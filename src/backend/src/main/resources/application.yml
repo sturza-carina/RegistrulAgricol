@@ -15,8 +15,6 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
         multiTenancy: SCHEMA
-        tenant_identifier_resolver: com.multitenant.config.tenant.TenantIdentifierResolver
-        multi_tenant_connection_provider: com.multitenant.config.tenant.MultiTenantConnectionProviderImpl
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:none}
     show-sql: true

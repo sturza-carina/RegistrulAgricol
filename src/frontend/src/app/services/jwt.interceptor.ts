@@ -4,7 +4,7 @@ import { AuthService } from './auth.service';
 
 export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
-  let user;
+  let user: any = null;
   authService.currentUser.subscribe(u => user = u).unsubscribe();
 
   let clonedReq = req;
