@@ -1,0 +1,47 @@
+<div class="dashboard-container">
+  <aside class="sidebar">
+    <div class="logo">
+      <h2>TenantApp</h2>
+    </div>
+    <ul class="nav-links">
+      <li class="active"><a href="#">Dashboard</a></li>
+      <li *ngIf="user?.role === 'ROLE_SUPER_ADMIN'"><a href="#">Tenants</a></li>
+      <li *ngIf="user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_SUPER_ADMIN'"><a href="#">Users</a></li>
+      <li><a href="#">Settings</a></li>
+    </ul>
+    <div class="logout-container">
+      <button (click)="logout()" class="logout-btn">Log Out</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="header">
+      <div class="header-title">
+        <h1>Overview</h1>
+      </div>
+      <div class="user-profile">
+        <span>{{ user?.username }} ({{ user?.role }})</span>
+        <div class="avatar"></div>
+      </div>
+    </header>
+
+    <div class="content-cards">
+      <div class="card">
+        <h3>Current Context</h3>
+        <p>You are logged into the tenant schema: <strong>{{ user?.tenantId || 'Public' }}</strong></p>
+      </div>
+
+      <div class="card" *ngIf="user?.role === 'ROLE_SUPER_ADMIN'">
+        <h3>Super Admin Controls</h3>
+        <p>You have access to create new tenants and provision new schemas.</p>
+        <button class="action-btn">Manage Tenants</button>
+      </div>
+
+      <div class="card" *ngIf="user?.role === 'ROLE_ADMIN'">
+        <h3>Admin Controls</h3>
+        <p>Manage users within your specific tenant.</p>
+        <button class="action-btn">Manage Users</button>
+      </div>
+    </div>
+  </main>
+</div>
