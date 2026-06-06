@@ -16,4 +16,4 @@ CREATE TABLE public.users (
 
 -- Insert default super admin (password: superadmin)
 INSERT INTO public.users (username, password, role) 
-VALUES ('superadmin', '$2a$10$wE1mG1h8/r5q9aK5/r6/GOCvU33f9m6m/G.s8uT0s8P9X00V2YmUa', 'ROLE_SUPER_ADMIN');
+VALUES ('superadmin', '$2a$10$2hlN1uQM/pBQJhU6vWousuBwLlnYCKcrwrLyFOgjNbVWhMiZgUvrq', 'ROLE_SUPER_ADMIN');

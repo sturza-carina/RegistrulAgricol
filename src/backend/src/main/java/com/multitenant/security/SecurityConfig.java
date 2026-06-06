@@ -43,7 +43,8 @@ public class SecurityConfig {
             .cors(cors -> cors.disable()) // Note: In production configure properly
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> 
-                auth.requestMatchers("/api/auth/**").permitAll()
+                auth.dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR).permitAll()
+                    .requestMatchers("/api/auth/**", "/error").permitAll()
                     .anyRequest().authenticated()
             );
 
