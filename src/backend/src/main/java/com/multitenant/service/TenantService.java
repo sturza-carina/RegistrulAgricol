@@ -2,11 +2,13 @@ package com.multitenant.service;
 
 import com.multitenant.model.Tenant;
 import com.multitenant.repository.TenantRepository;
-import org.flywaydb.core.Flyway;
 import org.springframework.stereotype.Service;
-
 import javax.sql.DataSource;
-import java.util.UUID;
+import java.sql.Connection;
+import java.sql.Statement;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class TenantService {
@@ -19,29 +21,41 @@ public class TenantService {
         this.dataSource = dataSource;
     }
 
-    public Tenant createTenant(String name, String schemaName) {
+    public Tenant createTenant(String sirutaCode, String name) {
+        if (tenantRepository.existsById(sirutaCode)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A UAT with SIRUTA code " + sirutaCode + " already exists.");
+        }
+
+        String schemaName = "uat_" + sirutaCode;
+
         Tenant tenant = new Tenant();
-        tenant.setId(UUID.randomUUID().toString());
+        tenant.setId(sirutaCode);
         tenant.setName(name);
         tenant.setSchemaName(schemaName);
         
         // Save to public schema
         Tenant saved = tenantRepository.save(tenant);
 
-        // Create schema
-        try {
-            dataSource.getConnection().createStatement().execute("CREATE SCHEMA " + schemaName);
+        // Create schema and table natively
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement()) {
+            
+            // 1. Create schema
+            statement.execute("CREATE SCHEMA IF NOT EXISTS " + schemaName);
+            
+            // 2. Create users table
+            String createTableSql = "CREATE TABLE IF NOT EXISTS " + schemaName + ".users (" +
+                    "id SERIAL PRIMARY KEY, " +
+                    "username VARCHAR(255) NOT NULL UNIQUE, " +
+                    "password VARCHAR(255) NOT NULL, " +
+                    "role VARCHAR(50) NOT NULL, " +
+                    "tenant_id VARCHAR(255)" +
+                    ")";
+            statement.execute(createTableSql);
+            
         } catch (Exception e) {
-            throw new RuntimeException("Could not create schema " + schemaName, e);
+            throw new RuntimeException("Could not provision schema and users table for UAT: " + schemaName, e);
         }
-
-        // Run migrations for the new schema
-        Flyway flyway = Flyway.configure()
-                .dataSource(dataSource)
-                .schemas(schemaName)
-                .locations("classpath:db/tenant") // Separate folder for tenant migrations
-                .load();
-        flyway.migrate();
 
         return saved;
     }
