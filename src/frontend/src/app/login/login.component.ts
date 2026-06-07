@@ -26,7 +26,14 @@ export class LoginComponent {
     if (this.loginForm.valid) {
       this.authService.login(this.loginForm.value).subscribe({
         next: () => {
-          this.router.navigate(['/dashboard']);
+          const user = this.authService.currentUserSubject.value;
+          if (user?.role === 'ROLE_SUPER_ADMIN') {
+            this.router.navigate(['/super-admin']);
+          } else if (user?.role === 'ROLE_ADMIN') {
+            this.router.navigate(['/tenant-admin']);
+          } else {
+            this.router.navigate(['/user-management']);
+          }
         },
         error: err => {
           this.error = 'Invalid credentials';

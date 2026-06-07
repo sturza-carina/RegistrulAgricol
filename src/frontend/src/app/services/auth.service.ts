@@ -15,7 +15,7 @@ export interface JwtResponse {
 })
 export class AuthService {
   private apiUrl = '/api/auth';
-  private currentUserSubject = new BehaviorSubject<JwtResponse | null>(null);
+  currentUserSubject = new BehaviorSubject<JwtResponse | null>(null);
   public currentUser = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient) {
