@@ -8,15 +8,24 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "identity_documents")
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "document_type", discriminatorType = DiscriminatorType.STRING)
 @Data
 @NoArgsConstructor
-public abstract class IdentityDocument {
+public class IdentityDocument {
+
+    public enum IdentityCardType {
+        IDENTITY_CARD,
+        BIRTH_CERTIFICATE,
+        PASSPORT,
+        DRIVER_LICENSE
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "document_type")
+    private IdentityCardType documentType;
 
     private String series;
 
@@ -28,6 +37,9 @@ public abstract class IdentityDocument {
 
     @Column(name = "issue_date")
     private LocalDate issueDate;
+
+    @Column(name = "expiration_date")
+    private LocalDate expirationDate;
 
     // Optional relation for tracking multi-tenancy.
     @Column(name = "tenant_id")

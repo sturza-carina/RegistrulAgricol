@@ -32,7 +32,4 @@ public class PhysicalPerson extends Person {
 
     @Column(name = "is_head_of_household")
     private Boolean isHeadOfHousehold;
-
-    @Column(name = "kinship_relation")
-    private String kinshipRelation;
 }
