@@ -21,7 +21,7 @@ public class TenantService {
 
     public Tenant createTenant(String name, String schemaName) {
         Tenant tenant = new Tenant();
-        tenant.setId(UUID.randomUUID().toString());
+        tenant.setId(schemaName);
         tenant.setName(name);
         tenant.setSchemaName(schemaName);
         

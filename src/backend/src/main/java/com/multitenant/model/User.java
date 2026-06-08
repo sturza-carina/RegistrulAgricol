@@ -25,4 +25,17 @@ public class User {
     // Optional relation for tracking. The physical FK is in the DB.
     @Column(name = "tenant_id")
     private String tenantId;
+
+    @Column(length = 255)
+    private String nume;
+
+    @Column(length = 255)
+    private String email;
+
+    @Column(nullable = false)
+    private boolean activ = true;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "uat_id")
+    private Uat uat;
 }
