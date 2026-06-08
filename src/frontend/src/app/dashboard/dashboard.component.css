@@ -138,3 +138,95 @@
 .action-btn:hover {
   background: #4f46e5;
 }
+
+.content-form-container {
+  padding: 30px;
+}
+
+.form-card {
+  max-width: 500px;
+}
+
+.uat-form {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #444;
+  font-size: 14px;
+}
+
+.form-control {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.alert {
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.alert.success {
+  background-color: #def7ec;
+  color: #03543f;
+  border: 1px solid #bcf0da;
+}
+
+.alert.error {
+  background-color: #fde8e8;
+  color: #9b1c1c;
+  border: 1px solid #fbd5d5;
+}
+
+.submit-btn {
+  width: 100%;
+}
+
+.tenant-card {
+  position: relative;
+  border-top: 4px solid #6366f1;
+}
+
+.tenant-badge {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background-color: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.tenant-details p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.tenant-details p.date {
+  color: #888;
+  font-size: 12px;
+}

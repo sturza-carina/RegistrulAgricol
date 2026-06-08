@@ -1,0 +1,41 @@
+package com.multitenant.model;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "persons")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "person_type", discriminatorType = DiscriminatorType.STRING)
+@Data
+@NoArgsConstructor
+public abstract class Person {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    // Address (Domiciliu / Sediu)
+    @Embedded
+    private Address address;
+
+    // Contact Information
+    @Column(name = "phone_number")
+    private String phoneNumber;
+    
+    private String email;
+
+    // Agriculture Register specific (Registrul Agricol)
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+
+    // Optional relation for tracking multi-tenancy.
+    @Column(name = "tenant_id")
+    private String tenantId;
+
+    @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PersonRelation> relations = new ArrayList<>();
+}

@@ -1,0 +1,186 @@
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <div class="logo-title">Registru<br>Agricol</div>
+      <div class="logo-subtitle">Management Platform</div>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" (click)="goToDashboard()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        Dashboard
+      </button>
+      <button class="nav-item" (click)="goToUsers()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        Users
+      </button>
+      <button class="nav-item" (click)="goToSettings()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.07 4.93a10 10 0 0 1 1.79 11.26l-3.07-3.07"/>
+          <path d="M4.93 4.93a10 10 0 0 0-1.79 11.26l3.07-3.07"/>
+        </svg>
+        Settings
+      </button>
+    </nav>
+    <div class="sidebar-bottom">
+      <button class="nav-item" (click)="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Logout
+      </button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div class="search-bar">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" placeholder="Search platform...">
+      </div>
+      <div class="topbar-spacer"></div>
+      <div class="user-chip">
+        <div class="user-info">
+          <div class="user-name">{{ user?.username || 'Admin User' }}</div>
+          <div class="user-role">{{ user?.tenantId || 'Tenant Admin' }}</div>
+        </div>
+        <div class="avatar">{{ (user?.username?.charAt(0) || 'A') | uppercase }}</div>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="page-header-row">
+        <div>
+          <h1 style="font-size:26px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--text-primary);margin-bottom:4px">
+            Welcome, {{ user?.username || 'Admin' }}
+          </h1>
+          <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            {{ user?.tenantId || 'Your Organization' }}
+          </div>
+        </div>
+        <button class="btn-primary" (click)="goToCreateUser()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <line x1="19" y1="8" x2="19" y2="14"/>
+            <line x1="22" y1="11" x2="16" y2="11"/>
+          </svg>
+          Create New User
+        </button>
+      </div>
+
+      <div class="stats-grid" style="grid-template-columns:1fr 1fr 1.4fr;margin-bottom:20px">
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Total Users in Tenant</span>
+            <div class="stat-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+          </div>
+          <div class="stat-delta" style="margin-bottom:4px">+2 this month</div>
+          <div class="stat-value">{{ users.length }}</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Active Sessions</span>
+            <div class="stat-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+            </div>
+          </div>
+          <div class="live-badge" style="margin-bottom:4px">Live</div>
+          <div class="stat-value">5</div>
+        </div>
+
+        <div class="green-banner" style="border-radius:var(--radius-lg)">
+          <h3 style="font-size:16px;margin-bottom:6px">Administrative Insights</h3>
+          <p style="font-size:12px;max-width:240px">Monitor user activity and manage permissions across your administrative zone.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>
+            <span style="display:inline-flex;align-items:center;gap:8px">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--primary)">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              User Management
+            </span>
+          </h3>
+        </div>
+
+        <table class="data-table">
+          <thead>
+          <tr>
+            <th>User Name</th>
+            <th>Email Address</th>
+            <th>Role</th>
+            <th>Last Login</th>
+            <th>Actions</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let u of users">
+            <td>
+              <div class="user-cell">
+                <div class="user-avatar" [style.background]="u.color">{{ u.initials }}</div>
+                <span style="font-weight:600">{{ u.name }}</span>
+              </div>
+            </td>
+            <td style="color:var(--text-secondary)">{{ u.email }}</td>
+            <td><span class="badge" [class]="u.role.toLowerCase()">{{ u.role }}</span></td>
+            <td style="color:var(--text-secondary)">{{ u.lastLogin }}</td>
+            <td>
+              <button class="edit-btn" (click)="editUser(u)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+
+        <div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--card-border)">
+          <span style="font-size:12.5px;color:var(--text-muted)">Showing {{ users.length }} users</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn-secondary" style="padding:6px 14px;font-size:12px">Previous</button>
+            <button class="btn-primary" style="padding:6px 14px;font-size:12px">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

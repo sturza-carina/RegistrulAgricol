@@ -13,7 +13,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class Tenant {
     @Id
-    private String id; // Use string IDs for ease of routing
+    @Column(name = "cod_siruta")
+    private String id;
 
     @Column(nullable = false)
     private String name;

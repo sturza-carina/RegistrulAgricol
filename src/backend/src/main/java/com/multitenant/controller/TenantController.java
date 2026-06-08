@@ -3,6 +3,7 @@ package com.multitenant.controller;
 import com.multitenant.model.Tenant;
 import com.multitenant.repository.TenantRepository;
 import com.multitenant.service.TenantService;
+import com.multitenant.payload.TenantCreateRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,9 +22,9 @@ public class TenantController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
-    public Tenant createTenant(@RequestParam String name, @RequestParam String schemaName) {
-        return tenantService.createTenant(name, schemaName);
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public Tenant createTenant(@RequestBody TenantCreateRequest request) {
+        return tenantService.createTenant(request.getSirutaCode(), request.getName());
     }
 
     @GetMapping

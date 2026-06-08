@@ -1,0 +1,8 @@
+# Maven build output
+src/backend/target/
+frontend/node_modules/
+
+# IDE files
+.idea/
+*.iml
+out/
