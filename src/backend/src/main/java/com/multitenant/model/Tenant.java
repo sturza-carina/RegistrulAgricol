@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class Tenant {
     @Id
-    @Column(name = "cod_siruta")
+    @Column(name = "id")
     private String id;
 
     @Column(nullable = false)
@@ -25,4 +25,7 @@ public class Tenant {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "is_active", nullable = false)
+    private boolean isActive = true;
 }

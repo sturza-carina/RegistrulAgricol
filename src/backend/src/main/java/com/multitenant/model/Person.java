@@ -29,6 +29,12 @@ public abstract class Person {
     private String email;
 
     // Agriculture Register specific (Registrul Agricol)
+    @Column(name = "register_volume")
+    private String registerVolume;
+
+    @Column(name = "register_position")
+    private String registerPosition;
+
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
