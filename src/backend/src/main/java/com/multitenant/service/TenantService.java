@@ -29,7 +29,7 @@ public class TenantService {
         String schemaName = "uat_" + sirutaCode;
 
         Tenant tenant = new Tenant();
-        tenant.setId(sirutaCode);
+        tenant.setId(schemaName);
         tenant.setName(name);
         tenant.setSchemaName(schemaName);
         
