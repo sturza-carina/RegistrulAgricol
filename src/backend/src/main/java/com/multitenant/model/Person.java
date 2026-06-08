@@ -3,6 +3,8 @@ package com.multitenant.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "persons")
@@ -17,18 +19,8 @@ public abstract class Person {
     private Long id;
 
     // Address (Domiciliu / Sediu)
-    private String county;
-    private String city;
-    private String village;
-    private String street;
-    @Column(name = "street_number")
-    private String streetNumber;
-    private String block;
-    private String staircase;
-    private String floor;
-    private String apartment;
-    @Column(name = "postal_code")
-    private String postalCode;
+    @Embedded
+    private Address address;
 
     // Contact Information
     @Column(name = "phone_number")
@@ -37,16 +29,13 @@ public abstract class Person {
     private String email;
 
     // Agriculture Register specific (Registrul Agricol)
-    @Column(name = "register_volume")
-    private String registerVolume;
-
-    @Column(name = "register_position")
-    private String registerPosition;
-
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
     // Optional relation for tracking multi-tenancy.
     @Column(name = "tenant_id")
     private String tenantId;
+
+    @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PersonRelation> relations = new ArrayList<>();
 }

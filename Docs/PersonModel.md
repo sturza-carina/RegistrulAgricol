@@ -7,12 +7,12 @@ The `Person` domain model in the Registrul Agricol application represents any le
 The `Person` class is an abstract `@Entity` that contains all the common attributes shared across both individuals and companies.
 
 ### Common Attributes
-- **Address Details (Domiciliu/Sediu Social):** `county`, `city`, `village`, `street`, `streetNumber`, `block`, `staircase`, `floor`, `apartment`, `postalCode`.
+- **Address Details (Domiciliu/Sediu Social):** Embedded as `Address` class containing `county`, `locality`, `street`, `streetNumber`, `building`, `staircase`, `floor` (Integer), `apartmentNumber` (Integer), `postalCode`.
 - **Contact Information:** `phoneNumber`, `email`.
 - **Agricultural Register Details:**
-  - `registerVolume`: The physical or digital volume number in the Agricultural Register.
-  - `registerPosition`: The specific position/page in the volume.
   - `notes`: Any additional observation notes.
+- **Relations:**
+  - `relations`: A `@OneToMany` relationship to `PersonRelation` entities, which explicitly define how this person is related to other `Person`s in the database using the `PersonRelation.KinshipType` enum.
 - **Multi-Tenancy:** `tenantId` is used to segregate records per local administration.
 
 ---
@@ -28,7 +28,6 @@ Represents an individual ("Persoană Fizică").
 - `dateOfBirth`
 - **Household Role:**
   - `isHeadOfHousehold`: Boolean flag indicating if they are the primary holder of the household.
-  - `kinshipRelation`: If they are not the head, this describes their relationship to the head of the household.
 - **Identity Documents:** A one-to-many relationship (`List<IdentityDocument>`) linking the person to their various identity documents.
 
 ---
@@ -46,22 +45,17 @@ Represents a company, institution, or association ("Persoană Juridică").
 
 ---
 
-## 4. Identity Documents Hierarchy
+## 4. Identity Documents
 
-To support the diverse types of identification a `PhysicalPerson` might hold, the application uses a secondary inheritance hierarchy for identity documents. 
+To support the diverse types of identification a `PhysicalPerson` might hold, the application uses a single `IdentityDocument` entity with a `documentType` field to distinguish between them (e.g., Identity Card, Birth Certificate, Passport, Driver License).
 
-A `PhysicalPerson` is linked via a `@OneToMany` relationship to the `IdentityDocument` abstract base class.
+A `PhysicalPerson` is linked via a `@OneToMany` relationship to the `IdentityDocument` class.
 
-### Abstract Base: `IdentityDocument`
-Contains common fields for any official document:
+### `IdentityDocument` Fields
+Contains the following fields for any official document:
+- `documentType` (using the `IdentityDocument.IdentityCardType` enum)
 - `series`
 - `number`
 - `issuedBy`
 - `issueDate`
-
-### Concrete Document Types
-The following concrete classes extend `IdentityDocument` and are mapped using the `SINGLE_TABLE` strategy in the `identity_documents` table:
-- `IdentityCard` (Carte/Buletin de Identitate)
-- `BirthCertificate` (Certificat de Naștere)
-- `Passport` (Pașaport)
-- `DriverLicense` (Permis de Conducere)
+- `expirationDate`
