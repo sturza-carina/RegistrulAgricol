@@ -1,15 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { PersonService } from '../../services/person.service';
 import { Person, PhysicalPerson, LegalEntity } from '../../models/person.model';
 import { AuthService } from '../../services/auth.service';
 
+import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+
 @Component({
   selector: 'app-person-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, SidebarComponent],
   templateUrl: './person-list.component.html',
   styleUrls: ['./person-list.component.css']
 })
@@ -90,24 +92,7 @@ export class PersonListComponent implements OnInit {
       });
     }
   }
-
-  // Navigation
-  goToDashboard() {
-    const role = this.user?.role || '';
-    if (role === 'ROLE_SUPER_ADMIN') this.router.navigate(['/super-admin']);
-    else if (role === 'ROLE_ADMIN') this.router.navigate(['/tenant-admin']);
-    else this.router.navigate(['/dashboard']);
-  }
-
-  goToUsers() {
-    this.router.navigate(['/user-management']);
-  }
-  
-  goToPersons() {
-    this.router.navigate(['/persons']);
-  }
-
-  logout() {
+  logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
   }

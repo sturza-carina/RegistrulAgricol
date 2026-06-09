@@ -53,6 +53,9 @@ public class PersonService {
 
     @Transactional(readOnly = true)
     public Person getPersonById(Long id) {
+        if (id == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID must not be null");
+        }
         return personRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Person not found with id: " + id));
     }
@@ -113,14 +116,19 @@ public class PersonService {
 
     public void deletePerson(Long id) {
         Person person = getPersonById(id);
-        personRepository.delete(person);
+        if (person != null) {
+            personRepository.delete(person);
+        }
     }
 
     private void validateAndSetRelatedPerson(PersonRelation relation) {
-        if (relation.getRelatedPerson() == null || relation.getRelatedPerson().getId() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Related person must have a valid ID");
+        if (relation.getRelatedPerson() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Related person must not be null");
         }
         Long relatedId = relation.getRelatedPerson().getId();
+        if (relatedId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Related person must have a valid ID");
+        }
         Person related = personRepository.findById(relatedId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Related person not found with id: " + relatedId));
         relation.setRelatedPerson(related);

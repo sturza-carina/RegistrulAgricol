@@ -38,12 +38,19 @@ public class UatService {
     }
 
     public Uat getUatByCodSiruta(String codSiruta) {
+        if (codSiruta == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "codSiruta must not be null");
+        }
         return uatRepository.findByCodSiruta(codSiruta)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "UAT with codSiruta " + codSiruta + " not found."));
     }
 
     public Uat updateUat(String codSiruta, Uat request) {
         Uat existing = getUatByCodSiruta(codSiruta);
+
+        if (existing == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "UAT not found");
+        }
 
         if (request.getDenumire() != null) {
             existing.setDenumire(request.getDenumire());
@@ -63,6 +70,8 @@ public class UatService {
 
     public void deleteUat(String codSiruta) {
         Uat existing = getUatByCodSiruta(codSiruta);
-        uatRepository.delete(existing);
+        if (existing != null) {
+            uatRepository.delete(existing);
+        }
     }
 }

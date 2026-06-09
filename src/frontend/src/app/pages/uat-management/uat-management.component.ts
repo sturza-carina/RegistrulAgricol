@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 
 
 interface UAT {
@@ -17,7 +18,7 @@ interface UAT {
 @Component({
   selector: 'app-uat-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, SidebarComponent],
   templateUrl: './uat-management.component.html',
   styleUrls: ['./uat-management.component.scss']
 })
@@ -70,14 +71,6 @@ export class UatManagementComponent implements OnInit {
     });
     this.loadUats();
   }
-
-  // Navigation
-  goToTenants(): void    { this.router.navigate(['/super-admin']); }
-  goToCreateTenant(): void { this.router.navigate(['/tenants/new']); }
-  goToUsers(): void      { this.router.navigate(['/user-management']); }
-  goToUats(): void       { this.router.navigate(['/uats']); }
-  goToSettings(): void   { }
-  logout(): void         { this.authService.logout(); this.router.navigate(['/login']); }
 
   // CRUD
   loadUats(): void {
@@ -175,5 +168,10 @@ export class UatManagementComponent implements OnInit {
         error: (err) => console.error('Delete failed:', err)
       });
     }
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

@@ -4,10 +4,12 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { HttpClient } from '@angular/common/http';
 
+import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+
 @Component({
   selector: 'app-tenant-admin-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SidebarComponent],
   templateUrl: './tenant-admin-dashboard.component.html',
 })
 export class TenantAdminDashboardComponent implements OnInit {
@@ -46,31 +48,12 @@ export class TenantAdminDashboardComponent implements OnInit {
     });
   }
 
-  goToDashboard(): void {
-    this.router.navigate(['/tenant-admin']);
-  }
-
-  goToUsers(): void {
-    this.router.navigate(['/user-management']);
-  }
-
-  goToPersons(): void {
-    this.router.navigate(['/persons']);
-  }
-
-  goToSettings(): void {}
-
-  goToCreateUser(): void {
-    // TODO: navigate to create user page
-  }
-
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
-
   editUser(user: any): void {
     console.log('Edit user:', user);
     // TODO: open edit modal or navigate to edit page
+  }
+
+  goToCreateUser(): void {
+    // TODO: navigate to create user page
   }
 }

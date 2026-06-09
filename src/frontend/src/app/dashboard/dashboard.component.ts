@@ -5,10 +5,12 @@ import { AuthService, JwtResponse } from '../services/auth.service';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 
+import { SidebarComponent } from '../components/sidebar/sidebar.component';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SidebarComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
@@ -91,12 +93,4 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
-
-  goToPersons() {
-    this.router.navigate(['/persons']);
-  }
 }

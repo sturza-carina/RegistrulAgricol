@@ -4,8 +4,6 @@ import com.multitenant.model.Tenant;
 import com.multitenant.repository.TenantRepository;
 import org.springframework.stereotype.Service;
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.Statement;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -22,8 +20,12 @@ public class TenantService {
     }
 
     public Tenant createTenant(String sirutaCode, String name) {
+        if (sirutaCode == null || name == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "SIRUTA code and name must not be null");
+        }
         if (tenantRepository.existsById(sirutaCode)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "A UAT with SIRUTA code " + sirutaCode + " already exists.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "A UAT with SIRUTA code " + sirutaCode + " already exists.");
         }
 
         String schemaName = "uat_" + sirutaCode;
@@ -32,7 +34,7 @@ public class TenantService {
         tenant.setId(sirutaCode);
         tenant.setName(name);
         tenant.setSchemaName(schemaName);
-        
+
         // Save to public schema
         Tenant saved = tenantRepository.save(tenant);
 
