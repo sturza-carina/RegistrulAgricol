@@ -1,0 +1,211 @@
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </div>
+      <div class="logo-title">Registru<br>Agricol</div>
+      <div class="logo-subtitle">Management Platform</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item" (click)="goToTenants()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        Dashboard
+      </button>
+      <button class="nav-item" (click)="goToCreateTenant()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Tenants
+      </button>
+      <button class="nav-item" (click)="goToUsers()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        Users
+      </button>
+      <button class="nav-item active" (click)="goToUats()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        UATs
+      </button>
+      <button class="nav-item" (click)="goToSettings()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.07 4.93a10 10 0 0 1 1.79 11.26l-3.07-3.07"/>
+          <path d="M4.93 4.93a10 10 0 0 0-1.79 11.26l3.07-3.07"/>
+          <path d="M12 2v2m0 18v-2m10-8h-2M4 12H2"/>
+        </svg>
+        Settings
+      </button>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-spacer"></div>
+      <div class="user-chip">
+        <div class="user-info">
+          <div class="user-name">{{ user?.username || 'Admin User' }}</div>
+        </div>
+        <div class="avatar">{{ (user?.username?.charAt(0) || 'A') | uppercase }}</div>
+      </div>
+      <button class="logout-btn" (click)="logout()">Logout</button>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <div class="page-content">
+
+      <div class="page-header-row">
+        <div class="page-header" style="margin-bottom:0">
+          <h1>UAT Management</h1>
+          <p>Manage administrative territorial units.</p>
+        </div>
+        <button class="btn-primary" (click)="openAddModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add UAT
+        </button>
+      </div>
+
+      <div *ngIf="loadError" class="card" style="padding: 12px 20px; margin-bottom: 20px; color: #b91c1c;">
+        {{ loadError }}
+      </div>
+
+      <!-- Search -->
+      <div class="card" style="padding: 12px 20px; margin-bottom: 20px;">
+        <div class="search-bar" style="max-width: 100%;">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input type="text" placeholder="Search by name or county..." (input)="onSearch($event)">
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card table-container">
+        <table class="data-table">
+          <thead>
+          <tr>
+            <th>SIRUTA Code</th>
+            <th>Name</th>
+            <th>County</th>
+            <th>UAT Type</th>
+            <th>Status</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let uat of filteredUats">
+            <td>{{ uat.codSiruta }}</td>
+            <td><strong>{{ uat.denumire }}</strong></td>
+            <td>{{ uat.judet }}</td>
+            <td>{{ uat.tipUat }}</td>
+            <td>
+                <span class="badge" [ngClass]="uat.isActive ? 'active' : 'archived'">
+                  {{ uat.isActive ? 'Active' : 'Inactive' }}
+                </span>
+            </td>
+            <td style="text-align:right">
+              <button class="btn-icon btn-edit" (click)="openEditModal(uat)" title="Edit">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+              <button class="btn-icon btn-delete" (click)="confirmDelete(uat)" title="Delete">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6M14 11v6"/>
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="filteredUats.length === 0">
+            <td colspan="6" class="empty-state">No results found.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-backdrop" *ngIf="showModal">
+  <div class="modal card">
+    <h2>{{ isEditMode ? 'Edit UAT' : 'Add New UAT' }}</h2>
+    <form [formGroup]="uatForm" (ngSubmit)="saveUat()">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="codSiruta">SIRUTA Code *</label>
+          <input id="codSiruta" formControlName="codSiruta" type="text" placeholder="e.g. 54975">
+        </div>
+        <div class="form-group">
+          <label for="denumire">Name *</label>
+          <input id="denumire" formControlName="denumire" type="text" placeholder="e.g. Cluj-Napoca">
+        </div>
+        <div class="form-group">
+          <label for="judet">County *</label>
+          <select id="judet" formControlName="judet">
+            <option value="">-- Select County --</option>
+            <option *ngFor="let judet of judete" [value]="judet">{{ judet }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="tipUat">UAT Type</label>
+          <select id="tipUat" formControlName="tipUat">
+            <option value="Municipiu">Municipiu</option>
+            <option value="Oraș">Oraș</option>
+            <option value="Comună">Comună</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" formControlName="isActive"> Active Status
+          </label>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="closeModal()">Cancel</button>
+        <button type="submit" class="btn-primary" [disabled]="uatForm.invalid">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-backdrop" *ngIf="showDeleteConfirm">
+  <div class="modal card">
+    <h2>Confirm Deletion</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">
+      Are you sure you want to delete UAT <strong>{{ selectedUat?.denumire }}</strong>?
+    </p>
+    <div class="modal-actions">
+      <button class="btn-secondary" (click)="showDeleteConfirm = false">Cancel</button>
+      <button class="btn-danger" (click)="deleteUat()">Delete</button>
+    </div>
+  </div>
+</div>
