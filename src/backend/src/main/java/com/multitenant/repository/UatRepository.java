@@ -9,4 +9,6 @@ import java.util.Optional;
 @Repository
 public interface UatRepository extends JpaRepository<Uat, Long> {
     Optional<Uat> findByCodSiruta(String codSiruta);
+    boolean existsByCodSiruta(String codSiruta);
+    void deleteByCodSiruta(String codSiruta);
 }
