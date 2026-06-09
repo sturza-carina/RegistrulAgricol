@@ -3,7 +3,8 @@ CREATE TABLE uat (
     cod_siruta VARCHAR(50) NOT NULL,
     denumire VARCHAR(255) NOT NULL,
     judet VARCHAR(100) NOT NULL,
-    tip_uat VARCHAR(50) NOT NULL
+    tip_uat VARCHAR(50) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE users (

@@ -25,6 +25,9 @@ import java.util.List;
 @NoArgsConstructor
 public abstract class Person {
 
+    @Column(name = "person_type", insertable = false, updatable = false)
+    private String personType;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

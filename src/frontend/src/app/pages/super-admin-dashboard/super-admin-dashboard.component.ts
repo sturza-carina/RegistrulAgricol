@@ -44,6 +44,10 @@ export class SuperAdminDashboardComponent implements OnInit {
     this.router.navigate(['/user-management']);
   }
 
+  goToPersons(): void {
+    this.router.navigate(['/persons']);
+  }
+
   goToTenants(): void {
     this.router.navigate(['/super-admin']);
   }

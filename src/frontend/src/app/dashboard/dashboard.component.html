@@ -7,6 +7,7 @@
        <li [class.active]="activeTab === 'overview'"><a (click)="setTab('overview')" href="javascript:void(0)">Dashboard</a></li>
        <li *ngIf="user?.role === 'ROLE_SUPER_ADMIN'" [class.active]="activeTab === 'tenants'"><a (click)="setTab('tenants')" href="javascript:void(0)">Tenants</a></li>
        <li *ngIf="user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_SUPER_ADMIN'"><a href="#">Users</a></li>
+       <li><a (click)="goToPersons()" href="javascript:void(0)">Persons</a></li>
        <li><a href="#">Settings</a></li>
      </ul>
      <div class="logout-container">

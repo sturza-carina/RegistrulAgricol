@@ -54,6 +54,10 @@ export class TenantAdminDashboardComponent implements OnInit {
     this.router.navigate(['/user-management']);
   }
 
+  goToPersons(): void {
+    this.router.navigate(['/persons']);
+  }
+
   goToSettings(): void {}
 
   goToCreateUser(): void {

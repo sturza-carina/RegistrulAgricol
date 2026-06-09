@@ -40,12 +40,28 @@ public class DatabaseSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        System.out.println("[DatabaseSeeder] Running migrations for existing tenants...");
+        tenantService.migrateAllTenants();
+
+        // Ensure superadmin exists in public schema
+        if (userRepository.findByUsername("superadmin").isEmpty()) {
+            System.out.println("[DatabaseSeeder] Seeding superadmin user...");
+            User superadmin = new User();
+            superadmin.setUsername("superadmin");
+            superadmin.setPassword(passwordEncoder.encode("superadmin"));
+            superadmin.setRole("ROLE_SUPER_ADMIN");
+            superadmin.setNume("Super Administrator");
+            superadmin.setEmail("superadmin@registru.ro");
+            superadmin.setActiv(true);
+            userRepository.save(superadmin);
+        }
+
         // Check if there are any tenants in the public schema
         if (tenantRepository.count() == 0) {
             System.out.println("[DatabaseSeeder] Seeding initial development tenant...");
             
             // Create default tenant "cluj" (this creates the schema and runs Flyway on it)
-            tenantService.createTenant("Cluj-Napoca", "cluj");
+            tenantService.createTenant("cluj", "Cluj-Napoca");
             
             // Seed tenant users in public schema (required for authentication/login)
             System.out.println("[DatabaseSeeder] Seeding tenant users in public schema...");

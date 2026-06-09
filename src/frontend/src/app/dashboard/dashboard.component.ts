@@ -95,4 +95,8 @@ export class DashboardComponent implements OnInit {
     this.authService.logout();
     this.router.navigate(['/login']);
   }
+
+  goToPersons() {
+    this.router.navigate(['/persons']);
+  }
 }

@@ -12,18 +12,18 @@ import java.util.List;
 public interface PersonRepository extends JpaRepository<Person, Long> {
 
     @Query("SELECT p FROM Person p WHERE " +
-           "(:type IS NULL OR p.class = :type) AND " +
-           "(:search IS NULL OR " +
-           " LOWER(p.email) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           " LOWER(p.phoneNumber) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "(CAST(:type AS text) IS NULL OR p.personType = CAST(:type AS text)) AND " +
+           "(CAST(:search AS text) IS NULL OR " +
+           " LOWER(COALESCE(p.email, '')) LIKE LOWER(CONCAT('%', CAST(:search AS text), '%')) OR " +
+           " LOWER(COALESCE(p.phoneNumber, '')) LIKE LOWER(CONCAT('%', CAST(:search AS text), '%')) OR " +
            " (TYPE(p) = PhysicalPerson AND (" +
-           "   LOWER(TREAT(p AS PhysicalPerson).firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "   LOWER(TREAT(p AS PhysicalPerson).lastName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "   TREAT(p AS PhysicalPerson).cnp LIKE CONCAT('%', :search, '%') " +
+           "   LOWER(COALESCE(TREAT(p AS PhysicalPerson).firstName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS text), '%')) OR " +
+           "   LOWER(COALESCE(TREAT(p AS PhysicalPerson).lastName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS text), '%')) OR " +
+           "   COALESCE(TREAT(p AS PhysicalPerson).cnp, '') LIKE CONCAT('%', CAST(:search AS text), '%') " +
            " )) OR " +
            " (TYPE(p) = LegalEntity AND (" +
-           "   LOWER(TREAT(p AS LegalEntity).companyName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "   TREAT(p AS LegalEntity).cui LIKE CONCAT('%', :search, '%') " +
+           "   LOWER(COALESCE(TREAT(p AS LegalEntity).companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS text), '%')) OR " +
+           "   COALESCE(TREAT(p AS LegalEntity).cui, '') LIKE CONCAT('%', CAST(:search AS text), '%') " +
            " )))")
     List<Person> searchPersons(@Param("search") String search, @Param("type") String type);
 }
