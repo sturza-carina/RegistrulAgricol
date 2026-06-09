@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "uat")
+@Table(name = "uat", schema = "public")
 @Data
 @NoArgsConstructor
 public class Uat {
@@ -27,4 +27,52 @@ public class Uat {
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getCodSiruta() {
+        return codSiruta;
+    }
+
+    public void setCodSiruta(String codSiruta) {
+        this.codSiruta = codSiruta;
+    }
+
+    public String getDenumire() {
+        return denumire;
+    }
+
+    public void setDenumire(String denumire) {
+        this.denumire = denumire;
+    }
+
+    public String getJudet() {
+        return judet;
+    }
+
+    public void setJudet(String judet) {
+        this.judet = judet;
+    }
+
+    public String getTipUat() {
+        return tipUat;
+    }
+
+    public void setTipUat(String tipUat) {
+        this.tipUat = tipUat;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
 }

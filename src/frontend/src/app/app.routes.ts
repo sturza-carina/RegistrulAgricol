@@ -7,6 +7,7 @@ import { UserManagementComponent } from './pages/user-management/user-management
 import { CreateTenantComponent } from './pages/create-tenant/create-tenant.component';
 import { PersonListComponent } from './pages/person-list/person-list.component';
 import { PersonFormComponent } from './pages/person-form/person-form.component';
+import { UatManagementComponent } from './pages/uat-management/uat-management.component';
 
 export const routes: Routes = [
   { path: 'login',          component: LoginComponent },
@@ -18,5 +19,6 @@ export const routes: Routes = [
   { path: 'persons',        component: PersonListComponent },
   { path: 'persons/new',    component: PersonFormComponent },
   { path: 'persons/edit/:id', component: PersonFormComponent },
+  { path: 'uats',           component: UatManagementComponent },
   { path: '',               redirectTo: '/login', pathMatch: 'full' }
 ];
