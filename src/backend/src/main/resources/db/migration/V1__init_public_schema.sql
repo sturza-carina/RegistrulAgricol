@@ -1,8 +1,9 @@
 CREATE TABLE public.tenants (
-    cod_siruta VARCHAR(255) PRIMARY KEY,
+    id VARCHAR(255) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     schema_name VARCHAR(255) NOT NULL UNIQUE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 -- Super admin should not belong to a specific tenant, but let's put superadmins in public schema for simplicity.
@@ -11,7 +12,7 @@ CREATE TABLE public.users (
     username VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(50) NOT NULL, -- SUPER_ADMIN
-    tenant_id VARCHAR(255) REFERENCES public.tenants(cod_siruta), -- Nullable for SUPER_ADMIN
+    tenant_id VARCHAR(255) REFERENCES public.tenants(id), -- Nullable for SUPER_ADMIN
     nume VARCHAR(255),
     email VARCHAR(255),
     activ BOOLEAN DEFAULT TRUE,

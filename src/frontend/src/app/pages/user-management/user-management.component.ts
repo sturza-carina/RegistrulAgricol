@@ -5,10 +5,12 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { HttpClient } from '@angular/common/http';
 
+import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+
 @Component({
   selector: 'app-user-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SidebarComponent],
   templateUrl: './user-management.component.html',
 })
 export class UserManagementComponent implements OnInit {
@@ -37,7 +39,19 @@ export class UserManagementComponent implements OnInit {
 
   loadUsers(): void {
     this.http.get<any[]>('/api/users').subscribe({
-      next: (data) => this.users = data,
+      next: (data) => {
+        this.users = data.map(u => ({
+          name: u.nume || u.username,
+          initials: (u.nume ? u.nume.charAt(0) : u.username.charAt(0)).toUpperCase(),
+          handle: '@' + u.username,
+          avatarBg: '#0369a1', // default color
+          img: null,
+          email: u.email || 'No email provided',
+          role: u.role.replace('ROLE_', ''),
+          status: u.activ ? 'Active' : 'Inactive',
+          lastLogin: 'Unknown'
+        }));
+      },
       error: () => {
         this.users = [
           { name: 'Elena Ionescu',  initials: 'EI', handle: '@elena_admin',  avatarBg: '#1a6b3c', img: null, email: 'e.ionescu@registru.gov.ro', role: 'Admin',     status: 'Active',   lastLogin: '2 hours ago' },
@@ -47,25 +61,6 @@ export class UserManagementComponent implements OnInit {
         ];
       }
     });
-  }
-
-  goToDashboard(): void {
-    const role = this.user?.role;
-    if (role === 'ROLE_SUPER_ADMIN') {
-      this.router.navigate(['/super-admin']);
-    } else {
-      this.router.navigate(['/tenant-admin']);
-    }
-  }
-
-  goToSettings(): void {}
-
-  goToRegistry(): void {}
-
-  goToReports(): void {}
-
-  goToCreateUser(): void {
-    // TODO: navigate to create user page
   }
 
   editUser(u: any): void {
@@ -80,5 +75,9 @@ export class UserManagementComponent implements OnInit {
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  goToCreateUser(): void {
+    // TODO: navigate to create user page
   }
 }

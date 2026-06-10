@@ -1,0 +1,120 @@
+<div class="app-shell">
+  <app-sidebar></app-sidebar>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div class="search-bar">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" placeholder="Search persons by name, CNP/CUI..." [(ngModel)]="searchQuery" (keyup.enter)="applyFilters()">
+      </div>
+      <div class="topbar-title">Persons Register</div>
+      <div class="topbar-spacer"></div>
+      <div class="user-chip">
+        <div class="avatar">{{ (user?.username?.charAt(0) || 'A') | uppercase }}</div>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="page-header-row">
+        <div>
+          <h1 style="font-size:22px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--text-primary);margin-bottom:3px">
+            Manage Persons & Entities
+          </h1>
+          <p style="font-size:13px;color:var(--text-secondary)">
+            Register and manage physical persons and legal entities in the agricultural register.
+          </p>
+        </div>
+        <button class="btn-primary" (click)="goToCreatePerson()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <line x1="19" y1="8" x2="19" y2="14"/>
+            <line x1="22" y1="11" x2="16" y2="11"/>
+          </svg>
+          Add New Person
+        </button>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div style="padding:0 16px">
+          <div class="filter-bar">
+            <span class="filter-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+              </svg>
+              Filters:
+            </span>
+            <select class="filter-select" [(ngModel)]="typeFilter" (change)="applyFilters()">
+              <option>All Types</option>
+              <option>Physical Person</option>
+              <option>Legal Entity</option>
+            </select>
+            <button class="clear-btn" (click)="clearFilters()">Clear filters</button>
+            <span class="results-count">Showing {{ filteredPersons.length }} persons</span>
+          </div>
+        </div>
+
+        <table class="data-table">
+          <thead>
+          <tr>
+            <th>Name / Company</th>
+            <th>Type</th>
+            <th>Identifier (CNP/CUI)</th>
+            <th>Contact</th>
+            <th>Register Vol/Pos</th>
+            <th>Actions</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let p of filteredPersons">
+            <td>
+              <div class="user-cell">
+                <div class="user-avatar" style="background:var(--accent-light);color:var(--accent-hover)">
+                  {{ getPersonName(p).charAt(0) | uppercase }}
+                </div>
+                <div class="user-name-cell">
+                  <div class="name">{{ getPersonName(p) }}</div>
+                  <div class="handle">{{ p.address?.locality || 'Unknown Locality' }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge" [class]="p.personType === 'PHYSICAL_PERSON' ? 'admin' : 'viewer'">
+                {{ p.personType === 'PHYSICAL_PERSON' ? 'Physical' : 'Legal Entity' }}
+              </span>
+            </td>
+            <td style="color:var(--text-secondary)">{{ getPersonIdentifier(p) }}</td>
+            <td style="color:var(--text-secondary)">
+              {{ p.phoneNumber || 'No phone' }}<br>
+              <small>{{ p.email || 'No email' }}</small>
+            </td>
+            <td style="color:var(--text-secondary)">
+              Vol: {{ p.registerVolume || '-' }}, Pos: {{ p.registerPosition || '-' }}
+            </td>
+            <td>
+              <button class="edit-btn" (click)="editPerson(p)" style="margin-right: 8px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+              <button class="edit-btn" (click)="deletePerson(p)" style="color:#ef4444; border-color:#fee2e2; background:#fef2f2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="filteredPersons.length === 0">
+            <td colspan="6" style="text-align: center; padding: 30px; color: var(--text-muted);">
+              No persons found. Adjust filters or create a new person.
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>

@@ -5,10 +5,12 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { HttpClient } from '@angular/common/http';
 
+import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+
 @Component({
   selector: 'app-create-tenant',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SidebarComponent],
   templateUrl: './create-tenant.component.html',
 })
 export class CreateTenantComponent implements OnInit {
@@ -44,27 +46,17 @@ export class CreateTenantComponent implements OnInit {
     });
   }
 
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
+
   goToDashboard(): void {
     this.router.navigate(['/super-admin']);
   }
 
-  goToUsers(): void {
-    this.router.navigate(['/user-management']);
-  }
-
-  goToSettings(): void {}
-
-  goToTenants(): void {
-    this.router.navigate(['/tenants/new']);
-  }
-
   cancel(): void {
     this.router.navigate(['/super-admin']);
-  }
-
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
   }
 
   onCreateTenant(): void {

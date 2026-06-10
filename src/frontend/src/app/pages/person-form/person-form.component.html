@@ -1,0 +1,163 @@
+<div class="page-container">
+  <div class="form-header">
+    <button class="back-btn" (click)="cancel()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Back to Persons List
+    </button>
+    <h1 style="font-family:'DM Serif Display',serif;margin-top:16px;color:var(--text-primary);">
+      {{ isEditMode ? 'Edit Person/Entity' : 'Register New Person/Entity' }}
+    </h1>
+  </div>
+
+  <div class="card" style="max-width: 800px; margin: 0 auto; padding: 24px;">
+    <form (ngSubmit)="save()" #personForm="ngForm">
+      
+      <!-- General Section -->
+      <h3 style="margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">General Information</h3>
+      
+      <div class="form-row">
+        <div class="form-group" style="width:100%">
+          <label>Type of Entity *</label>
+          <select class="input-field" [(ngModel)]="personType" name="personType" required [disabled]="isEditMode">
+            <option value="PHYSICAL_PERSON">Physical Person (Persoană Fizică)</option>
+            <option value="LEGAL_ENTITY">Legal Entity (Persoană Juridică)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Physical Person Fields -->
+      <ng-container *ngIf="personType === 'PHYSICAL_PERSON'">
+        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group">
+            <label>First Name *</label>
+            <input type="text" class="input-field" [(ngModel)]="firstName" name="firstName" required>
+          </div>
+          <div class="form-group">
+            <label>Last Name *</label>
+            <input type="text" class="input-field" [(ngModel)]="lastName" name="lastName" required>
+          </div>
+        </div>
+        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group">
+            <label>CNP *</label>
+            <input type="text" class="input-field" [(ngModel)]="cnp" name="cnp" required maxlength="13">
+          </div>
+          <div class="form-group">
+            <label>Date of Birth</label>
+            <input type="date" class="input-field" [(ngModel)]="dateOfBirth" name="dateOfBirth">
+          </div>
+        </div>
+        <div class="form-row">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:500;">
+            <input type="checkbox" [(ngModel)]="isHeadOfHousehold" name="isHeadOfHousehold">
+            Head of Household (Cap Gospodărie)
+          </label>
+        </div>
+      </ng-container>
+
+      <!-- Legal Entity Fields -->
+      <ng-container *ngIf="personType === 'LEGAL_ENTITY'">
+        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group">
+            <label>Company Name *</label>
+            <input type="text" class="input-field" [(ngModel)]="companyName" name="companyName" required>
+          </div>
+          <div class="form-group">
+            <label>CUI *</label>
+            <input type="text" class="input-field" [(ngModel)]="cui" name="cui" required>
+          </div>
+        </div>
+        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group">
+            <label>Registration Number</label>
+            <input type="text" class="input-field" [(ngModel)]="registrationNumber" name="registrationNumber" placeholder="J.../...">
+          </div>
+          <div class="form-group">
+            <label>Legal Representative</label>
+            <input type="text" class="input-field" [(ngModel)]="legalRepresentative" name="legalRepresentative">
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Address Section -->
+      <h3 style="margin-top: 32px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">Address Details</h3>
+      <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>County (Județ)</label>
+          <input type="text" class="input-field" [(ngModel)]="county" name="county">
+        </div>
+        <div class="form-group">
+          <label>Locality (Localitate)</label>
+          <input type="text" class="input-field" [(ngModel)]="locality" name="locality">
+        </div>
+      </div>
+      <div class="form-row" style="display:grid;grid-template-columns:2fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>Street</label>
+          <input type="text" class="input-field" [(ngModel)]="street" name="street">
+        </div>
+        <div class="form-group">
+          <label>Number</label>
+          <input type="text" class="input-field" [(ngModel)]="streetNumber" name="streetNumber">
+        </div>
+      </div>
+      <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>Building (Bl)</label>
+          <input type="text" class="input-field" [(ngModel)]="building" name="building">
+        </div>
+        <div class="form-group">
+          <label>Staircase (Sc)</label>
+          <input type="text" class="input-field" [(ngModel)]="staircase" name="staircase">
+        </div>
+        <div class="form-group">
+          <label>Floor (Et)</label>
+          <input type="number" class="input-field" [(ngModel)]="floor" name="floor">
+        </div>
+        <div class="form-group">
+          <label>Apt (Ap)</label>
+          <input type="number" class="input-field" [(ngModel)]="apartmentNumber" name="apartmentNumber">
+        </div>
+      </div>
+
+      <!-- Contact Details Section -->
+      <h3 style="margin-top: 32px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">Contact & Agriculture Register</h3>
+      <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" class="input-field" [(ngModel)]="phoneNumber" name="phoneNumber">
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" class="input-field" [(ngModel)]="email" name="email">
+        </div>
+      </div>
+      <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>Register Volume</label>
+          <input type="text" class="input-field" [(ngModel)]="registerVolume" name="registerVolume">
+        </div>
+        <div class="form-group">
+          <label>Register Position</label>
+          <input type="text" class="input-field" [(ngModel)]="registerPosition" name="registerPosition">
+        </div>
+      </div>
+      <div class="form-row" style="width:100%">
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea class="input-field" rows="3" [(ngModel)]="notes" name="notes"></textarea>
+        </div>
+      </div>
+
+      <div style="margin-top:32px;display:flex;gap:16px;justify-content:flex-end">
+        <button type="button" class="btn-outline" (click)="cancel()">Cancel</button>
+        <button type="submit" class="btn-primary" [disabled]="!personForm.form.valid">
+          {{ isEditMode ? 'Update Record' : 'Register Record' }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

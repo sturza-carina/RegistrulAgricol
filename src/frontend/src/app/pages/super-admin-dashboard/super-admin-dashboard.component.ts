@@ -3,10 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
+import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+
 @Component({
   selector: 'app-super-admin-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SidebarComponent],
   templateUrl: './super-admin-dashboard.component.html',
 })
 export class SuperAdminDashboardComponent implements OnInit {
@@ -36,6 +38,11 @@ export class SuperAdminDashboardComponent implements OnInit {
     });
   }
 
+  exportRecords(): void {
+    console.log('Export records clicked');
+    // TODO: implement export
+  }
+
   goToCreateTenant(): void {
     this.router.navigate(['/tenants/new']);
   }
@@ -44,22 +51,9 @@ export class SuperAdminDashboardComponent implements OnInit {
     this.router.navigate(['/user-management']);
   }
 
-  goToTenants(): void {
-    this.router.navigate(['/super-admin']);
-  }
-
-  goToSettings(): void {
-    // settings page not yet implemented
-  }
-
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
-  }
-
-  exportRecords(): void {
-    console.log('Export records clicked');
-    // TODO: implement export
   }
 }
 

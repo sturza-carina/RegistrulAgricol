@@ -1,7 +1,6 @@
 package com.multitenant.payload;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+
 
 public class JwtResponse {
     private String token;

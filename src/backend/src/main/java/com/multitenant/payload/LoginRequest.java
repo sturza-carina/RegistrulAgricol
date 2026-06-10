@@ -1,6 +1,5 @@
 package com.multitenant.payload;
 
-import lombok.Data;
 
 public class LoginRequest {
     private String username;

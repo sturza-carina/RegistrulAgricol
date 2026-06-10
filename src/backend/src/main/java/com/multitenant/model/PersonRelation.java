@@ -1,5 +1,7 @@
 package com.multitenant.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,10 +28,12 @@ public class PersonRelation {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "person_id")
+    @JsonIgnore
     private Person person;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "related_person_id")
+    @JsonIgnoreProperties({"relations", "identityDocuments"})
     private Person relatedPerson;
 
     @Enumerated(EnumType.STRING)
