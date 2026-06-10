@@ -24,8 +24,9 @@ public class JwtUtils {
 
         return Jwts.builder()
                 .subject((userPrincipal.getUsername()))
-                .claim("role", userPrincipal.getRole())
+                .claim("userId", userPrincipal.getId())
                 .claim("tenantId", userPrincipal.getTenantId())
+                .claim("role", userPrincipal.getRole())
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(key(), Jwts.SIG.HS256)
@@ -36,9 +37,25 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
     }
 
-    public String getUserNameFromJwtToken(String token) {
+    public Claims getClaimsFromJwtToken(String token) {
         return Jwts.parser().verifyWith(key()).build()
-               .parseSignedClaims(token).getPayload().getSubject();
+               .parseSignedClaims(token).getPayload();
+    }
+
+    public String getUserNameFromJwtToken(String token) {
+        return getClaimsFromJwtToken(token).getSubject();
+    }
+
+    public Long getUserIdFromJwtToken(String token) {
+        return getClaimsFromJwtToken(token).get("userId", Long.class);
+    }
+
+    public String getTenantIdFromJwtToken(String token) {
+        return getClaimsFromJwtToken(token).get("tenantId", String.class);
+    }
+
+    public String getRoleFromJwtToken(String token) {
+        return getClaimsFromJwtToken(token).get("role", String.class);
     }
 
     public boolean validateJwtToken(String authToken) {
@@ -51,3 +68,4 @@ public class JwtUtils {
         return false;
     }
 }
+

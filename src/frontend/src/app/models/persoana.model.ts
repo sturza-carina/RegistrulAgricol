@@ -1,6 +1,6 @@
-export interface Address {
+export interface Adresa {
   county?: string;
-  locality?: string;
+  localitate?: string;
   street?: string;
   streetNumber?: string;
   building?: string;
@@ -10,10 +10,10 @@ export interface Address {
   postalCode?: string;
 }
 
-export interface Person {
+export interface Persoana {
   id?: number;
   personType: 'PHYSICAL_PERSON' | 'LEGAL_ENTITY';
-  address?: Address;
+  address?: Adresa;
   phoneNumber?: string;
   email?: string;
   registerVolume?: string;
@@ -22,7 +22,7 @@ export interface Person {
   tenantId?: string;
 }
 
-export interface PhysicalPerson extends Person {
+export interface PersoanaFizica extends Persoana {
   personType: 'PHYSICAL_PERSON';
   firstName: string;
   lastName: string;
@@ -31,10 +31,12 @@ export interface PhysicalPerson extends Person {
   isHeadOfHousehold?: boolean;
 }
 
-export interface LegalEntity extends Person {
+export interface PersoanaJuridica extends Persoana {
   personType: 'LEGAL_ENTITY';
   companyName: string;
   cui?: string;
   registrationNumber?: string;
   legalRepresentative?: string;
 }
+
+

@@ -12,7 +12,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
         String message = ex.getMostSpecificCause().getMessage();
         if (message != null && message.contains("persons_cnp_key")) {
-            return ResponseEntity.badRequest().body(java.util.Map.of("message", "A person with this CNP already exists."));
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", "A Persoana with this CNP already exists."));
         }
         if (message != null && message.contains("persons_cui_key")) {
             return ResponseEntity.badRequest().body(java.util.Map.of("message", "A legal entity with this CUI already exists."));
@@ -20,3 +20,4 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(java.util.Map.of("message", "Database constraint violation: " + message));
     }
 }
+

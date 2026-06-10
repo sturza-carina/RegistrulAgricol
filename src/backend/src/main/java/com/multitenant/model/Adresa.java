@@ -8,10 +8,10 @@ import lombok.NoArgsConstructor;
 @Embeddable
 @Data
 @NoArgsConstructor
-public class Address {
+public class Adresa {
 
     private String county;
-    private String locality;
+    private String localitate;
     private String street;
 
     @Column(name = "street_number")
@@ -32,3 +32,5 @@ public class Address {
     @Column(name = "postal_code")
     private String postalCode;
 }
+
+

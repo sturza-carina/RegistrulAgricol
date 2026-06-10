@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class LegalEntity extends Person {
+public class PersoanaJuridica extends Persoana {
 
     @Column(name = "company_name")
     private String companyName;
@@ -26,3 +26,4 @@ public class LegalEntity extends Person {
     @Column(name = "legal_representative")
     private String legalRepresentative;
 }
+

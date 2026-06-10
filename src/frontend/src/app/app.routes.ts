@@ -5,8 +5,8 @@ import { SuperAdminDashboardComponent } from './pages/super-admin-dashboard/supe
 import { TenantAdminDashboardComponent } from './pages/tenant-admin-dashboard/tenant-admin-dashboard.component';
 import { UserManagementComponent } from './pages/user-management/user-management.component';
 import { CreateTenantComponent } from './pages/create-tenant/create-tenant.component';
-import { PersonListComponent } from './pages/person-list/person-list.component';
-import { PersonFormComponent } from './pages/person-form/person-form.component';
+import { PersonListComponent } from './pages/persoana-list/persoana-list.component';
+import { PersonFormComponent } from './pages/persoana-form/persoana-form.component';
 import { UatManagementComponent } from './pages/uat-management/uat-management.component';
 
 export const routes: Routes = [
@@ -16,9 +16,10 @@ export const routes: Routes = [
   { path: 'tenant-admin',   component: TenantAdminDashboardComponent },
   { path: 'user-management',component: UserManagementComponent },
   { path: 'tenants/new',    component: CreateTenantComponent },
-  { path: 'persons',        component: PersonListComponent },
-  { path: 'persons/new',    component: PersonFormComponent },
-  { path: 'persons/edit/:id', component: PersonFormComponent },
+  { path: 'persoane',        component: PersonListComponent },
+  { path: 'persoane/new',    component: PersonFormComponent },
+  { path: 'persoane/edit/:id', component: PersonFormComponent },
   { path: 'uats',           component: UatManagementComponent },
   { path: '',               redirectTo: '/login', pathMatch: 'full' }
 ];
+

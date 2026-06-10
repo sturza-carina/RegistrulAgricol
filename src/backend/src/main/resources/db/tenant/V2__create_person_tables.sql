@@ -6,7 +6,7 @@ CREATE TABLE persons (
     
     -- Address Details (Embedded)
     county VARCHAR(255),
-    locality VARCHAR(255),
+    localitate VARCHAR(255),
     street VARCHAR(255),
     street_number VARCHAR(50),
     building VARCHAR(50),
@@ -59,3 +59,4 @@ CREATE TABLE person_relations (
     related_person_id INTEGER NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
     relation_type VARCHAR(50) NOT NULL
 );
+

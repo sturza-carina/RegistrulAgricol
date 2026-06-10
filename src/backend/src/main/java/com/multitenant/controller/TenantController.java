@@ -22,7 +22,7 @@ public class TenantController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
     public Tenant createTenant(@RequestBody TenantCreateRequest request) {
         return tenantService.createTenant(request.getSirutaCode(), request.getName());
     }
@@ -33,3 +33,4 @@ public class TenantController {
         return tenantRepository.findAll();
     }
 }
+

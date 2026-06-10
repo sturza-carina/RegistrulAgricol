@@ -10,7 +10,7 @@ import java.time.LocalDate;
 @Table(name = "identity_documents")
 @Data
 @NoArgsConstructor
-public class IdentityDocument {
+public class ActIdentitate {
 
     public enum IdentityCardType {
         IDENTITY_CARD,
@@ -48,5 +48,6 @@ public class IdentityDocument {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "person_id")
     @JsonIgnore
-    private PhysicalPerson person;
+    private PersoanaFizica persoana;
 }
+

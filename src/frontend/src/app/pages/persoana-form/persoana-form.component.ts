@@ -2,14 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { PersonService } from '../../services/person.service';
-import { Person, PhysicalPerson, LegalEntity } from '../../models/person.model';
+import { PersoanaService } from '../../services/persoana.service';
+import { Persoana, PersoanaFizica, PersoanaJuridica } from '../../models/persoana.model';
 
 @Component({
-  selector: 'app-person-form',
+  selector: 'app-persoana-form',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './person-form.component.html'
+  templateUrl: './persoana-form.component.html'
 })
 export class PersonFormComponent implements OnInit {
   isEditMode = false;
@@ -25,9 +25,9 @@ export class PersonFormComponent implements OnInit {
   registerPosition: string = '';
   notes: string = '';
 
-  // Address fields
+  // Adresa fields
   county: string = '';
-  locality: string = '';
+  localitate: string = '';
   street: string = '';
   streetNumber: string = '';
   building: string = '';
@@ -36,21 +36,21 @@ export class PersonFormComponent implements OnInit {
   apartmentNumber?: number;
   postalCode: string = '';
 
-  // PhysicalPerson fields
+  // PersoanaFizica fields
   firstName: string = '';
   lastName: string = '';
   cnp: string = '';
   dateOfBirth: string = '';
   isHeadOfHousehold: boolean = false;
 
-  // LegalEntity fields
+  // PersoanaJuridica fields
   companyName: string = '';
   cui: string = '';
   registrationNumber: string = '';
   legalRepresentative: string = '';
 
   constructor(
-    private personService: PersonService,
+    private persoanaService: PersoanaService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -67,50 +67,50 @@ export class PersonFormComponent implements OnInit {
   }
 
   loadPerson(id: number) {
-    this.personService.getPersonById(id).subscribe({
-      next: (person) => {
-        this.personType = person.personType;
-        this.phoneNumber = person.phoneNumber || '';
-        this.email = person.email || '';
-        this.registerVolume = person.registerVolume || '';
-        this.registerPosition = person.registerPosition || '';
-        this.notes = person.notes || '';
+    this.persoanaService.getPersonById(id).subscribe({
+      next: (persoana) => {
+        this.personType = persoana.personType;
+        this.phoneNumber = persoana.phoneNumber || '';
+        this.email = persoana.email || '';
+        this.registerVolume = persoana.registerVolume || '';
+        this.registerPosition = persoana.registerPosition || '';
+        this.notes = persoana.notes || '';
 
-        if (person.address) {
-          this.county = person.address.county || '';
-          this.locality = person.address.locality || '';
-          this.street = person.address.street || '';
-          this.streetNumber = person.address.streetNumber || '';
-          this.building = person.address.building || '';
-          this.staircase = person.address.staircase || '';
-          this.floor = person.address.floor;
-          this.apartmentNumber = person.address.apartmentNumber;
-          this.postalCode = person.address.postalCode || '';
+        if (persoana.address) {
+          this.county = persoana.address.county || '';
+          this.localitate = persoana.address.localitate || '';
+          this.street = persoana.address.street || '';
+          this.streetNumber = persoana.address.streetNumber || '';
+          this.building = persoana.address.building || '';
+          this.staircase = persoana.address.staircase || '';
+          this.floor = persoana.address.floor;
+          this.apartmentNumber = persoana.address.apartmentNumber;
+          this.postalCode = persoana.address.postalCode || '';
         }
 
-        if (person.personType === 'PHYSICAL_PERSON') {
-          const p = person as PhysicalPerson;
+        if (persoana.personType === 'PHYSICAL_PERSON') {
+          const p = persoana as PersoanaFizica;
           this.firstName = p.firstName || '';
           this.lastName = p.lastName || '';
           this.cnp = p.cnp || '';
           this.dateOfBirth = p.dateOfBirth ? p.dateOfBirth.substring(0,10) : '';
           this.isHeadOfHousehold = p.isHeadOfHousehold || false;
         } else {
-          const l = person as LegalEntity;
+          const l = persoana as PersoanaJuridica;
           this.companyName = l.companyName || '';
           this.cui = l.cui || '';
           this.registrationNumber = l.registrationNumber || '';
           this.legalRepresentative = l.legalRepresentative || '';
         }
       },
-      error: (err) => console.error('Error loading person', err)
+      error: (err) => console.error('Error loading persoana', err)
     });
   }
 
   save() {
     const address = {
       county: this.county,
-      locality: this.locality,
+      localitate: this.localitate,
       street: this.street,
       streetNumber: this.streetNumber,
       building: this.building,
@@ -120,7 +120,7 @@ export class PersonFormComponent implements OnInit {
       postalCode: this.postalCode
     };
 
-    let payload: Person;
+    let payload: Persoana;
 
     if (this.personType === 'PHYSICAL_PERSON') {
       payload = {
@@ -136,7 +136,7 @@ export class PersonFormComponent implements OnInit {
         registerVolume: this.registerVolume,
         registerPosition: this.registerPosition,
         notes: this.notes
-      } as PhysicalPerson;
+      } as PersoanaFizica;
     } else {
       payload = {
         personType: 'LEGAL_ENTITY',
@@ -150,29 +150,31 @@ export class PersonFormComponent implements OnInit {
         registerVolume: this.registerVolume,
         registerPosition: this.registerPosition,
         notes: this.notes
-      } as LegalEntity;
+      } as PersoanaJuridica;
     }
 
     if (this.isEditMode && this.personId) {
-      this.personService.updatePerson(this.personId, payload).subscribe({
-        next: () => this.router.navigate(['/persons']),
+      this.persoanaService.updatePerson(this.personId, payload).subscribe({
+        next: () => this.router.navigate(['/persoane']),
         error: (err) => {
           const msg = err.error?.message || err.message;
-          alert('Error updating person: ' + msg);
+          alert('Error updating persoana: ' + msg);
         }
       });
     } else {
-      this.personService.createPerson(payload).subscribe({
-        next: () => this.router.navigate(['/persons']),
+      this.persoanaService.createPerson(payload).subscribe({
+        next: () => this.router.navigate(['/persoane']),
         error: (err) => {
           const msg = err.error?.message || err.message;
-          alert('Error creating person: ' + msg);
+          alert('Error creating persoana: ' + msg);
         }
       });
     }
   }
 
   cancel() {
-    this.router.navigate(['/persons']);
+    this.router.navigate(['/persoane']);
   }
 }
+
+

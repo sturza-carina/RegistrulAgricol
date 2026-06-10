@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "person_relations")
 @Data
 @NoArgsConstructor
-public class PersonRelation {
+public class RelatieRudenie {
 
     public enum KinshipType {
         PARENT,
@@ -29,14 +29,16 @@ public class PersonRelation {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "person_id")
     @JsonIgnore
-    private Person person;
+    private Persoana persoana;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "related_person_id")
     @JsonIgnoreProperties({"relations", "identityDocuments"})
-    private Person relatedPerson;
+    private Persoana relatedPerson;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "relation_type")
     private KinshipType relationType;
 }
+
+
