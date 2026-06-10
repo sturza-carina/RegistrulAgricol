@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { HttpClient } from '@angular/common/http';
+import { TenantService } from '../../services/tenant.service';
 
 @Component({
   selector: 'app-create-tenant',
@@ -19,19 +19,13 @@ export class CreateTenantComponent implements OnInit {
   errorMessage = '';
 
   form = {
-    orgName: '',
-    schemaName: '',
-    domain: '',
-    region: '',
-    contactName: '',
-    contactEmail: '',
-    status: 'pending',
+    name: ''
   };
 
   constructor(
     private router: Router,
     private authService: AuthService,
-    private http: HttpClient
+    private tenantService: TenantService
   ) {}
 
   ngOnInit(): void {
@@ -55,7 +49,7 @@ export class CreateTenantComponent implements OnInit {
   goToSettings(): void {}
 
   goToTenants(): void {
-    this.router.navigate(['/tenants/new']);
+    this.router.navigate(['/tenants']);
   }
 
   cancel(): void {
@@ -68,25 +62,22 @@ export class CreateTenantComponent implements OnInit {
   }
 
   onCreateTenant(): void {
-    if (!this.form.orgName || !this.form.schemaName) {
-      this.errorMessage = 'Please fill out all required fields.';
+    if (!this.form.name) {
+      this.errorMessage = 'Vă rugăm să introduceți numele tenantului.';
       return;
     }
     this.isSubmitting = true;
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.http.post('/api/tenants', {
-      name: this.form.orgName,
-      sirutaCode: this.form.schemaName,
-    }).subscribe({
+    this.tenantService.createTenant(this.form.name).subscribe({
       next: (res: any) => {
-        this.successMessage = `Tenant "${res.name}" created successfully!`;
+        this.successMessage = `Tenantul "${res.name}" a fost creat cu succes!`;
         this.isSubmitting = false;
         setTimeout(() => this.router.navigate(['/super-admin']), 1500);
       },
       error: (err) => {
-        this.errorMessage = err.error?.message || 'An error occurred while creating the tenant.';
+        this.errorMessage = err.error?.message || 'A apărut o eroare la crearea tenantului.';
         this.isSubmitting = false;
       }
     });

@@ -1,104 +1,135 @@
 <div class="dashboard-container">
   <aside class="sidebar">
-     <div class="logo">
-       <h2>TenantApp</h2>
-     </div>
-     <ul class="nav-links">
-       <li [class.active]="activeTab === 'overview'"><a (click)="setTab('overview')" href="javascript:void(0)">Dashboard</a></li>
-       <li *ngIf="user?.role === 'ROLE_SUPER_ADMIN'" [class.active]="activeTab === 'tenants'"><a (click)="setTab('tenants')" href="javascript:void(0)">Tenants</a></li>
-       <li *ngIf="user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_SUPER_ADMIN'"><a href="#">Users</a></li>
-       <li><a href="#">Settings</a></li>
-     </ul>
-     <div class="logout-container">
-       <button (click)="logout()" class="logout-btn">Log Out</button>
-     </div>
+    <div class="logo">
+      <h2>TenantApp</h2>
+    </div>
+    <ul class="nav-links">
+      <li [class.active]="activeTab === 'overview'"><a (click)="setTab('overview')"
+          href="javascript:void(0)">Dashboard</a></li>
+      <li *ngIf="user?.role === 'ROLE_SUPER_ADMIN'" [class.active]="activeTab === 'tenants'"><a
+          (click)="setTab('tenants')" href="javascript:void(0)">Tenants</a></li>
+      <li *ngIf="user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_SUPER_ADMIN'"><a href="#">Users</a></li>
+      <li><a href="#">Settings</a></li>
+    </ul>
+    <div class="logout-container">
+      <button (click)="logout()" class="logout-btn">Log Out</button>
+    </div>
   </aside>
 
   <main class="main-content">
-     <header class="header">
-       <div class="header-title">
-         <h1>{{ activeTab === 'overview' ? 'Overview' : 'Tenants Board' }}</h1>
-       </div>
-       <div class="user-profile">
-         <span>{{ user?.username }} ({{ user?.role }})</span>
-         <div class="avatar"></div>
-       </div>
-     </header>
+    <header class="header">
+      <div class="header-title">
+        <h1>{{ activeTab === 'overview' ? 'Overview' : 'Tenants Board' }}</h1>
+      </div>
+      <div class="user-profile">
+        <span>{{ user?.username }} ({{ user?.role }})</span>
+        <div class="avatar"></div>
+      </div>
+    </header>
 
-     <!-- Overview Tab content -->
-     <div class="content-cards" *ngIf="activeTab === 'overview'">
-       <div class="card">
-         <h3>Current Context</h3>
-         <p>You are logged into the tenant schema: <strong>{{ user?.tenantId || 'Public' }}</strong></p>
-       </div>
+    <!-- Overview Tab content -->
+    <div class="content-cards" *ngIf="activeTab === 'overview'">
+      <div class="card">
+        <h3>Current Context</h3>
+        <p>You are logged into the tenant schema: <strong>{{ user?.tenantId || 'Public' }}</strong></p>
+      </div>
 
-       <div class="card" *ngIf="user?.role === 'ROLE_SUPER_ADMIN'">
-         <h3>Super Admin Controls</h3>
-         <p>You have access to create new UATs and provision new schemas.</p>
-         <button (click)="setTab('tenants')" class="action-btn">Manage Tenants</button>
-       </div>
+      <div class="card" *ngIf="user?.role === 'ROLE_SUPER_ADMIN'">
+        <h3>Super Admin Controls</h3>
+        <p>You have access to create new Tenants and provision new schema spaces.</p>
+        <button (click)="setTab('tenants')" class="action-btn">Manage Tenants</button>
+      </div>
 
-       <div class="card" *ngIf="user?.role === 'ROLE_ADMIN'">
-         <h3>Admin Controls</h3>
-         <p>Manage users within your specific UAT.</p>
-         <button class="action-btn">Manage Users</button>
-       </div>
-     </div>
+      <div class="card" *ngIf="user?.role === 'ROLE_ADMIN'">
+        <h3>Admin Controls</h3>
+        <p>Manage users within your specific UAT.</p>
+        <button class="action-btn">Manage Users</button>
+      </div>
+    </div>
 
-     <!-- Tenants Tab content: Board grid -->
-     <div class="content-cards" *ngIf="activeTab === 'tenants'">
-       
-       <!-- The "Add UAT" Card on the board -->
-       <div class="card form-card">
-         <h3>Add UAT</h3>
-         <p>Register a new town hall to trigger dynamic schema space provisioning.</p>
+    <!-- Tenants Tab content: Board grid -->
+    <div class="tenants-container" *ngIf="activeTab === 'tenants'">
+      
+      <!-- Top Actions: Search and Alert Messages -->
+      <div class="tenants-header-actions">
+        <div class="search-box">
+          <input type="text" [(ngModel)]="searchQuery" placeholder="Search tenants by name or ID..." class="form-control search-input" />
+        </div>
+      </div>
 
-         <div *ngIf="successMessage" class="alert success">{{ successMessage }}</div>
-         <div *ngIf="errorMessage" class="alert error">{{ errorMessage }}</div>
+      <div *ngIf="successMessage" class="alert success">{{ successMessage }}</div>
+      <div *ngIf="errorMessage" class="alert error">{{ errorMessage }}</div>
 
-         <form (ngSubmit)="createUat()" #uatForm="ngForm" class="uat-form">
-           <div class="form-group">
-             <label for="uatName">UAT Name (Town Hall)</label>
-             <input 
-               type="text" 
-               id="uatName" 
-               name="uatName" 
-               [(ngModel)]="uatName" 
-               required 
-               placeholder="e.g., Primaria Giroc"
-               class="form-control" />
-           </div>
+      <div class="content-cards">
+        <!-- Add Tenant Card -->
+        <div class="card form-card">
+          <h3>Add Tenant</h3>
+          <p>Register a new client tenant to trigger dynamic database schema provisioning.</p>
 
-           <div class="form-group">
-             <label for="sirutaCode">SIRUTA Code (5 or 6 digits)</label>
-             <input 
-               type="text" 
-               id="sirutaCode" 
-               name="sirutaCode" 
-               [(ngModel)]="sirutaCode" 
-               required 
-               pattern="[0-9]{5,6}"
-               placeholder="e.g., 155286"
-               class="form-control" />
-           </div>
+          <form (ngSubmit)="createTenant()" #tenantForm="ngForm" class="tenant-form">
+            <div class="form-group">
+              <label for="tenantName">Tenant Name</label>
+              <input type="text" id="tenantName" name="tenantName" [(ngModel)]="tenantName" required
+                placeholder="e.g., Primaria Timisoara" class="form-control" />
+            </div>
 
-           <button type="submit" [disabled]="!uatForm.form.valid || isSubmitting" class="action-btn submit-btn">
-             {{ isSubmitting ? 'Provisioning...' : 'Add UAT' }}
-           </button>
-         </form>
-       </div>
+            <button type="submit" [disabled]="!tenantForm.form.valid || isSubmitting" class="action-btn submit-btn">
+              {{ isSubmitting ? 'Provisioning...' : 'Add Tenant' }}
+            </button>
+          </form>
+        </div>
 
-       <!-- Dynamic UAT Cards listed on the board -->
-       <div class="card tenant-card" *ngFor="let tenant of tenants">
-         <div class="tenant-badge">UAT</div>
-         <h3>{{ tenant.name }}</h3>
-         <div class="tenant-details">
-           <p><strong>SIRUTA Code:</strong> {{ tenant.id }}</p>
-           <p><strong>Schema:</strong> {{ tenant.schemaName }}</p>
-           <p class="date"><strong>Created:</strong> {{ tenant.createdAt | date:'short' }}</p>
-         </div>
-       </div>
+        <!-- Edit Tenant Card (Conditional) -->
+        <div class="card form-card edit-card" *ngIf="selectedTenant">
+          <h3>Edit Tenant</h3>
+          <p>Update metadata and status for tenant <strong>{{ selectedTenant.name }}</strong> (ID: {{ selectedTenant.id }}).</p>
 
-     </div>
+          <form (ngSubmit)="updateTenant()" #editForm="ngForm" class="tenant-form">
+            <div class="form-group">
+              <label for="editTenantName">Tenant Name</label>
+              <input type="text" id="editTenantName" name="editTenantName" [(ngModel)]="editTenantName" required
+                placeholder="e.g., Primaria Timisoara Nord" class="form-control" />
+            </div>
+
+            <div class="form-group checkbox-group">
+              <label class="switch-label">
+                <input type="checkbox" name="editTenantIsActive" [(ngModel)]="editTenantIsActive" />
+                <span class="checkbox-text">Active / Enabled</span>
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" [disabled]="!editForm.form.valid || isSubmitting" class="action-btn submit-btn">
+                Save Changes
+              </button>
+              <button type="button" (click)="cancelEdit()" class="action-btn cancel-btn">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Dynamic Tenant Cards listed on the board -->
+        <div class="card tenant-card" *ngFor="let tenant of filteredTenants">
+          <div class="tenant-card-header">
+            <span class="tenant-badge">Tenant</span>
+            <span class="status-badge" [class.active]="tenant.active || tenant.isActive">
+              {{ (tenant.active || tenant.isActive) ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+          <h3>{{ tenant.name }}</h3>
+          <div class="tenant-details">
+            <p><strong>Tenant ID:</strong> <span class="id-text">{{ tenant.id }}</span></p>
+            <p><strong>Schema:</strong> {{ tenant.schemaName }}</p>
+            <p class="date"><strong>Created:</strong> {{ tenant.createdAt | date:'medium' }}</p>
+          </div>
+          <div class="tenant-card-actions">
+            <button (click)="selectTenantForEdit(tenant)" class="card-action-btn edit-btn">Edit</button>
+            <button (click)="deleteTenant(tenant)" class="card-action-btn delete-btn">Delete</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </main>
 </div>

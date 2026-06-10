@@ -45,7 +45,7 @@ public class DatabaseSeeder implements CommandLineRunner {
             System.out.println("[DatabaseSeeder] Seeding initial development tenant...");
             
             // Create default tenant "cluj" (this creates the schema and runs Flyway on it)
-            tenantService.createTenant("Cluj-Napoca", "cluj");
+            tenantService.createTenant("cluj", "Cluj-Napoca");
             
             // Seed tenant users in public schema (required for authentication/login)
             System.out.println("[DatabaseSeeder] Seeding tenant users in public schema...");

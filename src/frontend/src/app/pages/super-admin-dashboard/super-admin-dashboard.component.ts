@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { TenantService, Tenant } from '../../services/tenant.service';
 
 @Component({
   selector: 'app-super-admin-dashboard',
@@ -12,18 +13,13 @@ import { AuthService } from '../../services/auth.service';
 export class SuperAdminDashboardComponent implements OnInit {
 
   user: any = null;
-
-  recentTenants = [
-    { name: 'AgriGroup S.A.',       initials: 'AG', color: '#1a6b3c', schema: 'agri_group_schema',      date: 'Oct 24, 2023', status: 'ACTIVE' },
-    { name: 'TerraForma Solutions',  initials: 'TF', color: '#0369a1', schema: 'terraform_sol_v2',       date: 'Oct 22, 2023', status: 'ACTIVE' },
-    { name: 'BioVineyard Ltd.',      initials: 'BV', color: '#9333ea', schema: 'biovine_master',         date: 'Oct 19, 2023', status: 'PENDING' },
-    { name: 'GreenHorizon Coop',     initials: 'GH', color: '#15803d', schema: 'green_horizon_prod',     date: 'Oct 15, 2023', status: 'ACTIVE' },
-    { name: 'SoilMaster Analytics',  initials: 'SM', color: '#6b7280', schema: 'soil_master_analytical', date: 'Oct 12, 2023', status: 'ARCHIVED' },
-  ];
+  tenants: Tenant[] = [];
+  errorMessage = '';
 
   constructor(
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private tenantService: TenantService
   ) {}
 
   ngOnInit(): void {
@@ -32,6 +28,18 @@ export class SuperAdminDashboardComponent implements OnInit {
         this.router.navigate(['/login']);
       } else {
         this.user = user;
+        this.loadTenants();
+      }
+    });
+  }
+
+  loadTenants(): void {
+    this.tenantService.getTenants().subscribe({
+      next: (data) => {
+        this.tenants = data;
+      },
+      error: (err) => {
+        this.errorMessage = err.error?.message || 'Eroare la incarcarea listei de tenanti.';
       }
     });
   }
@@ -45,7 +53,7 @@ export class SuperAdminDashboardComponent implements OnInit {
   }
 
   goToTenants(): void {
-    this.router.navigate(['/super-admin']);
+    this.router.navigate(['/tenants']);
   }
 
   goToSettings(): void {
@@ -61,5 +69,23 @@ export class SuperAdminDashboardComponent implements OnInit {
     console.log('Export records clicked');
     // TODO: implement export
   }
-}
 
+  getInitials(name: string): string {
+    if (!name) return 'TN';
+    const parts = name.split(' ');
+    if (parts.length > 1) {
+      return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  }
+
+  getRandomColor(id: string): string {
+    const colors = ['#1a6b3c', '#0369a1', '#9333ea', '#15803d', '#4b5563', '#b91c1c', '#d97706'];
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+      hash = id.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % colors.length;
+    return colors[index];
+  }
+}

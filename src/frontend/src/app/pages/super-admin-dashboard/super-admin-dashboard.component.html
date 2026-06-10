@@ -21,7 +21,7 @@
         </svg>
         Dashboard
       </button>
-      <button class="nav-item" (click)="goToCreateTenant()">
+      <button class="nav-item" (click)="goToTenants()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
           <circle cx="9" cy="7" r="4"/>
@@ -108,8 +108,8 @@
               </svg>
             </div>
           </div>
-          <div class="stat-value">{{ recentTenants.length }}</div>
-          <div class="stat-delta">▲ +2 this month</div>
+          <div class="stat-value">{{ tenants.length }}</div>
+          <div class="stat-delta">▲ Active Tenants</div>
         </div>
 
         <div class="stat-card">
@@ -125,7 +125,7 @@
             </div>
           </div>
           <div class="stat-value">145</div>
-          <div class="stat-delta">▲ +12% growth</div>
+          <div class="stat-delta">▲ System Users</div>
         </div>
 
         <div class="stat-card">
@@ -139,8 +139,8 @@
               </svg>
             </div>
           </div>
-          <div class="stat-value">{{ recentTenants.length }}</div>
-          <div class="stat-delta" style="color:var(--text-muted)">Current active build</div>
+          <div class="stat-value">{{ tenants.length }}</div>
+          <div class="stat-delta" style="color:var(--text-muted)">Current isolated schemas</div>
         </div>
       </div>
 
@@ -175,8 +175,25 @@
                 <polyline points="9 18 15 12 9 6"/>
               </svg>
             </div>
-            <div class="quick-action" (click)="goToUsers()">
+            <div class="quick-action" (click)="goToTenants()">
               <div class="qa-icon" style="background:#fef3c7;color:#d97706">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </div>
+              <div class="qa-text">
+                <div class="qa-title">Manage Tenants</div>
+                <div class="qa-desc">View, edit, delete tenants</div>
+              </div>
+              <svg class="qa-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </div>
+            <div class="quick-action" (click)="goToUsers()">
+              <div class="qa-icon" style="background:#e0e7ff;color:#4338ca">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
                 </svg>
@@ -190,39 +207,48 @@
               </svg>
             </div>
             <div class="platform-status">
-              <div class="status-label">Platform Status</div>
               <div class="status-dot-sm"></div>
               All systems operational
             </div>
           </div>
         </div>
 
-        <!-- Recent Tenants -->
+        <!-- Recent Tenants (READ-ONLY overview) -->
         <div class="card">
           <div class="card-header">
             <h3>Recent Tenants</h3>
-            <span class="view-all" (click)="goToCreateTenant()">View All</span>
+            <span class="view-all" (click)="goToTenants()" style="cursor:pointer">Manage All →</span>
           </div>
           <table class="data-table">
             <thead>
             <tr>
               <th>Name</th>
               <th>Schema Name</th>
-              <th>Created Date</th>
               <th>Status</th>
             </tr>
             </thead>
             <tbody>
-            <tr *ngFor="let tenant of recentTenants">
+            <tr *ngFor="let tenant of tenants">
               <td>
                 <div style="display:flex;align-items:center;gap:9px">
-                  <div class="tenant-avatar" [style.background]="tenant.color">{{ tenant.initials }}</div>
-                  <span style="font-weight:600">{{ tenant.name }}</span>
+                  <div class="tenant-avatar" [style.background]="getRandomColor(tenant.id)">{{ getInitials(tenant.name) }}</div>
+                  <div style="display:flex; flex-direction:column">
+                    <span style="font-weight:600">{{ tenant.name }}</span>
+                    <span style="font-size:10px; color:var(--text-muted); font-family:monospace;">ID: {{ tenant.id }}</span>
+                  </div>
                 </div>
               </td>
-              <td style="color:var(--text-secondary);font-family:monospace;font-size:12px">{{ tenant.schema }}</td>
-              <td style="color:var(--text-secondary)">{{ tenant.date }}</td>
-              <td><span class="badge" [class]="tenant.status.toLowerCase()">{{ tenant.status }}</span></td>
+              <td style="color:var(--text-secondary);font-family:monospace;font-size:12px">{{ tenant.schemaName }}</td>
+              <td>
+                <span class="badge" [class]="tenant.active ? 'active' : 'archived'">
+                  {{ tenant.active ? 'ACTIV' : 'INACTIV' }}
+                </span>
+              </td>
+            </tr>
+            <tr *ngIf="tenants.length === 0">
+              <td colspan="3" style="text-align:center; padding: 20px; color:var(--text-muted)">
+                Nu exista tenanti.
+              </td>
             </tr>
             </tbody>
           </table>
@@ -238,4 +264,3 @@
     </div>
   </main>
 </div>
-
