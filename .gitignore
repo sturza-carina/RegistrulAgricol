@@ -1,8 +1,24 @@
 # Maven build output
 src/backend/target/
-frontend/node_modules/
+target/
+
+# Node modules and Angular build output
+src/frontend/node_modules/
+src/frontend/dist/
+src/frontend/.angular/
+node_modules/
 
 # IDE files
 .idea/
 *.iml
 out/
+.vscode/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Environment files
+.env
+.env.*

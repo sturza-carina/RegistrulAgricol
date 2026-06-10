@@ -2,6 +2,11 @@ package com.multitenant.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.NoArgsConstructor;
 
 @Entity
@@ -27,6 +32,35 @@ public class Uat {
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @JsonIgnore
+    @JoinColumn(name = "tenant_id")
+    private Tenant tenant;
+
+    @OneToMany(mappedBy = "uat", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @JsonIgnore
+    private List<User> users = new ArrayList<>();
+
+    public List<User> getUsers() {
+        return users;
+    }
+
+    public void setUsers(List<User> users) {
+        this.users = users;
+    }
+
+    public Tenant getTenant() {
+        return tenant;
+    }
+
+    public void setTenant(Tenant tenant) {
+        this.tenant = tenant;
+    }
 
     public Long getId() {
         return id;
@@ -76,3 +110,6 @@ public class Uat {
         this.isActive = isActive;
     }
 }
+
+
+

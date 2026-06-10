@@ -2,7 +2,7 @@ package com.multitenant.service;
 
 import com.multitenant.config.tenant.TenantContext;
 import com.multitenant.model.*;
-import com.multitenant.repository.PersonRepository;
+import com.multitenant.repository.PersoanaRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,65 +12,65 @@ import java.util.List;
 
 @Service
 @Transactional
-public class PersonService {
+public class PersoanaService {
 
-    private final PersonRepository personRepository;
+    private final PersoanaRepository persoanaRepository;
 
-    public PersonService(PersonRepository personRepository) {
-        this.personRepository = personRepository;
+    public PersoanaService(PersoanaRepository persoanaRepository) {
+        this.persoanaRepository = persoanaRepository;
     }
 
-    public Person createPerson(Person person) {
+    public Persoana createPerson(Persoana persoana) {
         String currentTenant = TenantContext.getCurrentTenant();
         if (currentTenant != null && !currentTenant.equals("public")) {
-            person.setTenantId(currentTenant);
+            persoana.setTenantId(currentTenant);
         }
 
         // Set parent references and validate relations
-        if (person instanceof PhysicalPerson physicalPerson) {
-            if (physicalPerson.getIdentityDocuments() != null) {
-                for (IdentityDocument doc : physicalPerson.getIdentityDocuments()) {
-                    doc.setPerson(physicalPerson);
+        if (persoana instanceof PersoanaFizica persoanaFizica) {
+            if (persoanaFizica.getIdentityDocuments() != null) {
+                for (ActIdentitate doc : persoanaFizica.getIdentityDocuments()) {
+                    doc.setPersoana(persoanaFizica);
                     doc.setTenantId(currentTenant);
                 }
             }
         }
 
-        if (person.getRelations() != null) {
-            for (PersonRelation relation : person.getRelations()) {
-                relation.setPerson(person);
+        if (persoana.getRelations() != null) {
+            for (RelatieRudenie relation : persoana.getRelations()) {
+                relation.setPersoana(persoana);
                 validateAndSetRelatedPerson(relation);
             }
         }
 
-        return personRepository.save(person);
+        return persoanaRepository.save(persoana);
     }
 
     @Transactional(readOnly = true)
-    public List<Person> getAllPersons(String search, String type) {
-        return personRepository.searchPersons(search, type);
+    public List<Persoana> getAllPersons(String search, String type) {
+        return persoanaRepository.searchPersons(search, type);
     }
 
     @Transactional(readOnly = true)
-    public Person getPersonById(Long id) {
+    public Persoana getPersonById(Long id) {
         if (id == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID must not be null");
         }
-        return personRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Person not found with id: " + id));
+        return persoanaRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Persoana not found with id: " + id));
     }
 
-    public Person updatePerson(Long id, Person updatedPerson) {
-        Person existing = getPersonById(id);
+    public Persoana updatePerson(Long id, Persoana updatedPerson) {
+        Persoana existing = getPersonById(id);
 
         if (!existing.getClass().equals(updatedPerson.getClass())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot change person type");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot change Persoana type");
         }
 
         String currentTenant = TenantContext.getCurrentTenant();
 
         // Update common fields
-        existing.setAddress(updatedPerson.getAddress());
+        existing.setAdresa(updatedPerson.getAdresa());
         existing.setPhoneNumber(updatedPerson.getPhoneNumber());
         existing.setEmail(updatedPerson.getEmail());
         existing.setRegisterVolume(updatedPerson.getRegisterVolume());
@@ -78,7 +78,7 @@ public class PersonService {
         existing.setNotes(updatedPerson.getNotes());
 
         // Update type-specific fields
-        if (existing instanceof PhysicalPerson existingPhysical && updatedPerson instanceof PhysicalPerson updatedPhysical) {
+        if (existing instanceof PersoanaFizica existingPhysical && updatedPerson instanceof PersoanaFizica updatedPhysical) {
             existingPhysical.setFirstName(updatedPhysical.getFirstName());
             existingPhysical.setLastName(updatedPhysical.getLastName());
             existingPhysical.setCnp(updatedPhysical.getCnp());
@@ -88,13 +88,13 @@ public class PersonService {
             // Merge identity documents using orphanRemoval
             existingPhysical.getIdentityDocuments().clear();
             if (updatedPhysical.getIdentityDocuments() != null) {
-                for (IdentityDocument doc : updatedPhysical.getIdentityDocuments()) {
-                    doc.setPerson(existingPhysical);
+                for (ActIdentitate doc : updatedPhysical.getIdentityDocuments()) {
+                    doc.setPersoana(existingPhysical);
                     doc.setTenantId(currentTenant);
                     existingPhysical.getIdentityDocuments().add(doc);
                 }
             }
-        } else if (existing instanceof LegalEntity existingLegal && updatedPerson instanceof LegalEntity updatedLegal) {
+        } else if (existing instanceof PersoanaJuridica existingLegal && updatedPerson instanceof PersoanaJuridica updatedLegal) {
             existingLegal.setCompanyName(updatedLegal.getCompanyName());
             existingLegal.setCui(updatedLegal.getCui());
             existingLegal.setRegistrationNumber(updatedLegal.getRegistrationNumber());
@@ -104,33 +104,38 @@ public class PersonService {
         // Merge relations using orphanRemoval
         existing.getRelations().clear();
         if (updatedPerson.getRelations() != null) {
-            for (PersonRelation relation : updatedPerson.getRelations()) {
-                relation.setPerson(existing);
+            for (RelatieRudenie relation : updatedPerson.getRelations()) {
+                relation.setPersoana(existing);
                 validateAndSetRelatedPerson(relation);
                 existing.getRelations().add(relation);
             }
         }
 
-        return personRepository.save(existing);
+        return persoanaRepository.save(existing);
     }
 
     public void deletePerson(Long id) {
-        Person person = getPersonById(id);
-        if (person != null) {
-            personRepository.delete(person);
+        Persoana persoana = getPersonById(id);
+        if (persoana != null) {
+            persoanaRepository.delete(persoana);
         }
     }
 
-    private void validateAndSetRelatedPerson(PersonRelation relation) {
+    private void validateAndSetRelatedPerson(RelatieRudenie relation) {
         if (relation.getRelatedPerson() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Related person must not be null");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Related Persoana must not be null");
         }
         Long relatedId = relation.getRelatedPerson().getId();
         if (relatedId == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Related person must have a valid ID");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Related Persoana must have a valid ID");
         }
-        Person related = personRepository.findById(relatedId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Related person not found with id: " + relatedId));
+        Persoana related = persoanaRepository.findById(relatedId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Related Persoana not found with id: " + relatedId));
         relation.setRelatedPerson(related);
     }
 }
+
+
+
+
+

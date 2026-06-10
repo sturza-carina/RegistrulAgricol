@@ -18,12 +18,12 @@ import java.util.List;
     property = "personType"
 )
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = PhysicalPerson.class, name = "PHYSICAL_PERSON"),
-    @JsonSubTypes.Type(value = LegalEntity.class, name = "LEGAL_ENTITY")
+    @JsonSubTypes.Type(value = PersoanaFizica.class, name = "PHYSICAL_PERSON"),
+    @JsonSubTypes.Type(value = PersoanaJuridica.class, name = "LEGAL_ENTITY")
 })
 @Data
 @NoArgsConstructor
-public abstract class Person {
+public abstract class Persoana {
 
     @Column(name = "person_type", insertable = false, updatable = false)
     private String personType;
@@ -32,9 +32,9 @@ public abstract class Person {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Address (Domiciliu / Sediu)
+    // Adresa (Domiciliu / Sediu)
     @Embedded
-    private Address address;
+    private Adresa adresa;
 
     // Contact Information
     @Column(name = "phone_number")
@@ -56,6 +56,8 @@ public abstract class Person {
     @Column(name = "tenant_id")
     private String tenantId;
 
-    @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PersonRelation> relations = new ArrayList<>();
+    @OneToMany(mappedBy = "persoana", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RelatieRudenie> relations = new ArrayList<>();
 }
+
+

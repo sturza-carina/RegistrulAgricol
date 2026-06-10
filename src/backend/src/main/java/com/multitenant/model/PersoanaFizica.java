@@ -13,7 +13,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class PhysicalPerson extends Person {
+public class PersoanaFizica extends Persoana {
 
     @Column(name = "first_name")
     private String firstName;
@@ -27,9 +27,11 @@ public class PhysicalPerson extends Person {
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
-    @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<IdentityDocument> identityDocuments = new ArrayList<>();
+    @OneToMany(mappedBy = "persoana", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ActIdentitate> identityDocuments = new ArrayList<>();
 
     @Column(name = "is_head_of_household")
     private Boolean isHeadOfHousehold;
 }
+
+

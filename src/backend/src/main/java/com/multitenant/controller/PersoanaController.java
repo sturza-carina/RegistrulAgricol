@@ -1,7 +1,7 @@
 package com.multitenant.controller;
 
-import com.multitenant.model.Person;
-import com.multitenant.service.PersonService;
+import com.multitenant.model.Persoana;
+import com.multitenant.service.PersoanaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -10,21 +10,21 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/persons")
-public class PersonController {
+public class PersoanaController {
 
-    private final PersonService personService;
+    private final PersoanaService persoanaService;
 
-    public PersonController(PersonService personService) {
-        this.personService = personService;
+    public PersoanaController(PersoanaService persoanaService) {
+        this.persoanaService = persoanaService;
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
-    public ResponseEntity<?> createPerson(@RequestBody Person person) {
+    public ResponseEntity<?> createPerson(@RequestBody Persoana persoana) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot create a Person outside of a specific tenant context. Please log in as a Tenant Administrator.");
+            return ResponseEntity.badRequest().body("Cannot create a Persoana outside of a specific tenant context. Please log in as a Tenant Administrator.");
         }
-        return ResponseEntity.ok(personService.createPerson(person));
+        return ResponseEntity.ok(persoanaService.createPerson(persoana));
     }
 
     @GetMapping
@@ -35,34 +35,37 @@ public class PersonController {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.ok(java.util.Collections.emptyList());
         }
-        return ResponseEntity.ok(personService.getAllPersons(search, type));
+        return ResponseEntity.ok(persoanaService.getAllPersons(search, type));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> getPersonById(@PathVariable Long id) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot fetch a Person outside of a specific tenant context.");
+            return ResponseEntity.badRequest().body("Cannot fetch a Persoana outside of a specific tenant context.");
         }
-        return ResponseEntity.ok(personService.getPersonById(id));
+        return ResponseEntity.ok(persoanaService.getPersonById(id));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
-    public ResponseEntity<?> updatePerson(@PathVariable Long id, @RequestBody Person person) {
+    public ResponseEntity<?> updatePerson(@PathVariable Long id, @RequestBody Persoana persoana) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot update a Person outside of a specific tenant context.");
+            return ResponseEntity.badRequest().body("Cannot update a Persoana outside of a specific tenant context.");
         }
-        return ResponseEntity.ok(personService.updatePerson(id, person));
+        return ResponseEntity.ok(persoanaService.updatePerson(id, persoana));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> deletePerson(@PathVariable Long id) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot delete a Person outside of a specific tenant context.");
+            return ResponseEntity.badRequest().body("Cannot delete a Persoana outside of a specific tenant context.");
         }
-        personService.deletePerson(id);
+        persoanaService.deletePerson(id);
         return ResponseEntity.ok().build();
     }
 }
+
+
+

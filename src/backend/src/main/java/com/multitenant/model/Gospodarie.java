@@ -16,8 +16,8 @@ public class Gospodarie {
     @Column(name = "cod_gospodarie", nullable = false, length = 100)
     private String codGospodarie;
 
-    @Column(nullable = false, length = 255)
-    private String adresa;
+    @Embedded
+    private Adresa adresa;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tip_gospodarie", nullable = false, length = 50)
