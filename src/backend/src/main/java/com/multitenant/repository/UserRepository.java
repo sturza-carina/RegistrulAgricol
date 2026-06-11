@@ -1,6 +1,6 @@
 package com.multitenant.repository;
 
-import com.multitenant.model.User;
+import com.multitenant.model.core.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

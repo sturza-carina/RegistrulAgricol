@@ -1,7 +1,7 @@
 
 services:
   db:
-    image: postgres:15
+    image: postgis/postgis:15-3.3
     container_name: multi-tenant-db
     environment:
       POSTGRES_USER: admin

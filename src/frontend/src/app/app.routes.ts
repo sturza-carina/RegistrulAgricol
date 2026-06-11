@@ -8,6 +8,10 @@ import { CreateTenantComponent } from './pages/create-tenant/create-tenant.compo
 import { PersonListComponent } from './pages/persoana-list/persoana-list.component';
 import { PersonFormComponent } from './pages/persoana-form/persoana-form.component';
 import { UatManagementComponent } from './pages/uat-management/uat-management.component';
+import { ParcelaMapComponent } from './components/parcela-map/parcela-map.component';
+import { GospodarieListComponent } from './pages/gospodarie-list/gospodarie-list.component';
+import { GospodarieFormComponent } from './pages/gospodarie-form/gospodarie-form.component';
+import { GospodarieDetailsComponent } from './pages/gospodarie-details/gospodarie-details.component';
 
 export const routes: Routes = [
   { path: 'login',          component: LoginComponent },
@@ -20,6 +24,11 @@ export const routes: Routes = [
   { path: 'persoane/new',    component: PersonFormComponent },
   { path: 'persoane/edit/:id', component: PersonFormComponent },
   { path: 'uats',           component: UatManagementComponent },
+  { path: 'gospodarii',     component: GospodarieListComponent },
+  { path: 'gospodarii/new', component: GospodarieFormComponent },
+  { path: 'gospodarii/edit/:id', component: GospodarieFormComponent },
+  { path: 'gospodarii/:id', component: GospodarieDetailsComponent },
+  { path: 'harta',          component: ParcelaMapComponent },
   { path: '',               redirectTo: '/login', pathMatch: 'full' }
 ];
 

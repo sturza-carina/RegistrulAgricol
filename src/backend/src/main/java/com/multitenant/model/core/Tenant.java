@@ -1,4 +1,4 @@
-package com.multitenant.model;
+package com.multitenant.model.core;
 
 import jakarta.persistence.*;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.multitenant.model;
+package com.multitenant.model.persoana;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

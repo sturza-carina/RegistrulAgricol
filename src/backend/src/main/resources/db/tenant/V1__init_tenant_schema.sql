@@ -4,7 +4,8 @@ CREATE TABLE uat (
     denumire VARCHAR(255) NOT NULL,
     judet VARCHAR(100) NOT NULL,
     tip_uat VARCHAR(50) NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    tenant_id VARCHAR(255)
 );
 
 CREATE TABLE users (
@@ -25,5 +26,5 @@ CREATE TABLE gospodarie (
     adresa VARCHAR(255) NOT NULL,
     tip_gospodarie VARCHAR(50) NOT NULL,
     activa BOOLEAN DEFAULT TRUE,
-    uat_id INTEGER REFERENCES uat(id)
+    uat_id INTEGER REFERENCES public.uat(id)
 );

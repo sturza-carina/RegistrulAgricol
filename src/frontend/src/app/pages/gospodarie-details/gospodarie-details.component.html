@@ -1,0 +1,95 @@
+<div class="app-shell">
+  <app-sidebar></app-sidebar>
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-title">Detalii Gospodărie</div>
+      <div class="topbar-spacer"></div>
+    </header>
+
+    <div class="page-content" *ngIf="gospodarie">
+      <div class="page-header-row">
+        <div>
+          <button routerLink="/gospodarii" class="btn-secondary" style="margin-bottom: 10px;">← Înapoi la Gospodării</button>
+          <h1 style="font-size:24px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--text-primary);margin:0;">
+            Gospodăria #{{ gospodarie.codGospodarie }}
+          </h1>
+          <span class="badge {{ gospodarie.tipGospodarie === 'POPULATIE' ? 'user' : 'admin' }}">{{ gospodarie.tipGospodarie }}</span>
+        </div>
+        <div>
+           <button class="btn-secondary" (click)="editGospodarie()">Editează Gospodăria</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom: 20px;">
+        <h3 style="margin-top: 0;">Informații Generale</h3>
+        <p><strong>Adresă:</strong> {{ gospodarie.adresa.street }}, nr. {{ gospodarie.adresa.streetNumber }}, {{ gospodarie.adresa.localitate }}, jud. {{ gospodarie.adresa.county }}</p>
+        <p><strong>Status:</strong> <span class="badge success" *ngIf="gospodarie.activa">Activă</span><span class="badge viewer" *ngIf="!gospodarie.activa">Inactivă</span></p>
+      </div>
+
+      <div class="card" style="margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <h3 style="margin: 0;">Membrii Gospodăriei</h3>
+          <button class="btn-primary" (click)="addPerson()">Adaugă Membru</button>
+        </div>
+        
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nume / Denumire</th>
+              <th>CNP / CUI</th>
+              <th>Rol</th>
+              <th>Acțiuni</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of persoane" (click)="editPerson(p.id)" style="cursor: pointer;" class="hoverable-row">
+              <td>
+                <strong *ngIf="p.personType === 'PHYSICAL_PERSON'">{{ p.firstName }} {{ p.lastName }}</strong>
+                <strong *ngIf="p.personType === 'LEGAL_ENTITY'">{{ p.companyName }}</strong>
+              </td>
+              <td>
+                <span *ngIf="p.personType === 'PHYSICAL_PERSON'">{{ p.cnp }}</span>
+                <span *ngIf="p.personType === 'LEGAL_ENTITY'">{{ p.cui }}</span>
+              </td>
+              <td>
+                <span class="badge user" *ngIf="p.isHeadOfHousehold">Cap Gospodărie</span>
+                <span class="badge viewer" *ngIf="!p.isHeadOfHousehold">Membru</span>
+              </td>
+              <td><button class="edit-btn">Detalii / Editare</button></td>
+            </tr>
+            <tr *ngIf="persoane.length === 0">
+              <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">Niciun membru înregistrat.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" style="margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <h3 style="margin: 0;">Teren Agricol</h3>
+          <button class="btn-primary" (click)="viewMap()">Deschide Harta GIS</button>
+        </div>
+        
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Denumire Teren</th>
+              <th>Acțiuni</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="teren">
+              <td><strong>{{ teren.denumire }}</strong></td>
+              <td>
+                <button class="btn-secondary" (click)="viewTeren(teren.id)">Vezi Parcele (Harta)</button>
+              </td>
+            </tr>
+            <tr *ngIf="!teren">
+              <td colspan="2" style="text-align: center; color: var(--text-muted); padding: 20px;">Niciun teren înregistrat.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>

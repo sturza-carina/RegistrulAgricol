@@ -1,6 +1,6 @@
 package com.multitenant.repository;
 
-import com.multitenant.model.Persoana;
+import com.multitenant.model.persoana.Persoana;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -26,5 +26,8 @@ public interface PersoanaRepository extends JpaRepository<Persoana, Long> {
            "   COALESCE(TREAT(p AS PersoanaJuridica).cui, '') LIKE CONCAT('%', CAST(:search AS text), '%') " +
            " )))")
     List<Persoana> searchPersons(@Param("search") String search, @Param("type") String type);
+
+    @Query("SELECT p FROM Persoana p WHERE p.gospodarie.id = :gospodarieId")
+    List<Persoana> findByGospodarieId(@Param("gospodarieId") Long gospodarieId);
 }
 

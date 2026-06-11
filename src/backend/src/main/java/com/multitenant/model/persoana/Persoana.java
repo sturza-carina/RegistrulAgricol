@@ -1,10 +1,12 @@
-package com.multitenant.model;
+package com.multitenant.model.persoana;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.multitenant.model.common.Adresa;
+import com.multitenant.model.registru.Gospodarie;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,6 +60,16 @@ public abstract class Persoana {
 
     @OneToMany(mappedBy = "persoana", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RelatieRudenie> relations = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "gospodarie_id")
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private Gospodarie gospodarie;
+
+    @Transient
+    public Long getGospodarieId() {
+        return gospodarie != null ? gospodarie.getId() : null;
+    }
 }
 
 

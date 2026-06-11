@@ -49,6 +49,8 @@ export class PersonFormComponent implements OnInit {
   registrationNumber: string = '';
   legalRepresentative: string = '';
 
+  gospodarieId?: number;
+
   constructor(
     private persoanaService: PersoanaService,
     private router: Router,
@@ -62,6 +64,12 @@ export class PersonFormComponent implements OnInit {
         this.isEditMode = true;
         this.personId = +idParam;
         this.loadPerson(this.personId);
+      }
+    });
+
+    this.route.queryParams.subscribe(params => {
+      if (params['gospodarieId']) {
+        this.gospodarieId = +params['gospodarieId'];
       }
     });
   }
@@ -120,7 +128,8 @@ export class PersonFormComponent implements OnInit {
       postalCode: this.postalCode
     };
 
-    let payload: Persoana;
+    let gospodarieObj = this.gospodarieId ? { id: this.gospodarieId } : undefined;
+    let payload: any;
 
     if (this.personType === 'PHYSICAL_PERSON') {
       payload = {
@@ -135,7 +144,8 @@ export class PersonFormComponent implements OnInit {
         email: this.email,
         registerVolume: this.registerVolume,
         registerPosition: this.registerPosition,
-        notes: this.notes
+        notes: this.notes,
+        gospodarie: gospodarieObj
       } as PersoanaFizica;
     } else {
       payload = {
@@ -149,7 +159,8 @@ export class PersonFormComponent implements OnInit {
         email: this.email,
         registerVolume: this.registerVolume,
         registerPosition: this.registerPosition,
-        notes: this.notes
+        notes: this.notes,
+        gospodarie: gospodarieObj
       } as PersoanaJuridica;
     }
 

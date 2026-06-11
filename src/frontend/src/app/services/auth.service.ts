@@ -17,6 +17,9 @@ export class AuthService {
   private apiUrl = '/api/auth';
   currentUserSubject = new BehaviorSubject<JwtResponse | null>(null);
   public currentUser = this.currentUserSubject.asObservable();
+  
+  impersonatedTenantSubject = new BehaviorSubject<string | null>(null);
+  public impersonatedTenant = this.impersonatedTenantSubject.asObservable();
 
   constructor(private http: HttpClient) {
     const userStr = localStorage.getItem('currentUser');
@@ -38,9 +41,18 @@ export class AuthService {
   logout() {
     localStorage.removeItem('currentUser');
     this.currentUserSubject.next(null);
+    this.stopImpersonation();
+  }
+
+  setImpersonation(tenantId: string) {
+    this.impersonatedTenantSubject.next(tenantId);
+  }
+
+  stopImpersonation() {
+    this.impersonatedTenantSubject.next(null);
   }
 
   get currentTenantId(): string {
-    return this.currentUserSubject.value?.tenantId || '';
+    return this.impersonatedTenantSubject.value || this.currentUserSubject.value?.tenantId || '';
   }
 }

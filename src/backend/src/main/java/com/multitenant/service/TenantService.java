@@ -1,6 +1,6 @@
 package com.multitenant.service;
 
-import com.multitenant.model.Tenant;
+import com.multitenant.model.core.Tenant;
 import com.multitenant.repository.TenantRepository;
 import org.springframework.stereotype.Service;
 import javax.sql.DataSource;

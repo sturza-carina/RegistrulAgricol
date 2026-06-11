@@ -1,6 +1,6 @@
 package com.multitenant.controller;
 
-import com.multitenant.model.Tenant;
+import com.multitenant.model.core.Tenant;
 import com.multitenant.repository.TenantRepository;
 import com.multitenant.service.TenantService;
 import com.multitenant.payload.TenantCreateRequest;

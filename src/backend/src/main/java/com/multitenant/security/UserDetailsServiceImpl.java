@@ -1,6 +1,6 @@
 package com.multitenant.security;
 
-import com.multitenant.model.User;
+import com.multitenant.model.core.User;
 import com.multitenant.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

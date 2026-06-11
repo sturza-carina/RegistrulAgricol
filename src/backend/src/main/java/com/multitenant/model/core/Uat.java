@@ -1,4 +1,4 @@
-package com.multitenant.model;
+package com.multitenant.model.core;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -56,6 +56,12 @@ public class Uat {
 
     public Tenant getTenant() {
         return tenant;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("tenantId")
+    @Transient
+    public String getTenantId() {
+        return tenant != null ? tenant.getId() : null;
     }
 
     public void setTenant(Tenant tenant) {
