@@ -1,8 +1,7 @@
 package com.multitenant.controller;
 
-import com.multitenant.config.tenant.TenantContext;
-import com.multitenant.model.Uat;
-import com.multitenant.model.User;
+import com.multitenant.model.core.Uat;
+import com.multitenant.model.core.User;
 import com.multitenant.repository.UatRepository;
 import com.multitenant.repository.UserRepository;
 import com.multitenant.security.UserDetailsImpl;
@@ -49,7 +48,7 @@ public class UserController {
         if (!isSuperAdmin(currentUser)) {
             // Admin must create users in their own tenant
             user.setTenantId(currentUser.getTenantId());
-            
+
             Uat requestUat = user.getUat();
             if (requestUat != null) {
                 Long uatId = requestUat.getId();
@@ -81,7 +80,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
-    public ResponseEntity<?> getUser(@PathVariable Long id) {
+    public ResponseEntity<?> getUser(@PathVariable long id) {
         UserDetailsImpl currentUser = getCurrentUser();
         Optional<User> userOpt = userRepository.findById(id);
 
@@ -102,7 +101,7 @@ public class UserController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
+    public ResponseEntity<?> updateUser(@PathVariable long id, @RequestBody User userDetails) {
         UserDetailsImpl currentUser = getCurrentUser();
         Optional<User> userOpt = userRepository.findById(id);
 
@@ -118,10 +117,14 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You do not have permission to modify this user.");
         }
 
-        if (userDetails.getUsername() != null) user.setUsername(userDetails.getUsername());
-        if (userDetails.getRole() != null) user.setRole(userDetails.getRole());
-        if (userDetails.getNume() != null) user.setNume(userDetails.getNume());
-        if (userDetails.getEmail() != null) user.setEmail(userDetails.getEmail());
+        if (userDetails.getUsername() != null)
+            user.setUsername(userDetails.getUsername());
+        if (userDetails.getRole() != null)
+            user.setRole(userDetails.getRole());
+        if (userDetails.getNume() != null)
+            user.setNume(userDetails.getNume());
+        if (userDetails.getEmail() != null)
+            user.setEmail(userDetails.getEmail());
         user.setActiv(userDetails.isActiv());
 
         if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
@@ -147,7 +150,7 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<?> deleteUser(@PathVariable long id) {
         UserDetailsImpl currentUser = getCurrentUser();
         Optional<User> userOpt = userRepository.findById(id);
 

@@ -11,6 +11,7 @@ import { AuthService } from '../../services/auth.service';
 })
 export class SidebarComponent implements OnInit {
   user: any = null;
+  isImpersonating: boolean = false;
 
   constructor(
     private authService: AuthService,
@@ -21,6 +22,14 @@ export class SidebarComponent implements OnInit {
     this.authService.currentUser.subscribe(u => {
       this.user = u;
     });
+    this.authService.impersonatedTenant.subscribe(tenantId => {
+      this.isImpersonating = !!tenantId;
+    });
+  }
+
+  stopImpersonating(): void {
+    this.authService.stopImpersonation();
+    this.router.navigate(['/uats']);
   }
 
   logout(): void {

@@ -1,6 +1,6 @@
 package com.multitenant.security;
 
-import com.multitenant.model.User;
+import com.multitenant.model.core.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;

@@ -19,6 +19,10 @@ export class PersoanaService {
     return this.http.get<Persoana[]>(this.apiUrl, { params });
   }
 
+  getPersonsByGospodarieId(gospodarieId: number): Observable<Persoana[]> {
+    return this.http.get<Persoana[]>(`${this.apiUrl}/gospodarie/${gospodarieId}`);
+  }
+
   getPersonById(id: number): Observable<Persoana> {
     return this.http.get<Persoana>(`${this.apiUrl}/${id}`);
   }

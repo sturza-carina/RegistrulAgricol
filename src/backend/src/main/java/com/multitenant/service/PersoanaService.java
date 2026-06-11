@@ -1,7 +1,8 @@
 package com.multitenant.service;
 
 import com.multitenant.config.tenant.TenantContext;
-import com.multitenant.model.*;
+import com.multitenant.model.registru.*;
+import com.multitenant.model.persoana.*;
 import com.multitenant.repository.PersoanaRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -15,15 +16,24 @@ import java.util.List;
 public class PersoanaService {
 
     private final PersoanaRepository persoanaRepository;
+    private final com.multitenant.repository.GospodarieRepository gospodarieRepository;
 
-    public PersoanaService(PersoanaRepository persoanaRepository) {
+    public PersoanaService(PersoanaRepository persoanaRepository,
+            com.multitenant.repository.GospodarieRepository gospodarieRepository) {
         this.persoanaRepository = persoanaRepository;
+        this.gospodarieRepository = gospodarieRepository;
     }
 
     public Persoana createPerson(Persoana persoana) {
         String currentTenant = TenantContext.getCurrentTenant();
         if (currentTenant != null && !currentTenant.equals("public")) {
             persoana.setTenantId(currentTenant);
+        }
+
+        if (persoana.getGospodarie() != null && persoana.getGospodarie().getId() != null) {
+            long gId = persoana.getGospodarie().getId();
+            Gospodarie g = gospodarieRepository.findById(gId).orElse(null);
+            persoana.setGospodarie(g);
         }
 
         // Set parent references and validate relations
@@ -52,12 +62,18 @@ public class PersoanaService {
     }
 
     @Transactional(readOnly = true)
+    public List<Persoana> getPersonsByGospodarieId(Long gospodarieId) {
+        return persoanaRepository.findByGospodarieId(gospodarieId);
+    }
+
+    @Transactional(readOnly = true)
     public Persoana getPersonById(Long id) {
         if (id == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID must not be null");
         }
         return persoanaRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Persoana not found with id: " + id));
+                .orElseThrow(
+                        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Persoana not found with id: " + id));
     }
 
     public Persoana updatePerson(Long id, Persoana updatedPerson) {
@@ -77,8 +93,17 @@ public class PersoanaService {
         existing.setRegisterPosition(updatedPerson.getRegisterPosition());
         existing.setNotes(updatedPerson.getNotes());
 
+        if (updatedPerson.getGospodarie() != null && updatedPerson.getGospodarie().getId() != null) {
+            long gId = updatedPerson.getGospodarie().getId();
+            Gospodarie g = gospodarieRepository.findById(gId).orElse(null);
+            existing.setGospodarie(g);
+        } else {
+            existing.setGospodarie(null);
+        }
+
         // Update type-specific fields
-        if (existing instanceof PersoanaFizica existingPhysical && updatedPerson instanceof PersoanaFizica updatedPhysical) {
+        if (existing instanceof PersoanaFizica existingPhysical
+                && updatedPerson instanceof PersoanaFizica updatedPhysical) {
             existingPhysical.setFirstName(updatedPhysical.getFirstName());
             existingPhysical.setLastName(updatedPhysical.getLastName());
             existingPhysical.setCnp(updatedPhysical.getCnp());
@@ -94,7 +119,8 @@ public class PersoanaService {
                     existingPhysical.getIdentityDocuments().add(doc);
                 }
             }
-        } else if (existing instanceof PersoanaJuridica existingLegal && updatedPerson instanceof PersoanaJuridica updatedLegal) {
+        } else if (existing instanceof PersoanaJuridica existingLegal
+                && updatedPerson instanceof PersoanaJuridica updatedLegal) {
             existingLegal.setCompanyName(updatedLegal.getCompanyName());
             existingLegal.setCui(updatedLegal.getCui());
             existingLegal.setRegistrationNumber(updatedLegal.getRegistrationNumber());
@@ -130,12 +156,8 @@ public class PersoanaService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Related Persoana must have a valid ID");
         }
         Persoana related = persoanaRepository.findById(relatedId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Related Persoana not found with id: " + relatedId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Related Persoana not found with id: " + relatedId));
         relation.setRelatedPerson(related);
     }
 }
-
-
-
-
-

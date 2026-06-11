@@ -37,15 +37,50 @@
       Tenants
     </a>
     
-    <a class="nav-item" routerLink="/uats" routerLinkActive="active">
+    <a class="nav-item" routerLink="/uats" routerLinkActive="active" *ngIf="user?.role === 'ROLE_SUPER_ADMIN' || user?.role === 'ROLE_ADMIN'">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
         <polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
       UATs
     </a>
+    
+    <!-- Impersonation Banner -->
+    <div *ngIf="isImpersonating" style="background: rgba(255, 165, 0, 0.1); border: 1px solid rgba(255, 165, 0, 0.5); padding: 10px; margin-bottom: 10px; border-radius: 6px; font-size: 12px; color: #cc8400; display: flex; flex-direction: column; gap: 8px;">
+      <div><strong>Atenție:</strong> Mod administrare UAT activ</div>
+      <button (click)="stopImpersonating()" style="background: #cc8400; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">Ieși din Mod</button>
+    </div>
 
-    <a class="nav-item" routerLink="/user-management" routerLinkActive="active" *ngIf="user?.role === 'ROLE_SUPER_ADMIN' || user?.role === 'ROLE_ADMIN'">
+    <!-- Tenant Specific Tabs (visible to NON superadmin OR if impersonating) -->
+    <ng-container *ngIf="user?.role !== 'ROLE_SUPER_ADMIN' || isImpersonating">
+      <a class="nav-item" routerLink="/gospodarii" routerLinkActive="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <path d="M9 22V12h6v10"/>
+        </svg>
+        Gospodării
+      </a>
+      
+      <a class="nav-item" routerLink="/harta" routerLinkActive="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2"/>
+          <line x1="8" y1="2" x2="8" y2="18"/>
+          <line x1="16" y1="6" x2="16" y2="22"/>
+        </svg>
+        Harta Parcele
+      </a>
+
+      <a class="nav-item" routerLink="/persoane" routerLinkActive="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+        Persoane
+      </a>
+    </ng-container>
+
+    <!-- Users Tab -->
+    <a class="nav-item" routerLink="/user-management" routerLinkActive="active" *ngIf="user?.role === 'ROLE_ADMIN' || isImpersonating">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
         <circle cx="12" cy="7" r="4"/>
@@ -53,14 +88,6 @@
       Users
     </a>
 
-    <a class="nav-item" routerLink="/persoane" routerLinkActive="active">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-      </svg>
-      Persoane
-    </a>
-    
     <button class="nav-item" style="opacity: 0.5; cursor: not-allowed">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -98,4 +125,3 @@
     </button>
   </div>
 </aside>
-

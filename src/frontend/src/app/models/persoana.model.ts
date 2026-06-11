@@ -19,6 +19,8 @@ export interface Persoana {
   registerVolume?: string;
   registerPosition?: string;
   notes?: string;
+  gospodarieId?: number;
+  gospodarie?: { id: number };
   tenantId?: string;
 }
 

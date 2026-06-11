@@ -1,4 +1,4 @@
-package com.multitenant.model;
+package com.multitenant.model.persoana;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;

@@ -1,0 +1,68 @@
+<div class="app-shell">
+  <app-sidebar></app-sidebar>
+
+  <main class="main-content" style="padding: 0; display: flex; flex-direction: row; height: 100vh;">
+    <div class="map-controls">
+      <h3 style="margin-top: 0;">Selecție Teren</h3>
+      
+      <div class="form-group">
+        <label>Gospodărie</label>
+        <select class="form-control" [(ngModel)]="selectedGospodarieId" (change)="onGospodarieChange()">
+          <option [ngValue]="null">Selectați Gospodăria...</option>
+          <option *ngFor="let g of gospodarii" [ngValue]="g.id">{{ g.codGospodarie }} ({{ g.adresa?.localitate }})</option>
+        </select>
+      </div>
+
+      <div *ngIf="selectedGospodarieId && teren" class="form-group">
+        <label>Teren</label>
+        <div class="form-control" style="background: #f9f9f9; padding-top: 8px;">
+          <strong>{{ teren.denumire }}</strong>
+        </div>
+      </div>
+
+      <div *ngIf="selectedTerenId" class="alert-success" style="margin-top: 15px; padding: 10px; background: #ecfdf5; border: 1px solid #d1fae5; border-radius: 4px;">
+        <strong>Teren selectat</strong><br><br>
+        Puteți adăuga, edita sau șterge parcele aparținând acestui teren.
+      </div>
+    </div>
+    
+    <div id="map" style="flex: 1; height: 100%;"></div>
+  </main>
+</div>
+
+<!-- Combined Modal -->
+<div class="modal-overlay" *ngIf="showDialog">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+      <h2>Salvare Parcelă Nouă</h2>
+    </div>
+    <div class="modal-body">
+
+
+      <h3 style="margin-top: 0; font-size: 16px;">Detalii Parcelă</h3>
+      <div class="form-group">
+        <label>Denumire Parcelă</label>
+        <input type="text" class="form-control" [(ngModel)]="newParcela.denumire">
+      </div>
+      <div class="form-group">
+        <label>Suprafață (ha)</label>
+        <input type="number" class="form-control" [(ngModel)]="newParcela.suprafata">
+      </div>
+      <div class="form-group">
+        <label>Categorie Folosință</label>
+        <select class="form-control" [(ngModel)]="newParcela.categorieFolosinta">
+          <option value="Arabil">Arabil</option>
+          <option value="Pasune">Pășune</option>
+          <option value="Faneata">Fâneață</option>
+          <option value="Livada">Livadă</option>
+          <option value="Padure">Pădure</option>
+        </select>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+        <button class="btn-secondary" (click)="cancelDraw()">Anulează</button>
+        <button class="btn-primary" (click)="saveCombined()">Salvează</button>
+      </div>
+    </div>
+  </div>
+</div>

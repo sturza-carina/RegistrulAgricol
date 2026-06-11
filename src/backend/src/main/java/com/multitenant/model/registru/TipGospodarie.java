@@ -1,4 +1,4 @@
-package com.multitenant.model;
+package com.multitenant.model.registru;
 
 public enum TipGospodarie {
     INDIVIDUALA,

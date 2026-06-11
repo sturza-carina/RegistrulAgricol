@@ -1,6 +1,6 @@
 package com.multitenant.service;
 
-import com.multitenant.model.Uat;
+import com.multitenant.model.core.Uat;
 import com.multitenant.repository.UatRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -12,9 +12,11 @@ import java.util.List;
 public class UatService {
 
     private final UatRepository uatRepository;
+    private final com.multitenant.repository.TenantRepository tenantRepository;
 
-    public UatService(UatRepository uatRepository) {
+    public UatService(UatRepository uatRepository, com.multitenant.repository.TenantRepository tenantRepository) {
         this.uatRepository = uatRepository;
+        this.tenantRepository = tenantRepository;
     }
 
     public Uat createUat(Uat uat) {
@@ -30,11 +32,22 @@ public class UatService {
             uat.setIsActive(true);
         }
 
+        String currentTenant = com.multitenant.config.tenant.TenantContext.getCurrentTenant();
+        if (currentTenant != null && !"public".equals(currentTenant)) {
+            com.multitenant.model.core.Tenant tenant = tenantRepository.findById(currentTenant).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found"));
+            uat.setTenant(tenant);
+        }
+
         return uatRepository.save(uat);
     }
 
     public List<Uat> getAllUats() {
-        return uatRepository.findAll();
+        String currentTenant = com.multitenant.config.tenant.TenantContext.getCurrentTenant();
+        if ("public".equals(currentTenant)) {
+            return uatRepository.findAll();
+        } else {
+            return uatRepository.findByTenant_Id(currentTenant);
+        }
     }
 
     public Uat getUatByCodSiruta(String codSiruta) {

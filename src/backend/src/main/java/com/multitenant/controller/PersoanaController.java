@@ -1,6 +1,6 @@
 package com.multitenant.controller;
 
-import com.multitenant.model.Persoana;
+import com.multitenant.model.persoana.Persoana;
 import com.multitenant.service.PersoanaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -36,6 +36,12 @@ public class PersoanaController {
             return ResponseEntity.ok(java.util.Collections.emptyList());
         }
         return ResponseEntity.ok(persoanaService.getAllPersons(search, type));
+    }
+
+    @GetMapping("/gospodarie/{gospodarieId}")
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
+    public ResponseEntity<List<Persoana>> getPersonsByGospodarieId(@PathVariable Long gospodarieId) {
+        return ResponseEntity.ok(persoanaService.getPersonsByGospodarieId(gospodarieId));
     }
 
     @GetMapping("/{id}")

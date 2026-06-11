@@ -13,6 +13,7 @@ interface UAT {
   judet: string;
   tipUat: string;
   isActive: boolean;
+  tenantId?: string;
 }
 
 @Component({
@@ -116,6 +117,15 @@ export class UatManagementComponent implements OnInit {
   }
 
   closeModal(): void { this.showModal = false; this.selectedUat = null; }
+
+  manageUat(uat: UAT): void {
+    if (!uat.tenantId) {
+      alert('This UAT does not have an active tenant associated with it.');
+      return;
+    }
+    this.authService.setImpersonation(uat.tenantId);
+    this.router.navigate(['/gospodarii']);
+  }
 
   // saveUat(): void {
   //   if (this.uatForm.invalid) return;

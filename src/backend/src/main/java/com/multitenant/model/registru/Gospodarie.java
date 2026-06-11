@@ -1,8 +1,10 @@
-package com.multitenant.model;
+package com.multitenant.model.registru;
 
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.multitenant.model.common.Adresa;
+import com.multitenant.model.core.Uat;
 
 @Entity
 @Table(name = "gospodarie")
