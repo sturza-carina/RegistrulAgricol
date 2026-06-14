@@ -76,18 +76,34 @@ export class GospodarieFormComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.gospodarieForm.invalid) return;
+    if (this.gospodarieForm.invalid) {
+      this.gospodarieForm.markAllAsTouched();
+      return;
+    }
 
     const formData = this.gospodarieForm.value;
+    
+    // Sanitize numeric fields that might be empty strings to avoid Java Jackson parse errors
+    if (formData.adresa) {
+      if (formData.adresa.floor === '') formData.adresa.floor = null;
+      if (formData.adresa.apartmentNumber === '') formData.adresa.apartmentNumber = null;
+    }
+
     if (this.isEditMode && this.gospodarieId) {
       this.gospodarieService.updateGospodarie(this.gospodarieId, formData).subscribe({
         next: () => this.router.navigate(['/gospodarii']),
-        error: (err) => alert('Eroare la salvare')
+        error: (err) => {
+          console.error(err);
+          alert('Eroare la salvare');
+        }
       });
     } else {
       this.gospodarieService.createGospodarie(formData).subscribe({
         next: () => this.router.navigate(['/gospodarii']),
-        error: (err) => alert('Eroare la salvare')
+        error: (err) => {
+          console.error(err);
+          alert('Eroare la salvare');
+        }
       });
     }
   }

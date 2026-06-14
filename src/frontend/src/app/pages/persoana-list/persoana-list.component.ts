@@ -21,7 +21,7 @@ export class PersonListComponent implements OnInit {
   user: any;
   
   searchQuery: string = '';
-  typeFilter: string = 'All Types';
+  typeFilter: string = 'Toate Tipurile';
 
   constructor(
     private persoanaService: PersoanaService,
@@ -36,8 +36,8 @@ export class PersonListComponent implements OnInit {
 
   loadPersons() {
     let filterType = '';
-    if (this.typeFilter === 'Physical Persoana') filterType = 'PHYSICAL_PERSON';
-    if (this.typeFilter === 'Legal Entity') filterType = 'LEGAL_ENTITY';
+    if (this.typeFilter === 'Persoană Fizică') filterType = 'PHYSICAL_PERSON';
+    if (this.typeFilter === 'Persoană Juridică') filterType = 'LEGAL_ENTITY';
 
     this.persoanaService.getAllPersons(this.searchQuery, filterType).subscribe({
       next: (data) => {
@@ -54,7 +54,7 @@ export class PersonListComponent implements OnInit {
 
   clearFilters() {
     this.searchQuery = '';
-    this.typeFilter = 'All Types';
+    this.typeFilter = 'Toate Tipurile';
     this.loadPersons();
   }
 

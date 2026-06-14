@@ -1,0 +1,92 @@
+<div class="app-shell">
+  <app-sidebar></app-sidebar>
+
+  <main class="main-content" style="padding: 0; display: flex; flex-direction: row; height: 100vh; overflow: hidden;">
+
+    <!-- Left Panel: Form -->
+    <div class="teren-form-panel">
+      <!-- Breadcrumb -->
+      <div class="breadcrumbs">
+        <a [routerLink]="['/gospodarii']" style="color: var(--text-primary); text-decoration: none; font-weight: 500;">Gospodării</a>
+        <span>&gt;</span>
+        <a [routerLink]="['/gospodarii', gospodarieId]" style="color: var(--text-primary); text-decoration: none;">Detalii</a>
+        <span>&gt;</span>
+        <span style="color: var(--text-muted);">Adăugare Teren</span>
+      </div>
+
+      <h2 class="form-title">Adăugare Teren Agricol</h2>
+
+      <!-- Teren Info -->
+      <div class="form-section">
+        <div class="section-label">Informații Teren</div>
+
+        <div class="form-group">
+          <label>Denumire *</label>
+          <input type="text" class="form-control" [(ngModel)]="teren.denumire" placeholder="ex: Teren Lot 1 - Nord">
+        </div>
+
+        <div class="form-group">
+          <label>Tip Teren *</label>
+          <select class="form-control" [(ngModel)]="teren.tipTeren">
+            <option value="">-- Selectați tip --</option>
+            <option *ngFor="let tip of tipTerenOptions" [value]="tip">{{ tip }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Stereo 70 Coords -->
+      <div class="form-section">
+        <div class="section-label" style="display: flex; justify-content: space-between; align-items: center;">
+          <span>Coordonate Stereo 70</span>
+          <button class="btn-add-point" (click)="addPoint()">+ Punct</button>
+        </div>
+        <p class="hint-text">Introduceți perechile X Y ale vârfurilor poligonului. Harta se actualizează live.</p>
+
+        <div *ngFor="let point of points; let i = index" class="point-row">
+          <span class="point-index">{{ i + 1 }}</span>
+          <input type="text" class="form-control coord-input" [(ngModel)]="point.x" (ngModelChange)="updatePreview()" placeholder="X (Nord)">
+          <input type="text" class="form-control coord-input" [(ngModel)]="point.y" (ngModelChange)="updatePreview()" placeholder="Y (Est)">
+          <button class="btn-remove-point" (click)="removePoint(i)" *ngIf="points.length > 3" title="Șterge">✕</button>
+        </div>
+
+        <div *ngIf="calculatedArea !== null" class="area-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>
+          </svg>
+          Suprafață estimată: <strong>{{ calculatedArea }} ha</strong>
+        </div>
+
+        <div *ngIf="points.length >= 3 && calculatedArea === null" class="area-hint">
+          Introduceți cel puțin 3 perechi de coordonate valide.
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button class="btn-secondary rounded-btn" (click)="cancel()" [disabled]="saving">Anulează</button>
+        <button class="btn-primary" (click)="save()" [disabled]="saving">
+          <span *ngIf="!saving">Salvează Teren</span>
+          <span *ngIf="saving">Se salvează...</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Panel: Live Map -->
+    <div style="flex: 1; display: flex; flex-direction: column; position: relative;">
+      <div class="map-header-bar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
+        </svg>
+        Previzualizare Teren pe Hartă
+        <span style="font-size: 12px; color: rgba(255,255,255,0.7); margin-left: auto;" *ngIf="uatName">
+          UAT: {{ uatName }}
+        </span>
+        <span style="font-size: 12px; color: rgba(255,255,255,0.55);" *ngIf="calculatedArea">
+          &bull; {{ calculatedArea }} ha
+        </span>
+      </div>
+      <div id="teren-map" style="flex: 1;"></div>
+    </div>
+
+  </main>
+</div>

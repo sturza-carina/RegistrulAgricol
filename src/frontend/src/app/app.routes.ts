@@ -12,6 +12,8 @@ import { ParcelaMapComponent } from './components/parcela-map/parcela-map.compon
 import { GospodarieListComponent } from './pages/gospodarie-list/gospodarie-list.component';
 import { GospodarieFormComponent } from './pages/gospodarie-form/gospodarie-form.component';
 import { GospodarieDetailsComponent } from './pages/gospodarie-details/gospodarie-details.component';
+import { TerenFormComponent } from './pages/teren-form/teren-form.component';
+import { TerenParceleComponent } from './pages/teren-parcele/teren-parcele.component';
 
 export const routes: Routes = [
   { path: 'login',          component: LoginComponent },
@@ -19,7 +21,7 @@ export const routes: Routes = [
   { path: 'super-admin',    component: SuperAdminDashboardComponent },
   { path: 'tenant-admin',   component: TenantAdminDashboardComponent },
   { path: 'user-management',component: UserManagementComponent },
-  { path: 'tenants/new',    component: CreateTenantComponent },
+  { path: 'tenants',        component: CreateTenantComponent },
   { path: 'persoane',        component: PersonListComponent },
   { path: 'persoane/new',    component: PersonFormComponent },
   { path: 'persoane/edit/:id', component: PersonFormComponent },
@@ -28,7 +30,10 @@ export const routes: Routes = [
   { path: 'gospodarii/new', component: GospodarieFormComponent },
   { path: 'gospodarii/edit/:id', component: GospodarieFormComponent },
   { path: 'gospodarii/:id', component: GospodarieDetailsComponent },
+  { path: 'terenuri/new',   component: TerenFormComponent },
+  { path: 'terenuri/:id/parcele', component: TerenParceleComponent },
   { path: 'harta',          component: ParcelaMapComponent },
   { path: '',               redirectTo: '/login', pathMatch: 'full' }
 ];
+
 

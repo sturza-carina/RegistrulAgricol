@@ -24,13 +24,13 @@ public class UatController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
     public List<Uat> getAllUats() {
         return uatService.getAllUats();
     }
 
     @GetMapping("/{codSiruta}")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
     public Uat getUat(@PathVariable String codSiruta) {
         return uatService.getUatByCodSiruta(codSiruta);
     }

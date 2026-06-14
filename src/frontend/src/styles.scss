@@ -78,6 +78,7 @@ button {
 .sidebar {
   width: 220px;
   min-width: 220px;
+  height: 100%;
   background: var(--sidebar-bg);
   border-right: 1.5px solid var(--sidebar-border);
   display: flex;
@@ -168,6 +169,7 @@ button {
 }
 
 .sidebar-bottom {
+  margin-top: auto;
   padding: 12px 10px;
   border-top: 1px solid var(--sidebar-border);
 }
@@ -380,8 +382,28 @@ button {
   &.pending  { background: var(--badge-pending-bg);  color: var(--badge-pending-text); }
   &.archived { background: var(--badge-archived-bg); color: var(--badge-archived-text); }
   &.admin    { background: var(--badge-admin-bg);    color: var(--badge-admin-text); }
+  &.super_admin { 
+    background: #fef2f2; 
+    color: #b91c1c; 
+    border: 1px solid #fca5a5;
+  }
   &.registrar{ background: var(--badge-registrar-bg);color: var(--badge-registrar-text); }
   &.viewer   { background: var(--badge-viewer-bg);   color: var(--badge-viewer-text); }
+  &.user     { 
+    background: #f1f5f9; 
+    color: #475569; 
+    border: 1px solid #cbd5e1;
+  }
+  &.activ { 
+    background: #dcfce7; 
+    color: #16a34a; 
+    border: 1px solid #bbf7d0;
+  }
+  &.inactiv { 
+    background: #f1f5f9; 
+    color: #64748b; 
+    border: 1px solid #e2e8f0;
+  }
 }
 
 /* ─── TABLES ─── */
@@ -399,7 +421,8 @@ button {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--text-muted);
+    background-color: var(--primary);
+    color: white;
     padding: 10px 14px;
   }
 
@@ -584,8 +607,15 @@ button {
     justify-content: center;
     transition: all 0.15s;
 
-    &:hover { border-color: var(--primary); color: var(--primary); }
+    &:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
     &.active { background: var(--primary); color: white; border-color: var(--primary); }
+    &:disabled {
+      background-color: #f3f4f6;
+      color: #9ca3af;
+      border-color: #e5e7eb;
+      cursor: default;
+      opacity: 0.7;
+    }
   }
 }
 

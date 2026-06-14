@@ -38,14 +38,7 @@ public class GospodarieService {
         if (gospodarie == null) {
             throw new IllegalArgumentException("Gospodarie cannot be null");
         }
-        Gospodarie saved = gospodarieRepository.save(gospodarie);
-        
-        Teren teren = new Teren();
-        teren.setDenumire("Teren Agricol " + saved.getCodGospodarie());
-        teren.setGospodarie(saved);
-        terenRepository.save(teren);
-        
-        return saved;
+        return gospodarieRepository.save(gospodarie);
     }
 
     public Gospodarie updateGospodarie(Long id, Gospodarie updatedGospodarie) {

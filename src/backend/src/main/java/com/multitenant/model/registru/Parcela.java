@@ -3,7 +3,7 @@ package com.multitenant.model.registru;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.locationtech.jts.geom.Polygon;
+import com.fasterxml.jackson.databind.JsonNode;
 
 @Entity
 @Table(name = "parcele")
@@ -24,8 +24,12 @@ public class Parcela {
     @Column(name = "categorie_folosinta", length = 100)
     private String categorieFolosinta;
 
-    @Column(nullable = false, columnDefinition = "geometry(Polygon, 4326)")
-    private Polygon polygon;
+    @Column(columnDefinition = "jsonb")
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    private JsonNode polygon;
+
+    @Transient
+    private String stereo70Coordinates;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teren_id", nullable = false)

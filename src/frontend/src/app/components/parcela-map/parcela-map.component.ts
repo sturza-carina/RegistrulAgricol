@@ -1,6 +1,5 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone } from '@angular/core';
 import * as L from 'leaflet';
-import 'leaflet-draw';
 import { ParcelaService } from '../../services/parcela.service';
 import { Parcela } from '../../models/parcela.model';
 import { TerenService } from '../../services/teren.service';
@@ -22,9 +21,6 @@ import { HttpClient } from '@angular/common/http';
 })
 export class ParcelaMapComponent implements OnInit, OnDestroy {
   map!: L.Map;
-  drawnItems!: L.FeatureGroup;
-  drawControl!: L.Control.Draw;
-  isDrawControlAdded = false;
   
   showDialog = false;
   currentLayer: any = null;
@@ -38,17 +34,26 @@ export class ParcelaMapComponent implements OnInit, OnDestroy {
   selectedTerenId: number | null = null;
 
 
-  newParcela: Parcela = { denumire: '', suprafata: 0, categorieFolosinta: 'Arabil', polygon: null };
+  newParcela: Parcela = { denumire: '', suprafata: 0, categorieFolosinta: 'Arabil', polygon: null, stereo70Coordinates: '' };
 
-  layerToParcelaId = new Map<number, number>();
+  parcelaLayerGroup = L.featureGroup();
   maskLayer: L.Polygon | null = null;
+
+  isAddingParcela = false;
+  viewingParcela: Parcela | null = null;
+  points: { x: string; y: string }[] = [
+    { x: '', y: '' },
+    { x: '', y: '' },
+    { x: '', y: '' }
+  ];
 
   constructor(
     private parcelaService: ParcelaService,
     private terenService: TerenService,
     private gospodarieService: GospodarieService,
     private route: ActivatedRoute,
-    private http: HttpClient
+    private http: HttpClient,
+    private zone: NgZone
   ) {}
 
   ngOnInit() {
@@ -58,6 +63,9 @@ export class ParcelaMapComponent implements OnInit, OnDestroy {
       if (params['gospodarieId']) {
         this.selectedGospodarieId = +params['gospodarieId'];
         this.onGospodarieChange();
+      }
+      if (params['addParcela'] === 'true') {
+         this.isAddingParcela = true;
       }
       setTimeout(() => {
         this.initMap();
@@ -80,8 +88,10 @@ export class ParcelaMapComponent implements OnInit, OnDestroy {
     this.selectedTerenId = null;
     this.teren = null;
     this.parcele = [];
-    this.updateDrawControl();
-    if (this.drawnItems) this.drawnItems.clearLayers();
+    this.isAddingParcela = false;
+    if (this.parcelaLayerGroup) {
+      this.parcelaLayerGroup.clearLayers();
+    }
     if (this.maskLayer && this.map) {
       this.map.removeLayer(this.maskLayer);
       this.maskLayer = null;
@@ -97,11 +107,12 @@ export class ParcelaMapComponent implements OnInit, OnDestroy {
       });
 
       this.terenService.getTerenByGospodarieId(this.selectedGospodarieId).subscribe(data => {
-        this.teren = data;
-        if (data && data.id) {
-          this.selectedTerenId = data.id;
-          this.updateDrawControl();
-          this.loadParceleForTeren(this.selectedTerenId);
+        // Use first teren if available (map shows one at a time)
+        const firstTeren = data && data.length > 0 ? data[0] : null;
+        this.teren = firstTeren;
+        if (firstTeren && firstTeren.id) {
+          this.selectedTerenId = firstTeren.id;
+          this.loadParceleForTeren(firstTeren.id);
         }
       });
     } else {
@@ -156,79 +167,67 @@ export class ParcelaMapComponent implements OnInit, OnDestroy {
     // Fit map to UAT bounds and restrict panning
     const innerBounds = L.polygon(holes as any).getBounds();
     this.map.fitBounds(innerBounds);
-    this.map.setMaxBounds(innerBounds.pad(0.5));
   }
 
 
 
+  mapInitialized = false;
+
   private initMap() {
+    if (!document.getElementById('map')) return;
     this.map = L.map('map').setView([45.9432, 24.9668], 6);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(this.map);
-
-    this.drawnItems = new L.FeatureGroup();
-    this.map.addLayer(this.drawnItems);
-
-    this.setupDrawControl();
-
-    this.map.on('draw:created', (e: any) => {
-      const layer = e.layer;
-      this.currentLayer = layer;
-      this.newParcela.polygon = layer.toGeoJSON().geometry;
-      this.showDialog = true;
-    });
-
-    this.map.on('draw:edited', (e: any) => {
-      const layers = e.layers;
-      layers.eachLayer((layer: any) => {
-        const pId = this.layerToParcelaId.get(layer._leaflet_id);
-        if (pId) {
-           const p = this.parcele.find(x => x.id === pId);
-           if (p) {
-               p.polygon = layer.toGeoJSON().geometry;
-               this.parcelaService.updateParcela(p.id!, p).subscribe();
-           }
-        }
-      });
-    });
-
-    this.map.on('draw:deleted', (e: any) => {
-      const layers = e.layers;
-      layers.eachLayer((layer: any) => {
-        const pId = this.layerToParcelaId.get(layer._leaflet_id);
-        if (pId) {
-           this.parcelaService.deleteParcela(pId).subscribe(() => {
-              this.parcele = this.parcele.filter(x => x.id !== pId);
-              this.layerToParcelaId.delete(layer._leaflet_id);
-           });
-        }
-      });
-    });
+    this.parcelaLayerGroup.addTo(this.map);
+    this.mapInitialized = true;
+    this.renderParcele();
   }
 
-  private setupDrawControl() {
-    this.drawControl = new L.Control.Draw({
-      edit: { featureGroup: this.drawnItems, remove: true },
-      draw: { polygon: {}, polyline: false, rectangle: false, circle: false, circlemarker: false, marker: false }
-    });
-    this.updateDrawControl();
+  openAddParcelaForm() {
+    this.viewingParcela = null;
+    this.newParcela = { denumire: '', suprafata: 0, categorieFolosinta: 'Arabil', polygon: null, stereo70Coordinates: '' };
+    this.points = [
+      { x: '', y: '' },
+      { x: '', y: '' },
+      { x: '', y: '' }
+    ];
+    this.isAddingParcela = true;
   }
 
-  private updateDrawControl() {
-    if (!this.map || !this.drawControl) return;
-    
-    if (this.selectedTerenId) {
-      if (!this.isDrawControlAdded) {
-        this.map.addControl(this.drawControl);
-        this.isDrawControlAdded = true;
+  calculateArea() {
+    const validPoints = this.points
+      .map(p => ({ x: parseFloat(p.x), y: parseFloat(p.y) }))
+      .filter(p => !isNaN(p.x) && !isNaN(p.y));
+
+    if (validPoints.length >= 3) {
+      let area = 0;
+      for (let i = 0; i < validPoints.length; i++) {
+        let j = (i + 1) % validPoints.length;
+        area += validPoints[i].x * validPoints[j].y - validPoints[j].x * validPoints[i].y;
       }
-    } else {
-      if (this.isDrawControlAdded) {
-        this.map.removeControl(this.drawControl);
-        this.isDrawControlAdded = false;
-      }
+      area = Math.abs(area) / 2.0; // Area in square meters
+      let hectares = area / 10000.0;
+      this.newParcela.suprafata = parseFloat(hectares.toFixed(4));
     }
+  }
+
+  closeView() {
+    this.viewingParcela = null;
+  }
+
+  addPoint() {
+    this.points.push({ x: '', y: '' });
+  }
+
+  removePoint(index: number) {
+    if (this.points.length > 1) {
+       this.points.splice(index, 1);
+    }
+  }
+
+  cancelAdd() {
+    this.isAddingParcela = false;
   }
 
   loadAllParcele() {
@@ -246,48 +245,83 @@ export class ParcelaMapComponent implements OnInit, OnDestroy {
   }
 
   renderParcele() {
-    if (this.drawnItems) this.drawnItems.clearLayers();
-    this.layerToParcelaId.clear();
+    if (!this.mapInitialized || !this.map) return;
+    
+    this.parcelaLayerGroup.clearLayers();
+    const bounds: L.LatLngBounds[] = [];
     this.parcele.forEach(p => {
       if (p.polygon) {
-        const layer = L.geoJSON(p.polygon as any).getLayers()[0] as any;
-        const info = `<b>${p.denumire}</b><br>Suprafață: ${p.suprafata} ha<br>Cat: ${p.categorieFolosinta}<br><i>${p.gospodarieName || ''}</i>`;
-        layer.bindPopup(info);
+        const layer = L.geoJSON(p.polygon as any, {
+          style: {
+            color: '#e74c3c',
+            weight: 3,
+            opacity: 1,
+            fillColor: '#f1c40f',
+            fillOpacity: 0.6
+          }
+        }).getLayers()[0] as any;
+        const info = `<b>${p.denumire}</b><br>Suprafață: ${p.suprafata} ha<br>Cat: ${p.categorieFolosinta}<br><i>${p.gospodarieName || ''}</i><br><small>Click pentru detalii</small>`;
         layer.bindTooltip(info);
-        this.drawnItems.addLayer(layer);
-        this.layerToParcelaId.set(layer._leaflet_id, p.id!);
+        layer.on('click', () => {
+          this.zone.run(() => {
+            this.viewingParcela = p;
+            this.isAddingParcela = false;
+          });
+        });
+        layer.addTo(this.parcelaLayerGroup);
+        bounds.push(layer.getBounds());
       }
     });
-    if (this.drawnItems.getLayers().length > 0) {
-      this.map.fitBounds(this.drawnItems.getBounds());
+    if (bounds.length > 0) {
+      const allBounds = bounds[0];
+      for (let i = 1; i < bounds.length; i++) {
+        allBounds.extend(bounds[i]);
+      }
+      this.map.fitBounds(allBounds);
     }
   }
 
   saveCombined() {
-    if (!this.currentLayer || !this.selectedTerenId) return;
+    if (!this.selectedTerenId) return;
     
+    // Construct stereo70Coordinates string from points
+    this.newParcela.stereo70Coordinates = this.points
+       .filter(p => p.x.trim() !== '' && p.y.trim() !== '')
+       .map(p => `${p.x.trim()} ${p.y.trim()}`)
+       .join('\n');
+       
     this.parcelaService.createParcela(this.selectedTerenId, this.newParcela).subscribe({
       next: (saved) => {
+        console.log('Saved parcela:', saved);
         this.parcele.push(saved);
-        const info = `<b>${saved.denumire}</b><br>Suprafață: ${saved.suprafata} ha<br>Cat: ${saved.categorieFolosinta}<br><i>${saved.gospodarieName || ''}</i>`;
-        this.currentLayer.bindPopup(info);
-        this.currentLayer.bindTooltip(info);
-        this.drawnItems.addLayer(this.currentLayer);
-        this.layerToParcelaId.set(this.currentLayer._leaflet_id, saved.id!);
-        this.closeDialog();
+        this.renderParcele();
+        this.isAddingParcela = false;
       },
-      error: (err) => alert('Eroare la salvare!')
+      error: (err) => {
+        console.error('Save error:', err);
+        alert('Eroare la salvare!');
+      }
     });
   }
 
-  closeDialog() {
-    this.showDialog = false;
-    this.currentLayer = null;
-    this.newParcela = { denumire: '', suprafata: 0, categorieFolosinta: 'Arabil', polygon: null };
-  }
-  
-  cancelDraw() {
-    if (this.currentLayer) this.map.removeLayer(this.currentLayer);
-    this.closeDialog();
+  deleteParcela() {
+    if (this.viewingParcela && this.viewingParcela.id) {
+      if (confirm('Sunteți sigur că doriți să ștergeți această parcelă?')) {
+        this.parcelaService.deleteParcela(this.viewingParcela.id).subscribe({
+          next: () => {
+            this.viewingParcela = null;
+            if (this.selectedTerenId) {
+              this.loadParceleForTeren(this.selectedTerenId);
+            } else {
+              this.loadAllParcele();
+            }
+          },
+          error: (err) => {
+            console.error('Delete error:', err);
+            alert('Eroare la ștergere!');
+          }
+        });
+      }
+    }
   }
 }
