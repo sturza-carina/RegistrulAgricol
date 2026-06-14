@@ -28,6 +28,8 @@ export class GospodarieListComponent implements OnInit {
     private router: Router
   ) {}
 
+  filterTipGospodarie: string = '';
+
   ngOnInit() {
     this.authService.currentUser.subscribe(user => {
       if (!user) {
@@ -51,10 +53,14 @@ export class GospodarieListComponent implements OnInit {
 
   applyFilters() {
     const q = this.searchQuery.toLowerCase();
-    this.filteredGospodarii = this.gospodarii.filter(g => 
-      g.codGospodarie.toLowerCase().includes(q) ||
-      (g.adresa.localitate && g.adresa.localitate.toLowerCase().includes(q))
-    );
+    this.filteredGospodarii = this.gospodarii.filter(g => {
+      const matchSearch = g.codGospodarie.toLowerCase().includes(q) ||
+        (g.adresa.localitate && g.adresa.localitate.toLowerCase().includes(q));
+      
+      const matchType = this.filterTipGospodarie ? g.tipGospodarie === this.filterTipGospodarie : true;
+
+      return matchSearch && matchType;
+    });
     if (this.selectedGospodarie && !this.filteredGospodarii.find(g => g.id === this.selectedGospodarie?.id)) {
       this.selectedGospodarie = null;
     }
@@ -87,10 +93,35 @@ export class GospodarieListComponent implements OnInit {
     }
   }
 
+  deleteRow(id: number | undefined, event: Event) {
+    event.stopPropagation();
+    if (!id) return;
+    if (confirm('Ești sigur că vrei să ștergi această gospodărie?')) {
+      this.gospodarieService.deleteGospodarie(id).subscribe(() => {
+        if (this.selectedGospodarie?.id === id) {
+          this.selectedGospodarie = null;
+        }
+        this.loadGospodarii();
+      });
+    }
+  }
+
   viewDetailsSelected() {
     if (this.selectedGospodarie) {
       this.router.navigate(['/gospodarii', this.selectedGospodarie.id]);
     }
+  }
+
+  viewDetails(id?: number) {
+    if (id) this.router.navigate(['/gospodarii', id]);
+  }
+
+  editGospodarie(id?: number) {
+    if (id) this.router.navigate(['/gospodarii/edit', id]);
+  }
+
+  manageParcele(id?: number) {
+    if (id) this.router.navigate(['/harta'], { queryParams: { gospodarieId: id } });
   }
 
   addParcelaSelected() {
@@ -103,5 +134,10 @@ export class GospodarieListComponent implements OnInit {
     if (this.selectedGospodarie) {
       this.router.navigate(['/persoane/new'], { queryParams: { gospodarieId: this.selectedGospodarie.id } });
     }
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

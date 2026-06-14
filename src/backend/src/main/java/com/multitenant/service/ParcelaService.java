@@ -8,6 +8,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class ParcelaService {
 
@@ -34,6 +37,10 @@ public class ParcelaService {
         Teren teren = terenRepository.findById(terenId)
                 .orElseThrow(() -> new RuntimeException("Teren not found"));
         parcela.setTeren(teren);
+
+        if (parcela.getStereo70Coordinates() != null && !parcela.getStereo70Coordinates().trim().isEmpty()) {
+            // Already set by frontend or explicitly passed
+        }
         return parcelaRepository.save(parcela);
     }
 
@@ -52,11 +59,18 @@ public class ParcelaService {
             existing.setSuprafata(updatedParcela.getSuprafata());
         if (updatedParcela.getCategorieFolosinta() != null)
             existing.setCategorieFolosinta(updatedParcela.getCategorieFolosinta());
-        if (updatedParcela.getPolygon() != null)
+        
+        if (updatedParcela.getStereo70Coordinates() != null && !updatedParcela.getStereo70Coordinates().trim().isEmpty()) {
+            existing.setStereo70Coordinates(updatedParcela.getStereo70Coordinates());
+        }
+        if (updatedParcela.getPolygon() != null) {
             existing.setPolygon(updatedParcela.getPolygon());
+        }
 
         return parcelaRepository.save(existing);
     }
+
+
 
     public void deleteParcela(long id) {
         parcelaRepository.deleteById(id);

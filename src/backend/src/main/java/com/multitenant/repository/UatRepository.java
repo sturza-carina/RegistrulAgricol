@@ -12,4 +12,5 @@ public interface UatRepository extends JpaRepository<Uat, Long> {
     boolean existsByCodSiruta(String codSiruta);
     void deleteByCodSiruta(String codSiruta);
     java.util.List<Uat> findByTenant_Id(String tenantId);
+    java.util.List<Uat> findByTenant_IdOrTenantIsNull(String tenantId);
 }

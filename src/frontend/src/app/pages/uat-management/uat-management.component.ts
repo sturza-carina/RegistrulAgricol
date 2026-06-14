@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
@@ -38,17 +38,21 @@ export class UatManagementComponent implements OnInit {
   uats: UAT[] = [];
   filteredUats: UAT[] = [];
   uatForm: FormGroup;
-  isEditMode = false;
-  showModal = false;
-  showDeleteConfirm = false;
-  selectedUat: UAT | null = null;
+  creatingUat = false;
+  viewingUat: UAT | null = null;
+  editingUat: UAT | null = null;
+
   searchTerm = '';
+  tipUatFilter = 'Toate';
   loadError = '';
+  successMessage = '';
+  errorMessage = '';
 
   private apiUrl = '/api/uats';
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private authService: AuthService,
     private http: HttpClient,
     private fb: FormBuilder
@@ -71,6 +75,12 @@ export class UatManagementComponent implements OnInit {
       }
     });
     this.loadUats();
+
+    this.route.queryParams.subscribe(params => {
+      if (params['action'] === 'create') {
+        this.openAddForm();
+      }
+    });
   }
 
   // CRUD
@@ -95,28 +105,56 @@ export class UatManagementComponent implements OnInit {
   }
 
   applyFilter(): void {
-    this.filteredUats = this.uats.filter(uat =>
-      uat.denumire.toLowerCase().includes(this.searchTerm) ||
-      uat.judet.toLowerCase().includes(this.searchTerm)
-    );
+    this.filteredUats = this.uats.filter(uat => {
+      const matchesSearch = uat.denumire.toLowerCase().includes(this.searchTerm) || uat.judet.toLowerCase().includes(this.searchTerm);
+      const matchesTip = this.tipUatFilter === 'Toate' || uat.tipUat === this.tipUatFilter;
+      return matchesSearch && matchesTip;
+    });
   }
 
-  openAddModal(): void {
-    this.isEditMode = false;
+  openAddForm(): void {
+    this.creatingUat = true;
+    this.viewingUat = null;
+    this.editingUat = null;
     this.uatForm.reset({ tipUat: 'Comună', isActive: true });
     this.uatForm.get('codSiruta')?.enable();
-    this.showModal = true;
+    this.successMessage = '';
+    this.errorMessage = '';
   }
 
-  openEditModal(uat: UAT): void {
-    this.isEditMode = true;
-    this.selectedUat = uat;
+  closeAddForm(): void {
+    this.creatingUat = false;
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+  viewUat(uat: UAT): void {
+    this.viewingUat = uat;
+    this.creatingUat = false;
+    this.editingUat = null;
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+  closeViewUat(): void {
+    this.viewingUat = null;
+  }
+
+  editUat(uat: UAT): void {
+    this.editingUat = { ...uat };
+    this.viewingUat = null;
+    this.creatingUat = false;
     this.uatForm.patchValue(uat);
     this.uatForm.get('codSiruta')?.disable();
-    this.showModal = true;
+    this.errorMessage = '';
+    this.successMessage = '';
   }
 
-  closeModal(): void { this.showModal = false; this.selectedUat = null; }
+  closeEditUat(): void {
+    this.editingUat = null;
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
 
   manageUat(uat: UAT): void {
     if (!uat.tenantId) {
@@ -127,55 +165,50 @@ export class UatManagementComponent implements OnInit {
     this.router.navigate(['/gospodarii']);
   }
 
-  // saveUat(): void {
-  //   if (this.uatForm.invalid) return;
-  //   const uatData = this.uatForm.getRawValue();
-  //   if (this.isEditMode) {
-  //     this.http.put(`${this.apiUrl}/${uatData.codSiruta}`, uatData).subscribe(() => {
-  //       this.loadUats(); this.closeModal();
-  //     });
-  //   } else {
-  //     this.http.post(this.apiUrl, uatData).subscribe(() => {
-  //       this.loadUats(); this.closeModal();
-  //     });
-  //   }
-  // }
   saveUat(): void {
-    if (this.uatForm.invalid) return;
+    if (this.uatForm.invalid) {
+      this.errorMessage = 'Vă rugăm să completați toate câmpurile obligatorii.';
+      return;
+    }
     const uatData = this.uatForm.getRawValue();
-    if (this.isEditMode) {
+    
+    if (this.editingUat) {
       this.http.put(`${this.apiUrl}/${uatData.codSiruta}`, uatData).subscribe({
-        next: () => { this.loadUats(); this.closeModal(); },
-        error: (err) => console.error('Update failed:', err)
+        next: () => {
+          this.successMessage = 'UAT actualizat cu succes!';
+          this.loadUats(); 
+          this.closeEditUat(); 
+        },
+        error: (err) => {
+          this.errorMessage = err.error?.message || 'A apărut o eroare la actualizarea UAT-ului.';
+        }
       });
     } else {
       this.http.post(this.apiUrl, uatData).subscribe({
-        next: () => { this.loadUats(); this.closeModal(); },
-        error: (err) => console.error('Create failed:', err)
+        next: () => { 
+          this.successMessage = 'UAT creat cu succes!';
+          this.loadUats(); 
+          this.closeAddForm(); 
+        },
+        error: (err) => {
+          this.errorMessage = err.error?.message || 'A apărut o eroare la crearea UAT-ului.';
+        }
       });
     }
   }
 
-  confirmDelete(uat: UAT): void { this.selectedUat = uat; this.showDeleteConfirm = true; }
-
-  // deleteUat(): void {
-  //   if (this.selectedUat) {
-  //     this.http.delete(`${this.apiUrl}/${this.selectedUat.codSiruta}`).subscribe(() => {
-  //       this.loadUats();
-  //       this.showDeleteConfirm = false;
-  //       this.selectedUat = null;
-  //     });
-  //   }
-  // }
-  deleteUat(): void {
-    if (this.selectedUat) {
-      this.http.delete(`${this.apiUrl}/${this.selectedUat.codSiruta}`).subscribe({
+  deleteUat(uat: UAT): void {
+    if (confirm(`Ești sigur că vrei să ștergi UAT-ul ${uat.denumire}? Această acțiune este ireversibilă.`)) {
+      this.http.delete(`${this.apiUrl}/${uat.codSiruta}`).subscribe({
         next: () => {
+          this.successMessage = 'UAT șters cu succes!';
           this.loadUats();
-          this.showDeleteConfirm = false;
-          this.selectedUat = null;
+          if (this.viewingUat?.codSiruta === uat.codSiruta) this.closeViewUat();
+          if (this.editingUat?.codSiruta === uat.codSiruta) this.closeEditUat();
         },
-        error: (err) => console.error('Delete failed:', err)
+        error: (err) => {
+          this.errorMessage = err.error?.message || 'A apărut o eroare la ștergerea UAT-ului.';
+        }
       });
     }
   }

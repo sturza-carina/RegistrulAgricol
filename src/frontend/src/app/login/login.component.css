@@ -171,6 +171,8 @@
 
 .card-header {
   margin-bottom: 28px;
+  display: flex;
+  flex-direction: column;
 }
 
 .card-header h2 {

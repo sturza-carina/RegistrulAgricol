@@ -4,7 +4,7 @@
   <main class="main-content">
      <header class="header">
        <div class="header-title">
-         <h1>{{ activeTab === 'overview' ? 'Overview' : 'Tenants Board' }}</h1>
+         <h1>{{ activeTab === 'overview' ? 'Prezentare Generală' : 'Panou UAT-uri' }}</h1>
        </div>
        <div class="user-profile">
          <span>{{ user?.username }} ({{ user?.role }})</span>
@@ -15,20 +15,20 @@
      <!-- Overview Tab content -->
      <div class="content-cards" *ngIf="activeTab === 'overview'">
        <div class="card">
-         <h3>Current Context</h3>
-         <p>You are logged into the tenant schema: <strong>{{ user?.tenantId || 'Public' }}</strong></p>
+         <h3>Context Curent</h3>
+         <p>Sunteți autentificat în schema UAT-ului: <strong>{{ user?.tenantId || 'Public' }}</strong></p>
        </div>
 
        <div class="card" *ngIf="user?.role === 'ROLE_SUPER_ADMIN'">
-         <h3>Super Admin Controls</h3>
-         <p>You have access to create new UATs and provision new schemas.</p>
-         <button (click)="setTab('tenants')" class="action-btn">Manage Tenants</button>
+         <h3>Controale Super Admin</h3>
+         <p>Aveți acces pentru a crea noi UAT-uri și pentru a aloca noi scheme.</p>
+         <button (click)="setTab('tenants')" class="action-btn">Gestionare UAT-uri</button>
        </div>
 
        <div class="card" *ngIf="user?.role === 'ROLE_ADMIN'">
-         <h3>Admin Controls</h3>
-         <p>Manage users within your specific UAT.</p>
-         <button class="action-btn">Manage Users</button>
+         <h3>Controale Admin</h3>
+         <p>Gestionați utilizatorii din UAT-ul dumneavoastră specific.</p>
+         <button class="action-btn">Gestionare Utilizatori</button>
        </div>
      </div>
 
@@ -37,27 +37,27 @@
        
        <!-- The "Add UAT" Card on the board -->
        <div class="card form-card">
-         <h3>Add UAT</h3>
-         <p>Register a new town hall to trigger dynamic schema space provisioning.</p>
+         <h3>Adaugă UAT</h3>
+         <p>Înregistrați o nouă primărie pentru a iniția alocarea spațiului pentru schemă dinamic.</p>
 
          <div *ngIf="successMessage" class="alert success">{{ successMessage }}</div>
          <div *ngIf="errorMessage" class="alert error">{{ errorMessage }}</div>
 
          <form (ngSubmit)="createUat()" #uatForm="ngForm" class="uat-form">
            <div class="form-group">
-             <label for="uatName">UAT Name (Town Hall)</label>
+             <label for="uatName">Nume UAT (Primărie)</label>
              <input 
                type="text" 
                id="uatName" 
                name="uatName" 
                [(ngModel)]="uatName" 
                required 
-               placeholder="e.g., Primaria Giroc"
+               placeholder="ex., Primăria Giroc"
                class="form-control" />
            </div>
 
            <div class="form-group">
-             <label for="sirutaCode">SIRUTA Code (5 or 6 digits)</label>
+             <label for="sirutaCode">Cod SIRUTA (5 sau 6 cifre)</label>
              <input 
                type="text" 
                id="sirutaCode" 
@@ -65,12 +65,12 @@
                [(ngModel)]="sirutaCode" 
                required 
                pattern="[0-9]{5,6}"
-               placeholder="e.g., 155286"
+               placeholder="ex., 155286"
                class="form-control" />
            </div>
 
            <button type="submit" [disabled]="!uatForm.form.valid || isSubmitting" class="action-btn submit-btn">
-             {{ isSubmitting ? 'Provisioning...' : 'Add UAT' }}
+             {{ isSubmitting ? 'Se alocă...' : 'Adaugă UAT' }}
            </button>
          </form>
        </div>
@@ -80,9 +80,9 @@
          <div class="tenant-badge">UAT</div>
          <h3>{{ tenant.name }}</h3>
          <div class="tenant-details">
-           <p><strong>SIRUTA Code:</strong> {{ tenant.id }}</p>
+           <p><strong>Cod SIRUTA:</strong> {{ tenant.id }}</p>
            <p><strong>Schema:</strong> {{ tenant.schemaName }}</p>
-           <p class="date"><strong>Created:</strong> {{ tenant.createdAt | date:'short' }}</p>
+           <p class="date"><strong>Creat la:</strong> {{ tenant.createdAt | date:'short' }}</p>
          </div>
        </div>
 
