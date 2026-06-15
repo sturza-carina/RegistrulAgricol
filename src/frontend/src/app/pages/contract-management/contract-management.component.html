@@ -1,0 +1,354 @@
+<div class="app-shell">
+  <app-sidebar></app-sidebar>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-spacer"></div>
+      <div class="user-chip">
+        <div class="user-info">
+          <div class="user-name">{{ user?.username || 'Admin User' }}</div>
+        </div>
+        <div class="avatar">{{ (user?.username?.charAt(0) || 'A') | uppercase }}</div>
+      </div>
+      <button class="logout-btn" (click)="logout()">Deconectare</button>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <div class="page-content">
+
+      <!-- Breadcrumbs -->
+      <div style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-muted);margin-bottom:14px">
+        <span *ngIf="!creatingContract && !viewingContract && !editingContract" style="color:var(--text-secondary)">Contracte Utilizare</span>
+        <span *ngIf="creatingContract || viewingContract || editingContract" (click)="creatingContract ? closeAddForm() : (viewingContract ? closeViewContract() : closeEditContract())" style="cursor:pointer;color:var(--primary);font-weight:500">Contracte</span>
+        <svg *ngIf="creatingContract || viewingContract || editingContract" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+        <span *ngIf="creatingContract" style="color:var(--text-secondary)">Creare Contract</span>
+        <span *ngIf="viewingContract" style="color:var(--text-secondary)">Detalii: {{ viewingContract.numarContract }}</span>
+        <span *ngIf="editingContract" style="color:var(--text-secondary)">Editare: {{ editingContract.numarContract }}</span>
+      </div>
+
+      <!-- Page Title -->
+      <div class="page-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div class="page-header" style="margin-bottom:0">
+          <h1>Management Contracte Utilizare</h1>
+          <p *ngIf="!creatingContract && !editingContract && !viewingContract">Gestionare contracte de arendă, comodat și alte tipuri de folosință terenuri.</p>
+          <p *ngIf="creatingContract">Înregistrați un contract de utilizare nou pentru UAT-ul activ.</p>
+          <p *ngIf="editingContract">Actualizați detaliile contractului selectat.</p>
+        </div>
+        <button class="btn-primary" *ngIf="!creatingContract && !viewingContract && !editingContract" (click)="openAddForm()" [disabled]="!selectedTenantId">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Adaugă Contract
+        </button>
+      </div>
+
+      <!-- Tenant Context Selector (For SUPER_ADMIN) -->
+      <div class="card" style="padding: 16px 20px; margin-bottom: 20px;" *ngIf="user?.role === 'ROLE_SUPER_ADMIN' && !creatingContract && !editingContract && !viewingContract">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <label for="tenantSelect" style="font-weight: 600; font-size: 14px; color: var(--text-primary);">Alegeți Tenant / UAT:</label>
+          <select id="tenantSelect" [(ngModel)]="selectedTenantId" (change)="onTenantChange()" class="form-control" style="max-width: 300px; margin-bottom: 0;">
+            <option value="">-- Niciun UAT selectat --</option>
+            <option *ngFor="let tenant of tenants" [value]="tenant.id">{{ tenant.name }} ({{ tenant.schemaName }})</option>
+          </select>
+          <span *ngIf="!selectedTenantId" style="font-size: 13px; color: #cc8400; font-weight: 500;">
+            ⚠️ Selectați un tenant pentru a vizualiza și gestiona contractele acestuia.
+          </span>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div *ngIf="successMessage" style="background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px">
+        {{ successMessage }}
+      </div>
+      <div *ngIf="errorMessage" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px">
+        {{ errorMessage }}
+      </div>
+      <div *ngIf="loadError" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px">
+        {{ loadError }}
+      </div>
+
+      <!-- Filter Controls -->
+      <div class="card" *ngIf="!creatingContract && !viewingContract && !editingContract && selectedTenantId" style="padding: 12px 20px; margin-bottom: 20px;">
+        <div style="display: flex; gap: 16px; align-items: center; width: 100%;">
+          <div class="search-bar" style="flex: 1; margin: 0;">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" placeholder="Caută după nr. contract sau denumire teren..." (input)="onSearch($event)">
+          </div>
+          
+          <!-- Tip Filter -->
+          <div style="display: flex; align-items: center; background: #f8fafc; border: 1px solid var(--input-border, #e2e8f0); border-radius: 20px; padding: 4px 16px; gap: 6px;">
+            <span style="font-size: 13px; color: var(--text-secondary); font-weight: 500; white-space: nowrap;">Tip Contract:</span>
+            <select [(ngModel)]="tipContractFilter" (change)="applyFilter()" style="border: none; background: transparent; font-size: 13px; font-weight: 600; color: var(--text-primary); outline: none; cursor: pointer; padding: 4px 0;">
+              <option value="Toate">Toate</option>
+              <option *ngFor="let tip of tipuriContract" [value]="tip">{{ tip }}</option>
+            </select>
+          </div>
+
+          <!-- Status Filter -->
+          <div style="display: flex; align-items: center; background: #f8fafc; border: 1px solid var(--input-border, #e2e8f0); border-radius: 20px; padding: 4px 16px; gap: 6px;">
+            <span style="font-size: 13px; color: var(--text-secondary); font-weight: 500; white-space: nowrap;">Status:</span>
+            <select [(ngModel)]="statusContractFilter" (change)="applyFilter()" style="border: none; background: transparent; font-size: 13px; font-weight: 600; color: var(--text-primary); outline: none; cursor: pointer; padding: 4px 0;">
+              <option value="Toate">Toate</option>
+              <option *ngFor="let status of statusuriContract" [value]="status">{{ status }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Contracts Table -->
+      <div class="card table-container" *ngIf="!creatingContract && !viewingContract && !editingContract && selectedTenantId">
+        <div class="card-header">
+          <h3>Listă Contracte Utilizare</h3>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nr. Contract</th>
+              <th>Tip</th>
+              <th>Teren Asoc.</th>
+              <th>Valabilitate</th>
+              <th>Preț Arendă An</th>
+              <th>Status</th>
+              <th style="text-align:right">Acțiuni</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of filteredContracts" class="hoverable-row">
+              <td><strong>{{ c.numarContract }}</strong><br><small style="color:var(--text-muted)">Semnat: {{ c.dataSemnare || '-' }}</small></td>
+              <td><span class="badge active" style="background: #e0f2fe; color: #0369a1;">{{ c.tipContract }}</span></td>
+              <td>{{ c.teren?.denumire || '-' }}</td>
+              <td>{{ c.dataInceput || 'N/A' }} → {{ c.dataSfarsit || 'Nedefinit' }}</td>
+              <td>
+                <div *ngIf="c.pretArendaRonAn">{{ c.pretArendaRonAn }} RON</div>
+                <div *ngIf="c.pretArendaGrauKgHa"><small style="color:var(--text-secondary)">{{ c.pretArendaGrauKgHa }} Kg Grâu/Ha</small></div>
+                <div *ngIf="!c.pretArendaRonAn && !c.pretArendaGrauKgHa">-</div>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="c.statusContract === 'ACTIV' ? 'active' : 'archived'">
+                  {{ c.statusContract }}
+                </span>
+              </td>
+              <td style="text-align:right; display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
+                <button style="background:none; border:none; color:var(--primary); cursor:pointer; padding: 4px;" (click)="viewContract(c)" title="Detalii">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+                <button style="background:none; border:none; color:var(--primary); cursor:pointer; padding: 4px;" (click)="editContract(c)" title="Editare">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button style="background:none; border:none; color:red; cursor:pointer; padding: 4px;" (click)="deleteContract(c)" title="Ștergere">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="filteredContracts.length === 0">
+              <td colspan="7" class="empty-state">Niciun contract înregistrat.</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--card-border)">
+          <span style="font-size:12.5px;color:var(--text-muted)">Se afișează {{ filteredContracts.length }} contracte</span>
+        </div>
+      </div>
+
+      <!-- No Tenant Prompt -->
+      <div class="card" *ngIf="!selectedTenantId && !creatingContract && !editingContract && !viewingContract" style="padding: 40px; text-align: center;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" style="margin-bottom: 16px;">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        <h3 style="margin-bottom: 8px;">Niciun Tenant selectat</h3>
+        <p style="color: var(--text-muted); max-width: 400px; margin: 0 auto 20px;">Vă rugăm să selectați un Tenant din selectorul de mai sus pentru a vizualiza sau înregistra contractele acestuia.</p>
+      </div>
+
+      <!-- Contract Details View -->
+      <div *ngIf="viewingContract" style="display:flex; justify-content: center; gap: 60px; margin-top: 20px; align-items: start; max-width: 800px; margin-left: auto; margin-right: auto;">
+        <div style="flex: 1; display:flex; flex-direction:column; gap:20px; width: 100%;">
+          
+          <button class="btn-secondary" style="align-self: flex-start;" (click)="closeViewContract()">
+            ← Înapoi la listă
+          </button>
+
+          <div class="form-section">
+            <div class="section-title">
+              <div class="section-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+              </div>
+              Detalii Contract de Utilizare
+            </div>
+            
+            <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div>
+                <p><strong>Număr Contract:</strong> {{ viewingContract.numarContract }}</p>
+                <p><strong>Tip Contract:</strong> {{ viewingContract.tipContract }}</p>
+                <p><strong>Teren Asociat:</strong> {{ viewingContract.teren?.denumire || '-' }} (ID: {{ viewingContract.teren?.id }})</p>
+                <p><strong>Data Semnare:</strong> {{ viewingContract.dataSemnare || '-' }}</p>
+                <p><strong>Dată Început:</strong> {{ viewingContract.dataInceput || '-' }}</p>
+                <p><strong>Dată Sfârșit:</strong> {{ viewingContract.dataSfarsit || '-' }}</p>
+                <p><strong>Status:</strong> 
+                  <span class="badge" [ngClass]="viewingContract.statusContract === 'ACTIV' ? 'active' : 'archived'">
+                    {{ viewingContract.statusContract }}
+                  </span>
+                </p>
+              </div>
+              <div>
+                <p><strong>Arendă în RON / An:</strong> {{ viewingContract.pretArendaRonAn || '-' }}</p>
+                <p><strong>Arendă în Grâu / Kg / Ha:</strong> {{ viewingContract.pretArendaGrauKgHa || '-' }}</p>
+                <p><strong>Indexare Preț:</strong> {{ viewingContract.indexarePret ? 'Da' : 'Nu' }}</p>
+                <p><strong>Locator Proprietar:</strong> {{ getUserDisplayName(viewingContract.locatorProprietar) }}</p>
+                <p><strong>Locator Utilizator (Locatar):</strong> {{ getUserDisplayName(viewingContract.locatorUtilizator) }}</p>
+                <p><strong>Înregistrat la Data:</strong> {{ viewingContract.dataOperare || '-' }}</p>
+                <p><strong>Înregistrat de Utilizatorul:</strong> {{ getUserDisplayName(viewingContract.utilizatorOperare) }}</p>
+              </div>
+            </div>
+            <div *ngIf="viewingContract.motivIncetare" style="margin-top: 15px; padding: 12px; background: #f8fafc; border-radius: 6px; border-left: 4px solid #b91c1c;">
+              <strong>Motiv Încetare / Reziliere:</strong><br>
+              {{ viewingContract.motivIncetare }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Create / Edit Form View -->
+      <div *ngIf="creatingContract || editingContract" style="display:flex; justify-content: center; gap: 60px; margin-top: 20px; align-items: start; max-width: 800px; margin-left: auto; margin-right: auto;">
+        <div style="flex: 1; display:flex; flex-direction:column; gap:20px; width: 100%;">
+          
+          <button class="btn-secondary" style="align-self: flex-start;" (click)="creatingContract ? closeAddForm() : closeEditContract()">
+            ← Înapoi la listă
+          </button>
+          
+          <div class="form-section">
+            <div class="section-title">
+              <div class="section-icon">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+              </div>
+              {{ editingContract ? 'Editare Contract' : 'Înregistrare Contract Nou' }}
+            </div>
+
+            <form [formGroup]="contractForm" (ngSubmit)="saveContract()">
+              
+              <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                  <label for="numarContract">Număr Contract *</label>
+                  <input id="numarContract" formControlName="numarContract" type="text" class="form-control" placeholder="ex. 124/2026">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label for="tipContract">Tip Contract *</label>
+                  <select id="tipContract" formControlName="tipContract" class="form-control">
+                    <option *ngFor="let tip of tipuriContract" [value]="tip">{{ tip }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                  <label for="terenId">Teren Asociat *</label>
+                  <select id="terenId" formControlName="terenId" class="form-control">
+                    <option value="">-- Alegeți Teren --</option>
+                    <option *ngFor="let t of terenuri" [value]="t.id">{{ t.denumire }} (ID: {{ t.id }})</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                  <label for="locatorProprietarId">Proprietar Locator (Utilizator)</label>
+                  <select id="locatorProprietarId" formControlName="locatorProprietarId" class="form-control">
+                    <option value="">-- Niciunul selectat --</option>
+                    <option *ngFor="let u of users" [value]="u.id">{{ getUserDisplayName(u) }}</option>
+                  </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label for="locatorUtilizatorId">Utilizator Locatar</label>
+                  <select id="locatorUtilizatorId" formControlName="locatorUtilizatorId" class="form-control">
+                    <option value="">-- Niciunul selectat --</option>
+                    <option *ngFor="let u of users" [value]="u.id">{{ getUserDisplayName(u) }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                  <label for="dataSemnare">Data Semnare</label>
+                  <input id="dataSemnare" formControlName="dataSemnare" type="date" class="form-control">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label for="dataInceput">Dată Început</label>
+                  <input id="dataInceput" formControlName="dataInceput" type="date" class="form-control">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label for="dataSfarsit">Dată Sfârșit</label>
+                  <input id="dataSfarsit" formControlName="dataSfarsit" type="date" class="form-control">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                  <label for="pretArendaRonAn">Arendă RON / An</label>
+                  <input id="pretArendaRonAn" formControlName="pretArendaRonAn" type="number" class="form-control" placeholder="ex. 500">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label for="pretArendaGrauKgHa">Arendă Grâu (Kg/Ha)</label>
+                  <input id="pretArendaGrauKgHa" formControlName="pretArendaGrauKgHa" type="number" class="form-control" placeholder="ex. 800">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group" style="flex: 1; display: flex; align-items: center; gap: 8px;">
+                  <input id="indexarePret" formControlName="indexarePret" type="checkbox">
+                  <label for="indexarePret" style="margin-bottom: 0;">Indexare Preț</label>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label for="statusContract">Status Contract</label>
+                  <select id="statusContract" formControlName="statusContract" class="form-control">
+                    <option *ngFor="let s of statusuriContract" [value]="s">{{ s }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row" *ngIf="contractForm.get('statusContract')?.value !== 'ACTIV'">
+                <div class="form-group" style="flex: 1;">
+                  <label for="motivIncetare">Motiv Încetare / Reziliere</label>
+                  <textarea id="motivIncetare" formControlName="motivIncetare" class="form-control" placeholder="Descrieți motivul..." rows="2"></textarea>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                  <input id="esteActiv" formControlName="esteActiv" type="checkbox">
+                  <label for="esteActiv" style="margin-bottom: 0;">Contract Activ (Valabil)</label>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:12px;margin-top:20px">
+                <button type="button" class="btn-secondary" (click)="creatingContract ? closeAddForm() : closeEditContract()">Anulare</button>
+                <button type="submit" class="btn-primary" [disabled]="contractForm.invalid">
+                  {{ editingContract ? 'Salvează Modificările' : 'Creează Contract' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
