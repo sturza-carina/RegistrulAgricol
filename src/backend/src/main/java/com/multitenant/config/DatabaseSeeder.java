@@ -49,8 +49,12 @@ public class DatabaseSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        TenantContext.setCurrentTenant("public");
+
         System.out.println("[DatabaseSeeder] Running migrations for existing tenants...");
         tenantService.migrateAllTenants();
+
+        TenantContext.setCurrentTenant("public");
 
         // Ensure superadmin exists in public schema
         if (userRepository.findByUsername("superadmin").isEmpty()) {

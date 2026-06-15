@@ -7,7 +7,7 @@ spring:
   application:
     name: multi-tenant-backend
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/multi_tenant_db}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/multi_tenant_db}
     username: ${SPRING_DATASOURCE_USERNAME:admin}
     password: ${SPRING_DATASOURCE_PASSWORD:admin_password}
     driver-class-name: org.postgresql.Driver
@@ -26,6 +26,8 @@ spring:
     default-schema: public
     schemas: public
     locations: classpath:db/migration
+    validate-on-migrate: false
+    out-of-order: true
 
 jwt:
   secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
