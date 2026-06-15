@@ -29,10 +29,14 @@ public class MultiTenantConnectionProviderImpl implements MultiTenantConnectionP
     @Override
     public Connection getConnection(String tenantIdentifier) throws SQLException {
         Connection connection = getAnyConnection();
-        // Assume tenantIdentifier maps exactly to the schema name, except for super admin ops
-        String schemaName = "public".equals(tenantIdentifier) ? "public" : "uat_" + tenantIdentifier;
+        String schemaName;
+        if (tenantIdentifier == null || "public".equals(tenantIdentifier)) {
+            schemaName = "public";
+        } else {
+            schemaName = "uat_" + tenantIdentifier;
+        }
         try {
-            connection.createStatement().execute("SET SCHEMA '" + schemaName + "'");
+            connection.createStatement().execute("SET search_path TO " + schemaName + ", public");
         } catch (SQLException e) {
             throw new SQLException("Could not alter schema to " + schemaName, e);
         }
@@ -42,9 +46,9 @@ public class MultiTenantConnectionProviderImpl implements MultiTenantConnectionP
     @Override
     public void releaseConnection(String tenantIdentifier, Connection connection) throws SQLException {
         try {
-            connection.createStatement().execute("SET SCHEMA 'public'");
+            connection.createStatement().execute("SET search_path TO public");
         } catch (SQLException e) {
-            throw new SQLException("Could not alter schema to public", e);
+            throw new SQLException("Could not reset schema to public", e);
         }
         connection.close();
     }

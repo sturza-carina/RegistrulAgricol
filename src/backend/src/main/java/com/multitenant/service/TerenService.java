@@ -12,8 +12,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import org.springframework.lang.NonNull;
 
 @Service
+@SuppressWarnings("null")
 public class TerenService {
 
     private final TerenRepository terenRepository;
@@ -34,7 +36,7 @@ public class TerenService {
         return terenRepository.findByGospodarieId(gospodarieId);
     }
 
-    public Teren getTerenById(Long id) {
+    public Teren getTerenById(@NonNull Long id) {
         return terenRepository.findById(id).orElseThrow(() -> new RuntimeException("Teren not found"));
     }
 
@@ -46,8 +48,7 @@ public class TerenService {
     }
 
     @Transactional
-    public Teren createTerenFromDTO(TerenCreateDTO dto) {
-        if (dto == null) throw new IllegalArgumentException("DTO cannot be null");
+    public Teren createTerenFromDTO(@NonNull TerenCreateDTO dto) {
         if (dto.getGospodarieId() == null) throw new IllegalArgumentException("gospodarieId is required");
 
         Gospodarie gospodarie = gospodarieRepository.findById(dto.getGospodarieId())
@@ -80,7 +81,7 @@ public class TerenService {
         return savedTeren;
     }
 
-    public Teren updateTeren(Long id, Teren updatedTeren) {
+    public Teren updateTeren(@NonNull Long id, Teren updatedTeren) {
         if (updatedTeren == null) {
             throw new IllegalArgumentException("Teren cannot be null");
         }
@@ -90,7 +91,7 @@ public class TerenService {
         return terenRepository.save(existing);
     }
 
-    public void deleteTeren(Long id) {
+    public void deleteTeren(@NonNull Long id) {
         terenRepository.deleteById(id);
     }
 }

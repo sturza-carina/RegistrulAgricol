@@ -11,6 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tenants")
+@SuppressWarnings("null")
 public class TenantController {
 
     private final TenantService tenantService;
