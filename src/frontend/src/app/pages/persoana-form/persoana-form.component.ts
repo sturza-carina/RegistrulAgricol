@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
@@ -14,10 +14,18 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
   templateUrl: './persoana-form.component.html'
 })
 export class PersonFormComponent implements OnInit {
-  isEditMode = false;
-  personId?: number;
+  @Input() isModal = false;
+  @Input() personId?: number;
+  @Input() set editId(val: number | undefined) {
+    if (val) {
+      this.isEditMode = true;
+      this.personId = val;
+      this.loadPerson(val);
+    }
+  }
+  @Output() closeForm = new EventEmitter<void>();
 
-  // Form State
+  isEditMode = false;
   personType: 'PHYSICAL_PERSON' | 'LEGAL_ENTITY' = 'PHYSICAL_PERSON';
   
   // Common fields
@@ -51,7 +59,7 @@ export class PersonFormComponent implements OnInit {
   registrationNumber: string = '';
   legalRepresentative: string = '';
 
-  gospodarieId?: number;
+  @Input() gospodarieId?: number;
 
   constructor(
     private persoanaService: PersoanaService,
@@ -60,20 +68,22 @@ export class PersonFormComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.route.paramMap.subscribe(params => {
-      const idParam = params.get('id');
-      if (idParam) {
-        this.isEditMode = true;
-        this.personId = +idParam;
-        this.loadPerson(this.personId);
-      }
-    });
+    if (!this.isModal) {
+      this.route.paramMap.subscribe(params => {
+        const idParam = params.get('id');
+        if (idParam) {
+          this.isEditMode = true;
+          this.personId = +idParam;
+          this.loadPerson(this.personId);
+        }
+      });
 
-    this.route.queryParams.subscribe(params => {
-      if (params['gospodarieId']) {
-        this.gospodarieId = +params['gospodarieId'];
-      }
-    });
+      this.route.queryParams.subscribe(params => {
+        if (params['gospodarieId']) {
+          this.gospodarieId = +params['gospodarieId'];
+        }
+      });
+    }
   }
 
   loadPerson(id: number) {
@@ -168,7 +178,10 @@ export class PersonFormComponent implements OnInit {
 
     if (this.isEditMode && this.personId) {
       this.persoanaService.updatePerson(this.personId, payload).subscribe({
-        next: () => this.router.navigate(['/persoane']),
+        next: () => {
+          if (this.isModal) this.closeForm.emit();
+          else this.router.navigate(['/persoane']);
+        },
         error: (err) => {
           const msg = err.error?.message || err.message;
           alert('Error updating persoana: ' + msg);
@@ -176,7 +189,10 @@ export class PersonFormComponent implements OnInit {
       });
     } else {
       this.persoanaService.createPerson(payload).subscribe({
-        next: () => this.router.navigate(['/persoane']),
+        next: () => {
+          if (this.isModal) this.closeForm.emit();
+          else this.router.navigate(['/persoane']);
+        },
         error: (err) => {
           const msg = err.error?.message || err.message;
           alert('Error creating persoana: ' + msg);
@@ -186,7 +202,8 @@ export class PersonFormComponent implements OnInit {
   }
 
   cancel() {
-    this.router.navigate(['/persoane']);
+    if (this.isModal) this.closeForm.emit();
+    else this.router.navigate(['/persoane']);
   }
 }
 

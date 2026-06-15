@@ -53,22 +53,45 @@
 
     <!-- Tenant Specific Tabs (visible to NON superadmin OR if impersonating) -->
     <ng-container *ngIf="user?.role !== 'ROLE_SUPER_ADMIN' || isImpersonating">
-      <a class="nav-item" routerLink="/gospodarii" routerLinkActive="active">
+      <a class="nav-item" routerLink="/gospodarii" [class.active]="!activeGospodarieId && (router.isActive('/gospodarii', false) || router.isActive('/gospodarii/new', false))">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
           <path d="M9 22V12h6v10"/>
         </svg>
         Gospodării
       </a>
+      
+      <!-- Gospodarie Sub-menu -->
+      <div *ngIf="activeGospodarieId" style="margin-left: 26px; border-left: 1px solid var(--sidebar-border); padding-left: 10px; display: flex; flex-direction: column; gap: 4px; margin-top: 4px; margin-bottom: 8px;">
+        <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--sidebar-muted); margin-bottom: 4px; padding-left: 8px;">Context Gospodărie #{{activeGospodarieId}}</div>
+        
+        <a class="nav-item" [routerLink]="['/gospodarii', activeGospodarieId]" [queryParams]="{tab: 'GENERAL'}" [class.active]="activeTab === 'GENERAL'" style="font-size: 12.5px; padding: 6px 10px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          Informații Generale
+        </a>
+        
+        <a class="nav-item" [routerLink]="['/gospodarii', activeGospodarieId]" [queryParams]="{tab: 'MEMBERS'}" [class.active]="activeTab === 'MEMBERS'" style="font-size: 12.5px; padding: 6px 10px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Membri
+        </a>
+        
+        <a class="nav-item" [routerLink]="['/gospodarii', activeGospodarieId]" [queryParams]="{tab: 'TERENURI'}" [class.active]="activeTab === 'TERENURI'" style="font-size: 12.5px; padding: 6px 10px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Terenuri Agricole
+        </a>
+
+        <a class="nav-item" [routerLink]="['/gospodarii', activeGospodarieId]" [queryParams]="{tab: 'MACHINERY'}" [class.active]="activeTab === 'MACHINERY'" style="font-size: 12.5px; padding: 6px 10px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          Utilaje Agricole
+        </a>
+
+        <a class="nav-item" [routerLink]="['/gospodarii', activeGospodarieId]" [queryParams]="{tab: 'BUILDINGS'}" [class.active]="activeTab === 'BUILDINGS'" style="font-size: 12.5px; padding: 6px 10px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M3 21V9l9-7 9 7v12"/><path d="M9 21v-9h6v9"/></svg>
+          Clădiri și Construcții
+        </a>
+      </div>
 
 
-      <a class="nav-item" routerLink="/persoane" routerLinkActive="active">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-        </svg>
-        Persoane
-      </a>
     </ng-container>
 
     <!-- Users Tab -->

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -10,12 +10,14 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './sidebar.component.html'
 })
 export class SidebarComponent implements OnInit {
+  @Input() activeGospodarieId?: number;
+  @Input() activeTab?: string;
   user: any = null;
   isImpersonating: boolean = false;
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    public router: Router
   ) {}
 
   ngOnInit(): void {
