@@ -32,7 +32,7 @@ export class LoginComponent {
           } else if (user?.role === 'ROLE_ADMIN') {
             this.router.navigate(['/tenant-admin']);
           } else {
-            this.router.navigate(['/user-management']);
+            this.router.navigate(['/gospodarii']);
           }
         },
         error: err => {

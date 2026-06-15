@@ -15,8 +15,8 @@ export class TerenService {
     return this.http.get<Teren[]>(this.apiUrl);
   }
 
-  getTerenByGospodarieId(gospodarieId: number): Observable<Teren> {
-    return this.http.get<Teren>(`${this.apiUrl}/gospodarie/${gospodarieId}`);
+  getTerenByGospodarieId(gospodarieId: number): Observable<Teren[]> {
+    return this.http.get<Teren[]>(`${this.apiUrl}/gospodarie/${gospodarieId}`);
   }
 
   getTerenById(id: number): Observable<Teren> {

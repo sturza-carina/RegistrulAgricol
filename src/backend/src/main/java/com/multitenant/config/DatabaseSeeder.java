@@ -26,6 +26,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final UserRepository userRepository;
     private final GospodarieRepository gospodarieRepository;
     private final com.multitenant.repository.TerenRepository terenRepository;
+    private final com.multitenant.repository.ParcelaRepository parcelaRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DatabaseSeeder(TenantRepository tenantRepository,
@@ -34,6 +35,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                           UserRepository userRepository,
                           GospodarieRepository gospodarieRepository,
                           com.multitenant.repository.TerenRepository terenRepository,
+                          com.multitenant.repository.ParcelaRepository parcelaRepository,
                           PasswordEncoder passwordEncoder) {
         this.tenantRepository = tenantRepository;
         this.tenantService = tenantService;
@@ -41,6 +43,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         this.userRepository = userRepository;
         this.gospodarieRepository = gospodarieRepository;
         this.terenRepository = terenRepository;
+        this.parcelaRepository = parcelaRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -66,12 +69,9 @@ public class DatabaseSeeder implements CommandLineRunner {
             userRepository.save(superadmin);
         }
 
-        // Check if there are any tenants in the public schema
-        if (tenantRepository.count() == 0) {
-            System.out.println("[DatabaseSeeder] Seeding initial development tenant...");
-            
-            // Create default tenant "cluj" (this creates the schema and runs Flyway on it)
-            tenantService.createTenant("cluj", "Cluj-Napoca");
+        // Tenant schemas are created and migrated natively by TenantService.migrateAllTenants()
+            // Tenant schemas are created and migrated natively by TenantService.migrateAllTenants() 
+            // the UATs and Tenants have been inserted by the V3 migration.
             
             // Seed tenant users in public schema (required for authentication/login)
             System.out.println("[DatabaseSeeder] Seeding tenant users in public schema...");
@@ -99,30 +99,12 @@ public class DatabaseSeeder implements CommandLineRunner {
                 userRepository.save(publicUser);
             }
 
-            // Fetch the UATs created by V3 migration and assign them to the correct tenants
             try {
-                System.out.println("[DatabaseSeeder] Seeding UAT tenants...");
-                Tenant clujTenant = tenantRepository.findById("cluj").orElseThrow();
-                
-                Uat clujNapoca = uatRepository.findByCodSiruta("54975").orElseThrow();
-                clujNapoca.setTenant(clujTenant);
-                uatRepository.save(clujNapoca);
-
-                Uat floresti = uatRepository.findByCodSiruta("55311").orElseThrow();
-                floresti.setTenant(clujTenant);
-                uatRepository.save(floresti);
-
-                // Now for Bucuresti
-                tenantService.createTenant("bucuresti", "Bucuresti");
-                Tenant bucTenant = tenantRepository.findById("bucuresti").orElseThrow();
-                
-                Uat bucurestiUat = uatRepository.findByCodSiruta("1017").orElseThrow();
-                bucurestiUat.setTenant(bucTenant);
-                bucurestiUat.setIsActive(true); // V3 set it to false
-                uatRepository.save(bucurestiUat);
-
                 System.out.println("[DatabaseSeeder] Seeding Tenant Users in tenant schema...");
                 
+                Uat clujNapoca = uatRepository.findByCodSiruta("54975").orElseThrow();
+                Uat bucurestiUat = uatRepository.findByCodSiruta("1017").orElseThrow();
+
                 // Tenant Admin user Cluj
                 if (userRepository.findByUsername("cluj_admin").isEmpty()) {
                     User admin = new User();
@@ -179,10 +161,34 @@ public class DatabaseSeeder implements CommandLineRunner {
                     g1.setActiva(true);
                     g1.setUat(clujNapoca);
                     Gospodarie savedG1 = gospodarieRepository.save(g1);
+                    com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+
                     com.multitenant.model.registru.Teren t1 = new com.multitenant.model.registru.Teren();
                     t1.setDenumire("Teren Agricol " + savedG1.getCodGospodarie());
                     t1.setGospodarie(savedG1);
-                    terenRepository.save(t1);
+                    t1.setTipTeren("Extravilan");
+                    t1.setStereo70Coordinates("591250 390800\n591350 390800\n591350 390900\n591250 390900");
+                    String t1Json = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[23.569717, 46.810456], [23.569694, 46.811354], [23.571001, 46.811370], [23.571025, 46.810472], [23.569717, 46.810456]]]}, \"properties\": {}}";
+                    t1.setPolygon(mapper.readTree(t1Json));
+                    t1 = terenRepository.save(t1);
+
+                    com.multitenant.model.registru.Parcela p1 = new com.multitenant.model.registru.Parcela();
+                    p1.setDenumire("Parcela Grau");
+                    p1.setSuprafata(1.0);
+                    p1.setCategorieFolosinta("Arabil");
+                    p1.setTeren(t1);
+                    String p1Json = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[23.569717, 46.810456], [23.569705, 46.810905], [23.571013, 46.810921], [23.571025, 46.810472], [23.569717, 46.810456]]]}, \"properties\": {}}";
+                    p1.setPolygon(mapper.readTree(p1Json));
+                    parcelaRepository.save(p1);
+
+                    com.multitenant.model.registru.Parcela p2 = new com.multitenant.model.registru.Parcela();
+                    p2.setDenumire("Parcela Meri");
+                    p2.setSuprafata(1.0);
+                    p2.setCategorieFolosinta("Livada");
+                    p2.setTeren(t1);
+                    String p2Json = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[23.569705, 46.810905], [23.569694, 46.811354], [23.571001, 46.811370], [23.571013, 46.810921], [23.569705, 46.810905]]]}, \"properties\": {}}";
+                    p2.setPolygon(mapper.readTree(p2Json));
+                    parcelaRepository.save(p2);
                 }
                 
                 // Switch current thread to "bucuresti" tenant context for entity seeding
@@ -199,10 +205,34 @@ public class DatabaseSeeder implements CommandLineRunner {
                     g2.setActiva(true);
                     g2.setUat(bucurestiUat);
                     Gospodarie savedG2 = gospodarieRepository.save(g2);
+                    
+                    com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                    
                     com.multitenant.model.registru.Teren t2 = new com.multitenant.model.registru.Teren();
                     t2.setDenumire("Teren Agricol " + savedG2.getCodGospodarie());
                     t2.setGospodarie(savedG2);
-                    terenRepository.save(t2);
+                    t2.setTipTeren("Intravilan");
+                    String t2Json = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[26.1000, 44.4250], [26.1000, 44.4270], [26.1050, 44.4270], [26.1050, 44.4250], [26.1000, 44.4250]]]}, \"properties\": {}}";
+                    t2.setPolygon(mapper.readTree(t2Json));
+                    t2 = terenRepository.save(t2);
+
+                    com.multitenant.model.registru.Parcela p3 = new com.multitenant.model.registru.Parcela();
+                    p3.setDenumire("Parcela Stanga");
+                    p3.setSuprafata(0.5);
+                    p3.setCategorieFolosinta("Arabil");
+                    p3.setTeren(t2);
+                    String p3Json = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[26.1000, 44.4250], [26.1000, 44.4270], [26.1025, 44.4270], [26.1025, 44.4250], [26.1000, 44.4250]]]}, \"properties\": {}}";
+                    p3.setPolygon(mapper.readTree(p3Json));
+                    parcelaRepository.save(p3);
+
+                    com.multitenant.model.registru.Parcela p4 = new com.multitenant.model.registru.Parcela();
+                    p4.setDenumire("Parcela Dreapta");
+                    p4.setSuprafata(0.5);
+                    p4.setCategorieFolosinta("Pasune");
+                    p4.setTeren(t2);
+                    String p4Json = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[26.1025, 44.4250], [26.1025, 44.4270], [26.1050, 44.4270], [26.1050, 44.4250], [26.1025, 44.4250]]]}, \"properties\": {}}";
+                    p4.setPolygon(mapper.readTree(p4Json));
+                    parcelaRepository.save(p4);
                 }
 
 
@@ -214,6 +244,5 @@ public class DatabaseSeeder implements CommandLineRunner {
                 // Clean up context to avoid side effects
                 TenantContext.clear();
             }
-        }
     }
 }

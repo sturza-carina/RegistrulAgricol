@@ -1,13 +1,13 @@
 .map-controls {
-  width: 300px;
+  width: 350px;
   background: white;
   padding: 20px;
+  padding-bottom: 80px; /* Ensure button isn't cut off */
   box-shadow: 2px 0 5px rgba(0,0,0,0.1);
   z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
   border-right: 1px solid #eaeaea;
+  overflow-y: auto;
+  height: 100vh;
 }
 .form-group {
   display: flex;

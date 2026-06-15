@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { HttpClient } from '@angular/common/http';
 
@@ -20,18 +20,25 @@ export class CreateTenantComponent implements OnInit {
   successMessage = '';
   errorMessage = '';
 
+  tenants: any[] = [];
+  filteredTenants: any[] = [];
+  searchTerm: string = '';
+  showCreateForm = false;
+  selectedTenant: any = null;
+  allUats: any[] = [];
+  selectedUatToAssign: string = '';
+  currentPage = 1;
+  pageSize = 10;
+  Math = Math;
+
   form = {
     orgName: '',
-    schemaName: '',
-    domain: '',
-    region: '',
-    contactName: '',
-    contactEmail: '',
-    status: 'pending',
+    schemaName: ''
   };
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private authService: AuthService,
     private http: HttpClient
   ) {}
@@ -42,8 +49,188 @@ export class CreateTenantComponent implements OnInit {
         this.router.navigate(['/login']);
       } else {
         this.user = user;
+        if (this.user.role === 'ROLE_SUPER_ADMIN') {
+          this.loadTenants();
+        }
       }
     });
+
+    this.route.queryParams.subscribe(params => {
+      if (params['action'] === 'create') {
+        this.openCreateForm();
+      }
+    });
+  }
+
+  loadTenants(): void {
+    this.http.get<any[]>('/api/tenants').subscribe({
+      next: (data) => {
+        this.tenants = data;
+        this.applyFilter();
+      },
+      error: (err) => {
+        console.error('Failed to load tenants', err);
+      }
+    });
+  }
+
+  onSearch(event: any): void {
+    this.searchTerm = event.target.value.toLowerCase();
+    this.applyFilter();
+  }
+
+  applyFilter(): void {
+    this.currentPage = 1;
+    this.filteredTenants = this.tenants.filter(t => 
+      t.name.toLowerCase().includes(this.searchTerm) ||
+      t.id.toLowerCase().includes(this.searchTerm) ||
+      t.schemaName.toLowerCase().includes(this.searchTerm)
+    );
+  }
+
+  get paginatedTenants() {
+    const start = (this.currentPage - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    return this.filteredTenants.slice(start, end);
+  }
+
+  openCreateForm() {
+    this.showCreateForm = true;
+    this.selectedTenant = null;
+    this.form = { orgName: '', schemaName: '' };
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+  editingTenant: any = null;
+
+  closeCreateForm() {
+    this.showCreateForm = false;
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+  selectTenant(tenant: any) {
+    this.selectedTenant = tenant;
+    this.showCreateForm = false;
+    this.editingTenant = null;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.selectedUatToAssign = '';
+    this.loadUats();
+  }
+
+  closeTenantDetails() {
+    this.selectedTenant = null;
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+  editTenant(t: any) {
+    this.editingTenant = { ...t }; // copy object
+    this.selectedTenant = null;
+    this.showCreateForm = false;
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+  closeEditTenant() {
+    this.editingTenant = null;
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+  saveEditTenant() {
+    if (!this.editingTenant || !this.editingTenant.name || this.editingTenant.name.trim() === '') {
+      this.errorMessage = 'Numele nu poate fi gol.';
+      return;
+    }
+    
+    this.isSubmitting = true;
+    this.errorMessage = '';
+    
+    this.http.put(`/api/tenants/${this.editingTenant.id}`, { name: this.editingTenant.name }).subscribe({
+      next: () => {
+        this.isSubmitting = false;
+        this.successMessage = 'Numele a fost actualizat cu succes!';
+        this.editingTenant = null;
+        this.loadTenants();
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        this.errorMessage = err.error?.message || 'Eroare la actualizarea tenantului.';
+      }
+    });
+  }
+
+  deleteTenant(t: any) {
+    if (confirm(`Ești sigur că vrei să ștergi tenantul ${t.name}? Această acțiune este ireversibilă.`)) {
+      alert('Ștergerea unui tenant necesită intervenție manuală la nivel de bază de date momentan.');
+    }
+  }
+
+  loadUats(): void {
+    this.http.get<any[]>('/api/uats').subscribe({
+      next: (data) => {
+        this.allUats = data;
+      },
+      error: (err) => {
+        console.error('Failed to load UATs', err);
+      }
+    });
+  }
+
+  get assignedUats() {
+    const tenantId = this.selectedTenant ? this.selectedTenant.id : (this.editingTenant ? this.editingTenant.id : null);
+    if (!tenantId) return [];
+    return this.allUats.filter(u => u.tenantId === tenantId);
+  }
+
+  get unassignedUats() {
+    return this.allUats.filter(u => !u.tenantId);
+  }
+
+  assignUat(): void {
+    if (!this.selectedUatToAssign) {
+      this.errorMessage = 'Vă rugăm să selectați un UAT.';
+      return;
+    }
+    const tenantId = this.selectedTenant ? this.selectedTenant.id : (this.editingTenant ? this.editingTenant.id : null);
+    if (!tenantId) return;
+
+    this.isSubmitting = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.http.post(`/api/tenants/${tenantId}/uats/${this.selectedUatToAssign}`, {}).subscribe({
+      next: () => {
+        this.isSubmitting = false;
+        this.successMessage = 'UAT asociat cu succes!';
+        this.selectedUatToAssign = '';
+        this.loadUats(); // refresh
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        this.errorMessage = err.error?.message || 'A apărut o eroare la asocierea UAT-ului.';
+      }
+    });
+  }
+
+  removeUat(uat: any): void {
+    const tenantId = this.selectedTenant ? this.selectedTenant.id : (this.editingTenant ? this.editingTenant.id : null);
+    if (!tenantId) return;
+
+    if (confirm(`Ești sigur că vrei să dezasociezi UAT-ul ${uat.denumire}?`)) {
+      this.http.delete(`/api/tenants/${tenantId}/uats/${uat.codSiruta}`).subscribe({
+        next: () => {
+          this.successMessage = 'UAT dezasociat cu succes!';
+          this.loadUats();
+        },
+        error: (err) => {
+          this.errorMessage = err.error?.message || 'A apărut o eroare la dezasocierea UAT-ului.';
+        }
+      });
+    }
   }
 
   logout(): void {
@@ -56,12 +243,14 @@ export class CreateTenantComponent implements OnInit {
   }
 
   cancel(): void {
-    this.router.navigate(['/super-admin']);
+    if (confirm('Ești sigur că vrei să anulezi? Datele introduse se vor pierde.')) {
+      this.closeCreateForm();
+    }
   }
 
   onCreateTenant(): void {
     if (!this.form.orgName || !this.form.schemaName) {
-      this.errorMessage = 'Please fill out all required fields.';
+      this.errorMessage = 'Vă rugăm să completați toate câmpurile obligatorii.';
       return;
     }
     this.isSubmitting = true;
@@ -73,12 +262,13 @@ export class CreateTenantComponent implements OnInit {
       sirutaCode: this.form.schemaName,
     }).subscribe({
       next: (res: any) => {
-        this.successMessage = `Tenant "${res.name}" created successfully!`;
+        this.successMessage = `Tenant "${res.name}" a fost creat cu succes!`;
         this.isSubmitting = false;
-        setTimeout(() => this.router.navigate(['/super-admin']), 1500);
+        this.showCreateForm = false;
+        this.loadTenants();
       },
       error: (err) => {
-        this.errorMessage = err.error?.message || 'An error occurred while creating the tenant.';
+        this.errorMessage = err.error?.message || 'A apărut o eroare la crearea Tenant-ului.';
         this.isSubmitting = false;
       }
     });

@@ -3,12 +3,6 @@
 
   <main class="main-content">
     <header class="topbar">
-      <div class="search-bar">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-        <input type="text" placeholder="Search platform...">
-      </div>
       <div class="topbar-spacer"></div>
       <div class="user-chip">
         <div class="user-info">
@@ -17,126 +11,213 @@
         </div>
         <div class="avatar">{{ (user?.username?.charAt(0) || 'A') | uppercase }}</div>
       </div>
+      <button class="logout-btn" (click)="logout()">Deconectare</button>
     </header>
 
     <div class="page-content">
+      <div class="breadcrumbs" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+        <a routerLink="/tenant-admin" style="color: var(--text-primary); text-decoration: none; font-weight: 500;">Panou de Control (Utilizatori)</a>
+      </div>
       <div class="page-header-row">
         <div>
           <h1 style="font-size:26px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--text-primary);margin-bottom:4px">
-            Welcome, {{ user?.username || 'Admin' }}
+            Bun venit, {{ user?.username || 'Admin' }}
           </h1>
           <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
               <polyline points="9 22 9 12 15 12 15 22"/>
             </svg>
-            {{ user?.tenantId || 'Your Organization' }}
+            {{ user?.tenantId || 'Organizația Ta' }}
           </div>
-        </div>
-        <button class="btn-primary" (click)="goToCreateUser()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <line x1="19" y1="8" x2="19" y2="14"/>
-            <line x1="22" y1="11" x2="16" y2="11"/>
-          </svg>
-          Create New User
-        </button>
-      </div>
-
-      <div class="stats-grid" style="grid-template-columns:1fr 1fr 1.4fr;margin-bottom:20px">
-        <div class="stat-card">
-          <div class="stat-header">
-            <span class="stat-label">Total Users in Tenant</span>
-            <div class="stat-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-              </svg>
-            </div>
-          </div>
-          <div class="stat-delta" style="margin-bottom:4px">+2 this month</div>
-          <div class="stat-value">{{ users.length }}</div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-header">
-            <span class="stat-label">Active Sessions</span>
-            <div class="stat-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-              </svg>
-            </div>
-          </div>
-          <div class="live-badge" style="margin-bottom:4px">Live</div>
-          <div class="stat-value">5</div>
-        </div>
-
-        <div class="green-banner" style="border-radius:var(--radius-lg)">
-          <h3 style="font-size:16px;margin-bottom:6px">Administrative Insights</h3>
-          <p style="font-size:12px;max-width:240px">Monitor user activity and manage permissions across your administrative zone.</p>
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-header">
-          <h3>
-            <span style="display:inline-flex;align-items:center;gap:8px">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--primary)">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-              </svg>
-              User Management
-            </span>
-          </h3>
-        </div>
-
-        <table class="data-table">
-          <thead>
-          <tr>
-            <th>User Name</th>
-            <th>Email Adresa</th>
-            <th>Role</th>
-            <th>Last Login</th>
-            <th>Actions</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr *ngFor="let u of users">
-            <td>
-              <div class="user-cell">
-                <div class="user-avatar" [style.background]="u.color">{{ u.initials }}</div>
-                <span style="font-weight:600">{{ u.name }}</span>
-              </div>
-            </td>
-            <td style="color:var(--text-secondary)">{{ u.email }}</td>
-            <td><span class="badge" [class]="u.role.toLowerCase()">{{ u.role }}</span></td>
-            <td style="color:var(--text-secondary)">{{ u.lastLogin }}</td>
-            <td>
-              <button class="edit-btn" (click)="editUser(u)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      <div class="stats-grid" style="grid-template-columns:2fr 1fr; gap:20px; align-items:start; margin-bottom:20px">
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-header">
+            <h3>
+              <span style="display:inline-flex;align-items:center;gap:8px">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--primary)">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                 </svg>
-              </button>
-            </td>
-          </tr>
-          </tbody>
-        </table>
+                Acțiuni Rapide
+              </span>
+            </h3>
+          </div>
+          
+          <div class="card-body">
+            <div class="qa-grid" style="grid-template-columns: 1fr 1fr;">
+              <div class="quick-action" (click)="goToCreateUat()">
+                <div class="qa-icon" style="background:#e0e7ff;color:#4f46e5">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                  </svg>
+                </div>
+                <div class="qa-text">
+                  <div class="qa-title">Creare UAT</div>
+                  <div class="qa-desc">Adaugă o unitate administrativ-teritorială</div>
+                </div>
+                <svg class="qa-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
+              
+              <div class="quick-action" (click)="goToCreateGospodarie()">
+                <div class="qa-icon" style="background:#dcfce7;color:#16a34a">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                </div>
+                <div class="qa-text">
+                  <div class="qa-title">Adaugă Gospodărie</div>
+                  <div class="qa-desc">Înregistrează o gospodărie nouă</div>
+                </div>
+                <svg class="qa-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
 
-        <div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--card-border)">
-          <span style="font-size:12.5px;color:var(--text-muted)">Showing {{ users.length }} users</span>
-          <div style="display:flex;gap:8px">
-            <button class="btn-secondary" style="padding:6px 14px;font-size:12px">Previous</button>
-            <button class="btn-primary" style="padding:6px 14px;font-size:12px">Next</button>
+              <div class="quick-action" (click)="goToCreatePersoana()">
+                <div class="qa-icon" style="background:#fae8ff;color:#c026d3">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </div>
+                <div class="qa-text">
+                  <div class="qa-title">Adaugă Persoană</div>
+                  <div class="qa-desc">Înregistrează o persoană în sistem</div>
+                </div>
+                <svg class="qa-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
+
+              <div class="quick-action" (click)="goToCreateUser()">
+                <div class="qa-icon" style="background:#fef3c7;color:#d97706">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <line x1="19" y1="8" x2="19" y2="14"/>
+                    <line x1="22" y1="11" x2="16" y2="11"/>
+                  </svg>
+                </div>
+                <div class="qa-text">
+                  <div class="qa-title">Creare Utilizator</div>
+                  <div class="qa-desc">Adaugă un administrator sau agent</div>
+                </div>
+                <svg class="qa-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="green-banner" style="border-radius:var(--radius-lg); height: 100%; color: white;">
+          <div style="position: relative; z-index: 1;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+              <h3 style="font-size:16px; margin:0; color: white;">Ghid de Utilizare</h3>
+            </div>
+            <p style="font-size:13px; line-height:1.5; margin-bottom:12px; color: rgba(255,255,255,0.9);">Bine ai venit în Panoul de Control al organizației! De aici poți gestiona:</p>
+            <ul style="font-size:13px; line-height:1.6; padding-left:20px; margin-bottom:0; color: white;">
+              <li><strong>UAT-uri:</strong> Configurează și administrează unitățile teritoriale.</li>
+              <li><strong>Gospodării:</strong> Înregistrează și gestionează datele agricole.</li>
+              <li><strong>Persoane:</strong> Adaugă proprietari și asociază-i cu gospodăriile lor.</li>
+              <li><strong>Utilizatori:</strong> Invită și gestionează accesul personalului.</li>
+            </ul>
           </div>
         </div>
       </div>
     </div>
   </main>
+</div>
+
+<!-- View User Modal -->
+<div class="modal-overlay" *ngIf="showViewModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Detalii Utilizator</h2>
+      <button class="close-btn" (click)="closeViewModal()">×</button>
+    </div>
+    <div style="padding: 10px 0;">
+      <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 20px;">
+        <div class="user-avatar" style="width: 48px; height: 48px; font-size: 18px;" [style.background]="viewingUser?.color">{{ viewingUser?.initials }}</div>
+        <div>
+          <div style="font-weight: 600; font-size: 18px;">{{ viewingUser?.name }}</div>
+          <div style="color: var(--text-secondary); font-size: 14px;">{{ viewingUser?.email }}</div>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+        <div>
+          <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Username</label>
+          <div style="font-weight: 500;">{{ viewingUser?.username }}</div>
+        </div>
+        <div>
+          <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Rol</label>
+          <span class="badge" [class]="viewingUser?.role.toLowerCase()">{{ viewingUser?.role }}</span>
+        </div>
+        <div>
+          <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Status</label>
+          <span class="badge" [class]="viewingUser?.activ ? 'activ' : 'inactiv'">{{ viewingUser?.activ ? 'Activ' : 'Inactiv' }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" (click)="closeViewModal()">Închide</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal-overlay" *ngIf="showEditModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Editare Utilizator</h2>
+      <button class="close-btn" (click)="closeEditModal()">×</button>
+    </div>
+    
+    <div *ngIf="errorMessage" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px">
+      {{ errorMessage }}
+    </div>
+
+    <form (ngSubmit)="updateUser()" #editUserForm="ngForm">
+      <div class="form-group">
+        <label>Nume</label>
+        <input type="text" class="form-control" name="nume" [(ngModel)]="editingUser.nume" disabled>
+      </div>
+
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" class="form-control" name="username" [(ngModel)]="editingUser.username" disabled>
+      </div>
+      
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" class="form-control" name="email" [(ngModel)]="editingUser.email" disabled>
+      </div>
+
+      <div class="form-group">
+        <label>Rol</label>
+        <select class="form-control" name="role" [(ngModel)]="editingUser.role" required>
+          <option value="ROLE_ADMIN">Admin</option>
+          <option value="ROLE_USER">User</option>
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="closeEditModal()">Anulează</button>
+        <button type="submit" class="btn-primary" [disabled]="editUserForm.invalid">Salvează</button>
+      </div>
+    </form>
+  </div>
 </div>
 

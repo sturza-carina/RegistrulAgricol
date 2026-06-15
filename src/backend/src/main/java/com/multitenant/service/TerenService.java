@@ -2,9 +2,12 @@ package com.multitenant.service;
 
 import com.multitenant.model.registru.Teren;
 import com.multitenant.model.registru.Parcela;
+import com.multitenant.model.registru.Gospodarie;
 import com.multitenant.repository.TerenRepository;
 import com.multitenant.repository.ParcelaRepository;
+import com.multitenant.repository.GospodarieRepository;
 import com.multitenant.dto.TerenWithParcelaDTO;
+import com.multitenant.dto.TerenCreateDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,18 +18,20 @@ public class TerenService {
 
     private final TerenRepository terenRepository;
     private final ParcelaRepository parcelaRepository;
+    private final GospodarieRepository gospodarieRepository;
 
-    public TerenService(TerenRepository terenRepository, ParcelaRepository parcelaRepository) {
+    public TerenService(TerenRepository terenRepository, ParcelaRepository parcelaRepository, GospodarieRepository gospodarieRepository) {
         this.terenRepository = terenRepository;
         this.parcelaRepository = parcelaRepository;
+        this.gospodarieRepository = gospodarieRepository;
     }
 
     public List<Teren> getAllTerenuri() {
         return terenRepository.findAll();
     }
 
-    public Teren getTerenByGospodarieId(Long gospodarieId) {
-        return terenRepository.findByGospodarieId(gospodarieId).orElse(null);
+    public List<Teren> getTerenByGospodarieId(Long gospodarieId) {
+        return terenRepository.findByGospodarieId(gospodarieId);
     }
 
     public Teren getTerenById(Long id) {
@@ -37,6 +42,23 @@ public class TerenService {
         if (teren == null) {
             throw new IllegalArgumentException("Teren cannot be null");
         }
+        return terenRepository.save(teren);
+    }
+
+    @Transactional
+    public Teren createTerenFromDTO(TerenCreateDTO dto) {
+        if (dto == null) throw new IllegalArgumentException("DTO cannot be null");
+        if (dto.getGospodarieId() == null) throw new IllegalArgumentException("gospodarieId is required");
+
+        Gospodarie gospodarie = gospodarieRepository.findById(dto.getGospodarieId())
+            .orElseThrow(() -> new RuntimeException("Gospodarie not found: " + dto.getGospodarieId()));
+
+        Teren teren = new Teren();
+        teren.setDenumire(dto.getDenumire());
+        teren.setTipTeren(dto.getTipTeren());
+        teren.setStereo70Coordinates(dto.getStereo70Coordinates());
+        teren.setPolygon(dto.getPolygon());
+        teren.setGospodarie(gospodarie);
         return terenRepository.save(teren);
     }
 

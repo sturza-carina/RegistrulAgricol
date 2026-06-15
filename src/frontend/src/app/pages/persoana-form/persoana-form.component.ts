@@ -1,14 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { PersoanaService } from '../../services/persoana.service';
 import { Persoana, PersoanaFizica, PersoanaJuridica } from '../../models/persoana.model';
+
+import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 
 @Component({
   selector: 'app-persoana-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SidebarComponent, RouterModule],
   templateUrl: './persoana-form.component.html'
 })
 export class PersonFormComponent implements OnInit {

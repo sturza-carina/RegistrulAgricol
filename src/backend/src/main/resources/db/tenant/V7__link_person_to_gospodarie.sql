@@ -1,1 +1,1 @@
-ALTER TABLE persons ADD COLUMN gospodarie_id INT REFERENCES gospodarie(id) ON DELETE SET NULL;
+ALTER TABLE persons ADD COLUMN IF NOT EXISTS gospodarie_id INT REFERENCES gospodarie(id) ON DELETE SET NULL;

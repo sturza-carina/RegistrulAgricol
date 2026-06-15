@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
@@ -15,17 +16,13 @@ export class SuperAdminDashboardComponent implements OnInit {
 
   user: any = null;
 
-  recentTenants = [
-    { name: 'AgriGroup S.A.',       initials: 'AG', color: '#1a6b3c', schema: 'agri_group_schema',      date: 'Oct 24, 2023', status: 'ACTIVE' },
-    { name: 'TerraForma Solutions',  initials: 'TF', color: '#0369a1', schema: 'terraform_sol_v2',       date: 'Oct 22, 2023', status: 'ACTIVE' },
-    { name: 'BioVineyard Ltd.',      initials: 'BV', color: '#9333ea', schema: 'biovine_master',         date: 'Oct 19, 2023', status: 'PENDING' },
-    { name: 'GreenHorizon Coop',     initials: 'GH', color: '#15803d', schema: 'green_horizon_prod',     date: 'Oct 15, 2023', status: 'ACTIVE' },
-    { name: 'SoilMaster Analytics',  initials: 'SM', color: '#6b7280', schema: 'soil_master_analytical', date: 'Oct 12, 2023', status: 'ARCHIVED' },
-  ];
+  recentTenants: any[] = [];
+  totalUsers: number = 0;
 
   constructor(
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -36,6 +33,40 @@ export class SuperAdminDashboardComponent implements OnInit {
         this.user = user;
       }
     });
+    this.loadTenants();
+    this.loadUsers();
+  }
+
+  loadUsers(): void {
+    this.http.get<any[]>('/api/users').subscribe({
+      next: (data) => {
+        this.totalUsers = data.length;
+      },
+      error: (err) => console.error('Failed to load users', err)
+    });
+  }
+
+  loadTenants(): void {
+    this.http.get<any[]>('/api/tenants').subscribe({
+      next: (data) => {
+        this.recentTenants = data.map(t => {
+          // Generate initials and color based on name
+          const initials = t.name.substring(0, 2).toUpperCase();
+          const colors = ['#1a6b3c', '#0369a1', '#9333ea', '#15803d', '#6b7280', '#eab308', '#dc2626'];
+          const color = colors[t.id % colors.length] || '#1a6b3c';
+          
+          return {
+            name: t.name,
+            initials: initials,
+            color: color,
+            schema: t.schemaName,
+            date: new Date(t.createdAt).toLocaleDateString(),
+            numUats: t.uatsCount || 1 // Backend will supply this, defaults to 1 for demo
+          };
+        });
+      },
+      error: (err) => console.error('Failed to load tenants', err)
+    });
   }
 
   exportRecords(): void {
@@ -44,11 +75,23 @@ export class SuperAdminDashboardComponent implements OnInit {
   }
 
   goToCreateTenant(): void {
-    this.router.navigate(['/tenants/new']);
+    this.router.navigate(['/tenants'], { queryParams: { action: 'create' } });
+  }
+
+  goToCreateUat(): void {
+    this.router.navigate(['/uats'], { queryParams: { action: 'create' } });
+  }
+
+  goToUats(): void {
+    this.router.navigate(['/uats']);
+  }
+
+  goToCreateUser(): void {
+    this.router.navigate(['/users'], { queryParams: { action: 'create' } });
   }
 
   goToUsers(): void {
-    this.router.navigate(['/user-management']);
+    this.router.navigate(['/users']);
   }
 
   logout(): void {

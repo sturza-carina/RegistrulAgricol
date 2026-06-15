@@ -6,4 +6,5 @@ export interface Parcela {
     polygon: any;
     terenId?: number;
     gospodarieName?: string;
+    stereo70Coordinates?: string;
 }

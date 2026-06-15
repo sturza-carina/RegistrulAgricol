@@ -6,4 +6,8 @@ export interface Teren {
 
   gospodarie?: Gospodarie;
   gospodarieId?: number;
+  
+  tipTeren?: string;
+  stereo70Coordinates?: string;
+  polygon?: any;
 }

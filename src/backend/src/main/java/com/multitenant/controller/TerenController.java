@@ -3,6 +3,7 @@ package com.multitenant.controller;
 import com.multitenant.model.registru.Teren;
 import com.multitenant.service.TerenService;
 import com.multitenant.dto.TerenWithParcelaDTO;
+import com.multitenant.dto.TerenCreateDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -34,11 +35,8 @@ public class TerenController {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.noContent().build();
         }
-        Teren teren = terenService.getTerenByGospodarieId(gospodarieId);
-        if (teren == null) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(teren);
+        List<Teren> terenuri = terenService.getTerenByGospodarieId(gospodarieId);
+        return ResponseEntity.ok(terenuri);
     }
 
     @GetMapping("/{id}")
@@ -52,11 +50,15 @@ public class TerenController {
 
     @PostMapping
     @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
-    public ResponseEntity<?> createTeren(@RequestBody Teren teren) {
+    public ResponseEntity<?> createTeren(@RequestBody TerenCreateDTO dto) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot create a Teren outside of a specific tenant context.");
         }
-        return ResponseEntity.ok(terenService.createTeren(teren));
+        try {
+            return ResponseEntity.ok(terenService.createTerenFromDTO(dto));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Eroare la salvare teren: " + e.getMessage());
+        }
     }
 
     @PostMapping("/with-parcela")
