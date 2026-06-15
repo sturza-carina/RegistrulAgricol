@@ -36,6 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(TenantController.class)
 @Import(SecurityConfig.class)
+@SuppressWarnings("null")
 class TenantControllerTest {
 
     @Autowired

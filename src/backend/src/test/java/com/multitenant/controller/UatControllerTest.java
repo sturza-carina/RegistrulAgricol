@@ -32,6 +32,7 @@ import jakarta.servlet.ServletResponse;
 
 @WebMvcTest(UatController.class)
 @Import(SecurityConfig.class)
+@SuppressWarnings("null")
 class UatControllerTest {
 
     @Autowired

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@SuppressWarnings("null")
 public class CategorieFolosintaController {
 
     private final CategorieFolosintaService categorieFolosintaService;

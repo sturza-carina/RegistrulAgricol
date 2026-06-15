@@ -6,19 +6,15 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import com.multitenant.repository.TerenRepository;
-import com.multitenant.model.registru.Teren;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class GospodarieService {
 
     private final GospodarieRepository gospodarieRepository;
-    private final TerenRepository terenRepository;
 
-    public GospodarieService(GospodarieRepository gospodarieRepository, TerenRepository terenRepository) {
+    public GospodarieService(GospodarieRepository gospodarieRepository) {
         this.gospodarieRepository = gospodarieRepository;
-        this.terenRepository = terenRepository;
     }
 
     public List<Gospodarie> getAllGospodarii() {
