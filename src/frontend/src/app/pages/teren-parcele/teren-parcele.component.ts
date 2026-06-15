@@ -6,8 +6,10 @@ import * as L from 'leaflet';
 import { TerenService } from '../../services/teren.service';
 import { ParcelaService } from '../../services/parcela.service';
 import { CoordConversionService } from '../../services/coord-conversion.service';
+import { CategorieFolosintaService } from '../../services/categorie-folosinta.service';
 import { Teren } from '../../models/teren.model';
 import { Parcela } from '../../models/parcela.model';
+import { CategorieFolosinta } from '../../models/categorie-folosinta.model';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 
 @Component({
@@ -48,11 +50,17 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
 
   categoriiFolosinta = ['Arabil', 'Pășune', 'Fânețe', 'Livadă', 'Vii', 'Pădure', 'Ape', 'Alte'];
 
+  categorii: CategorieFolosinta[] = [];
+  isAddingCategorie = false;
+  editingCategorie: CategorieFolosinta | null = null;
+  newCategorie: CategorieFolosinta = { denumire: '', descriere: '' };
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private terenService: TerenService,
     private parcelaService: ParcelaService,
+    private categorieService: CategorieFolosintaService,
     private conv: CoordConversionService,
     private zone: NgZone
   ) {}
@@ -71,6 +79,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
       setTimeout(() => {
         this.initMap();
         this.loadParcele();
+        this.loadCategorii();
       }, 150);
     });
   }
@@ -334,6 +343,71 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
         this.calculatedArea = null;
       },
       error: (err) => { this.saving = false; console.error(err); alert('Eroare la salvare parcelă.'); }
+    });
+  }
+
+  loadCategorii() {
+    this.categorieService.getCategoriiForTeren(this.terenId).subscribe({
+      next: categorii => this.categorii = categorii || [],
+      error: () => this.categorii = []
+    });
+  }
+
+  openAddCategorieForm() {
+    this.isAddingCategorie = true;
+    this.editingCategorie = null;
+    this.newCategorie = { denumire: '', descriere: '' };
+  }
+
+  openEditCategorie(categorie: CategorieFolosinta) {
+    this.isAddingCategorie = true;
+    this.editingCategorie = categorie;
+    this.newCategorie = { ...categorie };
+  }
+
+  cancelAddCategorie() {
+    this.isAddingCategorie = false;
+    this.editingCategorie = null;
+    this.newCategorie = { denumire: '', descriere: '' };
+  }
+
+  saveCategorie() {
+    if (!this.newCategorie.denumire?.trim()) {
+      alert('Introduceți denumirea categoriei.');
+      return;
+    }
+
+    this.saving = true;
+    if (this.editingCategorie && this.editingCategorie.id) {
+      this.categorieService.updateCategorie(this.editingCategorie.id, this.newCategorie).subscribe({
+        next: (updated) => {
+          this.saving = false;
+          const idx = this.categorii.findIndex(c => c.id === updated.id);
+          if (idx >= 0) this.categorii[idx] = updated;
+          this.cancelAddCategorie();
+        },
+        error: (err) => { this.saving = false; console.error(err); alert('Eroare la actualizare categorie.'); }
+      });
+    } else {
+      this.categorieService.createCategorie(this.terenId, this.newCategorie).subscribe({
+        next: (saved) => {
+          this.saving = false;
+          this.categorii.push(saved);
+          this.cancelAddCategorie();
+        },
+        error: (err) => { this.saving = false; console.error(err); alert('Eroare la salvare categorie.'); }
+      });
+    }
+  }
+
+  deleteCategorie(categorie: CategorieFolosinta) {
+    if (!categorie.id) return;
+    if (!confirm(`Ștergeți categoria "${categorie.denumire}"?`)) return;
+    this.categorieService.deleteCategorie(categorie.id).subscribe({
+      next: () => {
+        this.categorii = this.categorii.filter(c => c.id !== categorie.id);
+      },
+      error: () => alert('Eroare la ștergere categorie.')
     });
   }
 
