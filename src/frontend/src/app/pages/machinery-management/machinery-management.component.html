@@ -1,0 +1,94 @@
+<section class="machinery-shell">
+  <header class="machinery-header">
+    <div>
+      <p class="eyebrow">Utilaje agricole</p>
+      <h2>Management utilaje</h2>
+      <p class="subtle">Gestionați utilajele asociate gospodăriei selectate.</p>
+    </div>
+    <button type="button" class="primary-btn" (click)="openCreateForm()">Adăugare utilaj</button>
+  </header>
+
+  <div class="panel" *ngIf="showForm">
+    <div class="panel-header">
+      <h3>{{ editingId ? 'Editare utilaj' : 'Adăugare utilaj nou' }}</h3>
+      <button type="button" class="ghost-btn" (click)="cancelForm()">Anulare</button>
+    </div>
+
+    <form class="machinery-form" (ngSubmit)="saveMachinery()" #machineryFormRef="ngForm">
+      <label>
+        Tip utilaj
+        <select name="tipUtilaj" [(ngModel)]="machineryForm.tipUtilaj" required>
+          <option *ngFor="let option of tipUtilajOptions" [value]="option">{{ option }}</option>
+        </select>
+      </label>
+
+      <label>
+        Marcă
+        <input type="text" name="marca" [(ngModel)]="machineryForm.marca" placeholder="Deutz, New Holland..." required />
+      </label>
+
+      <label>
+        Model
+        <input type="text" name="model" [(ngModel)]="machineryForm.model" placeholder="Model utilaj" required />
+      </label>
+
+      <label>
+        An fabricație
+        <input type="number" name="anFabricatie" [(ngModel)]="machineryForm.anFabricatie" min="1900" max="2100" />
+      </label>
+
+      <label>
+        Număr înmatriculare
+        <input type="text" name="numarInmatriculare" [(ngModel)]="machineryForm.numarInmatriculare" placeholder="B-123-ABC" />
+      </label>
+
+      <div class="form-actions">
+        <button type="button" class="ghost-btn" (click)="cancelForm()">Renunță</button>
+        <button type="submit" class="primary-btn" [disabled]="isSaving || !machineryFormRef.valid">
+          {{ isSaving ? 'Se salvează...' : (editingId ? 'Actualizează' : 'Salvează') }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <h3>Lista utilajelor</h3>
+      <span class="badge">{{ machineryList.length }} înregistrări</span>
+    </div>
+
+    <div *ngIf="isLoading" class="empty-state">Se încarcă utilajele...</div>
+
+    <div *ngIf="!isLoading && machineryList.length === 0" class="empty-state">
+      Nu există utilaje înregistrate pentru această gospodărie.
+    </div>
+
+    <div class="table-wrap" *ngIf="!isLoading && machineryList.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>Tip utilaj</th>
+            <th>Marcă</th>
+            <th>Model</th>
+            <th>An</th>
+            <th>Număr înmatriculare</th>
+            <th class="actions-col">Acțiuni</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of machineryList">
+            <td>{{ item.tipUtilaj }}</td>
+            <td>{{ item.marca }}</td>
+            <td>{{ item.model }}</td>
+            <td>{{ item.anFabricatie || '—' }}</td>
+            <td>{{ item.numarInmatriculare || '—' }}</td>
+            <td class="actions-col">
+              <button type="button" class="ghost-btn" (click)="openEditForm(item)">Edit</button>
+              <button type="button" class="danger-btn" (click)="deleteMachinery(item.id)">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

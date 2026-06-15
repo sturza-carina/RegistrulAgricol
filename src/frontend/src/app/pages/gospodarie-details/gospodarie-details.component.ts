@@ -8,11 +8,12 @@ import { TerenService } from '../../services/teren.service';
 import { Teren } from '../../models/teren.model';
 import { ParcelaService } from '../../services/parcela.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { MachineryManagementComponent } from '../machinery-management/machinery-management.component';
 
 @Component({
   selector: 'app-gospodarie-details',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, RouterModule],
+  imports: [CommonModule, SidebarComponent, RouterModule, MachineryManagementComponent],
   templateUrl: './gospodarie-details.component.html',
   styleUrls: ['./gospodarie-details.component.css']
 })
