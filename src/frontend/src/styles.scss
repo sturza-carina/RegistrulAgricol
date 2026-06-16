@@ -1130,13 +1130,19 @@ button {
   cursor: pointer;
   flex: 1;
   outline: none;
-  min-width: 0; /* permite text-overflow */
+  min-width: 0;
+
+  /* ascunde sageata nativa a browserului */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
-/* optiunile dropdown trebuie sa fie vizibile pe fundal inchis */
+/* optiunile dropdown - fundal luminos */
 .uat-select option {
-  background: #1e3a2f;
-  color: white;
+  background: #ffffff;
+  color: #1a1a1a;
+  font-weight: 500;
 }
 
 .uat-chevron {

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy} from '@angular/core';
+import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -6,7 +6,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
 import { UatContextService } from '../../services/uat-context.service';
-import {Uat} from '../../models/gospodarie.model';
+import { Uat } from '../../models/gospodarie.model';
 
 @Component({
   selector: 'app-sidebar',
@@ -15,6 +15,9 @@ import {Uat} from '../../models/gospodarie.model';
   templateUrl: './sidebar.component.html'
 })
 export class SidebarComponent implements OnInit, OnDestroy {
+  @Input() activeGospodarieId?: number;
+  @Input() activeTab?: string;
+
   user: any = null;
   isImpersonating: boolean = false;
   availableUats: Uat[] = [];
@@ -26,7 +29,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private uatContext: UatContextService,
-    private router: Router
+    public router: Router
   ) {}
 
   ngOnInit(): void {
@@ -40,23 +43,18 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
     this.uatContext.availableUats$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(uats => {
-        console.log('availableUats$ emis in sidebar:', uats.length, uats.map(u => u.codSiruta));
-        this.availableUats = uats;
-      });
+      .subscribe(uats => { this.availableUats = uats; });
 
     this.uatContext.activeUat$
       .pipe(takeUntil(this.destroy$))
       .subscribe(uat => {
         this.activeUat = uat;
-        this.activeUatCode = uat?.codSiruta || '';  // sincronizezi string-ul pentru ngModel
+        this.activeUatCode = uat?.codSiruta || '';
       });
   }
 
   onUatChange(codSiruta: string): void {
-    // ignoră dacă e același UAT — previne loop-uri
     if (codSiruta === this.activeUat?.codSiruta) return;
-
     const selected = this.availableUats.find(u => u.codSiruta === codSiruta);
     if (selected) {
       this.uatContext.setActiveUat(selected);
