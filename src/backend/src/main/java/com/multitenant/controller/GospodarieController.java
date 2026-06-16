@@ -16,15 +16,6 @@ public class GospodarieController {
         this.gospodarieService = gospodarieService;
     }
 
-    @GetMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
-    public ResponseEntity<?> getAllGospodarii() {
-        if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
-            return ResponseEntity.ok(java.util.Collections.emptyList());
-        }
-        return ResponseEntity.ok(gospodarieService.getAllGospodarii());
-    }
-
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> getGospodarieById(@PathVariable Long id) {
@@ -60,5 +51,16 @@ public class GospodarieController {
         }
         gospodarieService.deleteGospodarie(id);
         return ResponseEntity.ok().build();
+    }
+
+
+    @GetMapping
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
+    public ResponseEntity<?> getAllGospodarii(
+            @RequestParam(required = false) String uatCode) {
+        if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
+            return ResponseEntity.ok(java.util.Collections.emptyList());
+        }
+        return ResponseEntity.ok(gospodarieService.getAllGospodarii(uatCode));
     }
 }

@@ -382,26 +382,26 @@ button {
   &.pending  { background: var(--badge-pending-bg);  color: var(--badge-pending-text); }
   &.archived { background: var(--badge-archived-bg); color: var(--badge-archived-text); }
   &.admin    { background: var(--badge-admin-bg);    color: var(--badge-admin-text); }
-  &.super_admin { 
-    background: #fef2f2; 
-    color: #b91c1c; 
+  &.super_admin {
+    background: #fef2f2;
+    color: #b91c1c;
     border: 1px solid #fca5a5;
   }
   &.registrar{ background: var(--badge-registrar-bg);color: var(--badge-registrar-text); }
   &.viewer   { background: var(--badge-viewer-bg);   color: var(--badge-viewer-text); }
-  &.user     { 
-    background: #f1f5f9; 
-    color: #475569; 
+  &.user     {
+    background: #f1f5f9;
+    color: #475569;
     border: 1px solid #cbd5e1;
   }
-  &.activ { 
-    background: #dcfce7; 
-    color: #16a34a; 
+  &.activ {
+    background: #dcfce7;
+    color: #16a34a;
     border: 1px solid #bbf7d0;
   }
-  &.inactiv { 
-    background: #f1f5f9; 
-    color: #64748b; 
+  &.inactiv {
+    background: #f1f5f9;
+    color: #64748b;
     border: 1px solid #e2e8f0;
   }
 }
@@ -1094,4 +1094,70 @@ button {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 24px;
+}
+
+
+.uat-selector {
+  margin: 8px 10px 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.uat-selector-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sidebar-muted);
+  margin-bottom: 7px;
+  font-weight: 600;
+}
+
+.uat-dropdown-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--sidebar-text);
+}
+
+.uat-select {
+  background: transparent;
+  border: none;
+  color: var(--sidebar-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 1;
+  outline: none;
+  min-width: 0; /* permite text-overflow */
+}
+
+/* optiunile dropdown trebuie sa fie vizibile pe fundal inchis */
+.uat-select option {
+  background: #1e3a2f;
+  color: white;
+}
+
+.uat-chevron {
+  color: var(--sidebar-muted);
+  flex-shrink: 0;
+}
+
+.uat-fixed {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sidebar-text);
+}
+
+.nav-separator {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sidebar-muted);
+  padding: 12px 14px 4px;
+  font-weight: 600;
 }
