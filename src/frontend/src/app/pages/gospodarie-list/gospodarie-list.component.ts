@@ -1,11 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { Subject, combineLatest, filter } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
 import { GospodarieService } from '../../services/gospodarie.service';
-import { Gospodarie } from '../../models/gospodarie.model';
+import { UatContextService } from '../../services/uat-context.service';
+import { Gospodarie, Uat } from '../../models/gospodarie.model';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { AuthService } from '../../services/auth.service';
-import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-gospodarie-list',
@@ -14,35 +18,59 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './gospodarie-list.component.html',
   styleUrls: ['./gospodarie-list.component.css']
 })
-export class GospodarieListComponent implements OnInit {
+export class GospodarieListComponent implements OnInit, OnDestroy {
   gospodarii: Gospodarie[] = [];
   filteredGospodarii: Gospodarie[] = [];
   user: any = null;
   searchQuery = '';
-
+  filterTipGospodarie: string = '';
   selectedGospodarie: Gospodarie | null = null;
 
+  // UAT activ curent — folosit pentru banner si filtrare
+  activeUat: Uat | null = null;
+
+  private destroy$ = new Subject<void>();
   constructor(
     private gospodarieService: GospodarieService,
+    private uatContext: UatContextService,
     private authService: AuthService,
     private router: Router
   ) {}
 
-  filterTipGospodarie: string = '';
 
-  ngOnInit() {
-    this.authService.currentUser.subscribe(user => {
-      if (!user) {
-        this.router.navigate(['/login']);
-      } else {
-        this.user = user;
+  ngOnInit(): void {
+    this.user = this.authService.currentUserSubject.getValue();
+    if (!this.user) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    // super admin incarca imediat fara sa astepte UAT
+    if (this.user.role === 'ROLE_SUPER_ADMIN') {
+      this.loadGospodarii();
+      return;
+    }
+
+    // ceilalti așteapta UAT-ul activ (ignora null-ul initial)
+    this.uatContext.activeUat$
+      .pipe(
+        filter(uat => uat !== null),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(uat => {
+        this.activeUat = uat;
         this.loadGospodarii();
-      }
-    });
+      });
   }
 
-  loadGospodarii() {
-    this.gospodarieService.getAllGospodarii().subscribe({
+  loadGospodarii(): void {
+    const uatCode = this.user?.role === 'ROLE_SUPER_ADMIN'
+      ? undefined
+      : this.activeUat?.codSiruta;
+
+    console.log('loadGospodarii cu uatCode:', uatCode);
+
+    this.gospodarieService.getAllGospodarii(uatCode).subscribe({
       next: (data) => {
         this.gospodarii = data;
         this.applyFilters();
@@ -51,17 +79,22 @@ export class GospodarieListComponent implements OnInit {
     });
   }
 
-  applyFilters() {
+  applyFilters(): void {
     const q = this.searchQuery.toLowerCase();
     this.filteredGospodarii = this.gospodarii.filter(g => {
-      const matchSearch = g.codGospodarie.toLowerCase().includes(q) ||
+      const matchSearch =
+        g.codGospodarie.toLowerCase().includes(q) ||
         (g.adresa.localitate && g.adresa.localitate.toLowerCase().includes(q));
-      
-      const matchType = this.filterTipGospodarie ? g.tipGospodarie === this.filterTipGospodarie : true;
-
+      const matchType = this.filterTipGospodarie
+        ? g.tipGospodarie === this.filterTipGospodarie
+        : true;
       return matchSearch && matchType;
     });
-    if (this.selectedGospodarie && !this.filteredGospodarii.find(g => g.id === this.selectedGospodarie?.id)) {
+
+    if (
+      this.selectedGospodarie &&
+      !this.filteredGospodarii.find(g => g.id === this.selectedGospodarie?.id)
+    ) {
       this.selectedGospodarie = null;
     }
   }
@@ -70,12 +103,8 @@ export class GospodarieListComponent implements OnInit {
     this.router.navigate(['/gospodarii/new']);
   }
 
-  selectGospodarie(g: Gospodarie) {
-    if (this.selectedGospodarie?.id === g.id) {
-      this.selectedGospodarie = null; // deselect
-    } else {
-      this.selectedGospodarie = g;
-    }
+  selectGospodarie(g: Gospodarie): void {
+    this.selectedGospodarie = this.selectedGospodarie?.id === g.id ? null : g;
   }
 
   editSelected() {
@@ -84,8 +113,11 @@ export class GospodarieListComponent implements OnInit {
     }
   }
 
-  deleteSelected() {
-    if (this.selectedGospodarie?.id && confirm('Sunteți sigur că doriți să ștergeți gospodăria selectată?')) {
+  deleteSelected(): void {
+    if (
+      this.selectedGospodarie?.id &&
+      confirm('Sunteți sigur că doriți să ștergeți gospodăria selectată?')
+    ) {
       this.gospodarieService.deleteGospodarie(this.selectedGospodarie.id).subscribe(() => {
         this.selectedGospodarie = null;
         this.loadGospodarii();
@@ -93,7 +125,7 @@ export class GospodarieListComponent implements OnInit {
     }
   }
 
-  deleteRow(id: number | undefined, event: Event) {
+  deleteRow(id: number | undefined, event: Event): void {
     event.stopPropagation();
     if (!id) return;
     if (confirm('Ești sigur că vrei să ștergi această gospodărie?')) {
@@ -120,24 +152,29 @@ export class GospodarieListComponent implements OnInit {
     if (id) this.router.navigate(['/gospodarii/edit', id]);
   }
 
-  manageParcele(id?: number) {
-    if (id) this.router.navigate(['/harta'], { queryParams: { gospodarieId: id } });
-  }
-
-  addParcelaSelected() {
+  addParcelaSelected(): void {
     if (this.selectedGospodarie) {
-      this.router.navigate(['/harta'], { queryParams: { gospodarieId: this.selectedGospodarie.id } });
+      this.router.navigate(['/harta'], {
+        queryParams: { gospodarieId: this.selectedGospodarie.id }
+      });
     }
   }
 
-  addPersoanaSelected() {
+  addPersoanaSelected(): void {
     if (this.selectedGospodarie) {
-      this.router.navigate(['/persoane/new'], { queryParams: { gospodarieId: this.selectedGospodarie.id } });
+      this.router.navigate(['/persoane/new'], {
+        queryParams: { gospodarieId: this.selectedGospodarie.id }
+      });
     }
   }
 
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

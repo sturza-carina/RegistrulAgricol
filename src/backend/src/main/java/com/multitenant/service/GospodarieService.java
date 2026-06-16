@@ -58,4 +58,11 @@ public class GospodarieService {
         }
         gospodarieRepository.deleteById(id);
     }
+
+    public List<Gospodarie> getAllGospodarii(String uatCode) {
+        if (uatCode != null && !uatCode.isBlank()) {
+            return gospodarieRepository.findByUat_CodSiruta(uatCode);
+        }
+        return gospodarieRepository.findAll();
+    }
 }
