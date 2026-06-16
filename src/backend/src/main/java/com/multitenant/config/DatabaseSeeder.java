@@ -1,7 +1,5 @@
 package com.multitenant.config;
 
-import com.multitenant.model.core.Tenant;
-
 import com.multitenant.config.tenant.TenantContext;
 import com.multitenant.model.registru.Gospodarie;
 import com.multitenant.model.common.Adresa;
@@ -9,7 +7,6 @@ import com.multitenant.model.registru.TipGospodarie;
 import com.multitenant.model.core.Uat;
 import com.multitenant.model.core.User;
 import com.multitenant.repository.GospodarieRepository;
-import com.multitenant.repository.TenantRepository;
 import com.multitenant.repository.UatRepository;
 import com.multitenant.repository.UserRepository;
 import com.multitenant.service.TenantService;
@@ -20,7 +17,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class DatabaseSeeder implements CommandLineRunner {
 
-    private final TenantRepository tenantRepository;
     private final TenantService tenantService;
     private final UatRepository uatRepository;
     private final UserRepository userRepository;
@@ -29,15 +25,13 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final com.multitenant.repository.ParcelaRepository parcelaRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public DatabaseSeeder(TenantRepository tenantRepository,
-                          TenantService tenantService,
+    public DatabaseSeeder(TenantService tenantService,
                           UatRepository uatRepository,
                           UserRepository userRepository,
                           GospodarieRepository gospodarieRepository,
                           com.multitenant.repository.TerenRepository terenRepository,
                           com.multitenant.repository.ParcelaRepository parcelaRepository,
                           PasswordEncoder passwordEncoder) {
-        this.tenantRepository = tenantRepository;
         this.tenantService = tenantService;
         this.uatRepository = uatRepository;
         this.userRepository = userRepository;

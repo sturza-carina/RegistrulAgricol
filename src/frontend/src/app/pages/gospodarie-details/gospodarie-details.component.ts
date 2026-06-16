@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { GospodarieService } from '../../services/gospodarie.service';
 import { Gospodarie } from '../../models/gospodarie.model';
 import { PersoanaService } from '../../services/persoana.service';
@@ -8,11 +9,14 @@ import { TerenService } from '../../services/teren.service';
 import { Teren } from '../../models/teren.model';
 import { ParcelaService } from '../../services/parcela.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { MachineryManagementComponent } from '../machinery-management/machinery-management.component';
+import { CladireManagementComponent } from '../cladire-management/cladire-management.component';
+import { PersonFormComponent } from '../persoana-form/persoana-form.component';
 
 @Component({
   selector: 'app-gospodarie-details',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, RouterModule],
+  imports: [CommonModule, FormsModule, SidebarComponent, RouterModule, MachineryManagementComponent, CladireManagementComponent, PersonFormComponent],
   templateUrl: './gospodarie-details.component.html',
   styleUrls: ['./gospodarie-details.component.css']
 })
@@ -21,6 +25,14 @@ export class GospodarieDetailsComponent implements OnInit {
   gospodarie: Gospodarie | null = null;
   persoane: any[] = [];
   terenuri: Teren[] = [];
+  activeTab: string = 'GENERAL';
+
+  showPersonModal = false;
+  editPersonId?: number;
+
+  searchMembriText: string = '';
+  searchTerenuriText: string = '';
+  selectedTipTeren: string = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -37,6 +49,14 @@ export class GospodarieDetailsComponent implements OnInit {
       if (id) {
         this.gospodarieId = +id;
         this.loadDetails();
+      }
+    });
+
+    this.route.queryParams.subscribe(params => {
+      if (params['tab']) {
+        this.activeTab = params['tab'];
+      } else {
+        this.activeTab = 'GENERAL';
       }
     });
   }
@@ -63,11 +83,18 @@ export class GospodarieDetailsComponent implements OnInit {
   }
 
   addPerson() {
-    this.router.navigate(['/persoane/new'], { queryParams: { gospodarieId: this.gospodarieId } });
+    this.editPersonId = undefined;
+    this.showPersonModal = true;
   }
 
-  editPerson(id: number | undefined) {
-    if (id) this.router.navigate(['/persoane/edit', id]);
+  editPerson(id: number) {
+    this.editPersonId = id;
+    this.showPersonModal = true;
+  }
+
+  closePersonModal() {
+    this.showPersonModal = false;
+    this.loadDetails(); // Refresh members list
   }
 
   viewMap() {
@@ -95,5 +122,41 @@ export class GospodarieDetailsComponent implements OnInit {
       },
       error: () => alert('Eroare la ștergere teren.')
     });
+  }
+
+  get filteredPersoane() {
+    if (!this.searchMembriText) return this.persoane;
+    const lowerSearch = this.searchMembriText.toLowerCase();
+    return this.persoane.filter(p => {
+      const isLegal = p.personType === 'LEGAL_ENTITY';
+      const name = isLegal ? p.companyName : `${p.firstName} ${p.lastName}`;
+      const idCode = isLegal ? p.cui : p.cnp;
+      
+      return (name && name.toLowerCase().includes(lowerSearch)) ||
+             (idCode && idCode.toLowerCase().includes(lowerSearch));
+    });
+  }
+
+  get tipTerenOptions(): string[] {
+    const types = new Set(this.terenuri.map(t => t.tipTeren).filter(t => t));
+    return Array.from(types) as string[];
+  }
+
+  get filteredTerenuri() {
+    let filtered = this.terenuri;
+    
+    if (this.selectedTipTeren) {
+      filtered = filtered.filter(t => t.tipTeren === this.selectedTipTeren);
+    }
+
+    if (this.searchTerenuriText) {
+      const lowerSearch = this.searchTerenuriText.toLowerCase();
+      filtered = filtered.filter(t => {
+        return (t.denumire && t.denumire.toLowerCase().includes(lowerSearch)) ||
+               (t.tipTeren && t.tipTeren.toLowerCase().includes(lowerSearch));
+      });
+    }
+
+    return filtered;
   }
 }

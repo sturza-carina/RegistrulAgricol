@@ -1,0 +1,82 @@
+<div class="management-container">
+    <div class="header-actions">
+        <h3>Clădiri și Construcții</h3>
+        <button class="btn-primary" (click)="openAddModal()">
+            <i class="fas fa-plus"></i> Adaugă Clădire
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Destinație</th>
+                    <th>Suprafață (mp)</th>
+                    <th>An Terminare</th>
+                    <th>Materiale</th>
+                    <th>Adresă / Parcelă</th>
+                    <th>Acțiuni</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let cladire of cladiri">
+                    <td>{{ cladire.destinatie }}</td>
+                    <td>{{ cladire.suprafataConstruita }}</td>
+                    <td>{{ cladire.anTerminare || '-' }}</td>
+                    <td>{{ cladire.materiale || '-' }}</td>
+                    <td>{{ cladire.adresaSauParcela || '-' }}</td>
+                    <td class="actions-cell">
+                        <button class="btn-icon edit" (click)="openEditModal(cladire)" title="Editează">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-icon delete" (click)="deleteCladire(cladire.id)" title="Șterge">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr *ngIf="cladiri.length === 0">
+                    <td colspan="6" class="empty-state">Nu există clădiri înregistrate.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal Form -->
+    <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2>{{ isEditing ? 'Editează Clădire' : 'Adaugă Clădire' }}</h2>
+                <button class="btn-close" (click)="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form (ngSubmit)="saveCladire()">
+                    <div class="form-group">
+                        <label>Destinație *</label>
+                        <input type="text" [(ngModel)]="currentCladire.destinatie" name="destinatie" required placeholder="ex: Locuință, Grajd, Hambar">
+                    </div>
+                    <div class="form-group">
+                        <label>Suprafață construită (mp) *</label>
+                        <input type="number" [(ngModel)]="currentCladire.suprafataConstruita" name="suprafataConstruita" required step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>An Terminare</label>
+                        <input type="number" [(ngModel)]="currentCladire.anTerminare" name="anTerminare" min="1800" max="2100">
+                    </div>
+                    <div class="form-group">
+                        <label>Materiale</label>
+                        <input type="text" [(ngModel)]="currentCladire.materiale" name="materiale" placeholder="ex: Cărămidă, Lemn">
+                    </div>
+                    <div class="form-group">
+                        <label>Adresă / Parcelă</label>
+                        <input type="text" [(ngModel)]="currentCladire.adresaSauParcela" name="adresaSauParcela" placeholder="Identificator locație">
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" (click)="closeModal()">Anulează</button>
+                        <button type="submit" class="btn-primary">Salvează</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

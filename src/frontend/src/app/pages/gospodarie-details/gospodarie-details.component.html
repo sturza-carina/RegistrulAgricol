@@ -1,5 +1,5 @@
 <div class="app-shell">
-  <app-sidebar></app-sidebar>
+  <app-sidebar [activeGospodarieId]="gospodarieId" [activeTab]="activeTab"></app-sidebar>
   <main class="main-content">
     <header class="topbar">
       <div class="topbar-title">Detalii Gospodărie</div>
@@ -37,7 +37,7 @@
         </div>
       </div>
 
-      <div class="card" style="margin-bottom: 20px; padding: 20px;">
+      <div class="card" style="margin-bottom: 20px; padding: 20px;" *ngIf="activeTab === 'GENERAL'">
         <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 16px;">Informații Generale</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
           <div>
@@ -55,13 +55,17 @@
         </div>
       </div>
 
-      <div class="card" style="margin-bottom: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <div class="management-container" *ngIf="activeTab === 'MEMBERS'">
+        <div class="header-actions" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
           <h3 style="margin: 0;">Membrii Gospodăriei</h3>
-          <button class="btn-primary" (click)="addPerson()">Adaugă Membru</button>
+          <div style="display: flex; gap: 15px; align-items: center;">
+            <input type="text" class="input-field" placeholder="Caută membru..." [(ngModel)]="searchMembriText" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border, #cbd5e1); width: 250px;" />
+            <button class="btn-primary" (click)="addPerson()">Adaugă Membru</button>
+          </div>
         </div>
         
-        <table class="data-table">
+        <div class="table-responsive">
+          <table class="data-table">
           <thead>
             <tr>
               <th>Nume / Denumire</th>
@@ -71,7 +75,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let p of persoane" (click)="editPerson(p.id)" style="cursor: pointer;" class="hoverable-row">
+            <tr *ngFor="let p of filteredPersoane" (click)="editPerson(p.id)" style="cursor: pointer;" class="hoverable-row">
               <td>
                 <strong *ngIf="p.personType === 'PHYSICAL_PERSON'">{{ p.firstName }} {{ p.lastName }}</strong>
                 <strong *ngIf="p.personType === 'LEGAL_ENTITY'">{{ p.companyName }}</strong>
@@ -91,21 +95,30 @@
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
 
-      <div class="card" style="margin-bottom: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <div class="management-container" *ngIf="activeTab === 'TERENURI'">
+        <div class="header-actions" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
           <h3 style="margin: 0;">Terenuri Agricole</h3>
-          <button class="btn-primary" (click)="addTeren()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px; vertical-align: middle; display: inline-block;">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            Adaugă Teren
-          </button>
+          <div style="display: flex; gap: 15px; align-items: center;">
+            <select [(ngModel)]="selectedTipTeren" class="input-field" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border, #cbd5e1); min-width: 150px; background: white; cursor: pointer;">
+              <option value="">Toate tipurile</option>
+              <option *ngFor="let tip of tipTerenOptions" [value]="tip">{{ tip }}</option>
+            </select>
+            <input type="text" class="input-field" placeholder="Caută teren..." [(ngModel)]="searchTerenuriText" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border, #cbd5e1); width: 250px;" />
+            <button class="btn-primary" (click)="addTeren()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px; vertical-align: middle; display: inline-block;">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Adaugă Teren
+            </button>
+          </div>
         </div>
         
-        <table class="data-table">
+        <div class="table-responsive">
+          <table class="data-table">
           <thead>
             <tr>
               <th>Denumire</th>
@@ -115,7 +128,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let t of terenuri">
+            <tr *ngFor="let t of filteredTerenuri">
               <td><strong>{{ t.denumire || '-' }}</strong></td>
               <td>
                 <span *ngIf="t.tipTeren" class="badge viewer">{{ t.tipTeren }}</span>
@@ -162,7 +175,21 @@
             </tr>
           </tbody>
         </table>
+        </div>
+      </div>
+
+      <!-- Utilaje Section -->
+      <div style="margin-bottom: 20px;" *ngIf="activeTab === 'MACHINERY'">
+        <app-machinery-management [gospodarieId]="gospodarieId"></app-machinery-management>
+      </div>
+
+      <!-- Cladiri Section -->
+      <div style="margin-bottom: 20px;" *ngIf="activeTab === 'BUILDINGS'">
+        <app-cladire-management [gospodarieId]="gospodarieId"></app-cladire-management>
       </div>
     </div>
   </main>
 </div>
+
+<app-persoana-form *ngIf="showPersonModal" [isModal]="true" [gospodarieId]="gospodarieId" [editId]="editPersonId" (closeForm)="closePersonModal()"></app-persoana-form>
+
