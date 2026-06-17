@@ -1,0 +1,187 @@
+<div class="app-shell">
+  <app-sidebar></app-sidebar>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-spacer"></div>
+      <div class="user-chip">
+        <div class="user-info">
+          <div class="user-name">{{ user?.username || 'Admin User' }}</div>
+        </div>
+        <div class="avatar">{{ (user?.username?.charAt(0) || 'A') | uppercase }}</div>
+      </div>
+      <button class="logout-btn" (click)="logout()">Deconectare</button>
+    </header>
+
+    <div class="page-content">
+      <div class="breadcrumbs" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+        <span style="color: var(--text-primary); font-weight: 500;">Animale</span>
+      </div>
+
+      <div class="page-header-row">
+        <div>
+          <h1 style="font-size:22px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--text-primary);margin-bottom:3px">
+            Gestionare Animale & Efective de Animale
+          </h1>
+          <p style="font-size:13px;color:var(--text-secondary)">
+            Înregistrați și gestionați animalele individuale și efectivele de grup (flock stock) din registrul agricol.
+          </p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn-primary" [routerLink]="['/animale/individual/new']">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Adaugă Individual
+          </button>
+          <button class="btn-primary" [routerLink]="['/animale/grup/new']" style="background-color: var(--primary-mid)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            Adaugă Grup
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab Selection -->
+      <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--card-border); padding-bottom: 1px;">
+        <button 
+          (click)="setTab('individual')" 
+          [style.border-bottom]="activeTab === 'individual' ? '3px solid var(--primary)' : 'none'"
+          [style.color]="activeTab === 'individual' ? 'var(--primary)' : 'var(--text-secondary)'"
+          style="background: transparent; border: none; padding: 10px 16px; font-weight: 600; cursor: pointer; outline: none; transition: all 0.2s;">
+          Animale Individuale
+        </button>
+        <button 
+          (click)="setTab('grup')" 
+          [style.border-bottom]="activeTab === 'grup' ? '3px solid var(--primary)' : 'none'"
+          [style.color]="activeTab === 'grup' ? 'var(--primary)' : 'var(--text-secondary)'"
+          style="background: transparent; border: none; padding: 10px 16px; font-weight: 600; cursor: pointer; outline: none; transition: all 0.2s;">
+          Efective de Grup (Flock)
+        </button>
+      </div>
+
+      <!-- Individual Animals Table -->
+      <div *ngIf="activeTab === 'individual'" class="card table-container" style="margin-bottom:20px">
+        <div class="card-header">
+          <h3>Animale înregistrate individual</h3>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Număr Crotal</th>
+              <th>Specie</th>
+              <th>Rasă</th>
+              <th>Sex</th>
+              <th>Data Naștere</th>
+              <th>Greutate (kg)</th>
+              <th>Proprietar</th>
+              <th>Gospodărie</th>
+              <th>Stare</th>
+              <th>Acțiuni</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let anim of individuals">
+              <td style="font-weight: 600; color: var(--primary);">{{ anim.numarCrotal || 'Fără crotal' }}</td>
+              <td>
+                <span class="badge registrar">{{ anim.specie }}</span>
+              </td>
+              <td>{{ anim.rasa || '-' }}</td>
+              <td>{{ anim.sex === 'MASCULIN' ? 'Mascul' : 'Femelă' }}</td>
+              <td>{{ anim.dataNastere ? (anim.dataNastere | date:'dd.MM.yyyy') : '-' }}</td>
+              <td>{{ anim.greutateKg ? anim.greutateKg + ' kg' : '-' }}</td>
+              <td>{{ getOwnerName(anim.proprietar) }}</td>
+              <td>
+                <a [routerLink]="['/gospodarii', anim.gospodarie?.id]" style="color: var(--primary); text-decoration: none; font-weight: 500;">
+                  {{ anim.gospodarie?.codGospodarie || 'Detalii' }}
+                </a>
+              </td>
+              <td>
+                <span class="badge" [class]="anim.stareActiva ? 'activ' : 'inactiv'">
+                  {{ anim.stareActiva ? 'Activ' : 'Inactiv' }}
+                </span>
+              </td>
+              <td>
+                <button class="edit-btn" [routerLink]="['/animale/individual/edit', anim.id]" style="margin-right: 8px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="edit-btn" (click)="deleteIndividual(anim.id!)" style="color:#ef4444; border-color:#fee2e2; background:#fef2f2">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="individuals.length === 0">
+              <td colspan="10" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                Niciun animal individual înregistrat.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Group Stocks Table -->
+      <div *ngIf="activeTab === 'grup'" class="card table-container" style="margin-bottom:20px">
+        <div class="card-header">
+          <h3>Efective de grup (Flock / familii)</h3>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Specie</th>
+              <th>Număr Capete / Familii</th>
+              <th>Proprietar</th>
+              <th>Gospodărie</th>
+              <th>Detalii</th>
+              <th>Acțiuni</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let g of groups">
+              <td>#{{ g.id }}</td>
+              <td>
+                <span class="badge admin">{{ g.specie }}</span>
+              </td>
+              <td style="font-weight: 600; color: var(--primary);">{{ g.numarCapeteFamilii }} capete</td>
+              <td>{{ getOwnerName(g.proprietar) }}</td>
+              <td>
+                <a [routerLink]="['/gospodarii', g.gospodarie?.id]" style="color: var(--primary); text-decoration: none; font-weight: 500;">
+                  {{ g.gospodarie?.codGospodarie || 'Detalii' }}
+                </a>
+              </td>
+              <td>{{ g.detalii || '-' }}</td>
+              <td>
+                <button class="edit-btn" [routerLink]="['/animale/grup/edit', g.id]" style="margin-right: 8px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="edit-btn" (click)="deleteGroup(g.id!)" style="color:#ef4444; border-color:#fee2e2; background:#fef2f2">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="groups.length === 0">
+              <td colspan="7" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                Niciun efectiv de grup înregistrat.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+</div>
