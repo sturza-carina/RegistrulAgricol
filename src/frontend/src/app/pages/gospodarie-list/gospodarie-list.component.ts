@@ -24,7 +24,30 @@ export class GospodarieListComponent implements OnInit, OnDestroy {
   user: any = null;
   searchQuery = '';
   filterTipGospodarie: string = '';
+  filterStatus: string = '';
   selectedGospodarie: Gospodarie | null = null;
+  suggestions: string[] = [];
+  showSuggestions = false;
+
+  currentPage = 1;
+  itemsPerPage = 5;
+
+  get paginatedItems() {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    return this.filteredGospodarii.slice(startIndex, startIndex + this.itemsPerPage);
+  }
+
+  get totalPages() {
+    return Math.ceil(this.filteredGospodarii.length / this.itemsPerPage) || 1;
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) this.currentPage++;
+  }
+
+  prevPage() {
+    if (this.currentPage > 1) this.currentPage--;
+  }
 
   // UAT activ curent — folosit pentru banner si filtrare
   activeUat: Uat | null = null;
@@ -84,11 +107,15 @@ export class GospodarieListComponent implements OnInit, OnDestroy {
     this.filteredGospodarii = this.gospodarii.filter(g => {
       const matchSearch =
         g.codGospodarie.toLowerCase().includes(q) ||
-        (g.adresa.localitate && g.adresa.localitate.toLowerCase().includes(q));
+        (g.adresa.street && g.adresa.street.toLowerCase().includes(q));
       const matchType = this.filterTipGospodarie
         ? g.tipGospodarie === this.filterTipGospodarie
         : true;
-      return matchSearch && matchType;
+      const matchStatus =
+        !this.filterStatus ||
+        (this.filterStatus === 'Activ' && g.activa) ||
+        (this.filterStatus === 'Inactiv' && !g.activa);
+      return matchSearch && matchType && matchStatus;
     });
 
     if (
@@ -97,6 +124,39 @@ export class GospodarieListComponent implements OnInit, OnDestroy {
     ) {
       this.selectedGospodarie = null;
     }
+    this.currentPage = 1;
+  }
+
+  updateSuggestions(): void {
+    const term = this.searchQuery.toLowerCase().trim();
+    if (!term) {
+      this.suggestions = [];
+      this.showSuggestions = false;
+      return;
+    }
+    const strazi = this.gospodarii
+      .map(g => g.adresa.street)
+      .filter((s): s is string => !!s && s.toLowerCase().startsWith(term));
+    const combined = [...new Set([...strazi])];
+    this.suggestions = combined.slice(0, 8);
+    this.showSuggestions = this.suggestions.length > 0;
+  }
+
+  onSearchInput(event: any): void {
+    this.searchQuery = event.target.value;
+    this.applyFilters();
+    this.updateSuggestions();
+  }
+
+  selectSuggestion(suggestion: string): void {
+    this.searchQuery = suggestion;
+    this.showSuggestions = false;
+    this.suggestions = [];
+    this.applyFilters();
+  }
+
+  hideSuggestions(): void {
+    setTimeout(() => { this.showSuggestions = false; }, 150);
   }
 
   goToCreate() {

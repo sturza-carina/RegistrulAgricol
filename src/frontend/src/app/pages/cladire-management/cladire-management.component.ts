@@ -19,6 +19,26 @@ export class CladireManagementComponent implements OnInit {
   isEditing = false;
   currentCladire: Partial<Cladire> = {};
 
+  currentPage = 1;
+  itemsPerPage = 5;
+
+  get paginatedItems() {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    return this.cladiri.slice(startIndex, startIndex + this.itemsPerPage);
+  }
+
+  get totalPages() {
+    return Math.ceil(this.cladiri.length / this.itemsPerPage) || 1;
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) this.currentPage++;
+  }
+
+  prevPage() {
+    if (this.currentPage > 1) this.currentPage--;
+  }
+
   constructor(private cladireService: CladireService) {}
 
   ngOnInit(): void {
@@ -29,7 +49,10 @@ export class CladireManagementComponent implements OnInit {
 
   loadCladiri() {
     this.cladireService.getCladiri(this.gospodarieId).subscribe({
-      next: (data) => this.cladiri = data,
+      next: (data) => {
+        this.cladiri = data;
+        this.currentPage = 1;
+      },
       error: (err) => console.error('Failed to load cladiri', err)
     });
   }
