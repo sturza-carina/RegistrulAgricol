@@ -223,6 +223,52 @@ button {
     width: 14px;
     height: 14px;
   }
+
+  .autocomplete-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1.5px solid var(--card-border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+    z-index: 1000;
+    overflow: hidden;
+    animation: fadeInDown 0.12s ease;
+  }
+
+  .autocomplete-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    font-size: 13px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.1s;
+
+    &:not(:last-child) {
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    &:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    span {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .topbar-title {
@@ -506,6 +552,9 @@ button {
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
+}
+
+.table-container {
   overflow: hidden;
 }
 
@@ -593,8 +642,9 @@ button {
   gap: 4px;
 
   button {
-    width: 30px;
-    height: 30px;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 12px;
     border-radius: var(--radius-sm);
     border: 1.5px solid var(--card-border);
     background: white;
@@ -605,6 +655,7 @@ button {
     display: flex;
     align-items: center;
     justify-content: center;
+    white-space: nowrap;
     transition: all 0.15s;
 
     &:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
@@ -616,6 +667,22 @@ button {
       cursor: default;
       opacity: 0.7;
     }
+  }
+
+  .pagination-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 52px;
+    height: 32px;
+    padding: 0 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border: 1.5px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    background: #f8fafc;
+    white-space: nowrap;
   }
 }
 

@@ -22,6 +22,26 @@ export class MachineryManagementComponent implements OnInit, OnChanges {
 
   tipUtilajOptions = ['TRACTOR', 'COMBINA', 'PLUG', 'REMORCA', 'ALTELE'];
 
+  currentPage = 1;
+  itemsPerPage = 5;
+
+  get paginatedItems() {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    return this.machineryList.slice(startIndex, startIndex + this.itemsPerPage);
+  }
+
+  get totalPages() {
+    return Math.ceil(this.machineryList.length / this.itemsPerPage) || 1;
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) this.currentPage++;
+  }
+
+  prevPage() {
+    if (this.currentPage > 1) this.currentPage--;
+  }
+
   machineryForm: Machinery = this.createEmptyForm();
 
   constructor(private machineryService: MachineryService) {}
@@ -47,6 +67,7 @@ export class MachineryManagementComponent implements OnInit, OnChanges {
       next: (data) => {
         this.machineryList = data;
         this.isLoading = false;
+        this.currentPage = 1;
       },
       error: () => {
         this.isLoading = false;

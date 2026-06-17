@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -20,6 +20,8 @@ export class AnimalListComponent implements OnInit {
   groups: EfectivGrup[] = [];
   user: any;
 
+  @Input() gospodarieId?: number;
+
   constructor(
     private animalService: AnimalService,
     private authService: AuthService,
@@ -31,14 +33,24 @@ export class AnimalListComponent implements OnInit {
     this.loadData();
   }
 
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['gospodarieId'] && !changes['gospodarieId'].firstChange) {
+      this.loadData();
+    }
+  }
+
   loadData() {
     this.animalService.getAllIndividuals().subscribe({
-      next: (data) => this.individuals = data,
+      next: (data) => {
+        this.individuals = this.gospodarieId ? data.filter(a => a.gospodarie?.id === this.gospodarieId) : data;
+      },
       error: (err) => console.error('Error fetching individuals', err)
     });
 
     this.animalService.getAllGroups().subscribe({
-      next: (data) => this.groups = data,
+      next: (data) => {
+        this.groups = this.gospodarieId ? data.filter(g => g.gospodarie?.id === this.gospodarieId) : data;
+      },
       error: (err) => console.error('Error fetching groups', err)
     });
   }

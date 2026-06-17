@@ -44,6 +44,30 @@ export class UatManagementComponent implements OnInit {
 
   searchTerm = '';
   tipUatFilter = 'Toate';
+  statusFilter = 'Toate';
+  suggestions: string[] = [];
+  showSuggestions = false;
+
+  currentPage = 1;
+  itemsPerPage = 5;
+
+  get paginatedItems() {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    return this.filteredUats.slice(startIndex, startIndex + this.itemsPerPage);
+  }
+
+  get totalPages() {
+    return Math.ceil(this.filteredUats.length / this.itemsPerPage) || 1;
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) this.currentPage++;
+  }
+
+  prevPage() {
+    if (this.currentPage > 1) this.currentPage--;
+  }
+
   loadError = '';
   successMessage = '';
   errorMessage = '';
@@ -100,16 +124,56 @@ export class UatManagementComponent implements OnInit {
   }
 
   onSearch(event: any): void {
-    this.searchTerm = event.target.value.toLowerCase();
+    this.searchTerm = event.target.value;
+    this.applyFilter();
+    this.updateSuggestions();
+  }
+
+  updateSuggestions(): void {
+    const term = this.searchTerm.toLowerCase().trim();
+    if (!term) {
+      this.suggestions = [];
+      this.showSuggestions = false;
+      return;
+    }
+    const denumiriMatch = this.uats
+      .map(u => u.denumire)
+      .filter(d => d.toLowerCase().startsWith(term));
+    const judeteMatch = this.uats
+      .map(u => u.judet)
+      .filter(j => j.toLowerCase().startsWith(term));
+    // Combine and deduplicate, limit to 8
+    const combined = [...new Set([...denumiriMatch, ...judeteMatch])];
+    this.suggestions = combined.slice(0, 8);
+    this.showSuggestions = this.suggestions.length > 0;
+  }
+
+  selectSuggestion(suggestion: string): void {
+    this.searchTerm = suggestion;
+    this.showSuggestions = false;
+    this.suggestions = [];
     this.applyFilter();
   }
 
+  hideSuggestions(): void {
+    // Delay to allow click event on suggestion to fire first
+    setTimeout(() => {
+      this.showSuggestions = false;
+    }, 150);
+  }
+
   applyFilter(): void {
+    const term = this.searchTerm.toLowerCase();
     this.filteredUats = this.uats.filter(uat => {
-      const matchesSearch = uat.denumire.toLowerCase().includes(this.searchTerm) || uat.judet.toLowerCase().includes(this.searchTerm);
+      const matchesSearch = uat.denumire.toLowerCase().includes(term) || uat.judet.toLowerCase().includes(term);
       const matchesTip = this.tipUatFilter === 'Toate' || uat.tipUat === this.tipUatFilter;
-      return matchesSearch && matchesTip;
+      const matchesStatus =
+        this.statusFilter === 'Toate' ||
+        (this.statusFilter === 'Activ' && uat.isActive) ||
+        (this.statusFilter === 'Inactiv' && !uat.isActive);
+      return matchesSearch && matchesTip && matchesStatus;
     });
+    this.currentPage = 1;
   }
 
   openAddForm(): void {

@@ -94,6 +94,18 @@ export class CreateTenantComponent implements OnInit {
     return this.filteredTenants.slice(start, end);
   }
 
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredTenants.length / this.pageSize));
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 1) this.currentPage--;
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) this.currentPage++;
+  }
+
   openCreateForm() {
     this.showCreateForm = true;
     this.selectedTenant = null;

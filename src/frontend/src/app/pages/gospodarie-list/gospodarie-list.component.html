@@ -101,13 +101,33 @@
       </div>
 
       <!-- Search & Filter -->
-      <div class="card" style="padding: 12px 20px; margin-bottom: 20px;">
+      <div class="card" style="padding: 12px 20px; margin-bottom: 20px; overflow: visible;">
         <div style="display: flex; gap: 16px; align-items: center; width: 100%;">
-          <div class="search-bar" style="flex: 1; margin: 0;">
+          <div class="search-bar" style="flex: 1; margin: 0; position: relative;">
             <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
-            <input type="text" placeholder="Caută gospodării..." [(ngModel)]="searchQuery" (keyup)="applyFilters()">
+            <input
+              type="text"
+              placeholder="Caută după adresă (stradă)..."
+              [value]="searchQuery"
+              (input)="onSearchInput($event)"
+              (blur)="hideSuggestions()"
+              autocomplete="off"
+            >
+            <!-- Autocomplete dropdown -->
+            <div class="autocomplete-dropdown" *ngIf="showSuggestions">
+              <div
+                class="autocomplete-item"
+                *ngFor="let s of suggestions"
+                (mousedown)="selectSuggestion(s)"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--text-muted)">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <span>{{ s }}</span>
+              </div>
+            </div>
           </div>
           <div style="display: flex; align-items: center; background: #f8fafc; border: 1px solid var(--input-border, #e2e8f0); border-radius: 20px; padding: 4px 16px; gap: 6px;">
             <span style="font-size: 13px; color: var(--text-secondary); font-weight: 500; white-space: nowrap;">Tip Gospodărie:</span>
@@ -116,6 +136,14 @@
               <option value="INDIVIDUALA">Individuală</option>
               <option value="COLECTIVA">Colectivă</option>
               <option value="ASOCIATIE">Asociație</option>
+            </select>
+          </div>
+          <div style="display: flex; align-items: center; background: #f8fafc; border: 1px solid var(--input-border, #e2e8f0); border-radius: 20px; padding: 4px 16px; gap: 6px;">
+            <span style="font-size: 13px; color: var(--text-secondary); font-weight: 500; white-space: nowrap;">Status:</span>
+            <select [(ngModel)]="filterStatus" (change)="applyFilters()" style="border: none; background: transparent; font-size: 13px; font-weight: 600; color: var(--text-primary); outline: none; cursor: pointer; padding: 4px 0;">
+              <option value="">Toate</option>
+              <option value="Activ">Activă</option>
+              <option value="Inactiv">Inactivă</option>
             </select>
           </div>
         </div>
@@ -136,7 +164,7 @@
           </tr>
           </thead>
           <tbody>
-          <tr *ngFor="let g of filteredGospodarii">
+          <tr *ngFor="let g of paginatedItems">
             <td><strong>{{ g.codGospodarie }}</strong></td>
             <td>
               <span class="badge viewer">
@@ -144,8 +172,8 @@
               </span>
             </td>
             <td style="color:var(--text-secondary)">
-              {{ g.adresa.localitate || '-' }}<br>
-              <small>{{ g.adresa.street || '-' }} {{ g.adresa.streetNumber || '' }}</small>
+              {{ g.adresa.localitate || g.uat?.denumire || '-' }}<br>
+              <small>{{ g.adresa.street || (g.adresa.county ? g.adresa.county : (g.uat?.judet || '')) }} {{ g.adresa.streetNumber || '' }}</small>
             </td>
             <td>
               <span class="badge" [class]="g.activa ? 'admin' : 'viewer'">
@@ -181,6 +209,16 @@
           </tr>
           </tbody>
         </table>
+        <div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--card-border)">
+          <span style="font-size:12.5px;color:var(--text-muted)">
+            Pagina {{ currentPage }} din {{ totalPages }}
+          </span>
+          <div class="pagination" style="display: flex; gap: 4px;">
+            <button (click)="prevPage()" [disabled]="currentPage === 1">Înapoi</button>
+            <span class="pagination-info">{{ currentPage }} / {{ totalPages }}</span>
+            <button (click)="nextPage()" [disabled]="currentPage === totalPages">Următoarea</button>
+          </div>
+        </div>
       </div>
     </div>
   </main>

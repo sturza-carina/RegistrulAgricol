@@ -22,6 +22,28 @@ export class PersonListComponent implements OnInit {
   
   searchQuery: string = '';
   typeFilter: string = 'Toate Tipurile';
+  suggestions: string[] = [];
+  showSuggestions = false;
+
+  currentPage = 1;
+  itemsPerPage = 5;
+
+  get paginatedItems() {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    return this.filteredPersons.slice(startIndex, startIndex + this.itemsPerPage);
+  }
+
+  get totalPages() {
+    return Math.ceil(this.filteredPersons.length / this.itemsPerPage) || 1;
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) this.currentPage++;
+  }
+
+  prevPage() {
+    if (this.currentPage > 1) this.currentPage--;
+  }
 
   constructor(
     private persoanaService: PersoanaService,
@@ -43,6 +65,7 @@ export class PersonListComponent implements OnInit {
       next: (data) => {
         this.persoane = data;
         this.filteredPersons = data;
+        this.currentPage = 1;
       },
       error: (err) => console.error('Error fetching persoane', err)
     });
@@ -50,6 +73,36 @@ export class PersonListComponent implements OnInit {
 
   applyFilters() {
     this.loadPersons();
+  }
+
+  onSearchInput(event: any): void {
+    this.searchQuery = event.target.value;
+    this.updateSuggestions();
+    this.loadPersons();
+  }
+
+  updateSuggestions(): void {
+    const term = this.searchQuery.toLowerCase().trim();
+    if (!term || this.persoane.length === 0) {
+      this.suggestions = [];
+      this.showSuggestions = false;
+      return;
+    }
+    const names = this.persoane.map(p => this.getPersonName(p));
+    const matched = names.filter(n => n.toLowerCase().startsWith(term));
+    this.suggestions = [...new Set(matched)].slice(0, 8);
+    this.showSuggestions = this.suggestions.length > 0;
+  }
+
+  selectSuggestion(suggestion: string): void {
+    this.searchQuery = suggestion;
+    this.showSuggestions = false;
+    this.suggestions = [];
+    this.loadPersons();
+  }
+
+  hideSuggestions(): void {
+    setTimeout(() => { this.showSuggestions = false; }, 150);
   }
 
   clearFilters() {

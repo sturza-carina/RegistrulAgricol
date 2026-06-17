@@ -1,8 +1,8 @@
-<div class="app-shell">
-  <app-sidebar></app-sidebar>
+<div [class.app-shell]="!gospodarieId">
+  <app-sidebar *ngIf="!gospodarieId"></app-sidebar>
 
-  <main class="main-content">
-    <header class="topbar">
+  <main [class.main-content]="!gospodarieId">
+    <header class="topbar" *ngIf="!gospodarieId">
       <div class="topbar-spacer"></div>
       <div class="user-chip">
         <div class="user-info">
@@ -13,28 +13,31 @@
       <button class="logout-btn" (click)="logout()">Deconectare</button>
     </header>
 
-    <div class="page-content">
-      <div class="breadcrumbs" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+    <div [class.page-content]="!gospodarieId">
+      <div *ngIf="!gospodarieId" class="breadcrumbs" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
         <span style="color: var(--text-primary); font-weight: 500;">Animale</span>
       </div>
 
       <div class="page-header-row">
         <div>
-          <h1 style="font-size:22px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--text-primary);margin-bottom:3px">
+          <h1 *ngIf="!gospodarieId" style="font-size:22px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--text-primary);margin-bottom:3px">
             Gestionare Animale & Efective de Animale
           </h1>
-          <p style="font-size:13px;color:var(--text-secondary)">
+          <h1 *ngIf="gospodarieId" style="font-size:18px;font-weight:600;color:var(--text-primary);margin-bottom:3px">
+            Animale în Gospodărie
+          </h1>
+          <p *ngIf="!gospodarieId" style="font-size:13px;color:var(--text-secondary)">
             Înregistrați și gestionați animalele individuale și efectivele de grup (flock stock) din registrul agricol.
           </p>
         </div>
         <div style="display: flex; gap: 10px;">
-          <button class="btn-primary" [routerLink]="['/animale/individual/new']">
+          <button class="btn-primary" [routerLink]="['/animale/individual/new']" [queryParams]="gospodarieId ? {gospodarieId: gospodarieId} : {}">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 5v14M5 12h14"/>
             </svg>
             Adaugă Individual
           </button>
-          <button class="btn-primary" [routerLink]="['/animale/grup/new']" style="background-color: var(--primary-mid)">
+          <button class="btn-primary" [routerLink]="['/animale/grup/new']" [queryParams]="gospodarieId ? {gospodarieId: gospodarieId} : {}" style="background-color: var(--primary-mid)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
               <circle cx="9" cy="7" r="4"/>

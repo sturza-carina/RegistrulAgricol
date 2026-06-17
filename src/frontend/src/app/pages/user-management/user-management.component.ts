@@ -22,6 +22,26 @@ export class UserManagementComponent implements OnInit {
   statusFilter = 'Toate Statusurile';
   searchTerm = '';
 
+  currentPage = 1;
+  itemsPerPage = 5;
+
+  get paginatedItems() {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    return this.filteredUsers.slice(startIndex, startIndex + this.itemsPerPage);
+  }
+
+  get totalPages() {
+    return Math.ceil(this.filteredUsers.length / this.itemsPerPage) || 1;
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) this.currentPage++;
+  }
+
+  prevPage() {
+    if (this.currentPage > 1) this.currentPage--;
+  }
+
   creatingUser = false;
   viewingUser: any = null;
   editingUser: any = null;
@@ -106,6 +126,7 @@ export class UserManagementComponent implements OnInit {
       const matchesStatus = this.statusFilter === 'Toate Statusurile' || u.status === this.statusFilter;
       return matchesSearch && matchesRole && matchesStatus;
     });
+    this.currentPage = 1;
   }
 
   openAddForm(): void {

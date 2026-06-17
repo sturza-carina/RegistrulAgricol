@@ -12,11 +12,12 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { MachineryManagementComponent } from '../machinery-management/machinery-management.component';
 import { CladireManagementComponent } from '../cladire-management/cladire-management.component';
 import { PersonFormComponent } from '../persoana-form/persoana-form.component';
+import { AnimalListComponent } from '../animal-list/animal-list.component';
 
 @Component({
   selector: 'app-gospodarie-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, SidebarComponent, RouterModule, MachineryManagementComponent, CladireManagementComponent, PersonFormComponent],
+  imports: [CommonModule, FormsModule, SidebarComponent, RouterModule, MachineryManagementComponent, CladireManagementComponent, PersonFormComponent, AnimalListComponent],
   templateUrl: './gospodarie-details.component.html',
   styleUrls: ['./gospodarie-details.component.css']
 })

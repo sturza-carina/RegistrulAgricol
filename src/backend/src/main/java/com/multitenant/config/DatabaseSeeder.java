@@ -23,6 +23,9 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final GospodarieRepository gospodarieRepository;
     private final com.multitenant.repository.TerenRepository terenRepository;
     private final com.multitenant.repository.ParcelaRepository parcelaRepository;
+    private final com.multitenant.repository.PersoanaRepository persoanaRepository;
+    private final com.multitenant.repository.CladireRepository cladireRepository;
+    private final com.multitenant.repository.MachineryRepository machineryRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DatabaseSeeder(TenantService tenantService,
@@ -31,6 +34,9 @@ public class DatabaseSeeder implements CommandLineRunner {
                           GospodarieRepository gospodarieRepository,
                           com.multitenant.repository.TerenRepository terenRepository,
                           com.multitenant.repository.ParcelaRepository parcelaRepository,
+                          com.multitenant.repository.PersoanaRepository persoanaRepository,
+                          com.multitenant.repository.CladireRepository cladireRepository,
+                          com.multitenant.repository.MachineryRepository machineryRepository,
                           PasswordEncoder passwordEncoder) {
         this.tenantService = tenantService;
         this.uatRepository = uatRepository;
@@ -38,6 +44,9 @@ public class DatabaseSeeder implements CommandLineRunner {
         this.gospodarieRepository = gospodarieRepository;
         this.terenRepository = terenRepository;
         this.parcelaRepository = parcelaRepository;
+        this.persoanaRepository = persoanaRepository;
+        this.cladireRepository = cladireRepository;
+        this.machineryRepository = machineryRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -145,88 +154,129 @@ public class DatabaseSeeder implements CommandLineRunner {
                 TenantContext.setCurrentTenant("cluj");
                 System.out.println("[DatabaseSeeder] Seeding Households (Gospodarii) for Cluj...");
                 if (gospodarieRepository.count() == 0) {
-                    Gospodarie g1 = new Gospodarie();
-                    g1.setCodGospodarie("GOSP-001");
-                    Adresa a1 = new Adresa();
-                    a1.setStreet("Str. Observatorului");
-                    a1.setStreetNumber("2");
-                    g1.setAdresa(a1);
-                    g1.setTipGospodarie(TipGospodarie.INDIVIDUALA);
-                    g1.setActiva(true);
-                    g1.setUat(clujNapoca);
-                    Gospodarie savedG1 = gospodarieRepository.save(g1);
                     com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
-                    com.multitenant.model.registru.Teren t1 = new com.multitenant.model.registru.Teren();
-                    t1.setDenumire("Teren Agricol " + savedG1.getCodGospodarie());
-                    t1.setGospodarie(savedG1);
-                    t1.setTipTeren("Extravilan");
-                    t1.setStereo70Coordinates("591250 390800\n591350 390800\n591350 390900\n591250 390900");
-                    String t1Json = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[23.569717, 46.810456], [23.569694, 46.811354], [23.571001, 46.811370], [23.571025, 46.810472], [23.569717, 46.810456]]]}, \"properties\": {}}";
-                    t1.setPolygon(mapper.readTree(t1Json));
-                    t1 = terenRepository.save(t1);
+                    for (int i = 1; i <= 10; i++) {
+                        Gospodarie g = new Gospodarie();
+                        g.setCodGospodarie("CJ-GOSP-" + String.format("%03d", i));
+                        Adresa a = new Adresa();
+                        a.setStreet("Str. Observatorului");
+                        a.setStreetNumber(String.valueOf(i));
+                        g.setAdresa(a);
+                        g.setTipGospodarie(i % 2 == 0 ? TipGospodarie.INDIVIDUALA : TipGospodarie.COLECTIVA);
+                        g.setActiva(true);
+                        g.setUat(clujNapoca);
+                        Gospodarie savedG = gospodarieRepository.save(g);
 
-                    com.multitenant.model.registru.Parcela p1 = new com.multitenant.model.registru.Parcela();
-                    p1.setDenumire("Parcela Grau");
-                    p1.setSuprafata(1.0);
-                    p1.setCategorieFolosinta("Arabil");
-                    p1.setTeren(t1);
-                    String p1Json = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[23.569717, 46.810456], [23.569705, 46.810905], [23.571013, 46.810921], [23.571025, 46.810472], [23.569717, 46.810456]]]}, \"properties\": {}}";
-                    p1.setPolygon(mapper.readTree(p1Json));
-                    parcelaRepository.save(p1);
+                        com.multitenant.model.registru.Teren t = new com.multitenant.model.registru.Teren();
+                        t.setDenumire("Teren Agricol CJ " + i);
+                        t.setGospodarie(savedG);
+                        t.setTipTeren("Extravilan");
+                        t.setStereo70Coordinates("591250 390800\n591350 390800\n591350 390900\n591250 390900");
+                        String tJson = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[23.569717, 46.810456], [23.569694, 46.811354], [23.571001, 46.811370], [23.571025, 46.810472], [23.569717, 46.810456]]]}, \"properties\": {}}";
+                        t.setPolygon(mapper.readTree(tJson));
+                        t = terenRepository.save(t);
 
-                    com.multitenant.model.registru.Parcela p2 = new com.multitenant.model.registru.Parcela();
-                    p2.setDenumire("Parcela Meri");
-                    p2.setSuprafata(1.0);
-                    p2.setCategorieFolosinta("Livada");
-                    p2.setTeren(t1);
-                    String p2Json = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[23.569705, 46.810905], [23.569694, 46.811354], [23.571001, 46.811370], [23.571013, 46.810921], [23.569705, 46.810905]]]}, \"properties\": {}}";
-                    p2.setPolygon(mapper.readTree(p2Json));
-                    parcelaRepository.save(p2);
+                        com.multitenant.model.registru.Parcela p = new com.multitenant.model.registru.Parcela();
+                        p.setDenumire("Parcela CJ " + i);
+                        p.setSuprafata(1.0 + (i * 0.1));
+                        p.setCategorieFolosinta(i % 2 == 0 ? "Arabil" : "Livada");
+                        p.setTeren(t);
+                        String pJson = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[23.569717, 46.810456], [23.569705, 46.810905], [23.571013, 46.810921], [23.571025, 46.810472], [23.569717, 46.810456]]]}, \"properties\": {}}";
+                        p.setPolygon(mapper.readTree(pJson));
+                        parcelaRepository.save(p);
+
+                        com.multitenant.model.persoana.PersoanaFizica persoana = new com.multitenant.model.persoana.PersoanaFizica();
+                        persoana.setFirstName("Ion" + i);
+                        persoana.setLastName("Popescu CJ");
+                        persoana.setCnp(String.format("190010112%04d", i));
+                        persoana.setDateOfBirth(java.time.LocalDate.of(1990, 1, 1).plusDays(i));
+                        persoana.setAdresa(a);
+                        persoana.setGospodarie(savedG);
+                        persoana.setIsHeadOfHousehold(true);
+                        persoanaRepository.save(persoana);
+
+                        com.multitenant.model.registru.Cladire cladire = new com.multitenant.model.registru.Cladire();
+                        cladire.setDestinatie("Locuinta");
+                        cladire.setSuprafataConstruita(100.0 + i * 5);
+                        cladire.setAnTerminare(2000 + i);
+                        cladire.setMateriale("Caramida");
+                        cladire.setGospodarie(savedG);
+                        cladireRepository.save(cladire);
+
+                        com.multitenant.model.registru.Machinery machinery = new com.multitenant.model.registru.Machinery();
+                        machinery.setTipUtilaj("Tractor");
+                        machinery.setMarca("John Deere");
+                        machinery.setModel("X" + i);
+                        machinery.setAnFabricatie(2010 + i);
+                        machinery.setNumarInmatriculare(String.format("CJ-%02d-TRC", i));
+                        machinery.setGospodarie(savedG);
+                        machineryRepository.save(machinery);
+                    }
                 }
                 
                 // Switch current thread to "bucuresti" tenant context for entity seeding
                 TenantContext.setCurrentTenant("bucuresti");
                 System.out.println("[DatabaseSeeder] Seeding Households (Gospodarii) for Bucuresti...");
                 if (gospodarieRepository.count() == 0) {
-                    Gospodarie g2 = new Gospodarie();
-                    g2.setCodGospodarie("BUC-001");
-                    Adresa a2 = new Adresa();
-                    a2.setStreet("Calea Victoriei");
-                    a2.setStreetNumber("150");
-                    g2.setAdresa(a2);
-                    g2.setTipGospodarie(TipGospodarie.COLECTIVA);
-                    g2.setActiva(true);
-                    g2.setUat(bucurestiUat);
-                    Gospodarie savedG2 = gospodarieRepository.save(g2);
-                    
                     com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-                    
-                    com.multitenant.model.registru.Teren t2 = new com.multitenant.model.registru.Teren();
-                    t2.setDenumire("Teren Agricol " + savedG2.getCodGospodarie());
-                    t2.setGospodarie(savedG2);
-                    t2.setTipTeren("Intravilan");
-                    String t2Json = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[26.1000, 44.4250], [26.1000, 44.4270], [26.1050, 44.4270], [26.1050, 44.4250], [26.1000, 44.4250]]]}, \"properties\": {}}";
-                    t2.setPolygon(mapper.readTree(t2Json));
-                    t2 = terenRepository.save(t2);
 
-                    com.multitenant.model.registru.Parcela p3 = new com.multitenant.model.registru.Parcela();
-                    p3.setDenumire("Parcela Stanga");
-                    p3.setSuprafata(0.5);
-                    p3.setCategorieFolosinta("Arabil");
-                    p3.setTeren(t2);
-                    String p3Json = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[26.1000, 44.4250], [26.1000, 44.4270], [26.1025, 44.4270], [26.1025, 44.4250], [26.1000, 44.4250]]]}, \"properties\": {}}";
-                    p3.setPolygon(mapper.readTree(p3Json));
-                    parcelaRepository.save(p3);
+                    for (int i = 1; i <= 10; i++) {
+                        Gospodarie g = new Gospodarie();
+                        g.setCodGospodarie("BUC-GOSP-" + String.format("%03d", i));
+                        Adresa a = new Adresa();
+                        a.setStreet("Calea Victoriei");
+                        a.setStreetNumber(String.valueOf(i * 10));
+                        g.setAdresa(a);
+                        g.setTipGospodarie(i % 2 == 0 ? TipGospodarie.COLECTIVA : TipGospodarie.INDIVIDUALA);
+                        g.setActiva(true);
+                        g.setUat(bucurestiUat);
+                        Gospodarie savedG = gospodarieRepository.save(g);
 
-                    com.multitenant.model.registru.Parcela p4 = new com.multitenant.model.registru.Parcela();
-                    p4.setDenumire("Parcela Dreapta");
-                    p4.setSuprafata(0.5);
-                    p4.setCategorieFolosinta("Pasune");
-                    p4.setTeren(t2);
-                    String p4Json = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[26.1025, 44.4250], [26.1025, 44.4270], [26.1050, 44.4270], [26.1050, 44.4250], [26.1025, 44.4250]]]}, \"properties\": {}}";
-                    p4.setPolygon(mapper.readTree(p4Json));
-                    parcelaRepository.save(p4);
+                        com.multitenant.model.registru.Teren t = new com.multitenant.model.registru.Teren();
+                        t.setDenumire("Teren Agricol BUC " + i);
+                        t.setGospodarie(savedG);
+                        t.setTipTeren("Intravilan");
+                        String tJson = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[26.1000, 44.4250], [26.1000, 44.4270], [26.1050, 44.4270], [26.1050, 44.4250], [26.1000, 44.4250]]]}, \"properties\": {}}";
+                        t.setPolygon(mapper.readTree(tJson));
+                        t = terenRepository.save(t);
+
+                        com.multitenant.model.registru.Parcela p = new com.multitenant.model.registru.Parcela();
+                        p.setDenumire("Parcela BUC " + i);
+                        p.setSuprafata(0.5 + (i * 0.05));
+                        p.setCategorieFolosinta(i % 2 == 0 ? "Pasune" : "Arabil");
+                        p.setTeren(t);
+                        String pJson = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[26.1000, 44.4250], [26.1000, 44.4270], [26.1025, 44.4270], [26.1025, 44.4250], [26.1000, 44.4250]]]}, \"properties\": {}}";
+                        p.setPolygon(mapper.readTree(pJson));
+                        parcelaRepository.save(p);
+
+                        com.multitenant.model.persoana.PersoanaFizica persoana = new com.multitenant.model.persoana.PersoanaFizica();
+                        persoana.setFirstName("Vasile" + i);
+                        persoana.setLastName("Ionescu BUC");
+                        persoana.setCnp(String.format("180020223%04d", i));
+                        persoana.setDateOfBirth(java.time.LocalDate.of(1980, 2, 2).plusDays(i));
+                        persoana.setAdresa(a);
+                        persoana.setGospodarie(savedG);
+                        persoana.setIsHeadOfHousehold(true);
+                        persoanaRepository.save(persoana);
+
+                        com.multitenant.model.registru.Cladire cladire = new com.multitenant.model.registru.Cladire();
+                        cladire.setDestinatie("Anexa");
+                        cladire.setSuprafataConstruita(50.0 + i * 2);
+                        cladire.setAnTerminare(1990 + i);
+                        cladire.setMateriale("Lemn");
+                        cladire.setGospodarie(savedG);
+                        cladireRepository.save(cladire);
+
+                        com.multitenant.model.registru.Machinery machinery = new com.multitenant.model.registru.Machinery();
+                        machinery.setTipUtilaj("Combina");
+                        machinery.setMarca("Claas");
+                        machinery.setModel("Lexion " + i);
+                        machinery.setAnFabricatie(2015 + i);
+                        machinery.setNumarInmatriculare(String.format("B-%02d-CMB", i));
+                        machinery.setGospodarie(savedG);
+                        machineryRepository.save(machinery);
+                    }
                 }
 
 
