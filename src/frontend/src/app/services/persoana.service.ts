@@ -7,7 +7,7 @@ import { Persoana } from '../models/persoana.model';
   providedIn: 'root'
 })
 export class PersoanaService {
-  private apiUrl = '/api/persoane';
+  private apiUrl = '/api/persons';
 
   constructor(private http: HttpClient) { }
 

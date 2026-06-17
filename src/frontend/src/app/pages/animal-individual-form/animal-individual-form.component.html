@@ -1,0 +1,129 @@
+<div class="app-shell">
+  <app-sidebar></app-sidebar>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-spacer"></div>
+      <div class="user-chip">
+        <div class="user-info">
+          <div class="user-name">Operator Local</div>
+        </div>
+        <div class="avatar">O</div>
+      </div>
+    </header>
+
+    <div class="page-content" style="max-width: 800px; margin: 0 auto;">
+      
+      <div class="breadcrumbs" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+        <a routerLink="/animale" style="color: var(--text-secondary); text-decoration: none;">Animale</a>
+        <span>/</span>
+        <span style="color: var(--text-primary); font-weight: 500;">
+          {{ isEditMode ? 'Editare Animal' : 'Adăugare Animal Individual' }}
+        </span>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <h1 style="font-size:24px; font-weight:700; font-family:'DM Serif Display',serif; color:var(--text-primary); margin-bottom:4px">
+          {{ isEditMode ? 'Editare Animal' : 'Adăugare Animal Individual' }}
+        </h1>
+        <p style="font-size:13px; color:var(--text-secondary)">
+          Introduceți datele de identificare pentru animalul individual.
+        </p>
+      </div>
+
+      <form (ngSubmit)="save()" #animalForm="ngForm" class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 20px;">
+        
+        <!-- Gospodarie Selector -->
+        <div class="form-group">
+          <label for="gospodarie">Gospodărie asociată *</label>
+          <div class="select-wrapper">
+            <select id="gospodarie" [(ngModel)]="gospodarieId" name="gospodarieId" required>
+              <option [ngValue]="undefined" disabled>Selectați Gospodăria</option>
+              <option *ngFor="let g of gospodariiList" [ngValue]="g.id">
+                {{ g.codGospodarie }} - {{ g.adresa.street || '' }} {{ g.adresa.streetNumber || '' }} ({{ g.adresa.localitate || '' }})
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Proprietar Selector -->
+        <div class="form-group">
+          <label for="proprietar">Proprietar / Cap Gospodărie *</label>
+          <div class="select-wrapper">
+            <select id="proprietar" [(ngModel)]="proprietarId" name="proprietarId" required>
+              <option [ngValue]="undefined" disabled>Selectați Proprietarul</option>
+              <option *ngFor="let p of personsList" [ngValue]="p.id">
+                {{ getPersonDisplayName(p) }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <!-- Numar Crotal -->
+          <div class="form-group">
+            <label for="numarCrotal">Număr Crotal (Tag)</label>
+            <input type="text" id="numarCrotal" [(ngModel)]="numarCrotal" name="numarCrotal" placeholder="Ex: RO123456789">
+          </div>
+
+          <!-- Specie -->
+          <div class="form-group">
+            <label for="specie">Specie *</label>
+            <div class="select-wrapper">
+              <select id="specie" [(ngModel)]="specie" name="specie" required>
+                <option *ngFor="let s of speciesOptions" [value]="s">{{ s }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <!-- Rasa -->
+          <div class="form-group">
+            <label for="rasa">Rasă</label>
+            <input type="text" id="rasa" [(ngModel)]="rasa" name="rasa" placeholder="Ex: Bălțată Românească">
+          </div>
+
+          <!-- Sex -->
+          <div class="form-group">
+            <label for="sex">Sex *</label>
+            <div class="select-wrapper">
+              <select id="sex" [(ngModel)]="sex" name="sex" required>
+                <option *ngFor="let sexOpt of sexOptions" [value]="sexOpt">{{ sexOpt === 'MASCULIN' ? 'Mascul' : 'Femelă' }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <!-- Data Nastere -->
+          <div class="form-group">
+            <label for="dataNastere">Data Naștere</label>
+            <input type="date" id="dataNastere" [(ngModel)]="dataNastere" name="dataNastere">
+          </div>
+
+          <!-- Greutate Kg -->
+          <div class="form-group">
+            <label for="greutateKg">Greutate (kg)</label>
+            <input type="number" id="greutateKg" [(ngModel)]="greutateKg" name="greutateKg" placeholder="Ex: 150" min="0" step="0.1">
+          </div>
+        </div>
+
+        <!-- Stare Activa -->
+        <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px;">
+          <input type="checkbox" id="stareActiva" [(ngModel)]="stareActiva" name="stareActiva" style="width: 18px; height: 18px; cursor: pointer;">
+          <label for="stareActiva" style="cursor: pointer; margin-bottom: 0;">Animalul este activ / viu</label>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 12px; margin-top: 10px; justify-content: flex-end;">
+          <button type="button" class="btn-secondary" (click)="cancel()">Anulează</button>
+          <button type="submit" class="btn-primary" [disabled]="!animalForm.valid">
+            {{ isEditMode ? 'Salvează modificările' : 'Adaugă animal' }}
+          </button>
+        </div>
+      </form>
+      
+    </div>
+  </main>
+</div>
