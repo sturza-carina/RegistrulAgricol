@@ -5,12 +5,15 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
-import { ContractUtilizareService, ContractUtilizare } from '../../services/contract-utilizare.service';
+import { PersonSearchModalComponent } from '../../components/person-search-modal/person-search-modal.component';
+import { ContractUtilizareService, ContractUtilizare, ContractUtilizareRequest, PersoanaRef } from '../../services/contract-utilizare.service';
+import { PersoanaService } from '../../services/persoana.service';
+import { Persoana } from '../../models/persoana.model';
 
 @Component({
   selector: 'app-contract-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, SidebarComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, SidebarComponent, PersonSearchModalComponent],
   templateUrl: './contract-management.component.html',
   styleUrls: ['./contract-management.component.scss']
 })
@@ -18,24 +21,30 @@ export class ContractManagementComponent implements OnInit {
   user: any = null;
   tenants: any[] = [];
   selectedTenantId: string = '';
-  
+
   contracts: ContractUtilizare[] = [];
   filteredContracts: ContractUtilizare[] = [];
   terenuri: any[] = [];
-  users: any[] = []; // System users for selection
-  
+  persoane: Persoana[] = [];
+
   contractForm: FormGroup;
   creatingContract = false;
   editingContract: ContractUtilizare | null = null;
   viewingContract: ContractUtilizare | null = null;
-  
+
   searchTerm = '';
   tipContractFilter = 'Toate';
   statusContractFilter = 'Toate';
-  
+
   successMessage = '';
   errorMessage = '';
   loadError = '';
+
+  // Modal state
+  showLocatorProprietarModal = false;
+  showLocatorUtilizatorModal = false;
+  selectedLocatorProprietar: Persoana | PersoanaRef | null = null;
+  selectedLocatorUtilizator: Persoana | PersoanaRef | null = null;
 
   tipuriContract = ['ARENDA', 'COMODAT', 'CONCESIUNE', 'INCHIRIERE', 'ALTELE'];
   statusuriContract = ['ACTIV', 'EXPIRAT', 'REZILIAT', 'SUSPENDAT'];
@@ -45,12 +54,14 @@ export class ContractManagementComponent implements OnInit {
     private authService: AuthService,
     private contractService: ContractUtilizareService,
     private http: HttpClient,
+    private persoanaService: PersoanaService,
     private fb: FormBuilder
   ) {
     this.contractForm = this.fb.group({
       terenId: ['', [Validators.required]],
       locatorProprietarId: [''],
       locatorUtilizatorId: [''],
+      utilizatorOperareId: [''],
       tipContract: ['ARENDA', [Validators.required]],
       numarContract: ['', [Validators.required]],
       dataSemnare: [''],
@@ -74,7 +85,7 @@ export class ContractManagementComponent implements OnInit {
         if (this.user.role === 'ROLE_SUPER_ADMIN') {
           this.loadTenants();
         }
-        
+
         // If already impersonating a tenant, set it
         const activeTenant = this.authService.currentTenantId;
         if (activeTenant && activeTenant !== 'public') {
@@ -105,7 +116,7 @@ export class ContractManagementComponent implements OnInit {
       this.contracts = [];
       this.filteredContracts = [];
       this.terenuri = [];
-      this.users = [];
+      this.persoane = [];
     }
   }
 
@@ -113,7 +124,7 @@ export class ContractManagementComponent implements OnInit {
     this.loadError = '';
     this.successMessage = '';
     this.errorMessage = '';
-    
+
     // Load contracts
     this.contractService.getAllContracts().subscribe({
       next: (data) => {
@@ -135,12 +146,12 @@ export class ContractManagementComponent implements OnInit {
       error: (err) => console.error('Eroare la încărcarea terenurilor', err)
     });
 
-    // Load users
-    this.http.get<any[]>('/api/users').subscribe({
+    // Load persons
+    this.persoanaService.getAllPersons().subscribe({
       next: (data) => {
-        this.users = data;
+        this.persoane = data;
       },
-      error: (err) => console.error('Eroare la încărcarea utilizatorilor', err)
+      error: (err) => console.error('Eroare la încărcarea persoanelor', err)
     });
   }
 
@@ -151,7 +162,7 @@ export class ContractManagementComponent implements OnInit {
 
   applyFilter(): void {
     this.filteredContracts = this.contracts.filter(c => {
-      const matchesSearch = c.numarContract.toLowerCase().includes(this.searchTerm) || 
+      const matchesSearch = c.numarContract.toLowerCase().includes(this.searchTerm) ||
                             (c.teren?.denumire || '').toLowerCase().includes(this.searchTerm);
       const matchesTip = this.tipContractFilter === 'Toate' || c.tipContract === this.tipContractFilter;
       const matchesStatus = this.statusContractFilter === 'Toate' || c.statusContract === this.statusContractFilter;
@@ -167,11 +178,14 @@ export class ContractManagementComponent implements OnInit {
     this.creatingContract = true;
     this.viewingContract = null;
     this.editingContract = null;
+    this.selectedLocatorProprietar = null;
+    this.selectedLocatorUtilizator = null;
     this.contractForm.reset({
       tipContract: 'ARENDA',
       statusContract: 'ACTIV',
       indexarePret: false,
-      esteActiv: true
+      esteActiv: true,
+      utilizatorOperareId: this.user?.id || ''
     });
     this.successMessage = '';
     this.errorMessage = '';
@@ -179,6 +193,8 @@ export class ContractManagementComponent implements OnInit {
 
   closeAddForm(): void {
     this.creatingContract = false;
+    this.selectedLocatorProprietar = null;
+    this.selectedLocatorUtilizator = null;
     this.errorMessage = '';
   }
 
@@ -198,11 +214,20 @@ export class ContractManagementComponent implements OnInit {
     this.editingContract = contract;
     this.viewingContract = null;
     this.creatingContract = false;
-    
+
+    // Set selected persons if they exist
+    if (contract.locatorProprietar) {
+      this.selectedLocatorProprietar = contract.locatorProprietar;
+    }
+    if (contract.locatorUtilizator) {
+      this.selectedLocatorUtilizator = contract.locatorUtilizator;
+    }
+
     this.contractForm.patchValue({
       terenId: contract.teren?.id,
       locatorProprietarId: contract.locatorProprietar?.id || '',
       locatorUtilizatorId: contract.locatorUtilizator?.id || '',
+      utilizatorOperareId: contract.utilizatorOperare?.id || '',
       tipContract: contract.tipContract,
       numarContract: contract.numarContract,
       dataSemnare: contract.dataSemnare,
@@ -215,13 +240,15 @@ export class ContractManagementComponent implements OnInit {
       motivIncetare: contract.motivIncetare,
       esteActiv: contract.esteActiv
     });
-    
+
     this.errorMessage = '';
     this.successMessage = '';
   }
 
   closeEditContract(): void {
     this.editingContract = null;
+    this.selectedLocatorProprietar = null;
+    this.selectedLocatorUtilizator = null;
     this.errorMessage = '';
   }
 
@@ -232,10 +259,11 @@ export class ContractManagementComponent implements OnInit {
     }
 
     const formVal = this.contractForm.value;
-    const contractPayload: ContractUtilizare = {
-      teren: { id: +formVal.terenId },
-      locatorProprietar: formVal.locatorProprietarId ? { id: +formVal.locatorProprietarId } : null,
-      locatorUtilizator: formVal.locatorUtilizatorId ? { id: +formVal.locatorUtilizatorId } : null,
+    const contractPayload: ContractUtilizareRequest = {
+      terenId: +formVal.terenId,
+      locatorProprietarId: formVal.locatorProprietarId ? +formVal.locatorProprietarId : null,
+      locatorUtilizatorId: formVal.locatorUtilizatorId ? +formVal.locatorUtilizatorId : null,
+      utilizatorOperareId: formVal.utilizatorOperareId ? +formVal.utilizatorOperareId : null,
       tipContract: formVal.tipContract,
       numarContract: formVal.numarContract,
       dataSemnare: formVal.dataSemnare || null,
@@ -290,9 +318,68 @@ export class ContractManagementComponent implements OnInit {
     }
   }
 
-  getUserDisplayName(userObj: any): string {
-    if (!userObj) return '-';
-    return userObj.nume ? `${userObj.nume} (${userObj.username})` : userObj.username;
+  getPersonDisplayName(person: Persoana | PersoanaRef | null | undefined): string {
+    if (!person) return '-';
+
+    if (person.personType === 'PHYSICAL_PERSON') {
+      const physical = person as { id?: number; firstName?: string; lastName?: string };
+      return [physical.firstName, physical.lastName].filter(Boolean).join(' ') || `Persoană #${person.id}`;
+    }
+
+    if (person.personType === 'LEGAL_ENTITY') {
+      const legal = person as { id?: number; companyName?: string };
+      return legal.companyName || `Persoană #${person.id}`;
+    }
+
+    return `Persoană #${person.id}`;
+  }
+
+  // Modal methods for Locator Proprietar
+  openLocatorProprietarModal(): void {
+    this.showLocatorProprietarModal = true;
+  }
+
+  closeLocatorProprietarModal(): void {
+    this.showLocatorProprietarModal = false;
+  }
+
+  selectLocatorProprietar(person: Persoana): void {
+    this.selectedLocatorProprietar = person;
+    this.contractForm.patchValue({
+      locatorProprietarId: person.id
+    });
+    this.closeLocatorProprietarModal();
+  }
+
+  // Modal methods for Locator Utilizator
+  openLocatorUtilizatorModal(): void {
+    this.showLocatorUtilizatorModal = true;
+  }
+
+  closeLocatorUtilizatorModal(): void {
+    this.showLocatorUtilizatorModal = false;
+  }
+
+  selectLocatorUtilizator(person: Persoana): void {
+    this.selectedLocatorUtilizator = person;
+    this.contractForm.patchValue({
+      locatorUtilizatorId: person.id
+    });
+    this.closeLocatorUtilizatorModal();
+  }
+
+  clearLocatorProprietar(): void {
+    this.selectedLocatorProprietar = null;
+    this.contractForm.patchValue({
+      locatorProprietarId: ''
+    });
+  }
+
+  clearLocatorUtilizator(): void {
+    this.selectedLocatorUtilizator = null;
+    this.contractForm.patchValue({
+      locatorUtilizatorId: ''
+    });
   }
 
   logout(): void {

@@ -40,3 +40,30 @@
     color: var(--text-primary);
   }
 }
+
+.btn-modal-open {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.btn-modal-open:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.btn-modal-open:active {
+  transform: translateY(0);
+}
+

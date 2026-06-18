@@ -1,12 +1,17 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { Persoana } from '../models/persoana.model';
+import { Teren } from '../models/teren.model';
+
+export type TerenRef = Partial<Teren> & { id: number };
+export type PersoanaRef = Partial<Persoana> & { id: number };
 
 export interface ContractUtilizare {
   id?: number;
-  teren?: { id: number; denumire?: string } | null;
-  locatorProprietar?: { id: number; username?: string; nume?: string } | null;
-  locatorUtilizator?: { id: number; username?: string; nume?: string } | null;
+  teren?: TerenRef | null;
+  locatorProprietar?: PersoanaRef | null;
+  locatorUtilizator?: PersoanaRef | null;
   tipContract: string; // ARENDA, COMODAT, CONCESIUNE, INCHIRIERE, ALTELE
   numarContract: string;
   dataSemnare?: string | null;
@@ -18,7 +23,26 @@ export interface ContractUtilizare {
   statusContract?: string; // ACTIV, EXPIRAT, REZILIAT, SUSPENDAT
   motivIncetare?: string | null;
   dataOperare?: string | null;
-  utilizatorOperare?: { id: number; username?: string; nume?: string } | null;
+  utilizatorOperare?: PersoanaRef | null;
+  esteActiv?: boolean;
+}
+
+export interface ContractUtilizareRequest {
+  terenId: number;
+  locatorProprietarId?: number | null;
+  locatorUtilizatorId?: number | null;
+  utilizatorOperareId?: number | null;
+  tipContract: string;
+  numarContract: string;
+  dataSemnare?: string | null;
+  dataInceput?: string | null;
+  dataSfarsit?: string | null;
+  pretArendaRonAn?: number | null;
+  pretArendaGrauKgHa?: number | null;
+  indexarePret?: boolean;
+  statusContract?: string;
+  motivIncetare?: string | null;
+  dataOperare?: string | null;
   esteActiv?: boolean;
 }
 
@@ -38,11 +62,11 @@ export class ContractUtilizareService {
     return this.http.get<ContractUtilizare>(`${this.apiUrl}/${id}`);
   }
 
-  createContract(contract: ContractUtilizare): Observable<ContractUtilizare> {
+  createContract(contract: ContractUtilizareRequest): Observable<ContractUtilizare> {
     return this.http.post<ContractUtilizare>(this.apiUrl, contract);
   }
 
-  updateContract(id: number, contract: ContractUtilizare): Observable<ContractUtilizare> {
+  updateContract(id: number, contract: ContractUtilizareRequest): Observable<ContractUtilizare> {
     return this.http.put<ContractUtilizare>(`${this.apiUrl}/${id}`, contract);
   }
 

@@ -81,7 +81,7 @@
             </svg>
             <input type="text" placeholder="Caută după nr. contract sau denumire teren..." (input)="onSearch($event)">
           </div>
-          
+
           <!-- Tip Filter -->
           <div style="display: flex; align-items: center; background: #f8fafc; border: 1px solid var(--input-border, #e2e8f0); border-radius: 20px; padding: 4px 16px; gap: 6px;">
             <span style="font-size: 13px; color: var(--text-secondary); font-weight: 500; white-space: nowrap;">Tip Contract:</span>
@@ -180,7 +180,7 @@
       <!-- Contract Details View -->
       <div *ngIf="viewingContract" style="display:flex; justify-content: center; gap: 60px; margin-top: 20px; align-items: start; max-width: 800px; margin-left: auto; margin-right: auto;">
         <div style="flex: 1; display:flex; flex-direction:column; gap:20px; width: 100%;">
-          
+
           <button class="btn-secondary" style="align-self: flex-start;" (click)="closeViewContract()">
             ← Înapoi la listă
           </button>
@@ -192,7 +192,7 @@
               </div>
               Detalii Contract de Utilizare
             </div>
-            
+
             <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
               <div>
                 <p><strong>Număr Contract:</strong> {{ viewingContract.numarContract }}</p>
@@ -201,7 +201,7 @@
                 <p><strong>Data Semnare:</strong> {{ viewingContract.dataSemnare || '-' }}</p>
                 <p><strong>Dată Început:</strong> {{ viewingContract.dataInceput || '-' }}</p>
                 <p><strong>Dată Sfârșit:</strong> {{ viewingContract.dataSfarsit || '-' }}</p>
-                <p><strong>Status:</strong> 
+                <p><strong>Status:</strong>
                   <span class="badge" [ngClass]="viewingContract.statusContract === 'ACTIV' ? 'active' : 'archived'">
                     {{ viewingContract.statusContract }}
                   </span>
@@ -211,10 +211,10 @@
                 <p><strong>Arendă în RON / An:</strong> {{ viewingContract.pretArendaRonAn || '-' }}</p>
                 <p><strong>Arendă în Grâu / Kg / Ha:</strong> {{ viewingContract.pretArendaGrauKgHa || '-' }}</p>
                 <p><strong>Indexare Preț:</strong> {{ viewingContract.indexarePret ? 'Da' : 'Nu' }}</p>
-                <p><strong>Locator Proprietar:</strong> {{ getUserDisplayName(viewingContract.locatorProprietar) }}</p>
-                <p><strong>Locator Utilizator (Locatar):</strong> {{ getUserDisplayName(viewingContract.locatorUtilizator) }}</p>
+                <p><strong>Locator Proprietar:</strong> {{ getPersonDisplayName(viewingContract.locatorProprietar) }}</p>
+                <p><strong>Locator Utilizator (Locatar):</strong> {{ getPersonDisplayName(viewingContract.locatorUtilizator) }}</p>
                 <p><strong>Înregistrat la Data:</strong> {{ viewingContract.dataOperare || '-' }}</p>
-                <p><strong>Înregistrat de Utilizatorul:</strong> {{ getUserDisplayName(viewingContract.utilizatorOperare) }}</p>
+                <p><strong>Înregistrat de Persoană:</strong> {{ getPersonDisplayName(viewingContract.utilizatorOperare) }}</p>
               </div>
             </div>
             <div *ngIf="viewingContract.motivIncetare" style="margin-top: 15px; padding: 12px; background: #f8fafc; border-radius: 6px; border-left: 4px solid #b91c1c;">
@@ -228,11 +228,11 @@
       <!-- Create / Edit Form View -->
       <div *ngIf="creatingContract || editingContract" style="display:flex; justify-content: center; gap: 60px; margin-top: 20px; align-items: start; max-width: 800px; margin-left: auto; margin-right: auto;">
         <div style="flex: 1; display:flex; flex-direction:column; gap:20px; width: 100%;">
-          
+
           <button class="btn-secondary" style="align-self: flex-start;" (click)="creatingContract ? closeAddForm() : closeEditContract()">
             ← Înapoi la listă
           </button>
-          
+
           <div class="form-section">
             <div class="section-title">
               <div class="section-icon">
@@ -244,7 +244,7 @@
             </div>
 
             <form [formGroup]="contractForm" (ngSubmit)="saveContract()">
-              
+
               <div class="form-row">
                 <div class="form-group" style="flex: 1;">
                   <label for="numarContract">Număr Contract *</label>
@@ -270,18 +270,51 @@
 
               <div class="form-row">
                 <div class="form-group" style="flex: 1;">
-                  <label for="locatorProprietarId">Proprietar Locator (Utilizator)</label>
-                  <select id="locatorProprietarId" formControlName="locatorProprietarId" class="form-control">
-                    <option value="">-- Niciunul selectat --</option>
-                    <option *ngFor="let u of users" [value]="u.id">{{ getUserDisplayName(u) }}</option>
-                  </select>
+                  <label for="locatorProprietarBtn">Proprietar Locator (Persoană)</label>
+                  <div style="display: flex; gap: 8px; align-items: center;">
+                    <div style="flex: 1; padding: 8px 12px; background: #1e1e2f; border: 1px solid #3a3a50; border-radius: 6px; color: #94a3b8; font-size: 14px; min-height: 40px; display: flex; align-items: center; justify-content: space-between;">
+                      <span>{{ selectedLocatorProprietar ? getPersonDisplayName(selectedLocatorProprietar) : '-- Niciun selectat --' }}</span>
+                      <button *ngIf="selectedLocatorProprietar" type="button" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0; margin-left: 8px;" (click)="clearLocatorProprietar()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                      </button>
+                    </div>
+                    <button type="button" id="locatorProprietarBtn" class="btn-modal-open" (click)="openLocatorProprietarModal()">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                      </svg>
+                      Căutare
+                    </button>
+                  </div>
                 </div>
                 <div class="form-group" style="flex: 1;">
-                  <label for="locatorUtilizatorId">Utilizator Locatar</label>
-                  <select id="locatorUtilizatorId" formControlName="locatorUtilizatorId" class="form-control">
-                    <option value="">-- Niciunul selectat --</option>
-                    <option *ngFor="let u of users" [value]="u.id">{{ getUserDisplayName(u) }}</option>
-                  </select>
+                  <label for="locatorUtilizatorBtn">Utilizator Locatar (Persoană)</label>
+                  <div style="display: flex; gap: 8px; align-items: center;">
+                    <div style="flex: 1; padding: 8px 12px; background: #1e1e2f; border: 1px solid #3a3a50; border-radius: 6px; color: #94a3b8; font-size: 14px; min-height: 40px; display: flex; align-items: center; justify-content: space-between;">
+                      <span>{{ selectedLocatorUtilizator ? getPersonDisplayName(selectedLocatorUtilizator) : '-- Niciun selectat --' }}</span>
+                      <button *ngIf="selectedLocatorUtilizator" type="button" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0; margin-left: 8px;" (click)="clearLocatorUtilizator()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                      </button>
+                    </div>
+                    <button type="button" id="locatorUtilizatorBtn" class="btn-modal-open" (click)="openLocatorUtilizatorModal()">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                      </svg>
+                      Căutare
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                  <label for="utilizatorOperareDisplay">Persoană Operare (Utilizator Logat)</label>
+                  <div style="padding: 8px 12px; background: #1e1e2f; border: 1px solid #3a3a50; border-radius: 6px; color: #ffffff; font-size: 14px; min-height: 40px; display: flex; align-items: center; opacity: 0.7;">
+                    {{ user?.username || 'Utilizator Logat' }}
+                  </div>
                 </div>
               </div>
 
@@ -338,16 +371,31 @@
                 </div>
               </div>
 
-              <div style="display:flex;gap:12px;margin-top:20px">
-                <button type="button" class="btn-secondary" (click)="creatingContract ? closeAddForm() : closeEditContract()">Anulare</button>
-                <button type="submit" class="btn-primary" [disabled]="contractForm.invalid">
-                  {{ editingContract ? 'Salvează Modificările' : 'Creează Contract' }}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
+               <div style="display:flex;gap:12px;margin-top:20px">
+                 <button type="button" class="btn-secondary" (click)="creatingContract ? closeAddForm() : closeEditContract()">Anulare</button>
+                 <button type="submit" class="btn-primary" [disabled]="contractForm.invalid">
+                   {{ editingContract ? 'Salvează Modificările' : 'Creează Contract' }}
+                 </button>
+               </div>
+             </form>
+           </div>
+         </div>
+       </div>
+
+      <!-- Modals for Person Selection -->
+      <app-person-search-modal
+        *ngIf="showLocatorProprietarModal"
+        [persoane]="persoane"
+        (personSelected)="selectLocatorProprietar($event)"
+        (modalClosed)="closeLocatorProprietarModal()"
+      ></app-person-search-modal>
+
+      <app-person-search-modal
+        *ngIf="showLocatorUtilizatorModal"
+        [persoane]="persoane"
+        (personSelected)="selectLocatorUtilizator($event)"
+        (modalClosed)="closeLocatorUtilizatorModal()"
+      ></app-person-search-modal>
 
     </div>
   </main>
