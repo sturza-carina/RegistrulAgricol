@@ -3,12 +3,18 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import * as L from 'leaflet';
 import { TerenService } from '../../services/teren.service';
 import { GospodarieService } from '../../services/gospodarie.service';
 import { CoordConversionService } from '../../services/coord-conversion.service';
+import { GoogleMapsLoaderService } from '../../services/google-maps-loader.service';
 import { Teren } from '../../models/teren.model';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+
+const DASH_ICON: google.maps.IconSequence = {
+  icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 3 },
+  offset: '0',
+  repeat: '12px'
+};
 
 @Component({
   selector: 'app-teren-form',
@@ -19,15 +25,16 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 })
 export class TerenFormComponent implements OnInit, OnDestroy {
   gospodarieId!: number;
-  map!: L.Map;
+  map!: google.maps.Map;
   mapInitialized = false;
 
-  // Map layers
-  maskLayer: L.Polygon | null = null;
-  uatOutlineLayer: L.GeoJSON | null = null;
-  markerGroup = L.featureGroup();
-  polygonLayer: L.Polygon | null = null;
-  polylineLayer: L.Polyline | null = null;
+  // Map overlays
+  maskPolygon: google.maps.Polygon | null = null;
+  uatOutlinePolygons: google.maps.Polyline[] = [];
+  markers: google.maps.Marker[] = [];
+  polygonOverlay: google.maps.Polygon | null = null;
+  polylineOverlay: google.maps.Polyline | null = null;
+  infoWindow: google.maps.InfoWindow | null = null;
 
   tipTerenOptions = ['Extravilan', 'Intravilan'];
 
@@ -50,7 +57,8 @@ export class TerenFormComponent implements OnInit, OnDestroy {
     private gospodarieService: GospodarieService,
     private conv: CoordConversionService,
     private http: HttpClient,
-    private zone: NgZone
+    private zone: NgZone,
+    private googleMapsLoader: GoogleMapsLoaderService
   ) { }
 
   ngOnInit() {
@@ -58,25 +66,34 @@ export class TerenFormComponent implements OnInit, OnDestroy {
       if (params['gospodarieId']) {
         this.gospodarieId = +params['gospodarieId'];
       }
-      setTimeout(() => {
-        this.initMap();
-        this.loadUatBoundary();
-      }, 150);
+      this.googleMapsLoader.load().then(() => {
+        setTimeout(() => {
+          this.initMap();
+          this.loadUatBoundary();
+        }, 150);
+      });
     });
   }
 
   ngOnDestroy() {
-    if (this.map) this.map.remove();
+    this.markers.forEach(m => m.setMap(null));
+    if (this.maskPolygon) this.maskPolygon.setMap(null);
+    this.uatOutlinePolygons.forEach(p => p.setMap(null));
+    if (this.polygonOverlay) this.polygonOverlay.setMap(null);
+    if (this.polylineOverlay) this.polylineOverlay.setMap(null);
   }
 
   private initMap() {
     const el = document.getElementById('teren-map');
     if (!el || this.mapInitialized) return;
-    this.map = L.map('teren-map').setView([45.9432, 24.9668], 7);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(this.map);
-    this.markerGroup.addTo(this.map);
+    this.map = new google.maps.Map(el, {
+      center: { lat: 45.9432, lng: 24.9668 },
+      zoom: 7,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false
+    });
+    this.infoWindow = new google.maps.InfoWindow();
     this.mapInitialized = true;
   }
 
@@ -105,33 +122,49 @@ export class TerenFormComponent implements OnInit, OnDestroy {
 
   private applyUatMask(geometry: any) {
     if (!this.map) return;
-    if (this.maskLayer) { this.map.removeLayer(this.maskLayer); }
-    if (this.uatOutlineLayer) { this.map.removeLayer(this.uatOutlineLayer); }
+    if (this.maskPolygon) { this.maskPolygon.setMap(null); this.maskPolygon = null; }
+    this.uatOutlinePolygons.forEach(p => p.setMap(null));
+    this.uatOutlinePolygons = [];
 
-    const worldBox: [number, number][] = [[-90, -180], [90, -180], [90, 180], [-90, 180]];
-    const holes: [number, number][][] = [];
+    const worldBox: google.maps.LatLngLiteral[] = [
+      { lat: -85, lng: -180 }, { lat: 85, lng: -180 }, { lat: 85, lng: 180 }, { lat: -85, lng: 180 }
+    ];
+    const holes: google.maps.LatLngLiteral[][] = [];
 
     if (geometry.type === 'Polygon') {
-      holes.push(geometry.coordinates[0].map((c: any) => [c[1], c[0]] as [number, number]));
+      holes.push(geometry.coordinates[0].map((c: any) => ({ lat: c[1], lng: c[0] })));
     } else if (geometry.type === 'MultiPolygon') {
       geometry.coordinates.forEach((poly: any) =>
-        holes.push(poly[0].map((c: any) => [c[1], c[0]] as [number, number]))
+        holes.push(poly[0].map((c: any) => ({ lat: c[1], lng: c[0] })))
       );
     }
 
-    this.maskLayer = L.polygon([worldBox, ...holes] as any, {
-      color: '#1e293b', fillColor: '#1e293b', fillOpacity: 0.55,
-      weight: 0, stroke: false, interactive: false
-    } as any).addTo(this.map);
+    this.maskPolygon = new google.maps.Polygon({
+      paths: [worldBox, ...holes],
+      strokeWeight: 0,
+      fillColor: '#1e293b',
+      fillOpacity: 0.55,
+      clickable: false,
+      map: this.map
+    });
 
-    this.uatOutlineLayer = L.geoJSON(
-      { type: 'Feature', geometry, properties: {} } as any,
-      { style: { color: '#3b82f6', weight: 2.5, fill: false, dashArray: '6 4' } }
-    ).addTo(this.map);
+    holes.forEach(ring => {
+      const outline = new google.maps.Polyline({
+        path: [...ring, ring[0]],
+        strokeColor: '#3b82f6',
+        strokeWeight: 2.5,
+        strokeOpacity: 0,
+        icons: [DASH_ICON],
+        clickable: false,
+        map: this.map
+      });
+      this.uatOutlinePolygons.push(outline);
+    });
 
-    const inner = L.polygon(holes as any);
-    if (inner.getBounds().isValid()) {
-      this.map.fitBounds(inner.getBounds(), { padding: [20, 20] });
+    const bounds = new google.maps.LatLngBounds();
+    holes.forEach(ring => ring.forEach(pt => bounds.extend(pt)));
+    if (!bounds.isEmpty()) {
+      this.map.fitBounds(bounds, 20);
     }
   }
 
@@ -159,51 +192,72 @@ export class TerenFormComponent implements OnInit, OnDestroy {
     if (!this.mapInitialized) return;
 
     // --- 1. Markers for every valid point ---
-    this.markerGroup.clearLayers();
-    const latlngs: [number, number][] = valid.map((p, idx) => {
-      const ll = this.conv.stereo70ToWgs84(p.x, p.y);
-      const marker = L.circleMarker(ll, {
-        radius: 6,
-        color: '#1e40af',
-        fillColor: '#3b82f6',
-        fillOpacity: 1,
-        weight: 2
+    this.markers.forEach(m => m.setMap(null));
+    this.markers = [];
+
+    const latlngs: google.maps.LatLngLiteral[] = valid.map((p, idx) => {
+      const [lat, lng] = this.conv.stereo70ToWgs84(p.x, p.y);
+      const position = { lat, lng };
+      const marker = new google.maps.Marker({
+        position,
+        map: this.map,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 6,
+          fillColor: '#3b82f6',
+          fillOpacity: 1,
+          strokeColor: '#1e40af',
+          strokeWeight: 2
+        }
       });
-      marker.bindTooltip(`Punct ${idx + 1}<br>X: ${p.x}<br>Y: ${p.y}`, { permanent: false });
-      this.markerGroup.addLayer(marker);
-      return ll;
+      marker.addListener('mouseover', () => {
+        this.infoWindow?.setContent(`Punct ${idx + 1}<br>X: ${p.x}<br>Y: ${p.y}`);
+        this.infoWindow?.open({ map: this.map, anchor: marker });
+      });
+      marker.addListener('mouseout', () => this.infoWindow?.close());
+      this.markers.push(marker);
+      return position;
     });
 
     // Remove old polygon/polyline
-    if (this.polygonLayer) { this.map.removeLayer(this.polygonLayer); this.polygonLayer = null; }
-    if (this.polylineLayer) { this.map.removeLayer(this.polylineLayer); this.polylineLayer = null; }
+    if (this.polygonOverlay) { this.polygonOverlay.setMap(null); this.polygonOverlay = null; }
+    if (this.polylineOverlay) { this.polylineOverlay.setMap(null); this.polylineOverlay = null; }
 
     if (latlngs.length === 0) return;
 
     if (latlngs.length === 1) {
       // Just a marker — already drawn above
-      this.map.setView(latlngs[0], Math.max(this.map.getZoom(), 14));
+      this.map.setCenter(latlngs[0]);
+      this.map.setZoom(Math.max(this.map.getZoom() ?? 7, 14));
     } else if (latlngs.length === 2) {
       // Draw a line segment
-      this.polylineLayer = L.polyline(latlngs, { color: '#3b82f6', weight: 2, dashArray: '5 4' }).addTo(this.map);
-      this.map.fitBounds(this.polylineLayer.getBounds(), { padding: [40, 40] });
+      this.polylineOverlay = new google.maps.Polyline({
+        path: latlngs,
+        strokeColor: '#3b82f6',
+        strokeWeight: 2,
+        strokeOpacity: 0,
+        icons: [{ icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 2 }, offset: '0', repeat: '10px' }],
+        map: this.map
+      });
+      const bounds = new google.maps.LatLngBounds();
+      latlngs.forEach(p => bounds.extend(p));
+      this.map.fitBounds(bounds, 40);
     } else {
       // 3+ points — draw a filled polygon
-      this.polygonLayer = L.polygon(latlngs, {
-        color: '#1e40af',
-        weight: 2.5,
+      this.polygonOverlay = new google.maps.Polygon({
+        paths: latlngs,
+        strokeColor: '#1e40af',
+        strokeWeight: 2.5,
         fillColor: '#86efac',
-        fillOpacity: 0.45
-      }).addTo(this.map);
+        fillOpacity: 0.45,
+        map: this.map
+      });
 
-      // Keep UAT mask on top of polygon but keep labels accessible
-      if (this.maskLayer) this.maskLayer.bringToFront();
-      if (this.uatOutlineLayer) this.uatOutlineLayer.bringToFront();
-      this.markerGroup.bringToFront();
+      // Markers render in their own pane above polygons by default — no z-order fix needed.
 
-      if (this.polygonLayer.getBounds().isValid()) {
-        this.map.fitBounds(this.polygonLayer.getBounds(), { padding: [30, 30] });
-      }
+      const bounds = new google.maps.LatLngBounds();
+      latlngs.forEach(p => bounds.extend(p));
+      this.map.fitBounds(bounds, 30);
     }
   }
 

@@ -1,0 +1,9 @@
+<google-map
+  *ngIf="apiLoaded"
+  [center]="center"
+  [zoom]="zoom"
+  height="500px"
+  width="100%">
+  <map-marker [position]="center"></map-marker>
+</google-map>
+<p *ngIf="!apiLoaded">Se încarcă harta...</p>
