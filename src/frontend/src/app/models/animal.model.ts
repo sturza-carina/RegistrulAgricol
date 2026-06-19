@@ -49,3 +49,23 @@ export interface ProprietarAnimals {
   individuals: AnimalIndividual[];
   groups: EfectivGrup[];
 }
+
+export enum TipEvenimentAnimal {
+  NASTERE           = 'NASTERE',
+  CUMPARARE         = 'CUMPARARE',
+  TRANSFER_INTRARE  = 'TRANSFER_INTRARE',
+  VANZARE           = 'VANZARE',
+  SACRIFICARE_PROPRIE = 'SACRIFICARE_PROPRIE',
+  MOARTE            = 'MOARTE',
+  UCIDERE_FOCAR     = 'UCIDERE_FOCAR',
+  DISPARITIE        = 'DISPARITIE'
+}
+
+export interface EvenimentAnimal {
+  id?: number;
+  animal?: AnimalIndividual;
+  tipEveniment: TipEvenimentAnimal;
+  dataEveniment: string; // YYYY-MM-DD
+  detalii?: string;
+  tenantId?: string;
+}

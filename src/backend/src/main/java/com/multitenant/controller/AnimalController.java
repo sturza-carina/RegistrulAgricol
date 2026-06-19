@@ -3,8 +3,10 @@ package com.multitenant.controller;
 import com.multitenant.config.tenant.TenantContext;
 import com.multitenant.model.animal.AnimalIndividual;
 import com.multitenant.model.animal.EfectivGrup;
+import com.multitenant.model.animal.EvenimentAnimal;
 import com.multitenant.service.AnimalIndividualService;
 import com.multitenant.service.EfectivGrupService;
+import com.multitenant.service.EvenimentAnimalService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,11 +21,14 @@ public class AnimalController {
 
     private final AnimalIndividualService animalIndividualService;
     private final EfectivGrupService efectivGrupService;
+    private final EvenimentAnimalService evenimentAnimalService;
 
     public AnimalController(AnimalIndividualService animalIndividualService,
-                            EfectivGrupService efectivGrupService) {
+                            EfectivGrupService efectivGrupService,
+                            EvenimentAnimalService evenimentAnimalService) {
         this.animalIndividualService = animalIndividualService;
         this.efectivGrupService = efectivGrupService;
+        this.evenimentAnimalService = evenimentAnimalService;
     }
 
     // --- AnimalIndividual Endpoints ---
@@ -72,6 +77,36 @@ public class AnimalController {
         }
         animalIndividualService.delete(id);
         return ResponseEntity.ok().build();
+    }
+
+    // --- Evenimente Animal (Timeline) ---
+
+    /**
+     * POST /api/animals/individual/{id}/evenimente
+     * Adaugă un eveniment nou în istoricul unui animal.
+     */
+    @PostMapping("/individual/{id}/evenimente")
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
+    public ResponseEntity<?> adaugaEveniment(
+            @PathVariable Long id,
+            @RequestBody EvenimentAnimal eveniment) {
+        if ("public".equals(TenantContext.getCurrentTenant())) {
+            return ResponseEntity.badRequest().body("Cannot create outside tenant context.");
+        }
+        return ResponseEntity.ok(evenimentAnimalService.adaugaEveniment(id, eveniment));
+    }
+
+    /**
+     * GET /api/animals/individual/{id}/evenimente
+     * Returnează timeline-ul complet al unui animal, ordonat descrescător după dată.
+     */
+    @GetMapping("/individual/{id}/evenimente")
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
+    public ResponseEntity<?> getTimeline(@PathVariable Long id) {
+        if ("public".equals(TenantContext.getCurrentTenant())) {
+            return ResponseEntity.badRequest().body("Cannot fetch outside tenant context.");
+        }
+        return ResponseEntity.ok(evenimentAnimalService.getTimeline(id));
     }
 
     // --- EfectivGrup Endpoints ---
