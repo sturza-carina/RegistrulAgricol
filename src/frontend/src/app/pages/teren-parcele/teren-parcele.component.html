@@ -7,13 +7,7 @@
     <div class="side-panel">
 
       <!-- Breadcrumb & Back -->
-      <div class="breadcrumbs">
-        <a [routerLink]="['/gospodarii']" style="color:var(--text-primary);text-decoration:none;font-weight:500;">Gospodării</a>
-        <span>&gt;</span>
-        <a [routerLink]="['/gospodarii', gospodarieId]" style="color:var(--text-primary);text-decoration:none;">Detalii</a>
-        <span>&gt;</span>
-        <span style="color:var(--text-muted);">{{ teren?.denumire || 'Teren' }}</span>
-      </div>
+      <app-breadcrumbs [items]="breadcrumbItems"></app-breadcrumbs>
 
       <h2 class="panel-title">{{ teren?.denumire || '...' }}</h2>
 

@@ -11,11 +11,12 @@ import { Teren } from '../../models/teren.model';
 import { Parcela } from '../../models/parcela.model';
 import { CategorieFolosinta } from '../../models/categorie-folosinta.model';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 
 @Component({
   selector: 'app-teren-parcele',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent, BreadcrumbsComponent],
   templateUrl: './teren-parcele.component.html',
   styleUrls: ['./teren-parcele.component.css']
 })
@@ -24,6 +25,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   gospodarieId!: number;
   teren: Teren | null = null;
   parcele: Parcela[] = [];
+  breadcrumbItems: BreadcrumbItem[] = [];
 
   map!: L.Map;
   mapInitialized = false;
@@ -75,6 +77,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
 
     this.terenService.getTerenById(this.terenId).subscribe(t => {
       this.teren = t;
+      this.updateBreadcrumbs();
       console.log('LOADED TEREN:', t);
       setTimeout(() => {
         this.initMap();
@@ -82,6 +85,14 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
         this.loadCategorii();
       }, 150);
     });
+  }
+
+  updateBreadcrumbs() {
+    this.breadcrumbItems = [
+      { label: 'Gospodării', link: '/gospodarii' },
+      { label: 'Detalii Gospodărie', link: `/gospodarii/${this.gospodarieId}?tab=TERENURI` },
+      { label: `Teren: ${this.teren?.denumire || ''}` }
+    ];
   }
 
   ngOnDestroy() {

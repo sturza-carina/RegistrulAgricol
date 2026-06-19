@@ -6,44 +6,46 @@ import { PersoanaService } from '../../services/persoana.service';
 import { Persoana, PersoanaFizica, PersoanaJuridica } from '../../models/persoana.model';
 import { AuthService } from '../../services/auth.service';
 
-import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { LayoutComponent } from '../../components/layout/layout.component';
+import { PageHeaderComponent } from '../../components/page-header/page-header.component';
+import { GenericTableComponent, TableColumn, TableFilter, TableAction } from '../../components/generic-table/generic-table.component';
+import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
+import { PersonFormComponent } from '../persoana-form/persoana-form.component';
 
 @Component({
   selector: 'app-persoana-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SidebarComponent],
-  templateUrl: './persoana-list.component.html',
-  styleUrls: ['./persoana-list.component.css']
+  imports: [CommonModule, RouterModule, FormsModule, LayoutComponent, PageHeaderComponent, GenericTableComponent, BreadcrumbsComponent, PersonFormComponent],
+  templateUrl: './persoana-list.component.html'
 })
 export class PersonListComponent implements OnInit {
-  persoane: Persoana[] = [];
-  filteredPersons: Persoana[] = [];
-  user: any;
-  
-  searchQuery: string = '';
-  typeFilter: string = 'Toate Tipurile';
-  suggestions: string[] = [];
-  showSuggestions = false;
+  persoane: any[] = [];
 
-  currentPage = 1;
-  itemsPerPage = 5;
 
-  get paginatedItems() {
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    return this.filteredPersons.slice(startIndex, startIndex + this.itemsPerPage);
-  }
+  breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Persoane', link: '/persoane' }
+  ];
 
-  get totalPages() {
-    return Math.ceil(this.filteredPersons.length / this.itemsPerPage) || 1;
-  }
+  showPersonModal = false;
+  editPersonId?: number;
 
-  nextPage() {
-    if (this.currentPage < this.totalPages) this.currentPage++;
-  }
+  columns: TableColumn[] = [
+    { field: 'displayName', header: 'Nume / Denumire', type: 'avatar', subField: 'displayHandle' },
+    { field: 'personType', header: 'Tip Persoană', type: 'badge', format: val => val === 'PHYSICAL_PERSON' ? 'Persoană Fizică' : 'Persoană Juridică', badgeClasses: { 'PHYSICAL_PERSON': 'viewer', 'LEGAL_ENTITY': 'admin' } },
+    { field: 'displayIdentifier', header: 'CNP / CUI', format: val => val || '-' },
+    { field: 'judet', header: 'Județ', format: val => val || '-' },
+    { field: 'localitate', header: 'Localitate', format: val => val || '-' }
+  ];
 
-  prevPage() {
-    if (this.currentPage > 1) this.currentPage--;
-  }
+  filters: TableFilter[] = [
+    { field: 'search', label: 'Caută după nume, CNP/CUI...', type: 'search', searchFields: ['displayName', 'displayIdentifier'] },
+    { field: 'personType', label: 'Tip Persoană', type: 'select', options: [{label: 'Persoană Fizică', value: 'PHYSICAL_PERSON'}, {label: 'Persoană Juridică', value: 'LEGAL_ENTITY'}] }
+  ];
+
+  actions: TableAction[] = [
+    { icon: 'edit', tooltip: 'Editare', action: (row) => this.editPerson(row.raw) },
+    { icon: 'delete', tooltip: 'Ștergere', action: (row) => this.deletePerson(row.raw) }
+  ];
 
   constructor(
     private persoanaService: PersoanaService,
@@ -52,63 +54,31 @@ export class PersonListComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.user = this.authService.currentUserSubject.value;
     this.loadPersons();
   }
 
   loadPersons() {
-    let filterType = '';
-    if (this.typeFilter === 'Persoană Fizică') filterType = 'PHYSICAL_PERSON';
-    if (this.typeFilter === 'Persoană Juridică') filterType = 'LEGAL_ENTITY';
-
-    this.persoanaService.getAllPersons(this.searchQuery, filterType).subscribe({
+    // we fetch all and let generic table filter, so pass empty strings to api if it requires
+    this.persoanaService.getAllPersons('', '').subscribe({
       next: (data) => {
-        this.persoane = data;
-        this.filteredPersons = data;
-        this.currentPage = 1;
+        this.persoane = data.map(p => ({
+           raw: p,
+           displayName: this.getPersonName(p),
+           displayHandle: this.getPersonTypeHandle(p),
+           displayIdentifier: this.getPersonIdentifier(p),
+           personType: p.personType,
+           judet: p.address?.county || '',
+           localitate: p.address?.localitate || '',
+           initials: this.getPersonName(p).substring(0, 1).toUpperCase(),
+           avatarBg: p.personType === 'PHYSICAL_PERSON' ? '#3b82f6' : '#8b5cf6'
+        })).sort((a, b) => (b.raw.id || 0) - (a.raw.id || 0));
       },
       error: (err) => console.error('Error fetching persoane', err)
     });
   }
 
-  applyFilters() {
-    this.loadPersons();
-  }
-
-  onSearchInput(event: any): void {
-    this.searchQuery = event.target.value;
-    this.updateSuggestions();
-    this.loadPersons();
-  }
-
-  updateSuggestions(): void {
-    const term = this.searchQuery.toLowerCase().trim();
-    if (!term || this.persoane.length === 0) {
-      this.suggestions = [];
-      this.showSuggestions = false;
-      return;
-    }
-    const names = this.persoane.map(p => this.getPersonName(p));
-    const matched = names.filter(n => n.toLowerCase().startsWith(term));
-    this.suggestions = [...new Set(matched)].slice(0, 8);
-    this.showSuggestions = this.suggestions.length > 0;
-  }
-
-  selectSuggestion(suggestion: string): void {
-    this.searchQuery = suggestion;
-    this.showSuggestions = false;
-    this.suggestions = [];
-    this.loadPersons();
-  }
-
-  hideSuggestions(): void {
-    setTimeout(() => { this.showSuggestions = false; }, 150);
-  }
-
-  clearFilters() {
-    this.searchQuery = '';
-    this.typeFilter = 'Toate Tipurile';
-    this.loadPersons();
+  getPersonTypeHandle(p: Persoana): string {
+    return p.personType === 'PHYSICAL_PERSON' ? 'Persoană Fizică' : 'Persoană Juridică';
   }
 
   getPersonName(persoana: Persoana): string {
@@ -130,11 +100,18 @@ export class PersonListComponent implements OnInit {
   }
 
   goToCreatePerson() {
-    this.router.navigate(['/persoane/new']);
+    this.editPersonId = undefined;
+    this.showPersonModal = true;
   }
 
   editPerson(persoana: Persoana) {
-    this.router.navigate(['/persoane/edit', persoana.id]);
+    this.editPersonId = persoana.id;
+    this.showPersonModal = true;
+  }
+
+  closePersonModal() {
+    this.showPersonModal = false;
+    this.loadPersons();
   }
 
   deletePerson(persoana: Persoana) {
@@ -145,9 +122,6 @@ export class PersonListComponent implements OnInit {
       });
     }
   }
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
+
 }
 

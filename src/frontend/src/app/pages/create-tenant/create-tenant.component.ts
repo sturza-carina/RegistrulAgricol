@@ -6,11 +6,14 @@ import { AuthService } from '../../services/auth.service';
 import { HttpClient } from '@angular/common/http';
 
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
+import { GenericFormComponent } from '../../components/generic-form/generic-form.component';
+import { FormConfig } from '../../components/generic-form/generic-form.models';
 
 @Component({
   selector: 'app-create-tenant',
   standalone: true,
-  imports: [CommonModule, FormsModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, SidebarComponent, BreadcrumbsComponent, GenericFormComponent],
   templateUrl: './create-tenant.component.html',
 })
 export class CreateTenantComponent implements OnInit {
@@ -24,6 +27,9 @@ export class CreateTenantComponent implements OnInit {
   filteredTenants: any[] = [];
   searchTerm: string = '';
   showCreateForm = false;
+  breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Tenanți', link: '/tenants' }
+  ];
   selectedTenant: any = null;
   allUats: any[] = [];
   selectedUatToAssign: string = '';
@@ -31,9 +37,18 @@ export class CreateTenantComponent implements OnInit {
   pageSize = 10;
   Math = Math;
 
-  form = {
-    orgName: '',
-    schemaName: ''
+  formInitialData: any = {};
+  formConfig: FormConfig = {
+    submitText: 'Creare Tenant',
+    cancelText: 'Anulare',
+    sections: [
+      {
+        fields: [
+          { name: 'orgName', label: 'Nume Organizație', type: 'text', required: true, placeholder: 'ex., Primăria Giroc', width: 'half', hint: 'Numele oficial al entității înregistrate.' },
+          { name: 'schemaName', label: 'Cod SIRUTA', type: 'text', required: true, placeholder: 'ex., 155286', width: 'half', hint: 'Cod din 5 sau 6 cifre.' }
+        ]
+      }
+    ]
   };
 
   constructor(
@@ -109,9 +124,11 @@ export class CreateTenantComponent implements OnInit {
   openCreateForm() {
     this.showCreateForm = true;
     this.selectedTenant = null;
-    this.form = { orgName: '', schemaName: '' };
+    this.formInitialData = { orgName: '', schemaName: '' };
+    this.formConfig.submitText = 'Creare Tenant';
     this.errorMessage = '';
     this.successMessage = '';
+    this.updateBreadcrumbs();
   }
 
   editingTenant: any = null;
@@ -120,6 +137,7 @@ export class CreateTenantComponent implements OnInit {
     this.showCreateForm = false;
     this.errorMessage = '';
     this.successMessage = '';
+    this.updateBreadcrumbs();
   }
 
   selectTenant(tenant: any) {
@@ -130,12 +148,14 @@ export class CreateTenantComponent implements OnInit {
     this.successMessage = '';
     this.selectedUatToAssign = '';
     this.loadUats();
+    this.updateBreadcrumbs();
   }
 
   closeTenantDetails() {
     this.selectedTenant = null;
     this.errorMessage = '';
     this.successMessage = '';
+    this.updateBreadcrumbs();
   }
 
   editTenant(t: any) {
@@ -144,12 +164,36 @@ export class CreateTenantComponent implements OnInit {
     this.showCreateForm = false;
     this.errorMessage = '';
     this.successMessage = '';
+    this.updateBreadcrumbs();
   }
 
   closeEditTenant() {
     this.editingTenant = null;
     this.errorMessage = '';
     this.successMessage = '';
+    this.updateBreadcrumbs();
+  }
+
+  updateBreadcrumbs(): void {
+    this.breadcrumbItems = [
+      { label: 'Tenanți', link: (this.showCreateForm || this.selectedTenant || this.editingTenant) ? undefined : '/tenants' }
+    ];
+    if (this.showCreateForm || this.selectedTenant || this.editingTenant) {
+      this.breadcrumbItems[0].link = '/tenants';
+      this.breadcrumbItems[0].action = () => {
+        if (this.showCreateForm) this.closeCreateForm();
+        if (this.selectedTenant) this.closeTenantDetails();
+        if (this.editingTenant) this.closeEditTenant();
+      };
+    }
+
+    if (this.showCreateForm) {
+      this.breadcrumbItems.push({ label: 'Creare Tenant' });
+    } else if (this.selectedTenant) {
+      this.breadcrumbItems.push({ label: `Detalii: ${this.selectedTenant.name}` });
+    } else if (this.editingTenant) {
+      this.breadcrumbItems.push({ label: `Editare: ${this.editingTenant.name}` });
+    }
   }
 
   saveEditTenant() {
@@ -255,13 +299,11 @@ export class CreateTenantComponent implements OnInit {
   }
 
   cancel(): void {
-    if (confirm('Ești sigur că vrei să anulezi? Datele introduse se vor pierde.')) {
-      this.closeCreateForm();
-    }
+    this.closeCreateForm();
   }
 
-  onCreateTenant(): void {
-    if (!this.form.orgName || !this.form.schemaName) {
+  onCreateTenant(formData: any): void {
+    if (!formData.orgName || !formData.schemaName) {
       this.errorMessage = 'Vă rugăm să completați toate câmpurile obligatorii.';
       return;
     }
@@ -270,8 +312,8 @@ export class CreateTenantComponent implements OnInit {
     this.successMessage = '';
 
     this.http.post('/api/tenants', {
-      name: this.form.orgName,
-      sirutaCode: this.form.schemaName,
+      name: formData.orgName,
+      sirutaCode: formData.schemaName,
     }).subscribe({
       next: (res: any) => {
         this.successMessage = `Tenant "${res.name}" a fost creat cu succes!`;

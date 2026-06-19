@@ -1,0 +1,14 @@
+<div class="breadcrumbs" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+  <ng-container *ngFor="let item of items; let last = last">
+    <a *ngIf="item.link && !item.action && !last" [routerLink]="item.link" [queryParams]="item.queryParams" style="color: var(--text-primary); text-decoration: none; font-weight: 500;">
+      {{ item.label }}
+    </a>
+    <a *ngIf="item.action && !last" (click)="item.action()" style="color: var(--text-primary); text-decoration: none; font-weight: 500; cursor: pointer;">
+      {{ item.label }}
+    </a>
+    <span *ngIf="(!item.link && !item.action) || last" [ngStyle]="last ? {'color': 'var(--text-muted)'} : {'color': 'var(--text-primary)', 'font-weight': '500'}">
+      {{ item.label }}
+    </span>
+    <span *ngIf="!last" style="color: var(--text-muted);">&gt;</span>
+  </ng-container>
+</div>
