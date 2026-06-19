@@ -9,11 +9,7 @@
       </header>
 
       <div class="page-content">
-        <div class="breadcrumbs" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-          <a routerLink="/persoane" style="color: var(--text-primary); text-decoration: none; font-weight: 500;">Persoane</a>
-          <span>&gt;</span>
-          <span style="color: var(--text-muted);">{{ isEditMode ? 'Editare' : 'Adăugare persoană' }}</span>
-        </div>
+        <app-breadcrumbs [items]="breadcrumbItems"></app-breadcrumbs>
         <div class="page-header-row" style="max-width: 800px; margin: 0 auto 20px;">
           <div style="display: flex; align-items: center; gap: 15px;">
             <button class="back-btn" (click)="cancel()" style="background:none; border:none; color:var(--text-secondary); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:8px; border-radius:50%; transition:background 0.2s;" onmouseover="this.style.background='var(--body-bg)'" onmouseout="this.style.background='none'" title="Înapoi">
@@ -52,149 +48,13 @@
 </ng-container>
 
 <ng-template #formContent>
-  <form (ngSubmit)="save()" #personForm="ngForm">
-    <!-- General Section -->
-    <h3 style="margin-top: 0; margin-bottom: 16px; border-bottom: 1px solid var(--border-color, #e2efe6); padding-bottom: 8px;">Informații Generale</h3>
-    
-    <div class="form-row">
-      <div class="form-group" style="width:100%">
-        <label>Tip Entitate *</label>
-        <select class="input-field" [(ngModel)]="personType" name="personType" required [disabled]="isEditMode">
-          <option value="PHYSICAL_PERSON">Persoană Fizică</option>
-          <option value="LEGAL_ENTITY">Persoană Juridică</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Physical Persoana Fields -->
-    <ng-container *ngIf="personType === 'PHYSICAL_PERSON'">
-      <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <div class="form-group">
-          <label>Prenume *</label>
-          <input type="text" class="input-field" [(ngModel)]="firstName" name="firstName" required>
-        </div>
-        <div class="form-group">
-          <label>Nume *</label>
-          <input type="text" class="input-field" [(ngModel)]="lastName" name="lastName" required>
-        </div>
-      </div>
-      <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <div class="form-group">
-          <label>CNP *</label>
-          <input type="text" class="input-field" [(ngModel)]="cnp" name="cnp" required maxlength="13">
-        </div>
-        <div class="form-group">
-          <label>Data Nașterii</label>
-          <input type="date" class="input-field" [(ngModel)]="dateOfBirth" name="dateOfBirth">
-        </div>
-      </div>
-      <div class="form-row">
-        <label style="display:flex;align-items:center;gap:8px;font-weight:500;">
-          <input type="checkbox" [(ngModel)]="isHeadOfHousehold" name="isHeadOfHousehold">
-          Cap Gospodărie
-        </label>
-      </div>
-    </ng-container>
-
-    <!-- Legal Entity Fields -->
-    <ng-container *ngIf="personType === 'LEGAL_ENTITY'">
-      <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <div class="form-group">
-          <label>Denumire Companie *</label>
-          <input type="text" class="input-field" [(ngModel)]="companyName" name="companyName" required>
-        </div>
-        <div class="form-group">
-          <label>CUI *</label>
-          <input type="text" class="input-field" [(ngModel)]="cui" name="cui" required>
-        </div>
-      </div>
-      <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <div class="form-group">
-          <label>Număr de Înregistrare</label>
-          <input type="text" class="input-field" [(ngModel)]="registrationNumber" name="registrationNumber" placeholder="J.../...">
-        </div>
-        <div class="form-group">
-          <label>Reprezentant Legal</label>
-          <input type="text" class="input-field" [(ngModel)]="legalRepresentative" name="legalRepresentative">
-        </div>
-      </div>
-    </ng-container>
-
-    <!-- Adresa Section -->
-    <h3 style="margin-top: 32px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color, #e2efe6); padding-bottom: 8px;">Detalii Adresă</h3>
-    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-      <div class="form-group">
-        <label>Județ</label>
-        <input type="text" class="input-field" [(ngModel)]="county" name="county">
-      </div>
-      <div class="form-group">
-        <label>Localitate</label>
-        <input type="text" class="input-field" [(ngModel)]="localitate" name="localitate">
-      </div>
-    </div>
-    <div class="form-row" style="display:grid;grid-template-columns:2fr 1fr;gap:16px;">
-      <div class="form-group">
-        <label>Stradă</label>
-        <input type="text" class="input-field" [(ngModel)]="street" name="street">
-      </div>
-      <div class="form-group">
-        <label>Număr</label>
-        <input type="text" class="input-field" [(ngModel)]="streetNumber" name="streetNumber">
-      </div>
-    </div>
-    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;">
-      <div class="form-group">
-        <label>Bloc</label>
-        <input type="text" class="input-field" [(ngModel)]="building" name="building">
-      </div>
-      <div class="form-group">
-        <label>Scară</label>
-        <input type="text" class="input-field" [(ngModel)]="staircase" name="staircase">
-      </div>
-      <div class="form-group">
-        <label>Etaj</label>
-        <input type="number" class="input-field" [(ngModel)]="floor" name="floor">
-      </div>
-      <div class="form-group">
-        <label>Ap.</label>
-        <input type="number" class="input-field" [(ngModel)]="apartmentNumber" name="apartmentNumber">
-      </div>
-    </div>
-
-    <!-- Contact Details Section -->
-    <h3 style="margin-top: 32px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color, #e2efe6); padding-bottom: 8px;">Contact și Registru Agricol</h3>
-    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-      <div class="form-group">
-        <label>Număr de Telefon</label>
-        <input type="tel" class="input-field" [(ngModel)]="phoneNumber" name="phoneNumber">
-      </div>
-      <div class="form-group">
-        <label>Adresă Email</label>
-        <input type="email" class="input-field" [(ngModel)]="email" name="email">
-      </div>
-    </div>
-    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-      <div class="form-group">
-        <label>Volum Registru</label>
-        <input type="text" class="input-field" [(ngModel)]="registerVolume" name="registerVolume">
-      </div>
-      <div class="form-group">
-        <label>Poziție Registru</label>
-        <input type="text" class="input-field" [(ngModel)]="registerPosition" name="registerPosition">
-      </div>
-    </div>
-    <div class="form-row" style="width:100%">
-      <div class="form-group">
-        <label>Note</label>
-        <textarea class="input-field" rows="3" [(ngModel)]="notes" name="notes"></textarea>
-      </div>
-    </div>
-
-    <div style="margin-top:32px;display:flex;gap:16px;justify-content:flex-end">
-      <button type="submit" class="btn-primary" [disabled]="!personForm.form.valid">
-        {{ isEditMode ? 'Actualizează' : 'Salvează' }}
-      </button>
-      <button type="button" class="btn-secondary" (click)="cancel()">Anulează</button>
-    </div>
-  </form>
+  <div style="padding: 0; margin-top: -10px;">
+    <app-generic-form 
+      [config]="formConfig" 
+      [initialData]="formInitialData"
+      [isSubmitting]="isSaving"
+      (formSubmit)="save($event)"
+      (formCancel)="cancel()">
+    </app-generic-form>
+  </div>
 </ng-template>

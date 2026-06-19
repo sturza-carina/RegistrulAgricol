@@ -1,29 +1,6 @@
-<div class="app-shell">
-
-  <app-sidebar></app-sidebar>
-
-  <!-- MAIN CONTENT -->
-  <main class="main-content">
-
-    <!-- TOPBAR -->
-    <header class="topbar">
-      <div class="topbar-spacer"></div>
-      <div class="user-chip">
-        <div class="user-info">
-          <div class="user-name">{{ user?.username || 'Admin User' }}</div>
-        </div>
-        <div class="avatar">{{ (user?.username?.charAt(0) || 'A') | uppercase }}</div>
-      </div>
-      <button class="logout-btn" (click)="logout()">Deconectare</button>
-    </header>
-
-    <!-- PAGE CONTENT -->
-    <div class="page-content">
-
-      <div class="breadcrumbs" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-        <a routerLink="/superadmin" style="color: var(--text-primary); text-decoration: none; font-weight: 500;">Panou de Control (Super Admin)</a>
-      </div>
-      <!-- Header Row -->
+<app-layout>
+  <app-breadcrumbs [items]="breadcrumbItems" style="display: block; margin-bottom: 15px;"></app-breadcrumbs>
+  <!-- Header Row -->
       <div class="page-header-row">
         <div class="page-header" style="margin-bottom:0">
           <h1>Bun venit, Super Admin</h1>
@@ -200,7 +177,4 @@
         <p>Împuternicirea sectorului agricol prin digitalizare sistematică și evidență transparentă.</p>
       </div>
 
-    </div>
-  </main>
-</div>
-
+</app-layout>

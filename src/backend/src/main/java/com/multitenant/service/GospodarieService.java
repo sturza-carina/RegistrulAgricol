@@ -22,7 +22,7 @@ public class GospodarieService {
     }
 
     public List<Gospodarie> getAllGospodarii() {
-        return gospodarieRepository.findAll();
+        return gospodarieRepository.findAllByOrderByIdDesc();
     }
 
     public Gospodarie getGospodarieById(Long id) {
@@ -80,8 +80,8 @@ public class GospodarieService {
 
     public List<Gospodarie> getAllGospodarii(String uatCode) {
         if (uatCode != null && !uatCode.isBlank()) {
-            return gospodarieRepository.findByUat_CodSiruta(uatCode);
+            return gospodarieRepository.findByUat_CodSirutaOrderByIdDesc(uatCode);
         }
-        return gospodarieRepository.findAll();
+        return gospodarieRepository.findAllByOrderByIdDesc();
     }
 }

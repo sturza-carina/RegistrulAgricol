@@ -3,16 +3,12 @@
 
   <main class="main-content">
     <header class="topbar">
-      <div class="topbar-title">Registru Agricol - Gospodării</div>
+      <div class="topbar-title">Registru Agricol</div>
       <div class="topbar-spacer"></div>
     </header>
 
     <div class="page-content">
-      <div class="breadcrumbs" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-        <a routerLink="/gospodarii" style="color: var(--text-primary); text-decoration: none; font-weight: 500;">Gospodării</a>
-        <span>&gt;</span>
-        <span style="color: var(--text-muted);">{{ isEditMode ? 'Editare' : 'Adăugare gospodărie' }}</span>
-      </div>
+      <app-breadcrumbs [items]="breadcrumbItems"></app-breadcrumbs>
       <div class="page-header-row" style="max-width: 800px; margin: 0 auto 20px;">
         <div style="display: flex; align-items: center; gap: 15px;">
           <button class="back-btn" (click)="cancel()" style="background:none; border:none; color:var(--text-secondary); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:8px; border-radius:50%; transition:background 0.2s;" onmouseover="this.style.background='var(--body-bg)'" onmouseout="this.style.background='none'" title="Înapoi">
@@ -22,99 +18,21 @@
             </svg>
           </button>
           <h1 style="font-size:24px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--text-primary);margin:0;">
-            {{ isEditMode ? 'Editare Gospodărie' : 'Adăugare Gospodărie Nouă' }}
+            {{ isEditMode ? 'Editare Gospodărie' : 'Adăugare Gospodărie' }}
           </h1>
         </div>
       </div>
 
       <div class="card" style="padding: 30px; max-width: 800px; margin: 0 auto;">
-        <form [formGroup]="gospodarieForm" (ngSubmit)="onSubmit()">
-          
-          <h3 style="margin-top:0">Informații Principale</h3>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Cod Gospodărie *</label>
-              <input type="text" formControlName="codGospodarie" class="form-control" />
-              <div *ngIf="gospodarieForm.get('codGospodarie')?.invalid && gospodarieForm.get('codGospodarie')?.touched" style="color: #ef4444; font-size: 12px; margin-top: 4px;">
-                Codul gospodăriei este obligatoriu.
-              </div>
-            </div>
-            
-            <div class="form-group">
-              <label>Tip Gospodărie *</label>
-              <select formControlName="tipGospodarie" class="form-control">
-                <option value="INDIVIDUALA">Individuală</option>
-                <option value="COLECTIVA">Colectivă</option>
-                <option value="ASOCIATIE">Asociație</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label>UAT *</label>
-              <select formControlName="uat" [compareWith]="compareUat" class="form-control">
-                <option [ngValue]="null">Selectați UAT...</option>
-                <option *ngFor="let u of uats" [ngValue]="u">{{ u.denumire }} ({{ u.judet }})</option>
-              </select>
-              <div *ngIf="gospodarieForm.get('uat')?.invalid && gospodarieForm.get('uat')?.touched" style="color: #ef4444; font-size: 12px; margin-top: 4px;">
-                Trebuie să selectați un UAT valid.
-              </div>
-            </div>
-
-            <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 25px;">
-              <input type="checkbox" formControlName="activa" id="activa" />
-              <label for="activa" style="margin: 0;">Gospodărie Activă</label>
-            </div>
-          </div>
-
-          <h3 style="margin-top:20px; border-top: 1px solid #eee; padding-top: 20px;">Adresă</h3>
-          <div formGroupName="adresa" class="form-grid">
-            <div class="form-group">
-              <label>Județ</label>
-              <input type="text" formControlName="county" class="form-control" />
-            </div>
-            <div class="form-group">
-              <label>Localitate</label>
-              <input type="text" formControlName="localitate" class="form-control" />
-            </div>
-            <div class="form-group" style="grid-column: span 2;">
-              <label>Stradă</label>
-              <input type="text" formControlName="street" class="form-control" />
-            </div>
-            <div class="form-group">
-              <label>Număr</label>
-              <input type="text" formControlName="streetNumber" class="form-control" />
-            </div>
-            <div class="form-group">
-              <label>Cod Poștal</label>
-              <input type="text" formControlName="postalCode" class="form-control" />
-            </div>
-            <div class="form-group">
-              <label>Bloc</label>
-              <input type="text" formControlName="building" class="form-control" />
-            </div>
-            <div class="form-group">
-              <label>Scară</label>
-              <input type="text" formControlName="staircase" class="form-control" />
-            </div>
-            <div class="form-group">
-              <label>Etaj</label>
-              <input type="number" formControlName="floor" class="form-control" />
-            </div>
-            <div class="form-group">
-              <label>Ap.</label>
-              <input type="number" formControlName="apartmentNumber" class="form-control" />
-            </div>
-          </div>
-
-          <div style="margin-top: 30px; display: flex; gap: 10px;">
-            <button type="submit" class="btn-primary" [disabled]="gospodarieForm.invalid">
-              Salvează
-            </button>
-            <button type="button" class="btn-secondary" (click)="cancel()">
-              Anulează
-            </button>
-          </div>
-        </form>
+        <div style="padding: 0; margin-top: -10px;">
+          <app-generic-form 
+            [config]="formConfig" 
+            [initialData]="formInitialData"
+            [isSubmitting]="isSaving"
+            (formSubmit)="save($event)"
+            (formCancel)="cancel()">
+          </app-generic-form>
+        </div>
       </div>
     </div>
   </main>

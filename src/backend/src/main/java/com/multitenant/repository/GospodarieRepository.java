@@ -11,5 +11,7 @@ import java.util.Optional;
 public interface GospodarieRepository extends JpaRepository<Gospodarie, Long> {
     Optional<Gospodarie> findByCodGospodarie(String codGospodarie);
 
-    List<Gospodarie> findByUat_CodSiruta(String codSiruta);
+    List<Gospodarie> findByUat_CodSirutaOrderByIdDesc(String codSiruta);
+
+    List<Gospodarie> findAllByOrderByIdDesc();
 }
