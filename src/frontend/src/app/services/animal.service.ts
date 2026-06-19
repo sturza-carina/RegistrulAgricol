@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AnimalIndividual, EfectivGrup, ProprietarAnimals } from '../models/animal.model';
+import { AnimalIndividual, EfectivGrup, ProprietarAnimals, EvenimentAnimal } from '../models/animal.model';
 
 @Injectable({
   providedIn: 'root'
@@ -59,5 +59,15 @@ export class AnimalService {
 
   getAnimalsByProprietar(proprietarId: number): Observable<ProprietarAnimals> {
     return this.http.get<ProprietarAnimals>(`${this.baseApiUrl}/proprietar/${proprietarId}`);
+  }
+
+  // --- Evenimente Animal (Timeline) ---
+
+  adaugaEveniment(animalId: number, eveniment: EvenimentAnimal): Observable<EvenimentAnimal> {
+    return this.http.post<EvenimentAnimal>(`${this.baseApiUrl}/individual/${animalId}/evenimente`, eveniment);
+  }
+
+  getTimeline(animalId: number): Observable<EvenimentAnimal[]> {
+    return this.http.get<EvenimentAnimal[]>(`${this.baseApiUrl}/individual/${animalId}/evenimente`);
   }
 }

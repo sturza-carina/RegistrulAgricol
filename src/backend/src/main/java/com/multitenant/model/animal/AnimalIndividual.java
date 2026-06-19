@@ -1,5 +1,6 @@
 package com.multitenant.model.animal;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.multitenant.model.persoana.Persoana;
 import com.multitenant.model.registru.Gospodarie;
@@ -7,6 +8,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "animal_individual")
@@ -63,6 +66,15 @@ public class AnimalIndividual {
 
     @Column(name = "tenant_id")
     private String tenantId;
+
+    /**
+     * Lista evenimentelor înregistrate pentru acest animal.
+     * @JsonIgnore previne recursivitatea infinită la serializare.
+     * Folosiți EvenimentAnimalRepository pentru a accesa timeline-ul.
+     */
+    @OneToMany(mappedBy = "animal", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<EvenimentAnimal> evenimente = new ArrayList<>();
 
 
 }
