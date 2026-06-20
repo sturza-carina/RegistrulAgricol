@@ -18,9 +18,11 @@ import { AnimalListComponent } from './pages/animal-list/animal-list.component';
 import { AnimalIndividualFormComponent } from './pages/animal-individual-form/animal-individual-form.component';
 import { EfectivGrupFormComponent } from './pages/efectiv-grup-form/efectiv-grup-form.component';
 import { AnimalTimelineComponent } from './pages/animal-timeline/animal-timeline.component';
+import { KeycloakCallbackComponent } from './keycloak-callback/keycloak-callback.component';
 
 export const routes: Routes = [
-  { path: 'login',          component: LoginComponent },
+  { path: 'login',               component: LoginComponent },
+  { path: 'keycloak-callback',    component: KeycloakCallbackComponent },
   { path: 'dashboard',      component: DashboardComponent },
   { path: 'super-admin',    component: SuperAdminDashboardComponent },
   { path: 'tenant-admin',   component: TenantAdminDashboardComponent },

@@ -9,6 +9,7 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
 
   let clonedReq = req;
 
+  // Trimite token-ul indiferent dacă e local (user.token) sau Keycloak (user.token = access_token)
   if (user && user.token) {
     clonedReq = req.clone({
       setHeaders: {

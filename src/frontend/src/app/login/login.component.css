@@ -290,6 +290,56 @@ input::placeholder {
   opacity: 0.7;
 }
 
+/* ─── DIVIDER ─── */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 16px;
+  color: #aec8b6;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2efe6;
+}
+
+/* ─── KEYCLOAK BUTTON ─── */
+.keycloak-btn {
+  width: 100%;
+  padding: 11px;
+  background: white;
+  color: #2c3e50;
+  border: 1.5px solid #d1e3d8;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+  margin-bottom: 4px;
+}
+
+.keycloak-btn:hover {
+  background: #f0f7f3;
+  border-color: #4D9FE0;
+  box-shadow: 0 2px 8px rgba(77, 159, 224, 0.15);
+  transform: translateY(-1px);
+}
+
+.keycloak-btn:active {
+  transform: translateY(0);
+}
+
 /* ─── CARD FOOTER ─── */
 .card-footer {
   display: flex;

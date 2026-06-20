@@ -14,6 +14,7 @@ import { CommonModule } from '@angular/common';
 export class LoginComponent {
   loginForm: FormGroup;
   error: string = '';
+  loading: boolean = false;
 
   constructor(private fb: FormBuilder, private authService: AuthService, private router: Router) {
     this.loginForm = this.fb.group({
@@ -24,8 +25,11 @@ export class LoginComponent {
 
   onSubmit() {
     if (this.loginForm.valid) {
+      this.loading = true;
+      this.error = '';
       this.authService.login(this.loginForm.value).subscribe({
         next: () => {
+          this.loading = false;
           const user = this.authService.currentUserSubject.value;
           if (user?.role === 'ROLE_SUPER_ADMIN') {
             this.router.navigate(['/super-admin']);
@@ -35,10 +39,15 @@ export class LoginComponent {
             this.router.navigate(['/gospodarii']);
           }
         },
-        error: err => {
-          this.error = 'Invalid credentials';
+        error: () => {
+          this.loading = false;
+          this.error = 'Credențiale incorecte. Vă rugăm să încercați din nou.';
         }
       });
     }
+  }
+
+  loginWithKeycloak() {
+    this.authService.loginWithKeycloak();
   }
 }
