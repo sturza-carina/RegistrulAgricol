@@ -86,7 +86,7 @@
       <!-- Parcel list -->
       <div *ngIf="!isAddingParcela && !viewingParcela" class="parcela-list">
         <div class="list-label">Parcele ({{ parcele.length }})</div>
-        <div *ngFor="let p of parcele" class="parcela-item" (click)="viewingParcela = p">
+        <div *ngFor="let p of parcele" class="parcela-item" (click)="selectParcela(p)">
           <div>
             <div class="parcela-name">{{ p.denumire }}</div>
             <div class="parcela-meta">{{ p.suprafata }} ha &bull; {{ p.categorieFolosinta }}</div>
@@ -110,7 +110,7 @@
       <div *ngIf="viewingParcela" class="parcela-detail-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
           <h3 style="margin:0;font-size:15px;">Detalii Parcelă</h3>
-          <button class="btn-close" (click)="viewingParcela=null">✕</button>
+          <button class="btn-close" (click)="closeParcela()">✕</button>
         </div>
         <p><strong>Denumire:</strong> {{ viewingParcela.denumire }}</p>
         <p><strong>Suprafață:</strong> {{ viewingParcela.suprafata }} ha</p>
@@ -122,6 +122,103 @@
           </svg>
           Șterge Parcelă
         </button>
+
+        <hr style="border-color: rgba(255,255,255,0.1); margin: 16px 0;">
+
+        <!-- CULTURI SECTION -->
+        <div *ngIf="!isAddingCultura" class="cultura-block">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div class="list-label" style="font-size: 14px; color: #86efac;">Culturi înregistrate</div>
+            <button class="btn-secondary" style="font-size:12px; padding:4px 8px; border-color: #22c55e; color: #4ade80;" (click)="openAddCulturaForm()">
+              + Cultură
+            </button>
+          </div>
+
+          <div *ngIf="culturi.length > 0" class="categorie-list">
+            <div *ngFor="let cult of culturi" class="categorie-item" style="border-left: 3px solid #22c55e;">
+              <div>
+                <div class="categorie-name">{{ cult.specieCultura }} ({{ cult.anAgricol }})</div>
+                <div class="categorie-meta">Suprafață: {{ cult.suprafataCultivataHa }} ha</div>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <button class="btn-icon" (click)="openEditCultura(cult)" title="Editează">✎</button>
+                <button class="btn-icon-delete" (click)="deleteCultura(cult)" title="Șterge">✕</button>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="culturi.length === 0" class="empty-state">
+            Nicio cultură pe această parcelă.
+          </div>
+        </div>
+
+        <div *ngIf="isAddingCultura" class="add-categorie-form" style="border-top: 2px solid #22c55e; margin-top: 10px;">
+          <h3 style="margin:0 0 12px;font-size:14px;color:#86efac;">{{ editingCultura ? 'Editează Cultură' : 'Adaugă Cultură' }}</h3>
+
+          <div class="form-group" style="display:flex; gap:10px;">
+            <div style="flex:1;">
+              <label>Specie * </label>
+              <input type="text" class="form-control" [(ngModel)]="newCultura.specieCultura" placeholder="ex: Grâu">
+            </div>
+            <div style="flex:1;">
+              <label>Anul * </label>
+              <input type="number" class="form-control" [(ngModel)]="newCultura.anAgricol">
+            </div>
+          </div>
+          <div class="form-group" style="display:flex; gap:10px;">
+             <div style="flex:1;">
+              <label>Suprafață (ha) *</label>
+              <input type="number" class="form-control" [(ngModel)]="newCultura.suprafataCultivataHa">
+            </div>
+            <div style="flex:1;">
+              <label>Sistem Irigare</label>
+              <input type="text" class="form-control" [(ngModel)]="newCultura.sistemIrigare" placeholder="Opțional">
+            </div>
+          </div>
+
+
+          <!-- Câmpuri extra, doar la editare -->
+          <ng-container *ngIf="editingCultura">
+            <hr style="border-color: rgba(255,255,255,0.08); margin: 14px 0 10px;">
+            <div class="list-label" style="font-size: 12px; margin-bottom: 8px; opacity: 0.7;">Detalii avansate</div>
+
+            <div class="form-group">
+              <label>Data Însămânțare</label>
+              <input type="date" class="form-control" [(ngModel)]="newCultura.dataInsamantare">
+            </div>
+            <div class="form-group">
+              <label>Data Recoltare</label>
+              <input type="date" class="form-control" [(ngModel)]="newCultura.dataRecoltare">
+            </div>
+            <div class="form-group">
+              <label>Producție / hectar (kg)</label>
+              <input type="number" class="form-control" [(ngModel)]="newCultura.productieHectarKg">
+            </div>
+            <div class="form-group">
+              <label>Producție totală (tone)</label>
+              <input type="number" class="form-control" [(ngModel)]="newCultura.productieTotalaTone">
+            </div>
+            <div class="form-group">
+              <label>Tip Sol</label>
+              <select class="form-control" [(ngModel)]="newCultura.tipSol">
+                <option value="">Selectează...</option>
+                <option *ngFor="let tip of tipuriSol" [value]="tip">{{ tip }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Cultura Precedentă</label>
+              <input type="text" class="form-control" [(ngModel)]="newCultura.culturaPrecedenta" placeholder="ex: Porumb">
+            </div>
+          </ng-container>
+
+
+          <div class="form-actions" style="margin-top: 15px;">
+            <button class="btn-secondary rounded-btn" (click)="cancelAddCultura()" [disabled]="saving">Anulează</button>
+            <button class="btn-primary" style="background-color: #16a34a; border: none;" (click)="saveCultura()" [disabled]="saving">
+              {{ saving ? 'Salvare...' : 'Salvează' }}
+            </button>
+          </div>
+        </div>
+
       </div>
 
       <!-- Add parcela form -->

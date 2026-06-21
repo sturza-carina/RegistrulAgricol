@@ -51,5 +51,11 @@ public class TenantController {
     public Tenant updateTenant(@PathVariable String tenantId, @RequestBody TenantCreateRequest request) {
         return tenantService.updateTenant(tenantId, request.getName());
     }
+
+    @PostMapping("/migrate-all")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    public void migrateAllTenants() {
+        tenantService.migrateAllTenants();
+    }
 }
 
