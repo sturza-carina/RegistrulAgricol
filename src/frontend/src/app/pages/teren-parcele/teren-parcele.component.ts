@@ -10,6 +10,8 @@ import { CategorieFolosintaService } from '../../services/categorie-folosinta.se
 import { Teren } from '../../models/teren.model';
 import { Parcela } from '../../models/parcela.model';
 import { CategorieFolosinta } from '../../models/categorie-folosinta.model';
+import { CulturaParcela } from '../../models/cultura-parcela.model';
+import { CulturaParcelaService } from '../../services/cultura-parcela.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 
@@ -51,11 +53,17 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   saving = false;
 
   categoriiFolosinta = ['Arabil', 'Pășune', 'Fânețe', 'Livadă', 'Vii', 'Pădure', 'Ape', 'Alte'];
+  tipuriSol = ['Cernoziom', 'Podzol', 'Aluvial', 'Nisipos', 'Argilos', 'Lutoasă', 'Sărăturat', 'Altul'];
 
   categorii: CategorieFolosinta[] = [];
   isAddingCategorie = false;
   editingCategorie: CategorieFolosinta | null = null;
   newCategorie: CategorieFolosinta = { denumire: '', descriere: '' };
+
+  culturi: CulturaParcela[] = [];
+  isAddingCultura = false;
+  editingCultura: CulturaParcela | null = null;
+  newCultura: Partial<CulturaParcela> = {};
 
   constructor(
     private route: ActivatedRoute,
@@ -63,6 +71,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     private terenService: TerenService,
     private parcelaService: ParcelaService,
     private categorieService: CategorieFolosintaService,
+    private culturaService: CulturaParcelaService,
     private conv: CoordConversionService,
     private zone: NgZone
   ) {}
@@ -119,7 +128,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
           while(typeof parsed === 'string') { parsed = JSON.parse(parsed); }
           geoJson = parsed;
         }
-        
+
         const geom = geoJson.geometry || geoJson;
         if (geom.type === 'Polygon') {
           const latlngs = geom.coordinates[0].map((c: any[]) => [c[1], c[0]]);
@@ -147,7 +156,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
         const ro = new ResizeObserver(() => {
           if (!this.map) return;
           this.map.invalidateSize();
-          
+
           let bounds = this.terenOutlineLayer ? this.terenOutlineLayer.getBounds() : null;
           if (!bounds || !bounds.isValid()) {
               bounds = this.parcelaLayerGroup.getBounds();
@@ -234,7 +243,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
           style: { color: '#dc2626', weight: 2, fillColor: '#fca5a5', fillOpacity: 0.5 }
         });
         layer.bindTooltip(`<b>${p.denumire}</b><br>${p.suprafata} ha<br>${p.categorieFolosinta}`);
-        layer.on('click', () => this.zone.run(() => { this.viewingParcela = p; this.isAddingParcela = false; }));
+        layer.on('click', () => this.zone.run(() => this.selectParcela(p)));
         layer.addTo(this.parcelaLayerGroup);
       }
     });
@@ -419,6 +428,93 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
         this.categorii = this.categorii.filter(c => c.id !== categorie.id);
       },
       error: () => alert('Eroare la ștergere categorie.')
+    });
+  }
+
+  selectParcela(p: Parcela) {
+    this.viewingParcela = p;
+    this.isAddingParcela = false;
+    this.isAddingCultura = false;
+    this.editingCultura = null;
+    this.culturi = [];
+    if (p.id) {
+      this.loadCulturi(p.id);
+    }
+  }
+
+  closeParcela() {
+    this.viewingParcela = null;
+    this.isAddingCultura = false;
+    this.editingCultura = null;
+  }
+
+  loadCulturi(parcelaId: number) {
+    this.culturaService.getCulturi(parcelaId).subscribe({
+      next: data => this.culturi = data || [],
+      error: () => this.culturi = []
+    });
+  }
+
+  openAddCulturaForm() {
+    this.isAddingCultura = true;
+    this.editingCultura = null;
+    this.newCultura = {
+      anAgricol: new Date().getFullYear(),
+      specieCultura: '',
+      suprafataCultivataHa: this.viewingParcela?.suprafata || 0
+    };
+  }
+
+  openEditCultura(cultura: CulturaParcela) {
+    this.isAddingCultura = true;
+    this.editingCultura = cultura;
+    this.newCultura = { ...cultura, tipSol: cultura.tipSol || '' };
+  }
+
+  cancelAddCultura() {
+    this.isAddingCultura = false;
+    this.editingCultura = null;
+    this.newCultura = {};
+  }
+
+  saveCultura() {
+    if (!this.newCultura.specieCultura?.trim() || !this.newCultura.anAgricol || !this.newCultura.suprafataCultivataHa) {
+      alert('Completați anul agricol, specia și suprafața.');
+      return;
+    }
+    if (!this.viewingParcela?.id) return;
+
+    this.saving = true;
+    if (this.editingCultura && this.editingCultura.id) {
+      this.culturaService.updateCultura(this.viewingParcela.id, this.editingCultura.id, this.newCultura as CulturaParcela).subscribe({
+        next: updated => {
+          this.saving = false;
+          const idx = this.culturi.findIndex(c => c.id === updated.id);
+          if (idx >= 0) this.culturi[idx] = updated;
+          this.cancelAddCultura();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare cultura.'); }
+      });
+    } else {
+      this.culturaService.createCultura(this.viewingParcela.id, this.newCultura as CulturaParcela).subscribe({
+        next: saved => {
+          this.saving = false;
+          this.culturi.push(saved);
+          this.cancelAddCultura();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare cultura.'); }
+      });
+    }
+  }
+
+  deleteCultura(cultura: CulturaParcela) {
+    if (!cultura.id || !this.viewingParcela?.id) return;
+    if (!confirm(`Ștergeți cultura "${cultura.specieCultura}"?`)) return;
+    this.culturaService.deleteCultura(this.viewingParcela.id, cultura.id).subscribe({
+      next: () => {
+        this.culturi = this.culturi.filter(c => c.id !== cultura.id);
+      },
+      error: () => alert('Eroare la ștergere cultura.')
     });
   }
 
