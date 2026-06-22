@@ -67,8 +67,8 @@ export class PersonListComponent implements OnInit {
            displayHandle: this.getPersonTypeHandle(p),
            displayIdentifier: this.getPersonIdentifier(p),
            personType: p.personType,
-           judet: p.address?.county || '',
-           localitate: p.address?.localitate || '',
+           judet: p.adresa?.county || '',
+           localitate: p.adresa?.localitate || '',
            initials: this.getPersonName(p).substring(0, 1).toUpperCase(),
            avatarBg: p.personType === 'PHYSICAL_PERSON' ? '#3b82f6' : '#8b5cf6'
         })).sort((a, b) => (b.raw.id || 0) - (a.raw.id || 0));
