@@ -53,7 +53,16 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   saving = false;
 
   categoriiFolosinta = ['Arabil', 'Pășune', 'Fânețe', 'Livadă', 'Vii', 'Pădure', 'Ape', 'Alte'];
-  tipuriSol = ['Cernoziom', 'Podzol', 'Aluvial', 'Nisipos', 'Argilos', 'Lutoasă', 'Sărăturat', 'Altul'];
+  tipuriSol = [
+    'Cernoziom',     // tip genetic
+    'Podzol',        // tip genetic
+    'Aluvial',       // origine
+    'Nisipos',       // textura
+    'Argilos',       // textura
+    'Lutos',         // textura
+    'Sărăturat',     // caracteristica
+    'Altul'
+  ];
 
   categorii: CategorieFolosinta[] = [];
   isAddingCategorie = false;
