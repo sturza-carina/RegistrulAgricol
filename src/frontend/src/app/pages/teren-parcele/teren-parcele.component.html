@@ -92,7 +92,7 @@
       <!-- Parcel list -->
       <div *ngIf="!isAddingParcela && !viewingParcela" class="parcela-list">
         <div class="list-label">Parcele ({{ parcele.length }})</div>
-        <div *ngFor="let p of parcele" class="parcela-item" (click)="viewingParcela = p">
+        <div *ngFor="let p of parcele" class="parcela-item" (click)="viewParcelaOnMap(p)">
           <div>
             <div class="parcela-name">{{ p.denumire }}</div>
             <div class="parcela-meta">{{ p.suprafata }} ha &bull; {{ p.categorieFolosinta }}</div>

@@ -4,6 +4,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
 COPY . .
+ARG GOOGLE_MAPS_API_KEY
+ENV GOOGLE_MAPS_API_KEY=$GOOGLE_MAPS_API_KEY
 RUN npm run build --configuration=production
 
 # Serve stage

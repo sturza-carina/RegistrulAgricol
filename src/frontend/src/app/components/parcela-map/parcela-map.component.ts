@@ -1,11 +1,11 @@
 import { Component, OnInit, OnDestroy, NgZone } from '@angular/core';
-import * as L from 'leaflet';
 import { ParcelaService } from '../../services/parcela.service';
 import { Parcela } from '../../models/parcela.model';
 import { TerenService } from '../../services/teren.service';
 import { Teren } from '../../models/teren.model';
 import { GospodarieService } from '../../services/gospodarie.service';
 import { Gospodarie } from '../../models/gospodarie.model';
+import { GoogleMapsLoaderService } from '../../services/google-maps-loader.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -20,8 +20,9 @@ import { HttpClient } from '@angular/common/http';
   styleUrls: ['./parcela-map.component.css']
 })
 export class ParcelaMapComponent implements OnInit, OnDestroy {
-  map!: L.Map;
-  
+  map!: google.maps.Map;
+  infoWindow!: google.maps.InfoWindow;
+
   showDialog = false;
   currentLayer: any = null;
 
@@ -29,15 +30,15 @@ export class ParcelaMapComponent implements OnInit, OnDestroy {
   gospodarii: Gospodarie[] = [];
   teren: Teren | null = null;
   parcele: Parcela[] = [];
-  
+
   selectedGospodarieId: number | null = null;
   selectedTerenId: number | null = null;
 
 
   newParcela: Parcela = { denumire: '', suprafata: 0, categorieFolosinta: 'Arabil', polygon: null, stereo70Coordinates: '' };
 
-  parcelaLayerGroup = L.featureGroup();
-  maskLayer: L.Polygon | null = null;
+  parcelaPolygons: google.maps.Polygon[] = [];
+  maskLayer: google.maps.Polygon | null = null;
 
   isAddingParcela = false;
   viewingParcela: Parcela | null = null;
@@ -53,6 +54,7 @@ export class ParcelaMapComponent implements OnInit, OnDestroy {
     private gospodarieService: GospodarieService,
     private route: ActivatedRoute,
     private http: HttpClient,
+    private googleMapsLoader: GoogleMapsLoaderService,
     private zone: NgZone
   ) {}
 
@@ -77,7 +79,8 @@ export class ParcelaMapComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    if (this.map) this.map.remove();
+    this.parcelaPolygons.forEach(p => p.setMap(null));
+    if (this.maskLayer) this.maskLayer.setMap(null);
   }
 
   loadGospodarii() {
@@ -89,13 +92,13 @@ export class ParcelaMapComponent implements OnInit, OnDestroy {
     this.teren = null;
     this.parcele = [];
     this.isAddingParcela = false;
-    if (this.parcelaLayerGroup) {
-      this.parcelaLayerGroup.clearLayers();
-    }
-    if (this.maskLayer && this.map) {
-      this.map.removeLayer(this.maskLayer);
+
+    this.parcelaPolygons.forEach(p => p.setMap(null));
+    this.parcelaPolygons = [];
+
+    if (this.maskLayer) {
+      this.maskLayer.setMap(null);
       this.maskLayer = null;
-      this.map.setMaxBounds(null as any); // remove bounds restriction
     }
 
     if (this.selectedGospodarieId) {
@@ -137,49 +140,58 @@ export class ParcelaMapComponent implements OnInit, OnDestroy {
   applyMask(geometry: any) {
     if (!this.map) return;
     if (this.maskLayer) {
-      this.map.removeLayer(this.maskLayer);
+      this.maskLayer.setMap(null);
+      this.maskLayer = null;
     }
 
     // World bounding box coordinates for the inverted polygon
-    const worldBox = [
-      [-90, -180], [90, -180], [90, 180], [-90, 180], [-90, -180]
+    const worldBox: google.maps.LatLngLiteral[] = [
+      { lat: -85, lng: -180 }, { lat: 85, lng: -180 }, { lat: 85, lng: 180 }, { lat: -85, lng: 180 }
     ];
 
-    let holes: any[] = [];
+    let holes: google.maps.LatLngLiteral[][] = [];
     if (geometry.type === 'Polygon') {
-        holes.push(geometry.coordinates[0].map((coord: any) => [coord[1], coord[0]]));
+        holes.push(geometry.coordinates[0].map((coord: any) => ({ lat: coord[1], lng: coord[0] })));
     } else if (geometry.type === 'MultiPolygon') {
         geometry.coordinates.forEach((poly: any) => {
-            holes.push(poly[0].map((coord: any) => [coord[1], coord[0]]));
+            holes.push(poly[0].map((coord: any) => ({ lat: coord[1], lng: coord[0] })));
         });
     }
 
-    const maskedPolygonCoordinates = [worldBox, ...holes];
+    this.maskLayer = new google.maps.Polygon({
+      paths: [worldBox, ...holes],
+      strokeWeight: 0,
+      fillColor: '#000',
+      fillOpacity: 0.6,
+      clickable: false,
+      zIndex: 1,
+      map: this.map
+    });
 
-    this.maskLayer = L.polygon(maskedPolygonCoordinates as any, {
-        color: '#000',
-        fillColor: '#000',
-        fillOpacity: 0.6,
-        weight: 1,
-        stroke: false
-    }).addTo(this.map);
-
-    // Fit map to UAT bounds and restrict panning
-    const innerBounds = L.polygon(holes as any).getBounds();
-    this.map.fitBounds(innerBounds);
+    // Fit map to UAT bounds
+    const bounds = new google.maps.LatLngBounds();
+    holes.forEach(ring => ring.forEach(pt => bounds.extend(pt)));
+    if (!bounds.isEmpty()) this.map.fitBounds(bounds);
   }
 
 
 
   mapInitialized = false;
 
-  private initMap() {
-    if (!document.getElementById('map')) return;
-    this.map = L.map('map').setView([45.9432, 24.9668], 6);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(this.map);
-    this.parcelaLayerGroup.addTo(this.map);
+  private async initMap() {
+    const el = document.getElementById('map');
+    if (!el) return;
+
+    await this.googleMapsLoader.load();
+
+    this.map = new google.maps.Map(el, {
+      center: { lat: 45.9432, lng: 24.9668 },
+      zoom: 6,
+      mapTypeId: google.maps.MapTypeId.HYBRID,
+      streetViewControl: false,
+      fullscreenControl: true
+    });
+    this.infoWindow = new google.maps.InfoWindow();
     this.mapInitialized = true;
     this.renderParcele();
   }
@@ -246,50 +258,68 @@ export class ParcelaMapComponent implements OnInit, OnDestroy {
 
   renderParcele() {
     if (!this.mapInitialized || !this.map) return;
-    
-    this.parcelaLayerGroup.clearLayers();
-    const bounds: L.LatLngBounds[] = [];
+
+    this.parcelaPolygons.forEach(p => p.setMap(null));
+    this.parcelaPolygons = [];
+
+    const bounds = new google.maps.LatLngBounds();
+    let hasBounds = false;
+
     this.parcele.forEach(p => {
-      if (p.polygon) {
-        const layer = L.geoJSON(p.polygon as any, {
-          style: {
-            color: '#e74c3c',
-            weight: 3,
-            opacity: 1,
-            fillColor: '#f1c40f',
-            fillOpacity: 0.6
-          }
-        }).getLayers()[0] as any;
-        const info = `<b>${p.denumire}</b><br>Suprafață: ${p.suprafata} ha<br>Cat: ${p.categorieFolosinta}<br><i>${p.gospodarieName || ''}</i><br><small>Click pentru detalii</small>`;
-        layer.bindTooltip(info);
-        layer.on('click', () => {
-          this.zone.run(() => {
-            this.viewingParcela = p;
-            this.isAddingParcela = false;
-          });
+      if (!p.polygon) return;
+
+      const geom = p.polygon.geometry ?? p.polygon;
+      let paths: google.maps.LatLngLiteral[][] = [];
+      if (geom.type === 'Polygon') {
+        paths = geom.coordinates.map((ring: any[]) => ring.map((c: number[]) => ({ lat: c[1], lng: c[0] })));
+      } else if (geom.type === 'MultiPolygon') {
+        geom.coordinates.forEach((poly: any[]) => {
+          poly.forEach((ring: any[]) => paths.push(ring.map((c: number[]) => ({ lat: c[1], lng: c[0] }))));
         });
-        layer.addTo(this.parcelaLayerGroup);
-        bounds.push(layer.getBounds());
       }
+      if (!paths.length) return;
+
+      const polygon = new google.maps.Polygon({
+        paths,
+        strokeColor: '#e74c3c', strokeWeight: 3, strokeOpacity: 1,
+        fillColor: '#f1c40f', fillOpacity: 0.6,
+        zIndex: 2,
+        map: this.map
+      });
+
+      const info = `<b>${p.denumire}</b><br>Suprafață: ${p.suprafata} ha<br>Cat: ${p.categorieFolosinta}<br><i>${p.gospodarieName || ''}</i><br><small>Click pentru detalii</small>`;
+      polygon.addListener('mouseover', (e: google.maps.PolyMouseEvent) => {
+        if (!e.latLng) return;
+        this.infoWindow.setContent(info);
+        this.infoWindow.setPosition(e.latLng);
+        this.infoWindow.open(this.map);
+      });
+      polygon.addListener('mouseout', () => this.infoWindow.close());
+      polygon.addListener('click', () => {
+        this.zone.run(() => {
+          this.viewingParcela = p;
+          this.isAddingParcela = false;
+        });
+      });
+
+      this.parcelaPolygons.push(polygon);
+      paths.forEach(ring => ring.forEach(pt => { bounds.extend(pt); hasBounds = true; }));
     });
-    if (bounds.length > 0) {
-      const allBounds = bounds[0];
-      for (let i = 1; i < bounds.length; i++) {
-        allBounds.extend(bounds[i]);
-      }
-      this.map.fitBounds(allBounds);
+
+    if (hasBounds) {
+      this.map.fitBounds(bounds);
     }
   }
 
   saveCombined() {
     if (!this.selectedTerenId) return;
-    
+
     // Construct stereo70Coordinates string from points
     this.newParcela.stereo70Coordinates = this.points
        .filter(p => p.x.trim() !== '' && p.y.trim() !== '')
        .map(p => `${p.x.trim()} ${p.y.trim()}`)
        .join('\n');
-       
+
     this.parcelaService.createParcela(this.selectedTerenId, this.newParcela).subscribe({
       next: (saved) => {
         console.log('Saved parcela:', saved);

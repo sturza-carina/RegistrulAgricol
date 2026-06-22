@@ -21,8 +21,12 @@ public class Parcela {
     @Column(nullable = false)
     private Double suprafata;
 
-    @Column(name = "categorie_folosinta", length = 100)
-    private String categorieFolosinta;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "categorie_folosinta_id")
+    private CategorieFolosinta categorieFolosinta;
+
+    @Transient
+    private Long categorieFolosintaId;
 
     @Column(columnDefinition = "jsonb")
     @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
