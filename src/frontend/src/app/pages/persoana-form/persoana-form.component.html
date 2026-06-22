@@ -112,7 +112,13 @@
       <div class="form-row" style="display:grid;grid-template-columns:2fr 1fr;gap:16px;">
         <div class="form-group">
           <label>Stradă</label>
-          <input type="text" class="input-field" [(ngModel)]="street" name="street">
+          <app-street-autocomplete
+            [(ngModel)]="street"
+            name="street"
+            [city]="localitate"
+            [county]="county"
+            placeholder="Introduceți strada">
+          </app-street-autocomplete>
         </div>
         <div class="form-group">
           <label>Număr</label>

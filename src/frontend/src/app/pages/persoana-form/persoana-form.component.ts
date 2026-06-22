@@ -6,11 +6,12 @@ import { PersoanaService } from '../../services/persoana.service';
 import { Persoana, PersoanaFizica, PersoanaJuridica } from '../../models/persoana.model';
 
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { StreetAutocompleteComponent } from '../../components/street-autocomplete/street-autocomplete.component';
 
 @Component({
   selector: 'app-persoana-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, SidebarComponent, RouterModule],
+  imports: [CommonModule, FormsModule, SidebarComponent, RouterModule, StreetAutocompleteComponent],
   templateUrl: './persoana-form.component.html'
 })
 export class PersonFormComponent implements OnInit {

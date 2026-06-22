@@ -5,12 +5,13 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { GospodarieService } from '../../services/gospodarie.service';
 import { Gospodarie, Uat } from '../../models/gospodarie.model';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { StreetAutocompleteComponent } from '../../components/street-autocomplete/street-autocomplete.component';
 import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-gospodarie-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, SidebarComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, SidebarComponent, StreetAutocompleteComponent],
   templateUrl: './gospodarie-form.component.html',
   styleUrls: ['./gospodarie-form.component.css']
 })
@@ -73,6 +74,14 @@ export class GospodarieFormComponent implements OnInit {
 
   compareUat(u1: Uat, u2: Uat): boolean {
     return u1 && u2 ? u1.id === u2.id : u1 === u2;
+  }
+
+  get selectedUatName(): string {
+    return this.gospodarieForm.get('uat')?.value?.denumire || '';
+  }
+
+  get selectedUatJudet(): string {
+    return this.gospodarieForm.get('uat')?.value?.judet || '';
   }
 
   onSubmit() {
