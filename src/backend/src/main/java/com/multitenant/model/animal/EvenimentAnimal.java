@@ -43,6 +43,15 @@ public class EvenimentAnimal {
     private String detalii;
 
     /**
+     * Pentru evenimentele de tip VANZARE care declansă un transfer inter-tenant:
+     * ID-ul tenant-ului de destinație. Permite CrossTenantTransferService să śtie
+     * către ce schemă PostgreSQL să copieze animalul și istoricul său.
+     * Rămâne NULL pentru orice alt tip de eveniment.
+     */
+    @Column(name = "destinatar_tenant_id")
+    private String destinatarTenantId;
+
+    /**
      * Tenant-ul căruia îi aparține înregistrarea (pentru arhitectura multi-tenant).
      */
     @Column(name = "tenant_id")

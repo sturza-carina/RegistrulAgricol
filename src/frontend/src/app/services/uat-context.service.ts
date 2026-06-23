@@ -15,13 +15,33 @@ export class UatContextService {
   activeUat$ = this.activeUatSubject.asObservable();
 
   constructor(private http: HttpClient, private authService: AuthService) {
+    this.authService.impersonatedTenant.subscribe(tenantId => {
+      const user = this.authService.currentUserSubject.value;
+      if (!user) {
+        this.reset();
+        return;
+      }
+
+      if (tenantId) {
+        this.uatsLoaded = true;
+        this.loadUats(tenantId);
+      } else {
+        if (user.role !== 'ROLE_SUPER_ADMIN') {
+          this.uatsLoaded = true;
+          this.loadUats(user.tenantId);
+        } else {
+          this.reset();
+        }
+      }
+    });
+
     this.authService.currentUser.subscribe(user => {
       if (!user) {
         this.reset();
         return;
       }
-      // incarca UAT-urile doar prima data, nu la fiecare emit al currentUser
-      if (!this.uatsLoaded) {
+      const impersonated = this.authService.impersonatedTenantSubject.value;
+      if (!impersonated && user.role !== 'ROLE_SUPER_ADMIN' && !this.uatsLoaded) {
         this.uatsLoaded = true;
         this.loadUats(user.tenantId);
       }

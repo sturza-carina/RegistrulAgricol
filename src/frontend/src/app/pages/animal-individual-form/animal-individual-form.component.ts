@@ -11,7 +11,7 @@ import { Persoana } from '../../models/persoana.model';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 import { GenericFormComponent } from '../../components/generic-form/generic-form.component';
-import { FormConfig } from '../../components/generic-form/generic-form.models';
+import { FormConfig, FormField } from '../../components/generic-form/generic-form.models';
 
 @Component({
   selector: 'app-animal-individual-form',
@@ -125,6 +125,21 @@ export class AnimalIndividualFormComponent implements OnInit {
 
   updateFormConfig() {
     this.formConfig.submitText = this.isEditMode ? 'Salvează Modificările' : 'Adăugare Animal';
+    const assocFields: FormField[] = [
+      { 
+        name: 'gospodarieId', label: 'Gospodărie Asociată', type: 'select', required: true, width: 'half', placeholder: '-- Selectează Gospodăria --',
+        options: this.gospodariiList.map(g => ({ label: `${g.codGospodarie} - ${g.adresa?.street || ''} ${g.adresa?.streetNumber || ''} (${g.adresa?.localitate || ''})`, value: g.id }))
+      },
+      { 
+        name: 'proprietarId', label: 'Proprietar (Persoană)', type: 'select', required: true, width: 'half', placeholder: '-- Selectează Proprietar --',
+        options: this.personsList.map(p => ({ label: this.getPersonDisplayName(p), value: p.id }))
+      }
+    ];
+
+    if (!this.isEditMode) {
+      assocFields.push({ name: 'stareActiva', label: 'Stare Activă (Prezent în exploatație)', type: 'checkbox', required: false, width: 'full' });
+    }
+
     this.formConfig.sections = [
       {
         title: 'Detalii Identificare',
@@ -139,17 +154,7 @@ export class AnimalIndividualFormComponent implements OnInit {
       },
       {
         title: 'Asociere',
-        fields: [
-          { 
-            name: 'gospodarieId', label: 'Gospodărie Asociată', type: 'select', required: true, width: 'half', placeholder: '-- Selectează Gospodăria --',
-            options: this.gospodariiList.map(g => ({ label: `${g.codGospodarie} - ${g.adresa?.street || ''} ${g.adresa?.streetNumber || ''} (${g.adresa?.localitate || ''})`, value: g.id }))
-          },
-          { 
-            name: 'proprietarId', label: 'Proprietar (Persoană)', type: 'select', required: true, width: 'half', placeholder: '-- Selectează Proprietar --',
-            options: this.personsList.map(p => ({ label: this.getPersonDisplayName(p), value: p.id }))
-          },
-          { name: 'stareActiva', label: 'Stare Activă (Prezent în exploatație)', type: 'checkbox', required: false, width: 'full' }
-        ]
+        fields: assocFields
       }
     ];
 
@@ -207,7 +212,7 @@ export class AnimalIndividualFormComponent implements OnInit {
       sex: formData.sex,
       dataNastere: formData.dataNastere ? formData.dataNastere : undefined,
       greutateKg: formData.greutateKg,
-      stareActiva: formData.stareActiva,
+      stareActiva: this.isEditMode ? undefined : (formData.stareActiva !== undefined ? formData.stareActiva : true),
       gospodarieId: formData.gospodarieId,
       proprietarId: formData.proprietarId
     } as any;

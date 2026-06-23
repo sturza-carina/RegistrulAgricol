@@ -18,6 +18,7 @@ import java.util.Set;
 @Transactional
 public class EvenimentAnimalService {
 
+
     /** Tipuri de evenimente care marchează animalul ca inactiv (terminale). */
     private static final Set<TipEvenimentAnimal> EVENIMENTE_TERMINALE = Set.of(
             TipEvenimentAnimal.VANZARE,
@@ -33,6 +34,11 @@ public class EvenimentAnimalService {
             TipEvenimentAnimal.CUMPARARE,
             TipEvenimentAnimal.TRANSFER_INTRARE
     );
+
+    // Nota: TRATAMENT_VETERINAR nu este nici terminal, nici de origine.
+    // Este un eveniment intermediar repetabil (multiple tratamente pe același animal).
+    // Nu modifică stareActiva și nu intră în nicio restricție de cardinalitate.
+
 
     private final EvenimentAnimalRepository evenimentAnimalRepository;
     private final AnimalIndividualRepository animalIndividualRepository;

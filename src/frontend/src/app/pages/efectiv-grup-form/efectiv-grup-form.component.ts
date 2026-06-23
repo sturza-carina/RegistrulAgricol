@@ -11,8 +11,18 @@ import { Persoana } from '../../models/persoana.model';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 import { GenericFormComponent } from '../../components/generic-form/generic-form.component';
-import { FormConfig } from '../../components/generic-form/generic-form.models';
+import { FormConfig, FormField } from '../../components/generic-form/generic-form.models';
 
+/**
+ * Formular pentru înregistrarea efectivelor de grup (model snapshot ANSVSA).
+ *
+ * Semantică:
+ *  - Route /animale/grup/new → creează un snapshot nou de efectiv
+ *  - Route /animale/grup/:id/snapshot → adaugă un snapshot actualizat
+ *    (numărul de capete s-a modificat; rândul vechi rămâne în istoric)
+ *
+ * Modul "editare" clasică NU mai există — modelul este append-only.
+ */
 @Component({
   selector: 'app-efectiv-grup-form',
   standalone: true,
@@ -25,8 +35,8 @@ export class EfectivGrupFormComponent implements OnInit {
   @Input() editId?: number;
   @Output() closeForm = new EventEmitter<void>();
 
-  isEditMode = false;
-  efectivId?: number;
+  isSnapshotMode = false;
+  referenceGrupId?: number;
   returnToGospodarieId?: number;
   gospodarieId?: number;
 
@@ -38,10 +48,7 @@ export class EfectivGrupFormComponent implements OnInit {
     sections: []
   };
 
-  // Enum Options
   speciesOptions = Object.values(SpecieAnimal);
-
-  // Dropdown lists
   gospodariiList: Gospodarie[] = [];
   personsList: Persoana[] = [];
   breadcrumbItems: BreadcrumbItem[] = [];
@@ -63,17 +70,17 @@ export class EfectivGrupFormComponent implements OnInit {
         this.returnToGospodarieId = this.inputGospodarieId;
       }
       if (this.editId) {
-        this.isEditMode = true;
-        this.efectivId = this.editId;
-        this.loadGroup(this.efectivId);
+        this.isSnapshotMode = true;
+        this.referenceGrupId = this.editId;
+        this.loadReferenceGroup(this.referenceGrupId);
       }
     } else {
       this.route.paramMap.subscribe(params => {
         const idParam = params.get('id');
         if (idParam) {
-          this.isEditMode = true;
-          this.efectivId = +idParam;
-          this.loadGroup(this.efectivId);
+          this.isSnapshotMode = true;
+          this.referenceGrupId = +idParam;
+          this.loadReferenceGroup(this.referenceGrupId);
         }
       });
     }
@@ -82,9 +89,7 @@ export class EfectivGrupFormComponent implements OnInit {
       this.route.queryParams.subscribe(params => {
         if (params['gospodarieId']) {
           this.returnToGospodarieId = +params['gospodarieId'];
-          if (!this.isEditMode) {
-            this.gospodarieId = this.returnToGospodarieId;
-          }
+          this.gospodarieId = this.returnToGospodarieId;
         }
         this.updateBreadcrumbs();
       });
@@ -101,7 +106,7 @@ export class EfectivGrupFormComponent implements OnInit {
         { label: 'Detalii Gospodărie', link: `/gospodarii/${this.returnToGospodarieId}`, queryParams: { tab: 'ANIMALS' } }
       ];
     }
-    this.breadcrumbItems.push({ label: this.isEditMode ? 'Editare Efectiv' : 'Adăugare Efectiv' });
+    this.breadcrumbItems.push({ label: this.isSnapshotMode ? 'Actualizare Efectiv' : 'Adăugare Efectiv' });
   }
 
   loadDropdowns() {
@@ -112,7 +117,6 @@ export class EfectivGrupFormComponent implements OnInit {
       },
       error: (err) => console.error('Error fetching households', err)
     });
-
     this.persoanaService.getAllPersons().subscribe({
       next: (data) => {
         this.personsList = data;
@@ -123,15 +127,24 @@ export class EfectivGrupFormComponent implements OnInit {
   }
 
   updateFormConfig() {
-    this.formConfig.submitText = this.isEditMode ? 'Salvează Modificările' : 'Adăugare Efectiv';
+    this.formConfig.submitText = this.isSnapshotMode ? 'Salvează Snapshot' : 'Adăugare Efectiv';
+    const detailFields: FormField[] = [
+      { name: 'specie', label: 'Specie', type: 'select', required: true, width: 'half', options: this.speciesOptions.map(s => ({ label: s, value: s })) },
+      { name: 'numarCapeteFamilii', label: 'Număr Capete / Familii Albine', type: 'number', required: true, width: 'half', min: 1 }
+    ];
+
+    if (this.isSnapshotMode) {
+      detailFields[0].width = 'third';
+      detailFields[1].width = 'third';
+      detailFields.push({ name: 'dataInregistrare', label: 'Data Înregistrării', type: 'date', required: true, width: 'third' });
+    }
+
+    detailFields.push({ name: 'detalii', label: 'Detalii Suplimentare', type: 'textarea', required: false, width: 'full', placeholder: 'Ex: Tineret ovin etc.' });
+
     this.formConfig.sections = [
       {
         title: 'Detalii Efectiv / Grup',
-        fields: [
-          { name: 'specie', label: 'Specie', type: 'select', required: true, width: 'half', options: this.speciesOptions.map(s => ({ label: s, value: s })) },
-          { name: 'numarCapeteFamilii', label: 'Număr Capete / Familii Albine', type: 'number', required: true, width: 'half', min: 1 },
-          { name: 'detalii', label: 'Detalii Suplimentare', type: 'textarea', required: false, width: 'full', placeholder: 'Ex: Tineret ovin etc.' }
-        ]
+        fields: detailFields
       },
       {
         title: 'Asociere',
@@ -148,7 +161,7 @@ export class EfectivGrupFormComponent implements OnInit {
       }
     ];
 
-    if (!this.isEditMode && Object.keys(this.formInitialData).length === 0) {
+    if (!this.isSnapshotMode && Object.keys(this.formInitialData).length === 0) {
       this.formInitialData = {
         specie: SpecieAnimal.OVINE,
         numarCapeteFamilii: 1,
@@ -157,18 +170,21 @@ export class EfectivGrupFormComponent implements OnInit {
     }
   }
 
-  loadGroup(id: number) {
+  loadReferenceGroup(id: number) {
     this.animalService.getGroupById(id).subscribe({
       next: (g) => {
         this.formInitialData = {
           specie: g.specie,
           numarCapeteFamilii: g.numarCapeteFamilii,
-          detalii: g.detalii || '',
+          dataInregistrare: new Date().toISOString().substring(0, 10),
+          detalii: '',
           gospodarieId: g.gospodarie?.id,
           proprietarId: g.proprietar?.id
         };
+        this.gospodarieId = g.gospodarie?.id;
+        this.updateFormConfig();
       },
-      error: (err) => console.error('Error loading group flock', err)
+      error: (err) => console.error('Error loading reference group', err)
     });
   }
 
@@ -189,26 +205,28 @@ export class EfectivGrupFormComponent implements OnInit {
     }
 
     const payload: EfectivGrup = {
-      id: this.efectivId,
       specie: formData.specie,
       numarCapeteFamilii: formData.numarCapeteFamilii,
-      detalii: formData.detalii,
+      dataInregistrare: formData.dataInregistrare ? formData.dataInregistrare : new Date().toISOString().substring(0, 10),
+      detalii: formData.detalii || undefined,
       gospodarieId: formData.gospodarieId,
       proprietarId: formData.proprietarId
     } as any;
 
-    if (this.isEditMode && this.efectivId) {
-      this.animalService.updateGroup(this.efectivId, payload).subscribe({
+    if (this.isSnapshotMode && this.referenceGrupId) {
+      // Adăugăm un snapshot nou la efectivul existent
+      this.animalService.addGrupSnapshot(this.referenceGrupId, payload).subscribe({
         next: () => this.navigateBack(),
         error: (err) => {
-          alert('Eroare la actualizarea grupului: ' + (err.error?.message || err.message));
+          alert('Eroare la adăugarea snapshot-ului: ' + (err.error?.message || err.message));
         }
       });
     } else {
+      // Creăm un efectiv nou (primul snapshot)
       this.animalService.createGroup(payload).subscribe({
         next: () => this.navigateBack(),
         error: (err) => {
-          alert('Eroare la înregistrarea grupului: ' + (err.error?.message || err.message));
+          alert('Eroare la înregistrarea efectivului: ' + (err.error?.message || err.message));
         }
       });
     }

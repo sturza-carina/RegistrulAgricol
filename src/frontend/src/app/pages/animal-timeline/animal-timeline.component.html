@@ -25,12 +25,23 @@
             </span>
           </p>
         </div>
-        <button class="btn-primary" (click)="openModal()" [disabled]="animal && !animal.stareActiva">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 5v14M5 12h14"/>
-          </svg>
-          Adaugă Eveniment
-        </button>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn-primary" (click)="openModal()" [disabled]="animal && !animal.stareActiva">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Adaugă Eveniment
+          </button>
+          <!-- Buton transfer — activ doar dacă animalul e activ -->
+          <button class="btn-transfer" (click)="openTransferModal()"
+                  [disabled]="animal && !animal.stareActiva"
+                  title="Transferă animalul în alt registru UAT">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+            Transfer UAT
+          </button>
+        </div>
       </div>
 
       <!-- Error state -->
@@ -64,13 +75,23 @@
             <!-- Card eveniment -->
             <div class="timeline-card">
               <div class="timeline-card-header">
-                <span class="ev-tip-badge" [style.background]="getTipColor(ev.tipEveniment) + '22'" [style.color]="getTipColor(ev.tipEveniment)" [style.border-color]="getTipColor(ev.tipEveniment) + '55'">
+                <span class="ev-tip-badge"
+                      [style.background]="getTipColor(ev.tipEveniment) + '22'"
+                      [style.color]="getTipColor(ev.tipEveniment)"
+                      [style.border-color]="getTipColor(ev.tipEveniment) + '55'">
                   {{ getTipLabel(ev.tipEveniment) }}
                 </span>
                 <span class="ev-date">{{ formatDate(ev.dataEveniment) }}</span>
               </div>
               <p class="ev-detalii" *ngIf="ev.detalii">{{ ev.detalii }}</p>
               <p class="ev-detalii no-details" *ngIf="!ev.detalii">Fără observații suplimentare.</p>
+              <!-- Indicator transfer cross-tenant -->
+              <p class="ev-transfer-badge" *ngIf="ev.destinatarTenantId">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+                Transferat către UAT: <strong>{{ ev.destinatarTenantId }}</strong>
+              </p>
             </div>
           </div>
         </div>
@@ -94,7 +115,6 @@
     </div>
 
     <div class="modal-body">
-      <!-- Error inline în modal -->
       <div class="modal-error" *ngIf="modalError">{{ modalError }}</div>
 
       <div class="form-group">
@@ -122,6 +142,96 @@
       <button class="btn-primary" (click)="saveEveniment()" [disabled]="isSaving">
         <span *ngIf="!isSaving">Salvează</span>
         <span *ngIf="isSaving">Se salvează...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Modal Transfer Cross-Tenant ========== -->
+<div class="modal-overlay" *ngIf="showTransferModal" (click)="closeTransferModal()">
+  <div class="modal-box transfer-modal" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <div>
+        <h2>Transfer Animal între UAT-uri</h2>
+        <p style="font-size:13px; color: var(--text-secondary); margin-top: 4px;">
+          Animalul va fi marcat ca inactiv în UAT-ul curent și recreat cu istoricul complet în UAT-ul destinatar.
+        </p>
+      </div>
+      <button class="modal-close" (click)="closeTransferModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-error" *ngIf="transferError">{{ transferError }}</div>
+      <div class="transfer-success-banner" *ngIf="transferSuccess">{{ transferSuccess }}</div>
+
+      <div class="transfer-info-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+        </svg>
+        <span>
+          Crotalul <strong>{{ animal?.numarCrotal || 'fără crotal' }}</strong> va fi actualizat în
+          registrul național SNIIA pentru a reflecta noul proprietar.
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label for="destTenantId">UAT Destinatar *</label>
+        <select id="destTenantId" [(ngModel)]="transferDestinatarCodSiruta" (ngModelChange)="onUatTransferChange($event)"
+                style="padding: 10px; border-radius: var(--radius-md); border: 1px solid var(--card-border); background: white; cursor: pointer; width: 100%; font-size: 14px; color: var(--text-primary);">
+          <option *ngFor="let u of uatsList" [value]="u.codSiruta">
+            {{ u.denumire }} ({{ u.judet }}) &mdash; SIRUTA: {{ u.codSiruta }}
+          </option>
+        </select>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="form-group">
+          <label for="destGospodarieId">Gospodărie Destinatară *</label>
+          <select id="destGospodarieId" [(ngModel)]="transferDestinatarGospodarieId"
+                  style="padding: 10px; border-radius: var(--radius-md); border: 1px solid var(--card-border); background: white; cursor: pointer; width: 100%; font-size: 14px; color: var(--text-primary);">
+            <option *ngFor="let g of gospodariiList" [value]="g.id">
+              {{ g.codGospodarie }} ({{ g.tipGospodarie }})
+            </option>
+            <option *ngIf="gospodariiList.length === 0" disabled>Nicio gospodărie găsită</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="destProprietarId">Proprietar Destinatar *</label>
+          <select id="destProprietarId" [(ngModel)]="transferDestinatarProprietarId"
+                  style="padding: 10px; border-radius: var(--radius-md); border: 1px solid var(--card-border); background: white; cursor: pointer; width: 100%; font-size: 14px; color: var(--text-primary);">
+            <option *ngFor="let p of personsList" [value]="p.id">
+              <ng-container *ngIf="p.personType === 'PHYSICAL_PERSON'">
+                {{ p.firstName }} {{ p.lastName }} (CNP: {{ p.cnp || 'Fără CNP' }})
+              </ng-container>
+              <ng-container *ngIf="p.personType === 'LEGAL_ENTITY'">
+                {{ p.companyName }} (CUI: {{ p.cui || 'Fără CUI' }})
+              </ng-container>
+            </option>
+            <option *ngIf="personsList.length === 0" disabled>Niciun proprietar găsit</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="transferDetalii">Detalii transfer (opțional)</label>
+        <textarea id="transferDetalii" [(ngModel)]="transferDetalii" rows="2"
+          placeholder="Ex: Factură nr. 5678, contract vânzare-cumpărare..."></textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeTransferModal()" [disabled]="isTransferring">Anulează</button>
+      <button class="btn-danger" (click)="confirmTransfer()" [disabled]="isTransferring">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+        <span *ngIf="!isTransferring">Confirmă Transfer</span>
+        <span *ngIf="isTransferring">Se transferă...</span>
       </button>
     </div>
   </div>

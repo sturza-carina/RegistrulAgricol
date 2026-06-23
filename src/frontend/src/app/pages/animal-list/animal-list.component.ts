@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -11,6 +11,10 @@ import { GenericTableComponent, TableColumn, TableFilter, TableAction } from '..
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 import { AnimalIndividualFormComponent } from '../animal-individual-form/animal-individual-form.component';
 import { EfectivGrupFormComponent } from '../efectiv-grup-form/efectiv-grup-form.component';
+import { UatContextService } from '../../services/uat-context.service';
+import { Uat } from '../../models/gospodarie.model';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-animal-list',
@@ -18,11 +22,13 @@ import { EfectivGrupFormComponent } from '../efectiv-grup-form/efectiv-grup-form
   imports: [CommonModule, RouterModule, FormsModule, LayoutComponent, PageHeaderComponent, GenericTableComponent, BreadcrumbsComponent, AnimalIndividualFormComponent, EfectivGrupFormComponent],
   templateUrl: './animal-list.component.html'
 })
-export class AnimalListComponent implements OnInit {
+export class AnimalListComponent implements OnInit, OnChanges, OnDestroy {
   activeTab: 'individual' | 'grup' = 'individual';
   individuals: AnimalIndividual[] = [];
   groups: EfectivGrup[] = [];
   user: any;
+  activeUat: Uat | null = null;
+  private destroy$ = new Subject<void>();
   breadcrumbItems: BreadcrumbItem[] = [
     { label: 'Animale', link: '/animale' }
   ];
@@ -73,19 +79,25 @@ export class AnimalListComponent implements OnInit {
   ];
 
   groupsActions: TableAction[] = [
-    { icon: 'edit', tooltip: 'Editare', action: (row) => this.openEditGroup(row.id) },
+    { icon: 'edit', tooltip: 'Actualizare efectiv (snapshot nou)', action: (row) => this.openEditGroup(row.id) },
     { icon: 'delete', tooltip: 'Șterge', action: (row) => this.deleteGroup(row.id) }
   ];
 
   constructor(
     private animalService: AnimalService,
     private authService: AuthService,
+    private uatContext: UatContextService,
     private router: Router
   ) {}
 
   ngOnInit() {
     this.user = this.authService.currentUserSubject.value;
-    this.loadData();
+    this.uatContext.activeUat$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(uat => {
+        this.activeUat = uat;
+        this.loadData();
+      });
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -98,7 +110,13 @@ export class AnimalListComponent implements OnInit {
     this.animalService.getAllIndividuals().subscribe({
       next: (data) => {
         let sorted = data.sort((a, b) => (b.id || 0) - (a.id || 0));
-        this.individuals = this.gospodarieId ? sorted.filter(a => a.gospodarie?.id === this.gospodarieId) : sorted;
+        if (this.gospodarieId) {
+          this.individuals = sorted.filter(a => a.gospodarie?.id === this.gospodarieId);
+        } else if (this.activeUat) {
+          this.individuals = sorted.filter(a => a.gospodarie?.uat?.codSiruta === this.activeUat?.codSiruta);
+        } else {
+          this.individuals = sorted;
+        }
       },
       error: (err) => console.error('Error fetching individuals', err)
     });
@@ -106,7 +124,13 @@ export class AnimalListComponent implements OnInit {
     this.animalService.getAllGroups().subscribe({
       next: (data) => {
         let sorted = data.sort((a, b) => (b.id || 0) - (a.id || 0));
-        this.groups = this.gospodarieId ? sorted.filter(g => g.gospodarie?.id === this.gospodarieId) : sorted;
+        if (this.gospodarieId) {
+          this.groups = sorted.filter(g => g.gospodarie?.id === this.gospodarieId);
+        } else if (this.activeUat) {
+          this.groups = sorted.filter(g => g.gospodarie?.uat?.codSiruta === this.activeUat?.codSiruta);
+        } else {
+          this.groups = sorted;
+        }
       },
       error: (err) => console.error('Error fetching groups', err)
     });
@@ -177,5 +201,8 @@ export class AnimalListComponent implements OnInit {
     this.loadData();
   }
 
-
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 }

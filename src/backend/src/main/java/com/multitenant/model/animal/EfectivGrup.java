@@ -6,6 +6,7 @@ import com.multitenant.model.registru.Gospodarie;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "efectiv_grup")
@@ -41,6 +42,15 @@ public class EfectivGrup {
 
     @Column(name = "numar_capete_familii", nullable = false)
     private int numarCapeteFamilii;
+
+    /**
+     * Data la care a fost înregistrată această stare a efectivului.
+     * Fiecare înregistrare este un snapshot imutabil — numărul de capete
+     * nu se actualizează direct, ci se adaugă un rând nou cu data curentă.
+     * ANSVSA impune datarea explicită a fiecărei modificări de efectiv.
+     */
+    @Column(name = "data_inregistrare", nullable = false)
+    private LocalDate dataInregistrare = LocalDate.now();
 
     @Column(name = "detalii")
     private String detalii;
