@@ -27,7 +27,7 @@ public interface PersoanaRepository extends JpaRepository<Persoana, Long> {
            " )))")
     List<Persoana> searchPersons(@Param("search") String search, @Param("type") String type);
 
-    @Query("SELECT p FROM Persoana p WHERE p.gospodarie.id = :gospodarieId")
+    @Query("SELECT p FROM Persoana p JOIN p.gospodarii g WHERE g.id = :gospodarieId")
     List<Persoana> findByGospodarieId(@Param("gospodarieId") Long gospodarieId);
 }
 

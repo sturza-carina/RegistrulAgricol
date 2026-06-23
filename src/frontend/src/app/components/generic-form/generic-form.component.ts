@@ -51,7 +51,7 @@ export class GenericFormComponent implements OnInit, OnChanges {
         }
 
         const control = new FormControl(
-          { value: this.initialData[field.name] !== undefined ? this.initialData[field.name] : (field.type === 'checkbox' ? false : ''), disabled: field.disabled || false },
+          { value: this.initialData[field.name] !== undefined ? this.initialData[field.name] : (field.type === 'checkbox' ? false : (field.type === 'multi-select' ? [] : '')), disabled: field.disabled || false },
           validators
         );
         group[field.name] = control;

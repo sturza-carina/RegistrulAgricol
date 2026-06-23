@@ -21,7 +21,7 @@ export class UatContextService {
         return;
       }
       // incarca UAT-urile doar prima data, nu la fiecare emit al currentUser
-      if (!this.uatsLoaded && user.role !== 'ROLE_SUPER_ADMIN') {
+      if (!this.uatsLoaded) {
         this.uatsLoaded = true;
         this.loadUats(user.tenantId);
       }

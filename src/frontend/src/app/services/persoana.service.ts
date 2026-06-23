@@ -38,5 +38,9 @@ export class PersoanaService {
   deletePerson(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  addPersonToGospodarie(persoanaId: number, gospodarieId: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${persoanaId}/gospodarii/${gospodarieId}`, {});
+  }
 }
 

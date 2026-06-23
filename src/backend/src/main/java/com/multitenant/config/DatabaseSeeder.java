@@ -192,7 +192,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                         persoana.setCnp(String.format("190010112%04d", i));
                         persoana.setDateOfBirth(java.time.LocalDate.of(1990, 1, 1).plusDays(i));
                         persoana.setAdresa(a);
-                        persoana.setGospodarie(savedG);
+                        persoana.getGospodarii().add(savedG);
                         persoana.setIsHeadOfHousehold(true);
                         persoanaRepository.save(persoana);
 
@@ -256,7 +256,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                         persoana.setCnp(String.format("180020223%04d", i));
                         persoana.setDateOfBirth(java.time.LocalDate.of(1980, 2, 2).plusDays(i));
                         persoana.setAdresa(a);
-                        persoana.setGospodarie(savedG);
+                        persoana.getGospodarii().add(savedG);
                         persoana.setIsHeadOfHousehold(true);
                         persoanaRepository.save(persoana);
 

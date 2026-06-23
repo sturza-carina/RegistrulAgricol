@@ -33,6 +33,14 @@
               </select>
             </div>
 
+            <!-- Multi Select -->
+            <div *ngSwitchCase="'multi-select'" class="select-wrapper">
+              <select multiple [id]="field.name" [formControlName]="field.name" class="form-control" style="min-height: 120px;">
+                <option *ngFor="let opt of field.options" [value]="opt.value">{{ opt.label }}</option>
+              </select>
+              <small style="color: var(--text-muted); font-size: 11px; margin-top: 4px; display: block;">Țineți apăsat CTRL (sau CMD pe Mac) pentru a selecta mai multe opțiuni.</small>
+            </div>
+
             <!-- Checkbox -->
             <div *ngSwitchCase="'checkbox'" class="checkbox-wrapper" style="display: flex; align-items: center; gap: 8px;">
               <input type="checkbox" [id]="field.name" [formControlName]="field.name" style="width: 18px; height: 18px; cursor: pointer;">

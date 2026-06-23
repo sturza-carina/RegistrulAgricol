@@ -7,6 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { ContractUtilizareService, ContractUtilizare, ContractUtilizareRequest } from '../../services/contract-utilizare.service';
 import { PersoanaService } from '../../services/persoana.service';
 import { Persoana } from '../../models/persoana.model';
+import { UatContextService } from '../../services/uat-context.service';
 
 import { GenericTableComponent, TableColumn, TableFilter, TableAction } from '../../components/generic-table/generic-table.component';
 import { GenericFormComponent } from '../../components/generic-form/generic-form.component';
@@ -32,7 +33,6 @@ import { BreadcrumbsComponent } from '../../components/breadcrumbs/breadcrumbs.c
 })
 export class ContractManagementComponent implements OnInit {
   user: any = null;
-  tenants: any[] = [];
   selectedTenantId: string = '';
 
   contracts: ContractUtilizare[] = [];
@@ -84,7 +84,8 @@ export class ContractManagementComponent implements OnInit {
     private authService: AuthService,
     private contractService: ContractUtilizareService,
     private http: HttpClient,
-    private persoanaService: PersoanaService
+    private persoanaService: PersoanaService,
+    private uatContextService: UatContextService
   ) {}
 
   ngOnInit(): void {
@@ -93,38 +94,29 @@ export class ContractManagementComponent implements OnInit {
         this.router.navigate(['/login']);
       } else {
         this.user = user;
-        if (this.user.role === 'ROLE_SUPER_ADMIN') {
-          this.loadTenants();
-        }
-
-        const activeTenant = this.authService.currentTenantId;
-        if (activeTenant && activeTenant !== 'public') {
-          this.selectedTenantId = activeTenant;
-          this.loadTenantData();
-        }
+        this.uatContextService.activeUat$.subscribe(uat => {
+          if (uat && uat.tenantId) {
+            if (this.user.role === 'ROLE_SUPER_ADMIN') {
+              this.authService.setImpersonation(uat.tenantId);
+            }
+            this.selectedTenantId = uat.tenantId;
+            this.loadTenantData();
+          } else {
+            if (this.user.role === 'ROLE_SUPER_ADMIN') {
+              this.authService.stopImpersonation();
+            }
+            this.selectedTenantId = '';
+            this.contracts = [];
+            this.terenuri = [];
+            this.persoane = [];
+          }
+        });
       }
     });
     this.buildFormConfig();
   }
 
-  loadTenants(): void {
-    this.http.get<any[]>('/api/tenants').subscribe({
-      next: (data) => this.tenants = data,
-      error: (err) => console.error('Eroare la încărcarea tenantilor', err)
-    });
-  }
 
-  onTenantChange(): void {
-    if (this.selectedTenantId) {
-      this.authService.setImpersonation(this.selectedTenantId);
-      this.loadTenantData();
-    } else {
-      this.authService.stopImpersonation();
-      this.contracts = [];
-      this.terenuri = [];
-      this.persoane = [];
-    }
-  }
 
   loadTenantData(): void {
     this.loadError = '';

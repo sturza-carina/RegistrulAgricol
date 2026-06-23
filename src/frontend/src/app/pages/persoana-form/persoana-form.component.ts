@@ -85,7 +85,7 @@ export class PersonFormComponent implements OnInit {
           { name: 'email', label: 'Adresă Email', type: 'email', required: false, width: 'half' },
           { name: 'registerVolume', label: 'Volum Registru', type: 'text', required: false, width: 'half' },
           { name: 'registerPosition', label: 'Poziție Registru', type: 'text', required: false, width: 'half' },
-          { name: 'gospodarieId', label: 'Asociază Gospodărie', type: 'select', required: false, width: 'full', options: [], showIf: () => !this.hideGospodarieSelect },
+          { name: 'gospodarieIds', label: 'Asociază Gospodării', type: 'multi-select', required: false, width: 'full', options: [], showIf: () => !this.hideGospodarieSelect },
           { name: 'notes', label: 'Note', type: 'textarea', required: false, width: 'full' }
         ]
       }
@@ -122,9 +122,9 @@ export class PersonFormComponent implements OnInit {
       this.gospodarieService.getAllGospodarii().subscribe({
         next: (gospodarii) => {
           const section = this.formConfig.sections.find(s => s.title === 'Contact și Registru Agricol');
-          const field = section?.fields.find(f => f.name === 'gospodarieId');
+          const field = section?.fields.find(f => f.name === 'gospodarieIds');
           if (field) {
-            field.options = [{ label: '-- Fără Gospodărie --', value: null }, ...gospodarii.map(g => ({ label: `Gospodărie #${g.codGospodarie} (${g.tipGospodarie})`, value: g.id }))];
+            field.options = gospodarii.map(g => ({ label: `Gospodărie #${g.codGospodarie} (${g.tipGospodarie})`, value: g.id }));
           }
         }
       });
@@ -164,9 +164,15 @@ export class PersonFormComponent implements OnInit {
           }
         }
 
-        if (persoana.gospodarieId) {
-          this.gospodarieId = persoana.gospodarieId;
-          data.gospodarieId = persoana.gospodarieId;
+        if (persoana.gospodarieIds && persoana.gospodarieIds.length > 0) {
+          // If we receive the form inside the Gospodarie detail context
+          if (this.hideGospodarieSelect && this.gospodarieId) {
+            data.gospodarieIds = [this.gospodarieId];
+          } else {
+            data.gospodarieIds = persoana.gospodarieIds;
+          }
+        } else {
+            data.gospodarieIds = [];
         }
 
         // Disable personType in edit mode
@@ -192,8 +198,8 @@ export class PersonFormComponent implements OnInit {
       postalCode: formData.postalCode
     };
 
-    let finalGospodarieId = this.hideGospodarieSelect ? this.gospodarieId : formData.gospodarieId;
-    let gospodarieObj = finalGospodarieId ? { id: finalGospodarieId } : undefined;
+    let finalGospodarieIds = this.hideGospodarieSelect && this.gospodarieId ? [this.gospodarieId] : formData.gospodarieIds;
+    let gospodariiObjs = finalGospodarieIds && finalGospodarieIds.length > 0 ? finalGospodarieIds.map((id: number) => ({ id })) : [];
     let payload: any = {
       personType: formData.personType,
       adresa,
@@ -202,8 +208,8 @@ export class PersonFormComponent implements OnInit {
       registerVolume: formData.registerVolume,
       registerPosition: formData.registerPosition,
       notes: formData.notes,
-      gospodarie: gospodarieObj,
-      gospodarieId: finalGospodarieId
+      gospodarii: gospodariiObjs,
+      gospodarieIds: finalGospodarieIds
     };
 
     if (formData.personType === 'PHYSICAL_PERSON') {

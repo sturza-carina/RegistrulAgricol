@@ -5,6 +5,7 @@ import { Router, RouterModule } from '@angular/router';
 import { PersoanaService } from '../../services/persoana.service';
 import { Persoana, PersoanaFizica, PersoanaJuridica } from '../../models/persoana.model';
 import { AuthService } from '../../services/auth.service';
+import { UatContextService } from '../../services/uat-context.service';
 
 import { LayoutComponent } from '../../components/layout/layout.component';
 import { PageHeaderComponent } from '../../components/page-header/page-header.component';
@@ -19,6 +20,7 @@ import { PersonFormComponent } from '../persoana-form/persoana-form.component';
   templateUrl: './persoana-list.component.html'
 })
 export class PersonListComponent implements OnInit {
+  user: any = null;
   persoane: any[] = [];
 
 
@@ -49,12 +51,32 @@ export class PersonListComponent implements OnInit {
 
   constructor(
     private persoanaService: PersoanaService,
-    private authService: AuthService,
-    private router: Router
+    public authService: AuthService,
+    private router: Router,
+    public uatContextService: UatContextService
   ) {}
 
   ngOnInit() {
-    this.loadPersons();
+    this.authService.currentUser.subscribe(user => {
+      if (!user) {
+        this.router.navigate(['/login']);
+      } else {
+        this.user = user;
+        this.uatContextService.activeUat$.subscribe(uat => {
+          if (uat && uat.tenantId) {
+            if (user.role === 'ROLE_SUPER_ADMIN') {
+              this.authService.setImpersonation(uat.tenantId);
+            }
+            this.loadPersons();
+          } else {
+            if (user.role === 'ROLE_SUPER_ADMIN') {
+              this.authService.stopImpersonation();
+            }
+            this.persoane = [];
+          }
+        });
+      }
+    });
   }
 
   loadPersons() {
@@ -100,6 +122,10 @@ export class PersonListComponent implements OnInit {
   }
 
   goToCreatePerson() {
+    if (this.authService.currentUserSubject.value?.role === 'ROLE_SUPER_ADMIN' && !this.uatContextService.getActiveUat()?.tenantId) {
+      alert('Vă rugăm să selectați mai întâi un UAT.');
+      return;
+    }
     this.editPersonId = undefined;
     this.showPersonModal = true;
   }
