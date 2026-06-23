@@ -7,8 +7,10 @@ import com.multitenant.repository.TerenRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import org.springframework.lang.NonNull;
 
 @Service
+@SuppressWarnings("null")
 public class CategorieFolosintaService {
 
     private final CategorieFolosintaRepository categorieFolosintaRepository;
@@ -20,30 +22,23 @@ public class CategorieFolosintaService {
         this.terenRepository = terenRepository;
     }
 
-    public List<CategorieFolosinta> getCategoriiForTeren(Long terenId) {
+    public List<CategorieFolosinta> getCategoriiForTeren(@NonNull Long terenId) {
         return categorieFolosintaRepository.findByTerenId(terenId);
     }
 
-    public CategorieFolosinta getCategorieById(Long id) {
+    public CategorieFolosinta getCategorieById(@NonNull Long id) {
         return categorieFolosintaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("CategorieFolosinta not found"));
     }
 
-    public CategorieFolosinta saveCategorie(Long terenId, CategorieFolosinta categorie) {
-        if (categorie == null) {
-            throw new IllegalArgumentException("CategorieFolosinta cannot be null");
-        }
-
+    public CategorieFolosinta saveCategorie(@NonNull Long terenId, @NonNull CategorieFolosinta categorie) {
         Teren teren = terenRepository.findById(terenId)
                 .orElseThrow(() -> new RuntimeException("Teren not found"));
         categorie.setTeren(teren);
         return categorieFolosintaRepository.save(categorie);
     }
 
-    public CategorieFolosinta updateCategorie(Long id, CategorieFolosinta updatedCategorie) {
-        if (updatedCategorie == null) {
-            throw new IllegalArgumentException("CategorieFolosinta cannot be null");
-        }
+    public CategorieFolosinta updateCategorie(@NonNull Long id, @NonNull CategorieFolosinta updatedCategorie) {
         CategorieFolosinta existing = getCategorieById(id);
         if (updatedCategorie.getDenumire() != null) {
             existing.setDenumire(updatedCategorie.getDenumire());
@@ -54,7 +49,7 @@ public class CategorieFolosintaService {
         return categorieFolosintaRepository.save(existing);
     }
 
-    public void deleteCategorie(Long id) {
+    public void deleteCategorie(@NonNull Long id) {
         categorieFolosintaRepository.deleteById(id);
     }
 }

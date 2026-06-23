@@ -1,17 +1,6 @@
-<div class="app-shell">
-  <app-sidebar></app-sidebar>
-  <main class="main-content">
-    <header class="topbar">
-      <div class="topbar-title">Detalii Gospodărie</div>
-      <div class="topbar-spacer"></div>
-    </header>
-
-    <div class="page-content" *ngIf="gospodarie">
-      <div class="breadcrumbs" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-        <a routerLink="/gospodarii" style="color: var(--text-primary); text-decoration: none; font-weight: 500;">Gospodării</a>
-        <span>&gt;</span>
-        <span style="color: var(--text-muted);">Detalii - {{ gospodarie.codGospodarie }}</span>
-      </div>
+<app-layout [activeGospodarieId]="gospodarieId" [activeTab]="activeTab">
+    <ng-container *ngIf="gospodarie">
+      <app-breadcrumbs [items]="breadcrumbItems"></app-breadcrumbs>
 
       <div class="page-header-row">
         <div style="display: flex; align-items: center; gap: 15px;">
@@ -37,7 +26,7 @@
         </div>
       </div>
 
-      <div class="card" style="margin-bottom: 20px; padding: 20px;">
+      <div class="card" style="margin-bottom: 20px; padding: 20px;" *ngIf="activeTab === 'GENERAL'">
         <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 16px;">Informații Generale</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
           <div>
@@ -55,114 +44,79 @@
         </div>
       </div>
 
-      <div class="card" style="margin-bottom: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-          <h3 style="margin: 0;">Membrii Gospodăriei</h3>
-          <button class="btn-primary" (click)="addPerson()">Adaugă Membru</button>
-        </div>
-        
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Nume / Denumire</th>
-              <th>CNP / CUI</th>
-              <th>Rol</th>
-              <th>Acțiuni</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let p of persoane" (click)="editPerson(p.id)" style="cursor: pointer;" class="hoverable-row">
-              <td>
-                <strong *ngIf="p.personType === 'PHYSICAL_PERSON'">{{ p.firstName }} {{ p.lastName }}</strong>
-                <strong *ngIf="p.personType === 'LEGAL_ENTITY'">{{ p.companyName }}</strong>
-              </td>
-              <td>
-                <span *ngIf="p.personType === 'PHYSICAL_PERSON'">{{ p.cnp }}</span>
-                <span *ngIf="p.personType === 'LEGAL_ENTITY'">{{ p.cui }}</span>
-              </td>
-              <td>
-                <span class="badge user" *ngIf="p.isHeadOfHousehold">Cap Gospodărie</span>
-                <span class="badge viewer" *ngIf="!p.isHeadOfHousehold">Membru</span>
-              </td>
-              <td><button class="edit-btn">Detalii / Editare</button></td>
-            </tr>
-            <tr *ngIf="persoane.length === 0">
-              <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">Niciun membru înregistrat.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <!-- TAB: MEMBRI -->
+    <div *ngIf="activeTab === 'MEMBERS'" class="tab-pane fade show active">
+      <div class="content-card">
+        <ng-container *ngIf="!isAddingMember">
+          <div class="card-header">
+            <h3>Persoane / Membri Gospodărie</h3>
+            <button class="btn btn-primary btn-sm" (click)="addPerson()">Adaugă Membru</button>
+          </div>
+          
+          <app-generic-table
+            [data]="persoane"
+            [columns]="membriColumns"
+            [filters]="membriFilters"
+            [actions]="membriActions"
+            emptyMessage="Nu există membri adăugați.">
+          </app-generic-table>
+        </ng-container>
 
-      <div class="card" style="margin-bottom: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-          <h3 style="margin: 0;">Terenuri Agricole</h3>
-          <button class="btn-primary" (click)="addTeren()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px; vertical-align: middle; display: inline-block;">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            Adaugă Teren
-          </button>
-        </div>
-        
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Denumire</th>
-              <th>Tip Teren</th>
-              <th>Geometrie</th>
-              <th style="text-align: center;">Acțiuni</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let t of terenuri">
-              <td><strong>{{ t.denumire || '-' }}</strong></td>
-              <td>
-                <span *ngIf="t.tipTeren" class="badge viewer">{{ t.tipTeren }}</span>
-                <span *ngIf="!t.tipTeren" style="color: var(--text-muted); font-size: 12px;">Nespecificat</span>
-              </td>
-              <td>
-                <span *ngIf="t.polygon || t.stereo70Coordinates" style="color: var(--primary); font-size: 12px; display: flex; align-items: center; gap: 4px;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Mapat
-                </span>
-                <span *ngIf="!t.polygon && !t.stereo70Coordinates" style="color: var(--text-muted); font-size: 12px;">Nemapat</span>
-              </td>
-              <td style="text-align: center;">
-                <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
-                  <!-- Edit Parcels icon -->
-                  <button (click)="editTeren(t)" title="Editare Parcele"
-                    style="background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 6px; border-radius: 6px; transition: background 0.2s, color 0.2s;"
-                    onmouseover="this.style.background='var(--body-bg)';this.style.color='var(--accent-color)'"
-                    onmouseout="this.style.background='none';this.style.color='var(--text-secondary)'">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                  </button>
-                  <!-- Delete icon -->
-                  <button (click)="deleteTeren(t)" title="Ștergere Teren"
-                    style="background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 6px; border-radius: 6px; transition: background 0.2s, color 0.2s;"
-                    onmouseover="this.style.background='rgba(239,68,68,0.1)';this.style.color='#ef4444'"
-                    onmouseout="this.style.background='none';this.style.color='var(--text-secondary)'">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="3 6 5 6 21 6"></polyline>
-                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                      <path d="M10 11v6"></path>
-                      <path d="M14 11v6"></path>
-                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr *ngIf="terenuri.length === 0">
-              <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">
-                Niciun teren înregistrat. Folosiți butonul "Adaugă Teren" pentru a adăuga primul teren.
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <ng-container *ngIf="isAddingMember">
+          <div class="card-header">
+            <h3>Selectează o Persoană existentă sau Adaugă una nouă</h3>
+            <div class="d-flex gap-2">
+              <button class="btn btn-secondary btn-sm" (click)="cancelAddPerson()">Înapoi la Membri</button>
+              <button class="btn btn-primary btn-sm" (click)="createNewPerson()">Adaugă Persoană Nouă</button>
+            </div>
+          </div>
+          
+          <app-generic-table
+            [data]="toatePersoanele"
+            [columns]="membriColumns"
+            [filters]="membriFilters"
+            [actions]="toatePersoaneleActions"
+            emptyMessage="Nu există alte persoane în UAT.">
+          </app-generic-table>
+        </ng-container>
       </div>
     </div>
-  </main>
-</div>
+
+      <div class="management-container" *ngIf="activeTab === 'TERENURI'" style="padding-top: 15px;">
+        <app-generic-table
+          [data]="terenuri"
+          [columns]="terenuriColumns"
+          [filters]="terenuriFilters"
+          [actions]="terenuriActions"
+          [title]="'Terenuri Agricole'"
+          [itemsPerPage]="6"
+          [primaryActionText]="'Adaugă Teren'"
+          (primaryAction)="addTeren()">
+        </app-generic-table>
+      </div>
+
+      <!-- Utilaje Section -->
+      <div style="margin-bottom: 20px;" *ngIf="activeTab === 'MACHINERY'">
+        <app-machinery-management [gospodarieId]="gospodarieId"></app-machinery-management>
+      </div>
+
+      <!-- Cladiri Section -->
+      <div style="margin-bottom: 20px;" *ngIf="activeTab === 'BUILDINGS'">
+        <app-cladire-management [gospodarieId]="gospodarieId"></app-cladire-management>
+      </div>
+
+      <!-- Animale Section -->
+      <div style="margin-bottom: 20px;" *ngIf="activeTab === 'ANIMALS'">
+        <app-animal-list [gospodarieId]="gospodarieId"></app-animal-list>
+      </div>
+    </ng-container>
+</app-layout>
+
+<app-persoana-form *ngIf="showPersonModal" [isModal]="true" [hideGospodarieSelect]="true" [gospodarieId]="gospodarieId" [editId]="editPersonId" (closeForm)="closePersonModal()"></app-persoana-form>
+
+<app-teren-form 
+  *ngIf="showTerenModal" 
+  [isModal]="true" 
+  [inputGospodarieId]="gospodarieId" 
+  (closeForm)="closeTerenModal()">
+</app-teren-form>

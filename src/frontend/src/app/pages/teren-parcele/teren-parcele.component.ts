@@ -12,12 +12,17 @@ import { GospodarieService } from '../../services/gospodarie.service';
 import { Teren } from '../../models/teren.model';
 import { Parcela } from '../../models/parcela.model';
 import { CategorieFolosinta } from '../../models/categorie-folosinta.model';
+import { CulturaParcela } from '../../models/cultura-parcela.model';
+import { CulturaParcelaService } from '../../services/cultura-parcela.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
+import { SursaApa } from '../../models/sursa-apa.model';
+import { SursaApaService } from '../../services/sursa-apa.service';
 
 @Component({
   selector: 'app-teren-parcele',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent, BreadcrumbsComponent],
   templateUrl: './teren-parcele.component.html',
   styleUrls: ['./teren-parcele.component.css']
 })
@@ -26,6 +31,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   gospodarieId!: number;
   teren: Teren | null = null;
   parcele: Parcela[] = [];
+  breadcrumbItems: BreadcrumbItem[] = [];
 
   map!: google.maps.Map;
   mapInitialized = false;
@@ -54,11 +60,40 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   saving = false;
 
   categoriiFolosinta = ['Arabil', 'Pășune', 'Fânețe', 'Livadă', 'Vii', 'Pădure', 'Ape', 'Alte'];
+  tipuriSol = [
+    'Cernoziom',     // tip genetic
+    'Podzol',        // tip genetic
+    'Aluvial',       // origine
+    'Nisipos',       // textura
+    'Argilos',       // textura
+    'Lutos',         // textura
+    'Sărăturat',     // caracteristica
+    'Altul'
+  ];
 
   categorii: CategorieFolosinta[] = [];
   isAddingCategorie = false;
   editingCategorie: CategorieFolosinta | null = null;
   newCategorie: CategorieFolosinta = { denumire: '', descriere: '' };
+
+  culturi: CulturaParcela[] = [];
+  isAddingCultura = false;
+  editingCultura: CulturaParcela | null = null;
+  newCultura: Partial<CulturaParcela> = {};
+
+  surse: SursaApa[] = [];
+  isAddingSursa = false;
+  editingSursa: SursaApa | null = null;
+  newSursa: Partial<SursaApa> = { stareFunctionare: true };
+
+  tipuriSursa = [
+    'Puț forat',
+    'Fântână',
+    'Rețea irigații',
+    'Râu / Canal',
+    'Acumulare',
+    'Altul'
+  ];
 
   constructor(
     private route: ActivatedRoute,
@@ -66,6 +101,8 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     private terenService: TerenService,
     private parcelaService: ParcelaService,
     private categorieService: CategorieFolosintaService,
+    private culturaService: CulturaParcelaService,
+    private sursaApaService: SursaApaService,
     private conv: CoordConversionService,
     private googleMapsLoader: GoogleMapsLoaderService,
     private gospodarieService: GospodarieService,
@@ -83,6 +120,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
 
     this.terenService.getTerenById(this.terenId).subscribe(t => {
       this.teren = t;
+      this.updateBreadcrumbs();
       console.log('LOADED TEREN:', t);
       setTimeout(() => {
         this.initMap();
@@ -129,6 +167,14 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
       zIndex: 0,
       map: this.map
     });
+  }
+
+  updateBreadcrumbs() {
+    this.breadcrumbItems = [
+      { label: 'Gospodării', link: '/gospodarii' },
+      { label: 'Detalii Gospodărie', link: `/gospodarii/${this.gospodarieId}?tab=TERENURI` },
+      { label: `Teren: ${this.teren?.denumire || ''}` }
+    ];
   }
 
   ngOnDestroy() {
@@ -512,6 +558,27 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     });
   }
 
+  selectParcela(p: Parcela) {
+    this.viewingParcela = p;
+    this.isAddingParcela = false;
+    this.isAddingCultura = false;
+    this.editingCultura = null;
+    this.culturi = [];
+    if (p.id) {
+      this.loadCulturi(p.id);
+      this.loadSurse(p.id);
+    }
+  }
+
+  closeParcela() {
+    this.viewingParcela = null;
+    this.isAddingCultura = false;
+    this.editingCultura = null;
+    this.surse = [];
+    this.isAddingSursa = false;
+    this.editingSursa = null;
+  }
+
   deleteParcela(p: Parcela) {
     if (!p.id) return;
     if (!confirm(`Ștergeți parcela "${p.denumire}"?`)) return;
@@ -522,6 +589,140 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
         this.viewingParcela = null;
       },
       error: () => alert('Eroare la ștergere.')
+    });
+  }
+
+  loadCulturi(parcelaId: number) {
+    this.culturaService.getCulturi(parcelaId).subscribe({
+      next: data => this.culturi = data || [],
+      error: () => this.culturi = []
+    });
+  }
+
+  openAddCulturaForm() {
+    this.isAddingCultura = true;
+    this.editingCultura = null;
+    this.newCultura = {
+      anAgricol: new Date().getFullYear(),
+      specieCultura: '',
+      suprafataCultivataHa: this.viewingParcela?.suprafata || 0
+    };
+  }
+
+  openEditCultura(cultura: CulturaParcela) {
+    this.isAddingCultura = true;
+    this.editingCultura = cultura;
+    this.newCultura = { ...cultura, tipSol: cultura.tipSol || '' };
+  }
+
+  cancelAddCultura() {
+    this.isAddingCultura = false;
+    this.editingCultura = null;
+    this.newCultura = {};
+  }
+
+  saveCultura() {
+    if (!this.newCultura.specieCultura?.trim() || !this.newCultura.anAgricol || !this.newCultura.suprafataCultivataHa) {
+      alert('Completați anul agricol, specia și suprafața.');
+      return;
+    }
+    if (!this.viewingParcela?.id) return;
+
+    this.saving = true;
+    if (this.editingCultura && this.editingCultura.id) {
+      this.culturaService.updateCultura(this.viewingParcela.id, this.editingCultura.id, this.newCultura as CulturaParcela).subscribe({
+        next: updated => {
+          this.saving = false;
+          const idx = this.culturi.findIndex(c => c.id === updated.id);
+          if (idx >= 0) this.culturi[idx] = updated;
+          this.cancelAddCultura();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare cultura.'); }
+      });
+    } else {
+      this.culturaService.createCultura(this.viewingParcela.id, this.newCultura as CulturaParcela).subscribe({
+        next: saved => {
+          this.saving = false;
+          this.culturi.push(saved);
+          this.cancelAddCultura();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare cultura.'); }
+      });
+    }
+  }
+
+  deleteCultura(cultura: CulturaParcela) {
+    if (!cultura.id || !this.viewingParcela?.id) return;
+    if (!confirm(`Ștergeți cultura "${cultura.specieCultura}"?`)) return;
+    this.culturaService.deleteCultura(this.viewingParcela.id, cultura.id).subscribe({
+      next: () => {
+        this.culturi = this.culturi.filter(c => c.id !== cultura.id);
+      },
+      error: () => alert('Eroare la ștergere cultura.')
+    });
+  }
+
+  loadSurse(parcelaId: number) {
+    this.sursaApaService.getSurse(parcelaId).subscribe({
+      next: data => this.surse = data || [],
+      error: () => this.surse = []
+    });
+  }
+
+  openAddSursaForm() {
+    this.isAddingSursa = true;
+    this.editingSursa = null;
+    this.newSursa = { tipSursa: '', stareFunctionare: true };
+  }
+
+  openEditSursa(sursa: SursaApa) {
+    this.isAddingSursa = true;
+    this.editingSursa = sursa;
+    this.newSursa = { ...sursa };
+  }
+
+  cancelAddSursa() {
+    this.isAddingSursa = false;
+    this.editingSursa = null;
+    this.newSursa = { stareFunctionare: true };
+  }
+
+  saveSursa() {
+    if (!this.viewingParcela?.id) return;
+
+    this.saving = true;
+    const payload = this.newSursa as SursaApa;
+
+    if (this.editingSursa && this.editingSursa.id) {
+      this.sursaApaService.updateSursa(this.viewingParcela.id, this.editingSursa.id, payload).subscribe({
+        next: updated => {
+          this.saving = false;
+          const idx = this.surse.findIndex(s => s.id === updated.id);
+          if (idx >= 0) this.surse[idx] = updated;
+          this.cancelAddSursa();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare sursă apă.'); }
+      });
+    } else {
+      this.sursaApaService.createSursa(this.viewingParcela.id, payload).subscribe({
+        next: saved => {
+          this.saving = false;
+          this.surse.push(saved);
+          this.cancelAddSursa();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare sursă apă.'); }
+      });
+    }
+  }
+
+  deleteSursa(sursa: SursaApa) {
+    if (!sursa.id || !this.viewingParcela?.id) return;
+    if (!confirm(`Ștergeți sursa de apă "${sursa.tipSursa || 'fără tip'}"?`)) return;
+    this.sursaApaService.deleteSursa(this.viewingParcela.id, sursa.id).subscribe({
+      next: () => {
+        this.surse = this.surse.filter(s => s.id !== sursa.id);
+      },
+      error: () => alert('Eroare la ștergere sursă apă.')
     });
   }
 

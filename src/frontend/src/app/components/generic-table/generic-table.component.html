@@ -1,0 +1,157 @@
+<!-- generic-table.component.html -->
+<div class="card" style="padding: 24px; margin-bottom: 20px;">
+  
+  <!-- Header Actions -->
+  <div class="header-actions" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">
+    
+    <h3 *ngIf="title" style="margin: 0; font-size: 1.25rem; color: var(--text-primary);">{{ title }}</h3>
+    
+    <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-left: auto;">
+      
+      <ng-container *ngFor="let filter of filters">
+        
+        <!-- Search Input -->
+        <input *ngIf="filter.type === 'search'"
+               type="text"
+               class="input-field"
+               [placeholder]="filter.label"
+               [(ngModel)]="filterValues[filter.field]"
+               (input)="applyFilters()"
+               autocomplete="off"
+               style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border, #cbd5e1); width: 250px;"
+        >
+        
+        <select *ngIf="filter.type === 'select'"
+                [(ngModel)]="filterValues[filter.field]" 
+                (change)="applyFilters()"
+                class="input-field"
+                style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border, #cbd5e1); min-width: 150px; background: white; cursor: pointer;">
+          <option [ngValue]="''">{{ filter.label }} (Toate)</option>
+          <option *ngFor="let opt of filter.options" [ngValue]="opt.value">{{ opt.label }}</option>
+        </select>
+
+      </ng-container>
+
+      <button *ngIf="primaryActionText" class="btn-primary" (click)="onPrimaryAction()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px; vertical-align: middle; display: inline-block;">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        {{ primaryActionText }}
+      </button>
+
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-responsive" style="overflow-x: auto; border: 1px solid var(--card-border, #e5e7eb); border-radius: 8px;">
+    <table class="data-table" style="width: 100%; border-collapse: collapse; background: var(--card-bg, #ffffff);">
+      <thead>
+        <tr>
+          <th *ngFor="let col of columns" style="padding: 12px 16px; text-align: left; background: var(--primary-light, #f0fdf4); color: var(--text-secondary); font-weight: 500; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border, #e5e7eb);">
+            {{ col.header }}
+          </th>
+          <th *ngIf="actions && actions.length > 0" style="padding: 12px 16px; text-align: right; background: var(--primary-light, #f0fdf4); color: var(--text-secondary); font-weight: 500; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border, #e5e7eb);">
+            Acțiuni
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of paginatedItems" (click)="onRowClick(row, $event)" [class.hoverable-row]="rowClick.observed" style="border-bottom: 1px solid var(--border, #e5e7eb); transition: background 0.2s;">
+          <td *ngFor="let col of columns" style="padding: 16px; color: var(--text-primary); font-size: 0.95rem;">
+            
+            <!-- Avatar Type -->
+            <div *ngIf="col.type === 'avatar'" class="user-cell" style="display: flex; align-items: center; gap: 12px;">
+               <div class="user-avatar" [style.background]="row.avatarBg || '#e2e8f0'" style="width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff;">{{ row.initials || 'U' }}</div>
+               <div class="user-name-cell">
+                 <div class="name"><strong>{{ getCellValue(row, col) }}</strong></div>
+                 <div class="handle" *ngIf="col.subField" style="font-family: monospace; color: var(--text-secondary); font-size: 12px;">{{ getNestedValue(row, col.subField) }}</div>
+               </div>
+            </div>
+
+            <!-- Badge Type -->
+            <span *ngIf="col.type === 'badge'" class="badge" [ngClass]="getBadgeClass(row, col)">
+              {{ getCellValue(row, col) }}
+            </span>
+
+            <!-- Date Type -->
+            <span *ngIf="col.type === 'date'">
+              {{ getCellValue(row, col) | date:'dd.MM.yyyy' }}
+            </span>
+
+            <!-- Text/Default Type -->
+            <span *ngIf="!col.type || col.type === 'text'">
+              <strong *ngIf="col.header === 'Cod Gospodărie' || col.header === 'Utilizator' || col.field === 'denumire' || col.header === 'Nume / Denumire' || col.header === 'Număr Crotal'">{{ getCellValue(row, col) }}</strong>
+              <ng-container *ngIf="col.header !== 'Cod Gospodărie' && col.header !== 'Utilizator' && col.field !== 'denumire' && col.header !== 'Nume / Denumire' && col.header !== 'Număr Crotal'">{{ getCellValue(row, col) }}</ng-container>
+              <br *ngIf="col.subField">
+              <small *ngIf="col.subField" style="color: var(--text-secondary)">{{ getNestedValue(row, col.subField) }}</small>
+            </span>
+
+          </td>
+          
+          <td *ngIf="actions && actions.length > 0" style="padding: 16px; text-align: right;">
+            <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center; height: 100%;">
+              <ng-container *ngFor="let action of actions">
+                <button 
+                  *ngIf="!action.showIf || action.showIf(row)"
+                  class="action-btn-icon"
+                  [style.color]="getActionColor(action)"
+                  (click)="action.action(row, $event); $event.stopPropagation()" 
+                  [title]="action.tooltip"
+                  style="background: none; border: none; cursor: pointer; padding: 6px; border-radius: 6px; transition: background 0.2s, color 0.2s;"
+                  onmouseover="this.style.background='var(--body-bg, #f8fafc)'"
+                  onmouseout="this.style.background='none'">
+                  
+                  <svg *ngIf="action.icon === 'view'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  
+                  <svg *ngIf="action.icon === 'edit'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                  
+                  <svg *ngIf="action.icon === 'delete'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                  </svg>
+                  
+                  <svg *ngIf="action.icon === 'add'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  
+                  <svg *ngIf="action.icon === 'history'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                  </svg>
+                  
+                </button>
+              </ng-container>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="filteredData.length === 0">
+          <td [colSpan]="columns.length + (actions.length > 0 ? 1 : 0)" style="text-align: center; padding: 30px; color: var(--text-muted);">
+            {{ emptyMessage }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- Pagination -->
+  <div style="padding:16px 0 0 0; display:flex; align-items:center; justify-content:space-between; border-top: 1px solid var(--card-border, #e5e7eb); margin-top: 16px;" *ngIf="filteredData.length > 0">
+    <span style="font-size:13px;color:var(--text-muted)">
+      Pagina {{ currentPage }} din {{ totalPages || 1 }} (Total: {{ filteredData.length }} înregistrări)
+    </span>
+    <div class="pagination" style="display: flex; gap: 4px;">
+      <button (click)="prevPage()" [disabled]="currentPage === 1" style="background: white; border: 1px solid var(--border, #cbd5e1); border-radius: 6px; padding: 6px 12px; cursor: pointer; color: var(--text-secondary); font-size: 13px;" [style.opacity]="currentPage === 1 ? '0.5' : '1'">Înapoi</button>
+      <span style="font-size: 13px; font-weight: 600; padding: 6px 12px; color: var(--text-primary); background: var(--body-bg, #f8fafc); border-radius: 6px;">{{ currentPage }} / {{ totalPages || 1 }}</span>
+      <button (click)="nextPage()" [disabled]="currentPage === totalPages || totalPages === 0" style="background: white; border: 1px solid var(--border, #cbd5e1); border-radius: 6px; padding: 6px 12px; cursor: pointer; color: var(--text-secondary); font-size: 13px;" [style.opacity]="(currentPage === totalPages || totalPages === 0) ? '0.5' : '1'">Următoarea</button>
+    </div>
+  </div>
+</div>

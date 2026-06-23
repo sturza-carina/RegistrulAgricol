@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -30,10 +31,14 @@ public class PersoanaService {
             persoana.setTenantId(currentTenant);
         }
 
-        if (persoana.getGospodarie() != null && persoana.getGospodarie().getId() != null) {
-            long gId = persoana.getGospodarie().getId();
-            Gospodarie g = gospodarieRepository.findById(gId).orElse(null);
-            persoana.setGospodarie(g);
+        if (persoana.getGospodarii() != null && !persoana.getGospodarii().isEmpty()) {
+            List<Gospodarie> fetchedGospodarii = new ArrayList<>();
+            for (Gospodarie g : persoana.getGospodarii()) {
+                if (g.getId() != null) {
+                    gospodarieRepository.findById(g.getId()).ifPresent(fetchedGospodarii::add);
+                }
+            }
+            persoana.setGospodarii(fetchedGospodarii);
         }
 
         // Set parent references and validate relations
@@ -93,12 +98,20 @@ public class PersoanaService {
         existing.setRegisterPosition(updatedPerson.getRegisterPosition());
         existing.setNotes(updatedPerson.getNotes());
 
-        if (updatedPerson.getGospodarie() != null && updatedPerson.getGospodarie().getId() != null) {
-            long gId = updatedPerson.getGospodarie().getId();
-            Gospodarie g = gospodarieRepository.findById(gId).orElse(null);
-            existing.setGospodarie(g);
+        if (updatedPerson.getGospodarii() != null) {
+            List<Gospodarie> fetchedGospodarii = new ArrayList<>();
+            for (Gospodarie g : updatedPerson.getGospodarii()) {
+                if (g.getId() != null) {
+                    gospodarieRepository.findById(g.getId()).ifPresent(fetchedGospodarii::add);
+                }
+            }
+            existing.setGospodarii(fetchedGospodarii);
         } else {
-            existing.setGospodarie(null);
+            if (existing.getGospodarii() != null) {
+                existing.getGospodarii().clear();
+            } else {
+                existing.setGospodarii(new ArrayList<>());
+            }
         }
 
         // Update type-specific fields
@@ -159,5 +172,21 @@ public class PersoanaService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Related Persoana not found with id: " + relatedId));
         relation.setRelatedPerson(related);
+    }
+
+    public void addPersonToGospodarie(Long persoanaId, Long gospodarieId) {
+        Persoana persoana = getPersonById(persoanaId);
+        Gospodarie gospodarie = gospodarieRepository.findById(gospodarieId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Gospodarie not found with id: " + gospodarieId));
+        
+        if (persoana.getGospodarii() == null) {
+            persoana.setGospodarii(new ArrayList<>());
+        }
+        
+        boolean alreadyExists = persoana.getGospodarii().stream().anyMatch(g -> g.getId().equals(gospodarieId));
+        if (!alreadyExists) {
+            persoana.getGospodarii().add(gospodarie);
+            persoanaRepository.save(persoana);
+        }
     }
 }

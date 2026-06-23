@@ -4,8 +4,12 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } 
 import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
-import { SidebarComponent } from '../../components/sidebar/sidebar.component';
-
+import { LayoutComponent } from '../../components/layout/layout.component';
+import { PageHeaderComponent } from '../../components/page-header/page-header.component';
+import { GenericTableComponent, TableColumn, TableFilter, TableAction } from '../../components/generic-table/generic-table.component';
+import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
+import { GenericFormComponent } from '../../components/generic-form/generic-form.component';
+import { FormConfig } from '../../components/generic-form/generic-form.models';
 
 interface UAT {
   codSiruta: string;
@@ -19,7 +23,7 @@ interface UAT {
 @Component({
   selector: 'app-uat-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, LayoutComponent, PageHeaderComponent, GenericTableComponent, BreadcrumbsComponent, GenericFormComponent],
   templateUrl: './uat-management.component.html',
   styleUrls: ['./uat-management.component.scss']
 })
@@ -34,16 +38,62 @@ export class UatManagementComponent implements OnInit {
     'Timiș', 'Tulcea', 'Vâlcea', 'Vaslui', 'Vrancea'
   ];
 
-  user: any = null;
+
   uats: UAT[] = [];
-  filteredUats: UAT[] = [];
-  uatForm: FormGroup;
+  breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'UAT-uri', link: '/uats' }
+  ];
+
   creatingUat = false;
   viewingUat: UAT | null = null;
   editingUat: UAT | null = null;
+  formInitialData: any = {};
+  
+  formConfig: FormConfig = {
+    submitText: 'Creare UAT',
+    cancelText: 'Anulare',
+    sections: [
+      {
+        fields: [
+          { name: 'denumire', label: 'Nume UAT', type: 'text', required: true, placeholder: 'ex. Cluj-Napoca', width: 'half' },
+          { name: 'codSiruta', label: 'Cod SIRUTA', type: 'text', required: true, placeholder: 'ex. 54975', width: 'half', disabled: false },
+          { 
+            name: 'judet', label: 'Județ', type: 'select', required: true, width: 'half', placeholder: '-- Selectează Județ --',
+            options: this.judete.map(j => ({ label: j, value: j })) 
+          },
+          { 
+            name: 'tipUat', label: 'Tip UAT', type: 'select', required: true, width: 'half',
+            options: [
+              { label: 'Municipiu', value: 'Municipiu' },
+              { label: 'Oraș', value: 'Oraș' },
+              { label: 'Comună', value: 'Comună' }
+            ] 
+          },
+          { name: 'isActive', label: 'Status Activ', type: 'checkbox', required: false, width: 'full' }
+        ]
+      }
+    ]
+  };
 
-  searchTerm = '';
-  tipUatFilter = 'Toate';
+  columns: TableColumn[] = [
+    { field: 'denumire', header: 'Denumire', type: 'text', subField: 'judet' },
+    { field: 'codSiruta', header: 'Cod SIRUTA', format: val => val },
+    { field: 'tipUat', header: 'Tip UAT', type: 'badge', badgeClasses: { 'Comună': 'viewer', 'Oraș': 'viewer', 'Municipiu': 'viewer' } },
+    { field: 'isActive', header: 'Status', type: 'badge', format: val => val ? 'Activ' : 'Inactiv', badgeClasses: { 'true': 'activ', 'false': 'inactiv' } }
+  ];
+
+  filters: TableFilter[] = [
+    { field: 'search', label: 'Caută după denumire, județ...', type: 'search', searchFields: ['denumire', 'judet', 'codSiruta'] },
+    { field: 'tipUat', label: 'Tip UAT', type: 'select', options: [{label: 'Comună', value: 'Comună'}, {label: 'Oraș', value: 'Oraș'}, {label: 'Municipiu', value: 'Municipiu'}] },
+    { field: 'isActive', label: 'Status', type: 'select', options: [{label: 'Activ', value: true}, {label: 'Inactiv', value: false}] }
+  ];
+
+  actions: TableAction[] = [
+    { icon: 'view', tooltip: 'Accesare Context UAT', action: (row) => this.manageUat(row), showIf: (row) => row.isActive },
+    { icon: 'edit', tooltip: 'Editare UAT', action: (row) => this.editUat(row) },
+    { icon: 'delete', tooltip: 'Ștergere UAT', action: (row) => this.deleteUat(row) }
+  ];
+
   loadError = '';
   successMessage = '';
   errorMessage = '';
@@ -54,24 +104,14 @@ export class UatManagementComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private authService: AuthService,
-    private http: HttpClient,
-    private fb: FormBuilder
+    private http: HttpClient
   ) {
-    this.uatForm = this.fb.group({
-      codSiruta: ['', [Validators.required]],
-      denumire:  ['', [Validators.required]],
-      judet:     ['', [Validators.required]],
-      tipUat:    ['Comună', [Validators.required]],
-      isActive:  [true]
-    });
   }
 
   ngOnInit(): void {
     this.authService.currentUser.subscribe(user => {
       if (!user) {
         this.router.navigate(['/login']);
-      } else {
-        this.user = user;
       }
     });
     this.loadUats();
@@ -89,26 +129,11 @@ export class UatManagementComponent implements OnInit {
     this.http.get<UAT[]>(this.apiUrl).subscribe({
       next: (data) => {
         this.uats = data;
-        this.applyFilter();
       },
       error: () => {
         this.uats = [];
-        this.filteredUats = [];
         this.loadError = 'Nu s-au putut încărca UAT-urile. Verifică dacă backend-ul rulează.';
       }
-    });
-  }
-
-  onSearch(event: any): void {
-    this.searchTerm = event.target.value.toLowerCase();
-    this.applyFilter();
-  }
-
-  applyFilter(): void {
-    this.filteredUats = this.uats.filter(uat => {
-      const matchesSearch = uat.denumire.toLowerCase().includes(this.searchTerm) || uat.judet.toLowerCase().includes(this.searchTerm);
-      const matchesTip = this.tipUatFilter === 'Toate' || uat.tipUat === this.tipUatFilter;
-      return matchesSearch && matchesTip;
     });
   }
 
@@ -116,16 +141,21 @@ export class UatManagementComponent implements OnInit {
     this.creatingUat = true;
     this.viewingUat = null;
     this.editingUat = null;
-    this.uatForm.reset({ tipUat: 'Comună', isActive: true });
-    this.uatForm.get('codSiruta')?.enable();
+    
+    this.formInitialData = { tipUat: 'Comună', isActive: true };
+    this.formConfig.submitText = 'Creare UAT';
+    this.formConfig.sections[0].fields.find(f => f.name === 'codSiruta')!.disabled = false;
+    
     this.successMessage = '';
     this.errorMessage = '';
+    this.updateBreadcrumbs();
   }
 
   closeAddForm(): void {
     this.creatingUat = false;
     this.errorMessage = '';
     this.successMessage = '';
+    this.updateBreadcrumbs();
   }
 
   viewUat(uat: UAT): void {
@@ -134,26 +164,55 @@ export class UatManagementComponent implements OnInit {
     this.editingUat = null;
     this.errorMessage = '';
     this.successMessage = '';
+    this.updateBreadcrumbs();
   }
 
   closeViewUat(): void {
     this.viewingUat = null;
+    this.updateBreadcrumbs();
   }
 
   editUat(uat: UAT): void {
     this.editingUat = { ...uat };
     this.viewingUat = null;
     this.creatingUat = false;
-    this.uatForm.patchValue(uat);
-    this.uatForm.get('codSiruta')?.disable();
+    
+    this.formInitialData = { ...uat };
+    this.formConfig.submitText = 'Salvează Modificările';
+    this.formConfig.sections[0].fields.find(f => f.name === 'codSiruta')!.disabled = true;
+
     this.errorMessage = '';
     this.successMessage = '';
+    this.updateBreadcrumbs();
   }
 
   closeEditUat(): void {
     this.editingUat = null;
     this.errorMessage = '';
     this.successMessage = '';
+    this.updateBreadcrumbs();
+  }
+
+  updateBreadcrumbs(): void {
+    this.breadcrumbItems = [
+      { label: 'UAT-uri', link: (this.creatingUat || this.viewingUat || this.editingUat) ? undefined : '/uats' }
+    ];
+    if (this.creatingUat || this.viewingUat || this.editingUat) {
+      this.breadcrumbItems[0].link = '/uats';
+      this.breadcrumbItems[0].action = () => {
+        if (this.creatingUat) this.closeAddForm();
+        if (this.viewingUat) this.closeViewUat();
+        if (this.editingUat) this.closeEditUat();
+      };
+    }
+
+    if (this.creatingUat) {
+      this.breadcrumbItems.push({ label: 'Creare UAT' });
+    } else if (this.viewingUat) {
+      this.breadcrumbItems.push({ label: `Detalii: ${this.viewingUat.denumire}` });
+    } else if (this.editingUat) {
+      this.breadcrumbItems.push({ label: `Editare: ${this.editingUat.denumire}` });
+    }
   }
 
   manageUat(uat: UAT): void {
@@ -165,13 +224,7 @@ export class UatManagementComponent implements OnInit {
     this.router.navigate(['/gospodarii']);
   }
 
-  saveUat(): void {
-    if (this.uatForm.invalid) {
-      this.errorMessage = 'Vă rugăm să completați toate câmpurile obligatorii.';
-      return;
-    }
-    const uatData = this.uatForm.getRawValue();
-    
+  saveUat(uatData: any): void {
     if (this.editingUat) {
       this.http.put(`${this.apiUrl}/${uatData.codSiruta}`, uatData).subscribe({
         next: () => {
@@ -213,8 +266,5 @@ export class UatManagementComponent implements OnInit {
     }
   }
 
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
+
 }
