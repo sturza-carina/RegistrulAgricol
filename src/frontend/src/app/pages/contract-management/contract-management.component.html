@@ -1,0 +1,123 @@
+<app-layout>
+  <app-breadcrumbs [items]="breadcrumbItems" style="display: block; margin-bottom: 14px;"></app-breadcrumbs>
+
+  <app-page-header 
+    title="Management Contracte Utilizare" 
+    [description]="!creatingContract && !editingContract && !viewingContract ? 'Gestionare contracte de arendă, comodat și alte tipuri de folosință terenuri.' : (creatingContract ? 'Înregistrați un contract de utilizare nou pentru UAT-ul activ.' : (editingContract ? 'Actualizați detaliile contractului selectat.' : 'Detalii contract de utilizare.'))">
+  </app-page-header>
+
+  <!-- Tenant Context Selector (For SUPER_ADMIN) -->
+  <div class="card" style="padding: 16px 20px; margin-bottom: 20px;" *ngIf="user?.role === 'ROLE_SUPER_ADMIN' && !creatingContract && !editingContract && !viewingContract">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <label for="tenantSelect" style="font-weight: 600; font-size: 14px; color: var(--text-primary);">Alegeți Tenant / UAT:</label>
+      <select id="tenantSelect" (change)="onTenantChange()" [(ngModel)]="selectedTenantId" class="form-control" style="max-width: 300px; margin-bottom: 0;">
+        <option value="">-- Niciun UAT selectat --</option>
+        <option *ngFor="let tenant of tenants" [value]="tenant.id">{{ tenant.name }} ({{ tenant.schemaName }})</option>
+      </select>
+      <span *ngIf="!selectedTenantId" style="font-size: 13px; color: #cc8400; font-weight: 500;">
+        ⚠️ Selectați un tenant pentru a vizualiza și gestiona contractele acestuia.
+      </span>
+    </div>
+  </div>
+
+  <div *ngIf="successMessage" style="background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px">
+    {{ successMessage }}
+  </div>
+  <div *ngIf="errorMessage" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px">
+    {{ errorMessage }}
+  </div>
+  <div *ngIf="loadError" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px">
+    {{ loadError }}
+  </div>
+
+  <app-generic-table
+    *ngIf="!creatingContract && !viewingContract && !editingContract && selectedTenantId"
+    [data]="contracts"
+    [columns]="columns"
+    [filters]="filters"
+    [actions]="actions"
+    [title]="'Listă Contracte Utilizare'"
+    [itemsPerPage]="10"
+    [primaryActionText]="'Adaugă Contract'"
+    (primaryAction)="openAddForm()">
+  </app-generic-table>
+
+  <!-- No Tenant Prompt -->
+  <div class="card" *ngIf="!selectedTenantId && !creatingContract && !editingContract && !viewingContract && user?.role !== 'ROLE_SUPER_ADMIN'" style="padding: 40px; text-align: center;">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" style="margin-bottom: 16px;">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="16" y1="13" x2="8" y2="13"/>
+      <line x1="16" y1="17" x2="8" y2="17"/>
+    </svg>
+    <h3 style="margin-bottom: 8px;">Niciun Tenant selectat</h3>
+    <p style="color: var(--text-muted); max-width: 400px; margin: 0 auto 20px;">Vă rugăm să selectați un Tenant din selectorul de mai sus pentru a vizualiza sau înregistra contractele acestuia.</p>
+  </div>
+
+  <!-- Form View (Create/Edit) Modal -->
+  <div class="modal-overlay" *ngIf="creatingContract || editingContract" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; overflow-y: auto; padding: 20px;">
+    <div class="modal-content card" style="width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; background: var(--card-bg); padding: 30px; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); position: relative;">
+      
+      <button (click)="closeForm()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: color 0.2s;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-muted)'" title="Închide">&times;</button>
+      
+      <h2 style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin-top: 0; margin-bottom: 24px; font-family: 'DM Serif Display', serif;">
+        {{ editingContract ? 'Editare Contract' : 'Înregistrare Contract Nou' }}
+      </h2>
+
+      <div *ngIf="errorMessage" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px">
+        {{ errorMessage }}
+      </div>
+
+      <div style="padding: 0; margin-top: -10px;">
+        <app-generic-form 
+          [config]="formConfig" 
+          [initialData]="formInitialData"
+          (formSubmit)="saveContract($event)"
+          (formCancel)="closeForm()">
+        </app-generic-form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contract Details View Modal -->
+  <div class="modal-overlay" *ngIf="viewingContract" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; overflow-y: auto; padding: 20px;">
+    <div class="modal-content card" style="width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; background: var(--card-bg); padding: 30px; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); position: relative;">
+      
+      <button (click)="closeViewContract()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: color 0.2s;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-muted)'" title="Închide">&times;</button>
+      
+      <h2 style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin-top: 0; margin-bottom: 24px; font-family: 'DM Serif Display', serif;">
+        Detalii Contract
+      </h2>
+      
+      <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div>
+          <p><strong>Număr Contract:</strong> {{ viewingContract.numarContract }}</p>
+          <p><strong>Tip Contract:</strong> {{ viewingContract.tipContract }}</p>
+          <p><strong>Teren Asociat:</strong> {{ viewingContract.teren?.denumire || '-' }} (ID: {{ viewingContract.teren?.id }})</p>
+          <p><strong>Data Semnare:</strong> {{ viewingContract.dataSemnare || '-' }}</p>
+          <p><strong>Dată Început:</strong> {{ viewingContract.dataInceput || '-' }}</p>
+          <p><strong>Dată Sfârșit:</strong> {{ viewingContract.dataSfarsit || '-' }}</p>
+          <p><strong>Status:</strong>
+            <span class="badge" [ngClass]="viewingContract.statusContract === 'ACTIV' ? 'active' : 'archived'">
+              {{ viewingContract.statusContract }}
+            </span>
+          </p>
+        </div>
+        <div>
+          <p><strong>Arendă în RON / An:</strong> {{ viewingContract.pretArendaRonAn || '-' }}</p>
+          <p><strong>Arendă în Grâu / Kg / Ha:</strong> {{ viewingContract.pretArendaGrauKgHa || '-' }}</p>
+          <p><strong>Indexare Preț:</strong> {{ viewingContract.indexarePret ? 'Da' : 'Nu' }}</p>
+          <p><strong>Locator Proprietar:</strong> {{ getPersonDisplayName(viewingContract.locatorProprietar) }}</p>
+          <p><strong>Locator Utilizator (Locatar):</strong> {{ getPersonDisplayName(viewingContract.locatorUtilizator) }}</p>
+          <p><strong>Înregistrat la Data:</strong> {{ viewingContract.dataOperare || '-' }}</p>
+          <p><strong>Înregistrat de Persoană:</strong> {{ getPersonDisplayName(viewingContract.utilizatorOperare) }}</p>
+        </div>
+      </div>
+      <div *ngIf="viewingContract.motivIncetare" style="margin-top: 15px; padding: 12px; background: #f8fafc; border-radius: 6px; border-left: 4px solid #b91c1c;">
+        <strong>Motiv Încetare / Reziliere:</strong><br>
+        {{ viewingContract.motivIncetare }}
+      </div>
+    </div>
+  </div>
+
+</app-layout>
