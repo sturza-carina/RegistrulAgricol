@@ -14,6 +14,7 @@ import { GospodarieFormComponent } from './pages/gospodarie-form/gospodarie-form
 import { GospodarieDetailsComponent } from './pages/gospodarie-details/gospodarie-details.component';
 import { TerenFormComponent } from './pages/teren-form/teren-form.component';
 import { TerenParceleComponent } from './pages/teren-parcele/teren-parcele.component';
+import { ContractManagementComponent } from './pages/contract-management/contract-management.component';
 
 export const routes: Routes = [
   { path: 'login',          component: LoginComponent },
@@ -33,6 +34,7 @@ export const routes: Routes = [
   { path: 'terenuri/new',   component: TerenFormComponent },
   { path: 'terenuri/:id/parcele', component: TerenParceleComponent },
   { path: 'harta',          component: ParcelaMapComponent },
+  { path: 'contracte',      component: ContractManagementComponent },
   { path: '',               redirectTo: '/login', pathMatch: 'full' }
 ];
 
