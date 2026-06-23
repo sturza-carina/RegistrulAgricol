@@ -8,11 +8,12 @@ import {
   TransferRequest
 } from '../../models/animal.model';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 
 @Component({
   selector: 'app-animal-timeline',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent, BreadcrumbsComponent],
   templateUrl: './animal-timeline.component.html',
   styleUrls: ['./animal-timeline.component.css']
 })
@@ -22,6 +23,7 @@ export class AnimalTimelineComponent implements OnInit {
   timeline: EvenimentAnimal[] = [];
   isLoading = true;
   errorMsg = '';
+  breadcrumbItems: BreadcrumbItem[] = [];
 
   // --- Modal de adăugare eveniment ---
   showModal = false;
@@ -88,9 +90,19 @@ export class AnimalTimelineComponent implements OnInit {
 
   loadAnimal(): void {
     this.animalService.getIndividualById(this.animalId).subscribe({
-      next: (a) => this.animal = a,
+      next: (a) => {
+        this.animal = a;
+        this.updateBreadcrumbs();
+      },
       error: () => this.errorMsg = 'Animalul nu a putut fi încărcat.'
     });
+  }
+
+  updateBreadcrumbs() {
+    this.breadcrumbItems = [
+      { label: 'Animale', link: '/animale' },
+      { label: `Istoric (${this.animal?.numarCrotal || '...'})` }
+    ];
   }
 
   loadTimeline(): void {

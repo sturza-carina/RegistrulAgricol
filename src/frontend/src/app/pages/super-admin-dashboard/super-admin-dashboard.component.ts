@@ -4,12 +4,14 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 
-import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { LayoutComponent } from '../../components/layout/layout.component';
+import { PageHeaderComponent } from '../../components/page-header/page-header.component';
+import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 
 @Component({
   selector: 'app-super-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, SidebarComponent],
+  imports: [CommonModule, LayoutComponent, PageHeaderComponent, BreadcrumbsComponent],
   templateUrl: './super-admin-dashboard.component.html',
 })
 export class SuperAdminDashboardComponent implements OnInit {
@@ -18,6 +20,10 @@ export class SuperAdminDashboardComponent implements OnInit {
 
   recentTenants: any[] = [];
   totalUsers: number = 0;
+
+  breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Super Admin Dashboard', link: '/dashboard' }
+  ];
 
   currentPage = 1;
   itemsPerPage = 5;
@@ -115,9 +121,6 @@ export class SuperAdminDashboardComponent implements OnInit {
     this.router.navigate(['/users']);
   }
 
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
+
 }
 

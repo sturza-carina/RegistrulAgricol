@@ -3,13 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Cladire } from '../../models/cladire.model';
 import { CladireService } from '../../services/cladire.service';
+import { GenericTableComponent, TableColumn, TableAction } from '../../components/generic-table/generic-table.component';
+import { GenericFormComponent } from '../../components/generic-form/generic-form.component';
+import { FormConfig } from '../../components/generic-form/generic-form.models';
 
 @Component({
   selector: 'app-cladire-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './cladire-management.component.html',
-  styleUrl: './cladire-management.component.css'
+  imports: [CommonModule, FormsModule, GenericTableComponent, GenericFormComponent],
+  templateUrl: './cladire-management.component.html'
 })
 export class CladireManagementComponent implements OnInit {
   @Input() gospodarieId!: number;
@@ -19,25 +21,42 @@ export class CladireManagementComponent implements OnInit {
   isEditing = false;
   currentCladire: Partial<Cladire> = {};
 
-  currentPage = 1;
-  itemsPerPage = 5;
+  formInitialData: any = {};
+  formConfig: FormConfig = {
+    submitText: 'Salvează',
+    cancelText: 'Anulează',
+    sections: [
+      {
+        fields: [
+          { name: 'destinatie', label: 'Destinație', type: 'select', required: true, width: 'half', options: [
+            { label: 'LOCUINTA', value: 'LOCUINTA' },
+            { label: 'ANEXA', value: 'ANEXA' },
+            { label: 'ALTELE', value: 'ALTELE' }
+          ] },
+          { name: 'suprafataConstruita', label: 'Suprafață Construită (mp)', type: 'number', required: true, width: 'half', min: 0 },
+          { name: 'suprafataDesfasurata', label: 'Suprafață Desfășurată (mp)', type: 'number', required: false, width: 'half', min: 0 },
+          { name: 'anTerminare', label: 'Anul Terminării', type: 'number', required: false, width: 'half' },
+          { name: 'materiale', label: 'Materiale folosite (zidărie, acoperiș)', type: 'text', required: false, width: 'full' },
+          { name: 'adresaSauParcela', label: 'Adresă / Parcelă aferentă', type: 'text', required: false, width: 'full' },
+          { name: 'zonaImpozitare', label: 'Zona Impozitare', type: 'text', required: false, width: 'half' },
+          { name: 'observatii', label: 'Observații', type: 'textarea', required: false, width: 'full' }
+        ]
+      }
+    ]
+  };
 
-  get paginatedItems() {
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    return this.cladiri.slice(startIndex, startIndex + this.itemsPerPage);
-  }
+  columns: TableColumn[] = [
+    { field: 'destinatie', header: 'Destinație', type: 'badge', badgeClasses: { 'LOCUINTA': 'activ', 'ANEXA': 'viewer', 'ALTELE': 'default' } },
+    { field: 'suprafataConstruita', header: 'Suprafață Construită (mp)', format: val => val ? val + ' mp' : '-' },
+    { field: 'anTerminare', header: 'An Terminare', format: val => val || '-' },
+    { field: 'materiale', header: 'Materiale', format: val => val || '-' },
+    { field: 'adresaSauParcela', header: 'Adresă / Parcelă', format: val => val || '-' }
+  ];
 
-  get totalPages() {
-    return Math.ceil(this.cladiri.length / this.itemsPerPage) || 1;
-  }
-
-  nextPage() {
-    if (this.currentPage < this.totalPages) this.currentPage++;
-  }
-
-  prevPage() {
-    if (this.currentPage > 1) this.currentPage--;
-  }
+  actions: TableAction[] = [
+    { icon: 'edit', tooltip: 'Editare', action: (row) => this.openEditModal(row) },
+    { icon: 'delete', tooltip: 'Ștergere', action: (row) => this.deleteCladire(row.id) }
+  ];
 
   constructor(private cladireService: CladireService) {}
 
@@ -50,8 +69,7 @@ export class CladireManagementComponent implements OnInit {
   loadCladiri() {
     this.cladireService.getCladiri(this.gospodarieId).subscribe({
       next: (data) => {
-        this.cladiri = data;
-        this.currentPage = 1;
+        this.cladiri = data.sort((a, b) => (b.id || 0) - (a.id || 0));
       },
       error: (err) => console.error('Failed to load cladiri', err)
     });
@@ -62,12 +80,16 @@ export class CladireManagementComponent implements OnInit {
     this.currentCladire = {
       gospodarieId: this.gospodarieId
     };
+    this.formInitialData = {};
+    this.formConfig.submitText = 'Adaugă Clădire';
     this.showModal = true;
   }
 
   openEditModal(cladire: Cladire) {
     this.isEditing = true;
     this.currentCladire = { ...cladire };
+    this.formInitialData = { ...cladire };
+    this.formConfig.submitText = 'Salvează Modificările';
     this.showModal = true;
   }
 
@@ -76,14 +98,16 @@ export class CladireManagementComponent implements OnInit {
     this.currentCladire = {};
   }
 
-  saveCladire() {
-    if (!this.currentCladire.destinatie || !this.currentCladire.suprafataConstruita) {
+  saveCladire(formData: any) {
+    if (!formData.destinatie || !formData.suprafataConstruita) {
       alert('Vă rugăm să completați destinația și suprafața construită.');
       return;
     }
 
+    const payload = { ...this.currentCladire, ...formData };
+
     if (this.isEditing && this.currentCladire.id) {
-      this.cladireService.updateCladire(this.gospodarieId, this.currentCladire.id, this.currentCladire as Cladire)
+      this.cladireService.updateCladire(this.gospodarieId, this.currentCladire.id, payload as Cladire)
         .subscribe({
           next: () => {
             this.loadCladiri();
@@ -92,7 +116,7 @@ export class CladireManagementComponent implements OnInit {
           error: (err) => console.error('Failed to update cladire', err)
         });
     } else {
-      this.cladireService.createCladire(this.gospodarieId, this.currentCladire as Cladire)
+      this.cladireService.createCladire(this.gospodarieId, payload as Cladire)
         .subscribe({
           next: () => {
             this.loadCladiri();

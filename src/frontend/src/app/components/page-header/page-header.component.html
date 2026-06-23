@@ -1,0 +1,13 @@
+<div class="page-header-row" style="margin-bottom: 20px;">
+  <div class="page-header" style="margin-bottom:0">
+    <h1 style="font-size:22px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--text-primary);margin-bottom:3px">
+      {{ title }}
+    </h1>
+    <p *ngIf="description" style="font-size:13px;color:var(--text-secondary)">
+      {{ description }}
+    </p>
+  </div>
+  <div class="header-actions">
+    <ng-content></ng-content>
+  </div>
+</div>

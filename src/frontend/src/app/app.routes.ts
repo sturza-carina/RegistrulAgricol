@@ -14,6 +14,7 @@ import { GospodarieFormComponent } from './pages/gospodarie-form/gospodarie-form
 import { GospodarieDetailsComponent } from './pages/gospodarie-details/gospodarie-details.component';
 import { TerenFormComponent } from './pages/teren-form/teren-form.component';
 import { TerenParceleComponent } from './pages/teren-parcele/teren-parcele.component';
+import { ContractManagementComponent } from './pages/contract-management/contract-management.component';
 import { AnimalListComponent } from './pages/animal-list/animal-list.component';
 import { AnimalIndividualFormComponent } from './pages/animal-individual-form/animal-individual-form.component';
 import { EfectivGrupFormComponent } from './pages/efectiv-grup-form/efectiv-grup-form.component';
@@ -44,6 +45,7 @@ export const routes: Routes = [
   { path: 'animale/grup/:id/snapshot', component: EfectivGrupFormComponent },
   { path: 'animale/individual/:id/istoric', component: AnimalTimelineComponent },
   { path: 'harta',          component: ParcelaMapComponent },
+  { path: 'contracte',      component: ContractManagementComponent },
   { path: '',               redirectTo: '/login', pathMatch: 'full' }
 ];
 

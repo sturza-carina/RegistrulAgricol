@@ -4,20 +4,53 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { HttpClient } from '@angular/common/http';
 
-import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { LayoutComponent } from '../../components/layout/layout.component';
+import { PageHeaderComponent } from '../../components/page-header/page-header.component';
 import { FormsModule } from '@angular/forms';
+import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
+import { GenericFormComponent } from '../../components/generic-form/generic-form.component';
+import { FormConfig } from '../../components/generic-form/generic-form.models';
 
 @Component({
   selector: 'app-tenant-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, FormsModule],
+  imports: [CommonModule, LayoutComponent, PageHeaderComponent, FormsModule, BreadcrumbsComponent, GenericFormComponent],
   templateUrl: './tenant-admin-dashboard.component.html',
 })
 export class TenantAdminDashboardComponent implements OnInit {
 
   user: any = null;
-
   users: any[] = [];
+  breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Panou de Control (Tenant Admin)', link: '/dashboard' }
+  ];
+
+  showViewModal: boolean = false;
+  viewingUser: any = null;
+  
+  showEditModal: boolean = false;
+  editingId: number | null = null;
+  errorMessage: string = '';
+  isSaving: boolean = false;
+
+  formInitialData: any = {};
+  formConfig: FormConfig = {
+    submitText: 'Salvează',
+    cancelText: 'Anulează',
+    sections: [
+      {
+        fields: [
+          { name: 'nume', label: 'Nume', type: 'text', required: false, width: 'full', disabled: true },
+          { name: 'username', label: 'Username', type: 'text', required: false, width: 'full', disabled: true },
+          { name: 'email', label: 'Email', type: 'email', required: false, width: 'full', disabled: true },
+          { name: 'role', label: 'Rol', type: 'select', required: true, width: 'full', options: [
+            { label: 'Admin', value: 'ROLE_ADMIN' },
+            { label: 'User', value: 'ROLE_USER' }
+          ] }
+        ]
+      }
+    ]
+  };
 
   constructor(
     private router: Router,
@@ -64,12 +97,6 @@ export class TenantAdminDashboardComponent implements OnInit {
     });
   }
 
-  showViewModal: boolean = false;
-  viewingUser: any = null;
-  showEditModal: boolean = false;
-  editingUser: any = null;
-  errorMessage: string = '';
-
   viewUser(user: any): void {
     this.viewingUser = { ...user };
     this.showViewModal = true;
@@ -81,24 +108,37 @@ export class TenantAdminDashboardComponent implements OnInit {
   }
 
   editUser(user: any): void {
-    this.editingUser = { ...user };
+    this.editingId = user.id;
+    this.formInitialData = { ...user };
     this.showEditModal = true;
     this.errorMessage = '';
   }
 
   closeEditModal(): void {
     this.showEditModal = false;
-    this.editingUser = null;
+    this.editingId = null;
   }
 
-  updateUser(): void {
-    if (!this.editingUser) return;
-    this.http.put(`/api/users/${this.editingUser.id}`, this.editingUser).subscribe({
+  updateUser(formData: any): void {
+    if (!this.editingId) return;
+    
+    // We only send the role to be updated, or merge with existing object
+    // But since other fields are disabled, they might not be in formData depending on reactive forms behavior
+    // To be safe we merge
+    const payload = {
+      ...this.formInitialData,
+      role: formData.role
+    };
+
+    this.isSaving = true;
+    this.http.put(`/api/users/${this.editingId}`, payload).subscribe({
       next: () => {
+        this.isSaving = false;
         this.loadUsers();
         this.closeEditModal();
       },
       error: (err) => {
+        this.isSaving = false;
         this.errorMessage = err.error?.message || 'A apărut o eroare la salvare.';
       }
     });
@@ -133,8 +173,5 @@ export class TenantAdminDashboardComponent implements OnInit {
     this.router.navigate(['/user-management'], { queryParams: { action: 'create' } });
   }
 
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
+
 }

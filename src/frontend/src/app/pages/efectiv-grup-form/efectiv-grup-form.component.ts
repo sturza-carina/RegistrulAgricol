@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
@@ -9,6 +9,9 @@ import { EfectivGrup, SpecieAnimal } from '../../models/animal.model';
 import { Gospodarie } from '../../models/gospodarie.model';
 import { Persoana } from '../../models/persoana.model';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
+import { GenericFormComponent } from '../../components/generic-form/generic-form.component';
+import { FormConfig, FormField } from '../../components/generic-form/generic-form.models';
 
 /**
  * Formular pentru înregistrarea efectivelor de grup (model snapshot ANSVSA).
@@ -23,25 +26,32 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 @Component({
   selector: 'app-efectiv-grup-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, SidebarComponent, RouterModule],
+  imports: [CommonModule, FormsModule, SidebarComponent, RouterModule, BreadcrumbsComponent, GenericFormComponent],
   templateUrl: './efectiv-grup-form.component.html'
 })
 export class EfectivGrupFormComponent implements OnInit {
-  /** Snapshot mode: adăugăm un snapshot nou la un efectiv existent */
+  @Input() isModal = false;
+  @Input() inputGospodarieId?: number;
+  @Input() editId?: number;
+  @Output() closeForm = new EventEmitter<void>();
+
   isSnapshotMode = false;
   referenceGrupId?: number;
-
-  // Form fields
-  specie: SpecieAnimal = SpecieAnimal.OVINE;
-  numarCapeteFamilii = 1;
-  dataInregistrare: string = new Date().toISOString().substring(0, 10);
-  detalii = '';
+  returnToGospodarieId?: number;
   gospodarieId?: number;
-  proprietarId?: number;
+
+  // Form config
+  formInitialData: any = {};
+  formConfig: FormConfig = {
+    submitText: 'Salvare Efectiv',
+    cancelText: 'Anulare',
+    sections: []
+  };
 
   speciesOptions = Object.values(SpecieAnimal);
   gospodariiList: Gospodarie[] = [];
   personsList: Persoana[] = [];
+  breadcrumbItems: BreadcrumbItem[] = [];
 
   constructor(
     private animalService: AnimalService,
@@ -54,37 +64,125 @@ export class EfectivGrupFormComponent implements OnInit {
   ngOnInit() {
     this.loadDropdowns();
 
-    this.route.paramMap.subscribe(params => {
-      const idParam = params.get('id');
-      if (idParam) {
-        // Route /animale/grup/:id/snapshot → snapshot mode
+    if (this.isModal) {
+      if (this.inputGospodarieId) {
+        this.gospodarieId = this.inputGospodarieId;
+        this.returnToGospodarieId = this.inputGospodarieId;
+      }
+      if (this.editId) {
         this.isSnapshotMode = true;
-        this.referenceGrupId = +idParam;
+        this.referenceGrupId = this.editId;
         this.loadReferenceGroup(this.referenceGrupId);
       }
-    });
+    } else {
+      this.route.paramMap.subscribe(params => {
+        const idParam = params.get('id');
+        if (idParam) {
+          this.isSnapshotMode = true;
+          this.referenceGrupId = +idParam;
+          this.loadReferenceGroup(this.referenceGrupId);
+        }
+      });
+    }
+
+    if (!this.isModal) {
+      this.route.queryParams.subscribe(params => {
+        if (params['gospodarieId']) {
+          this.returnToGospodarieId = +params['gospodarieId'];
+          this.gospodarieId = this.returnToGospodarieId;
+        }
+        this.updateBreadcrumbs();
+      });
+    }
+  }
+
+  updateBreadcrumbs() {
+    this.breadcrumbItems = [
+      { label: 'Gospodării', link: '/gospodarii' }
+    ];
+    if (this.returnToGospodarieId) {
+      this.breadcrumbItems = [
+        { label: 'Gospodării', link: '/gospodarii' },
+        { label: 'Detalii Gospodărie', link: `/gospodarii/${this.returnToGospodarieId}`, queryParams: { tab: 'ANIMALS' } }
+      ];
+    }
+    this.breadcrumbItems.push({ label: this.isSnapshotMode ? 'Actualizare Efectiv' : 'Adăugare Efectiv' });
   }
 
   loadDropdowns() {
     this.gospodarieService.getAllGospodarii().subscribe({
-      next: (data) => this.gospodariiList = data,
+      next: (data) => {
+        this.gospodariiList = data;
+        this.updateFormConfig();
+      },
       error: (err) => console.error('Error fetching households', err)
     });
     this.persoanaService.getAllPersons().subscribe({
-      next: (data) => this.personsList = data,
+      next: (data) => {
+        this.personsList = data;
+        this.updateFormConfig();
+      },
       error: (err) => console.error('Error fetching persons', err)
     });
   }
 
-  /** Preîncarcă gospodăria și proprietarul din snapshot-ul de referință */
+  updateFormConfig() {
+    this.formConfig.submitText = this.isSnapshotMode ? 'Salvează Snapshot' : 'Adăugare Efectiv';
+    const detailFields: FormField[] = [
+      { name: 'specie', label: 'Specie', type: 'select', required: true, width: 'half', options: this.speciesOptions.map(s => ({ label: s, value: s })) },
+      { name: 'numarCapeteFamilii', label: 'Număr Capete / Familii Albine', type: 'number', required: true, width: 'half', min: 1 }
+    ];
+
+    if (this.isSnapshotMode) {
+      detailFields[0].width = 'third';
+      detailFields[1].width = 'third';
+      detailFields.push({ name: 'dataInregistrare', label: 'Data Înregistrării', type: 'date', required: true, width: 'third' });
+    }
+
+    detailFields.push({ name: 'detalii', label: 'Detalii Suplimentare', type: 'textarea', required: false, width: 'full', placeholder: 'Ex: Tineret ovin etc.' });
+
+    this.formConfig.sections = [
+      {
+        title: 'Detalii Efectiv / Grup',
+        fields: detailFields
+      },
+      {
+        title: 'Asociere',
+        fields: [
+          { 
+            name: 'gospodarieId', label: 'Gospodărie Asociată', type: 'select', required: true, width: 'half', placeholder: '-- Selectează Gospodăria --',
+            options: this.gospodariiList.map(g => ({ label: `${g.codGospodarie} - ${g.adresa?.street || ''} ${g.adresa?.streetNumber || ''} (${g.adresa?.localitate || ''})`, value: g.id }))
+          },
+          { 
+            name: 'proprietarId', label: 'Proprietar (Persoană)', type: 'select', required: true, width: 'half', placeholder: '-- Selectează Proprietar --',
+            options: this.personsList.map(p => ({ label: this.getPersonDisplayName(p), value: p.id }))
+          }
+        ]
+      }
+    ];
+
+    if (!this.isSnapshotMode && Object.keys(this.formInitialData).length === 0) {
+      this.formInitialData = {
+        specie: SpecieAnimal.OVINE,
+        numarCapeteFamilii: 1,
+        gospodarieId: this.gospodarieId
+      };
+    }
+  }
+
   loadReferenceGroup(id: number) {
     this.animalService.getGroupById(id).subscribe({
       next: (g) => {
-        this.specie = g.specie;
-        this.numarCapeteFamilii = g.numarCapeteFamilii;
-        this.detalii = '';  // detalii noi pentru noul snapshot
+        this.formInitialData = {
+          specie: g.specie,
+          numarCapeteFamilii: g.numarCapeteFamilii,
+          dataInregistrare: new Date().toISOString().substring(0, 10),
+          detalii: '',
+          gospodarieId: g.gospodarie?.id,
+          proprietarId: g.proprietar?.id
+        };
         this.gospodarieId = g.gospodarie?.id;
-        this.proprietarId = g.proprietar?.id;
+        this.updateFormConfig();
       },
       error: (err) => console.error('Error loading reference group', err)
     });
@@ -100,25 +198,25 @@ export class EfectivGrupFormComponent implements OnInit {
     }
   }
 
-  save() {
-    if (!this.gospodarieId || !this.proprietarId) {
+  save(formData: any) {
+    if (!formData.gospodarieId || !formData.proprietarId) {
       alert('Vă rugăm să selectați Gospodăria și Proprietarul.');
       return;
     }
 
     const payload: EfectivGrup = {
-      specie: this.specie,
-      numarCapeteFamilii: this.numarCapeteFamilii,
-      dataInregistrare: this.dataInregistrare,
-      detalii: this.detalii || undefined,
-      gospodarieId: this.gospodarieId,
-      proprietarId: this.proprietarId
+      specie: formData.specie,
+      numarCapeteFamilii: formData.numarCapeteFamilii,
+      dataInregistrare: formData.dataInregistrare ? formData.dataInregistrare : new Date().toISOString().substring(0, 10),
+      detalii: formData.detalii || undefined,
+      gospodarieId: formData.gospodarieId,
+      proprietarId: formData.proprietarId
     } as any;
 
     if (this.isSnapshotMode && this.referenceGrupId) {
       // Adăugăm un snapshot nou la efectivul existent
       this.animalService.addGrupSnapshot(this.referenceGrupId, payload).subscribe({
-        next: () => this.router.navigate(['/animale']),
+        next: () => this.navigateBack(),
         error: (err) => {
           alert('Eroare la adăugarea snapshot-ului: ' + (err.error?.message || err.message));
         }
@@ -126,7 +224,7 @@ export class EfectivGrupFormComponent implements OnInit {
     } else {
       // Creăm un efectiv nou (primul snapshot)
       this.animalService.createGroup(payload).subscribe({
-        next: () => this.router.navigate(['/animale']),
+        next: () => this.navigateBack(),
         error: (err) => {
           alert('Eroare la înregistrarea efectivului: ' + (err.error?.message || err.message));
         }
@@ -135,6 +233,16 @@ export class EfectivGrupFormComponent implements OnInit {
   }
 
   cancel() {
-    this.router.navigate(['/animale']);
+    this.navigateBack();
+  }
+
+  private navigateBack() {
+    if (this.isModal) {
+      this.closeForm.emit();
+    } else if (this.returnToGospodarieId) {
+      this.router.navigate(['/gospodarii', this.returnToGospodarieId], { queryParams: { tab: 'ANIMALS' } });
+    } else {
+      this.router.navigate(['/animale']);
+    }
   }
 }

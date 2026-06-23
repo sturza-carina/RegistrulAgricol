@@ -8,49 +8,47 @@ import { takeUntil } from 'rxjs/operators';
 import { GospodarieService } from '../../services/gospodarie.service';
 import { UatContextService } from '../../services/uat-context.service';
 import { Gospodarie, Uat } from '../../models/gospodarie.model';
-import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { LayoutComponent } from '../../components/layout/layout.component';
+import { PageHeaderComponent } from '../../components/page-header/page-header.component';
 import { AuthService } from '../../services/auth.service';
+
+import { GenericTableComponent, TableColumn, TableFilter, TableAction } from '../../components/generic-table/generic-table.component';
+import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 
 @Component({
   selector: 'app-gospodarie-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, SidebarComponent, FormsModule],
-  templateUrl: './gospodarie-list.component.html',
-  styleUrls: ['./gospodarie-list.component.css']
+  imports: [CommonModule, RouterLink, LayoutComponent, PageHeaderComponent, FormsModule, GenericTableComponent, BreadcrumbsComponent],
+  templateUrl: './gospodarie-list.component.html'
 })
 export class GospodarieListComponent implements OnInit, OnDestroy {
   gospodarii: Gospodarie[] = [];
-  filteredGospodarii: Gospodarie[] = [];
   user: any = null;
-  searchQuery = '';
-  filterTipGospodarie: string = '';
-  filterStatus: string = '';
   selectedGospodarie: Gospodarie | null = null;
-  suggestions: string[] = [];
-  showSuggestions = false;
-
-  currentPage = 1;
-  itemsPerPage = 5;
-
-  get paginatedItems() {
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    return this.filteredGospodarii.slice(startIndex, startIndex + this.itemsPerPage);
-  }
-
-  get totalPages() {
-    return Math.ceil(this.filteredGospodarii.length / this.itemsPerPage) || 1;
-  }
-
-  nextPage() {
-    if (this.currentPage < this.totalPages) this.currentPage++;
-  }
-
-  prevPage() {
-    if (this.currentPage > 1) this.currentPage--;
-  }
-
-  // UAT activ curent — folosit pentru banner si filtrare
   activeUat: Uat | null = null;
+
+  breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Gospodării', link: '/gospodarii' }
+  ];
+
+  columns: TableColumn[] = [
+    { field: 'codGospodarie', header: 'Cod Gospodărie' },
+    { field: 'tipGospodarie', header: 'Tip', type: 'badge', badgeClasses: { 'INDIVIDUALA': 'viewer', 'COLECTIVA': 'viewer', 'ASOCIATIE': 'viewer' } },
+    { field: 'adresa.localitate', header: 'Localitate / Adresă', format: (val, row) => val || row.uat?.denumire || '-', subField: 'adresa.street' },
+    { field: 'activa', header: 'Status', type: 'badge', format: val => val ? 'Activă' : 'Inactivă', badgeClasses: { 'true': 'admin', 'false': 'viewer' } }
+  ];
+
+  filters: TableFilter[] = [
+    { field: 'search', label: 'Caută după adresă sau cod...', type: 'search', searchFields: ['codGospodarie', 'adresa.street', 'adresa.localitate', 'uat.denumire'] },
+    { field: 'tipGospodarie', label: 'Tip Gospodărie', type: 'select', options: [{ label: 'Individuală', value: 'INDIVIDUALA' }, { label: 'Colectivă', value: 'COLECTIVA' }, { label: 'Asociație', value: 'ASOCIATIE' }] },
+    { field: 'activa', label: 'Status', type: 'select', options: [{ label: 'Activă', value: true }, { label: 'Inactivă', value: false }] }
+  ];
+
+  actions: TableAction[] = [
+    { icon: 'view', tooltip: 'Detalii', action: (row) => this.viewDetails(row.id) },
+    { icon: 'edit', tooltip: 'Editare', action: (row) => this.editGospodarie(row.id) },
+    { icon: 'delete', tooltip: 'Șterge', action: (row, event) => this.deleteRow(row.id, event) }
+  ];
 
   private destroy$ = new Subject<void>();
   constructor(
@@ -95,69 +93,13 @@ export class GospodarieListComponent implements OnInit, OnDestroy {
 
     this.gospodarieService.getAllGospodarii(uatCode).subscribe({
       next: (data) => {
-        this.gospodarii = data;
-        this.applyFilters();
+        this.gospodarii = data.sort((a, b) => (b.id || 0) - (a.id || 0));
       },
       error: (err) => console.error(err)
     });
   }
 
-  applyFilters(): void {
-    const q = this.searchQuery.toLowerCase();
-    this.filteredGospodarii = this.gospodarii.filter(g => {
-      const matchSearch =
-        g.codGospodarie.toLowerCase().includes(q) ||
-        (g.adresa.street && g.adresa.street.toLowerCase().includes(q));
-      const matchType = this.filterTipGospodarie
-        ? g.tipGospodarie === this.filterTipGospodarie
-        : true;
-      const matchStatus =
-        !this.filterStatus ||
-        (this.filterStatus === 'Activ' && g.activa) ||
-        (this.filterStatus === 'Inactiv' && !g.activa);
-      return matchSearch && matchType && matchStatus;
-    });
 
-    if (
-      this.selectedGospodarie &&
-      !this.filteredGospodarii.find(g => g.id === this.selectedGospodarie?.id)
-    ) {
-      this.selectedGospodarie = null;
-    }
-    this.currentPage = 1;
-  }
-
-  updateSuggestions(): void {
-    const term = this.searchQuery.toLowerCase().trim();
-    if (!term) {
-      this.suggestions = [];
-      this.showSuggestions = false;
-      return;
-    }
-    const strazi = this.gospodarii
-      .map(g => g.adresa.street)
-      .filter((s): s is string => !!s && s.toLowerCase().startsWith(term));
-    const combined = [...new Set([...strazi])];
-    this.suggestions = combined.slice(0, 8);
-    this.showSuggestions = this.suggestions.length > 0;
-  }
-
-  onSearchInput(event: any): void {
-    this.searchQuery = event.target.value;
-    this.applyFilters();
-    this.updateSuggestions();
-  }
-
-  selectSuggestion(suggestion: string): void {
-    this.searchQuery = suggestion;
-    this.showSuggestions = false;
-    this.suggestions = [];
-    this.applyFilters();
-  }
-
-  hideSuggestions(): void {
-    setTimeout(() => { this.showSuggestions = false; }, 150);
-  }
 
   goToCreate() {
     this.router.navigate(['/gospodarii/new']);
@@ -228,10 +170,7 @@ export class GospodarieListComponent implements OnInit, OnDestroy {
     }
   }
 
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
+
 
   ngOnDestroy(): void {
     this.destroy$.next();

@@ -1,134 +1,69 @@
-<div class="app-shell">
-  <app-sidebar></app-sidebar>
-
-  <main class="main-content">
-    <header class="topbar">
-      <div class="topbar-spacer"></div>
-      <div class="user-chip">
-        <div class="user-info">
-          <div class="user-name">Operator Local</div>
-        </div>
-        <div class="avatar">O</div>
+<ng-container *ngIf="!isModal">
+  <div class="app-shell">
+    <app-sidebar></app-sidebar>
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-title">Registru Agricol - Animale</div>
+        <div class="topbar-spacer"></div>
+      </header>
+      <div class="page-content">
+        <app-breadcrumbs [items]="breadcrumbItems"></app-breadcrumbs>
+        <ng-container *ngTemplateOutlet="formContent"></ng-container>
       </div>
-    </header>
+    </main>
+  </div>
+</ng-container>
 
-    <div class="page-content" style="max-width: 800px; margin: 0 auto;">
+<ng-container *ngIf="isModal">
+  <div class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 9999; overflow-y: auto; padding: 20px;">
+    <div class="modal-content card" style="width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; background: var(--card-bg); padding: 30px; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); position: relative;">
       
-      <div class="breadcrumbs" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-        <a routerLink="/animale" style="color: var(--text-secondary); text-decoration: none;">Animale</a>
-        <span>/</span>
-        <span style="color: var(--text-primary); font-weight: 500;">
-          {{ isEditMode ? 'Editare Animal' : 'Adăugare Animal Individual' }}
-        </span>
-      </div>
-
-      <div style="margin-bottom: 24px;">
-        <h1 style="font-size:24px; font-weight:700; font-family:'DM Serif Display',serif; color:var(--text-primary); margin-bottom:4px">
-          {{ isEditMode ? 'Editare Animal' : 'Adăugare Animal Individual' }}
-        </h1>
-        <p style="font-size:13px; color:var(--text-secondary)">
-          Introduceți datele de identificare pentru animalul individual.
-        </p>
-      </div>
-
-      <form (ngSubmit)="save()" #animalForm="ngForm" class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 20px;">
-        
-        <!-- Gospodarie Selector -->
-        <div class="form-group">
-          <label for="gospodarie">Gospodărie asociată *</label>
-          <div class="select-wrapper">
-            <select id="gospodarie" [(ngModel)]="gospodarieId" name="gospodarieId" required>
-              <option [ngValue]="undefined" disabled>Selectați Gospodăria</option>
-              <option *ngFor="let g of gospodariiList" [ngValue]="g.id">
-                {{ g.codGospodarie }} - {{ g.adresa.street || '' }} {{ g.adresa.streetNumber || '' }} ({{ g.adresa.localitate || '' }})
-              </option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Proprietar Selector -->
-        <div class="form-group">
-          <label for="proprietar">Proprietar / Cap Gospodărie *</label>
-          <div class="select-wrapper">
-            <select id="proprietar" [(ngModel)]="proprietarId" name="proprietarId" required>
-              <option [ngValue]="undefined" disabled>Selectați Proprietarul</option>
-              <option *ngFor="let p of personsList" [ngValue]="p.id">
-                {{ getPersonDisplayName(p) }}
-              </option>
-            </select>
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-          <!-- Numar Crotal -->
-          <div class="form-group">
-            <label for="numarCrotal">Număr Crotal (Tag)</label>
-            <input type="text" id="numarCrotal" [(ngModel)]="numarCrotal" name="numarCrotal" placeholder="Ex: RO123456789">
-          </div>
-
-          <!-- Specie -->
-          <div class="form-group">
-            <label for="specie">Specie *</label>
-            <div class="select-wrapper">
-              <select id="specie" [(ngModel)]="specie" name="specie" required>
-                <option *ngFor="let s of speciesOptions" [value]="s">{{ s }}</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-          <!-- Rasa -->
-          <div class="form-group">
-            <label for="rasa">Rasă</label>
-            <input type="text" id="rasa" [(ngModel)]="rasa" name="rasa" placeholder="Ex: Bălțată Românească">
-          </div>
-
-          <!-- Sex -->
-          <div class="form-group">
-            <label for="sex">Sex *</label>
-            <div class="select-wrapper">
-              <select id="sex" [(ngModel)]="sex" name="sex" required>
-                <option *ngFor="let sexOpt of sexOptions" [value]="sexOpt">{{ sexOpt === 'MASCULIN' ? 'Mascul' : 'Femelă' }}</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-          <!-- Data Nastere -->
-          <div class="form-group">
-            <label for="dataNastere">Data Naștere</label>
-            <input type="date" id="dataNastere" [(ngModel)]="dataNastere" name="dataNastere">
-          </div>
-
-          <!-- Greutate Kg -->
-          <div class="form-group">
-            <label for="greutateKg">Greutate (kg)</label>
-            <input type="number" id="greutateKg" [(ngModel)]="greutateKg" name="greutateKg" placeholder="Ex: 150" min="0" step="0.1">
-          </div>
-        </div>
-
-        <!-- Nota: stareActiva NU se poate seta manual.
-             Starea animalului se controlează EXCLUSIV prin evenimentele din timeline
-             (Naștere, Vânzare, Moarte etc.) conform cerințelor ANSVSA. -->
-        <div class="stare-info-notice" *ngIf="isEditMode">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
-          </svg>
-          Starea animalului (activ/inactiv) se modifică exclusiv prin adăugarea de evenimente
-          în <a [routerLink]="['/animale/individual', animalId, 'istoric']" class="link-to-timeline">istoricul mișcărilor</a>.
-        </div>
-
-        <!-- Action Buttons -->
-        <div style="display: flex; gap: 12px; margin-top: 10px; justify-content: flex-end;">
-          <button type="button" class="btn-secondary" (click)="cancel()">Anulează</button>
-          <button type="submit" class="btn-primary" [disabled]="!animalForm.valid">
-            {{ isEditMode ? 'Salvează modificările' : 'Adaugă animal' }}
-          </button>
-        </div>
-      </form>
+      <button (click)="cancel()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 26px; line-height: 1; cursor: pointer; color: var(--text-muted); transition: color 0.2s;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-muted)'" title="Închide">&times;</button>
       
+      <ng-container *ngTemplateOutlet="formContent"></ng-container>
     </div>
-  </main>
-</div>
+  </div>
+</ng-container>
+
+<ng-template #formContent>
+  <div [ngClass]="{'page-header-row': !isModal}" [style]="!isModal ? 'max-width: 800px; margin: 0 auto 20px;' : 'margin-bottom: 24px;'">
+    <div style="display: flex; align-items: center; gap: 15px;">
+      <button *ngIf="!isModal" class="back-btn" (click)="cancel()" style="background:none; border:none; color:var(--text-secondary); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:8px; border-radius:50%; transition:background 0.2s;" onmouseover="this.style.background='var(--body-bg)'" onmouseout="this.style.background='none'" title="Înapoi">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </button>
+      <h2 *ngIf="isModal" style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin: 0; font-family: 'DM Serif Display', serif;">
+        {{ isEditMode ? 'Editare Animal Individual' : 'Adăugare Animal Individual' }}
+      </h2>
+      <h1 *ngIf="!isModal" style="font-size:24px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--text-primary);margin:0;">
+        {{ isEditMode ? 'Editare Animal Individual' : 'Adăugare Animal Individual' }}
+      </h1>
+    </div>
+    <p *ngIf="!isModal" style="font-size:13px; color:var(--text-secondary); margin-top: 4px;">
+      Introduceți datele de identificare pentru animalul individual.
+    </p>
+  </div>
+
+  <div [ngClass]="{'card': !isModal}" [style]="!isModal ? 'padding: 30px; max-width: 800px; margin: 0 auto;' : 'padding: 0;'">
+    <!-- Notice for editMode stareActiva -->
+    <div class="stare-info-notice" *ngIf="isEditMode" style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px; background: var(--primary-light); color: var(--primary); padding: 12px; border-radius: 8px; font-size: 13px; border: 1px solid var(--primary-light);">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;">
+        <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+      </svg>
+      <span>
+        Starea animalului (activ/inactiv) se modifică exclusiv prin adăugarea de evenimente în 
+        <a [routerLink]="['/animale/individual', animalId, 'istoric']" class="link-to-timeline" style="color: var(--primary); font-weight: 600; text-decoration: underline;">istoricul mișcărilor</a>.
+      </span>
+    </div>
+
+    <app-generic-form 
+      *ngIf="formConfig.sections.length > 0"
+      [config]="formConfig" 
+      [initialData]="formInitialData"
+      (formSubmit)="save($event)"
+      (formCancel)="cancel()">
+    </app-generic-form>
+  </div>
+</ng-template>

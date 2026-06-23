@@ -1,0 +1,18 @@
+<div class="app-shell">
+  <app-sidebar [activeGospodarieId]="activeGospodarieId" [activeTab]="activeTab"></app-sidebar>
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-spacer"></div>
+      <div class="user-chip" *ngIf="user">
+        <div class="user-info">
+          <div class="user-name">{{ user.username || 'Admin User' }}</div>
+        </div>
+        <div class="avatar">{{ (user.username?.charAt(0) || 'A') | uppercase }}</div>
+      </div>
+      <button class="logout-btn" (click)="logout()">Deconectare</button>
+    </header>
+    <div class="page-content">
+      <ng-content></ng-content>
+    </div>
+  </main>
+</div>

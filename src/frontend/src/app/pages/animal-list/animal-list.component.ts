@@ -5,7 +5,12 @@ import { Router, RouterModule } from '@angular/router';
 import { AnimalService } from '../../services/animal.service';
 import { AnimalIndividual, EfectivGrup } from '../../models/animal.model';
 import { AuthService } from '../../services/auth.service';
-import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { LayoutComponent } from '../../components/layout/layout.component';
+import { PageHeaderComponent } from '../../components/page-header/page-header.component';
+import { GenericTableComponent, TableColumn, TableFilter, TableAction } from '../../components/generic-table/generic-table.component';
+import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
+import { AnimalIndividualFormComponent } from '../animal-individual-form/animal-individual-form.component';
+import { EfectivGrupFormComponent } from '../efectiv-grup-form/efectiv-grup-form.component';
 import { UatContextService } from '../../services/uat-context.service';
 import { Uat } from '../../models/gospodarie.model';
 import { Subject } from 'rxjs';
@@ -14,9 +19,8 @@ import { takeUntil } from 'rxjs/operators';
 @Component({
   selector: 'app-animal-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SidebarComponent],
-  templateUrl: './animal-list.component.html',
-  styleUrls: ['./animal-list.component.css']
+  imports: [CommonModule, RouterModule, FormsModule, LayoutComponent, PageHeaderComponent, GenericTableComponent, BreadcrumbsComponent, AnimalIndividualFormComponent, EfectivGrupFormComponent],
+  templateUrl: './animal-list.component.html'
 })
 export class AnimalListComponent implements OnInit, OnChanges, OnDestroy {
   activeTab: 'individual' | 'grup' = 'individual';
@@ -25,8 +29,59 @@ export class AnimalListComponent implements OnInit, OnChanges, OnDestroy {
   user: any;
   activeUat: Uat | null = null;
   private destroy$ = new Subject<void>();
+  breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Animale', link: '/animale' }
+  ];
 
   @Input() gospodarieId?: number;
+
+  showIndividualModal = false;
+  editIndividualId?: number;
+
+  showGroupModal = false;
+  editGroupId?: number;
+
+  individualsColumns: TableColumn[] = [
+    { field: 'numarCrotal', header: 'Număr Crotal' },
+    { field: 'specie', header: 'Specie', type: 'badge', badgeClasses: { 'BOVINE': 'registrar', 'OVINE': 'registrar', 'PORCINE': 'registrar' } },
+    { field: 'rasa', header: 'Rasă', format: val => val || '-' },
+    { field: 'sex', header: 'Sex', format: val => val === 'MASCULIN' ? 'Mascul' : 'Femelă' },
+    { field: 'dataNastere', header: 'Data Naștere', type: 'date' },
+    { field: 'greutateKg', header: 'Greutate (kg)', format: val => val ? val + ' kg' : '-' },
+    { field: 'proprietar', header: 'Proprietar', format: val => this.getOwnerName(val) },
+    { field: 'gospodarie.codGospodarie', header: 'Gospodărie', format: (val, row) => val || 'Detalii' },
+    { field: 'stareActiva', header: 'Stare', type: 'badge', format: val => val ? 'Activ' : 'Inactiv', badgeClasses: { 'true': 'activ', 'false': 'inactiv' } }
+  ];
+
+  individualsFilters: TableFilter[] = [
+    { field: 'search', label: 'Caută după crotal...', type: 'search', searchFields: ['numarCrotal'] },
+    { field: 'specie', label: 'Specie', type: 'select', options: [{label: 'Bovine', value: 'BOVINE'}, {label: 'Ovine', value: 'OVINE'}, {label: 'Porcine', value: 'PORCINE'}, {label: 'Păsări', value: 'PASARI'}] },
+    { field: 'stareActiva', label: 'Stare', type: 'select', options: [{label: 'Activ', value: true}, {label: 'Inactiv', value: false}] }
+  ];
+
+  individualsActions: TableAction[] = [
+    { icon: 'history', tooltip: 'Istoric mișcări', action: (row) => this.router.navigate(['/animale/individual', row.id, 'istoric']) },
+    { icon: 'edit', tooltip: 'Editare', action: (row) => this.openEditIndividual(row.id) },
+    { icon: 'delete', tooltip: 'Șterge', action: (row) => this.deleteIndividual(row.id) }
+  ];
+
+  groupsColumns: TableColumn[] = [
+    { field: 'id', header: 'ID', format: val => '#' + val },
+    { field: 'specie', header: 'Specie', type: 'badge', badgeClasses: { 'BOVINE': 'admin', 'OVINE': 'admin', 'PORCINE': 'admin' } },
+    { field: 'numarCapeteFamilii', header: 'Număr Capete / Familii', format: val => val + ' capete' },
+    { field: 'proprietar', header: 'Proprietar', format: val => this.getOwnerName(val) },
+    { field: 'gospodarie.codGospodarie', header: 'Gospodărie', format: (val, row) => val || 'Detalii' },
+    { field: 'detalii', header: 'Detalii', format: val => val || '-' }
+  ];
+
+  groupsFilters: TableFilter[] = [
+    { field: 'specie', label: 'Specie', type: 'select', options: [{label: 'Bovine', value: 'BOVINE'}, {label: 'Ovine', value: 'OVINE'}, {label: 'Porcine', value: 'PORCINE'}, {label: 'Păsări', value: 'PASARI'}, {label: 'Albine', value: 'ALBINE'}] }
+  ];
+
+  groupsActions: TableAction[] = [
+    { icon: 'edit', tooltip: 'Actualizare efectiv (snapshot nou)', action: (row) => this.openEditGroup(row.id) },
+    { icon: 'delete', tooltip: 'Șterge', action: (row) => this.deleteGroup(row.id) }
+  ];
 
   constructor(
     private animalService: AnimalService,
@@ -54,12 +109,13 @@ export class AnimalListComponent implements OnInit, OnChanges, OnDestroy {
   loadData() {
     this.animalService.getAllIndividuals().subscribe({
       next: (data) => {
+        let sorted = data.sort((a, b) => (b.id || 0) - (a.id || 0));
         if (this.gospodarieId) {
-          this.individuals = data.filter(a => a.gospodarie?.id === this.gospodarieId);
+          this.individuals = sorted.filter(a => a.gospodarie?.id === this.gospodarieId);
         } else if (this.activeUat) {
-          this.individuals = data.filter(a => a.gospodarie?.uat?.codSiruta === this.activeUat?.codSiruta);
+          this.individuals = sorted.filter(a => a.gospodarie?.uat?.codSiruta === this.activeUat?.codSiruta);
         } else {
-          this.individuals = data;
+          this.individuals = sorted;
         }
       },
       error: (err) => console.error('Error fetching individuals', err)
@@ -67,12 +123,13 @@ export class AnimalListComponent implements OnInit, OnChanges, OnDestroy {
 
     this.animalService.getAllGroups().subscribe({
       next: (data) => {
+        let sorted = data.sort((a, b) => (b.id || 0) - (a.id || 0));
         if (this.gospodarieId) {
-          this.groups = data.filter(g => g.gospodarie?.id === this.gospodarieId);
+          this.groups = sorted.filter(g => g.gospodarie?.id === this.gospodarieId);
         } else if (this.activeUat) {
-          this.groups = data.filter(g => g.gospodarie?.uat?.codSiruta === this.activeUat?.codSiruta);
+          this.groups = sorted.filter(g => g.gospodarie?.uat?.codSiruta === this.activeUat?.codSiruta);
         } else {
-          this.groups = data;
+          this.groups = sorted;
         }
       },
       error: (err) => console.error('Error fetching groups', err)
@@ -114,9 +171,34 @@ export class AnimalListComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
+  goToAddIndividual() {
+    this.editIndividualId = undefined;
+    this.showIndividualModal = true;
+  }
+
+  goToAddGroup() {
+    this.editGroupId = undefined;
+    this.showGroupModal = true;
+  }
+
+  openEditIndividual(id: number) {
+    this.editIndividualId = id;
+    this.showIndividualModal = true;
+  }
+
+  openEditGroup(id: number) {
+    this.editGroupId = id;
+    this.showGroupModal = true;
+  }
+
+  closeIndividualModal() {
+    this.showIndividualModal = false;
+    this.loadData();
+  }
+
+  closeGroupModal() {
+    this.showGroupModal = false;
+    this.loadData();
   }
 
   ngOnDestroy() {

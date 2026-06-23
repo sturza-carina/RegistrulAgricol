@@ -8,12 +8,7 @@
 
     <div class="page-content">
 
-      <!-- Breadcrumb -->
-      <div class="breadcrumbs">
-        <span class="breadcrumb-link" (click)="goBack()">Animale</span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-        <span>Istoric Animal</span>
-      </div>
+      <app-breadcrumbs [items]="breadcrumbItems"></app-breadcrumbs>
 
       <!-- Header -->
       <div class="page-header-row">

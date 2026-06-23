@@ -17,6 +17,7 @@ export interface Uat {
   judet: string;
   tipUat: string;
   isActive: boolean;
+  tenantId?: string;
 }
 
 export interface Gospodarie {
