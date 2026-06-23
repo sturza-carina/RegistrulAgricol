@@ -5,34 +5,40 @@
     <header class="topbar">
       <div class="topbar-spacer"></div>
       <div class="user-chip">
-        <div class="user-info">
-          <div class="user-name">Operator Local</div>
-        </div>
+        <div class="user-info"><div class="user-name">Operator Local</div></div>
         <div class="avatar">O</div>
       </div>
     </header>
 
     <div class="page-content" style="max-width: 800px; margin: 0 auto;">
-      
+
       <div class="breadcrumbs" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
         <a routerLink="/animale" style="color: var(--text-secondary); text-decoration: none;">Animale</a>
         <span>/</span>
         <span style="color: var(--text-primary); font-weight: 500;">
-          {{ isEditMode ? 'Editare Efectiv Grup' : 'Adăugare Efectiv Grup (Flock)' }}
+          {{ isSnapshotMode ? 'Actualizare Efectiv (Snapshot)' : 'Adăugare Efectiv de Grup' }}
         </span>
       </div>
 
       <div style="margin-bottom: 24px;">
         <h1 style="font-size:24px; font-weight:700; font-family:'DM Serif Display',serif; color:var(--text-primary); margin-bottom:4px">
-          {{ isEditMode ? 'Editare Efectiv Grup' : 'Adăugare Efectiv Grup (Flock)' }}
+          {{ isSnapshotMode ? 'Actualizare Efectiv de Grup' : 'Adăugare Efectiv de Grup (Flock)' }}
         </h1>
-        <p style="font-size:13px; color:var(--text-secondary)">
+        <p style="font-size:13px; color:var(--text-secondary)" *ngIf="!isSnapshotMode">
           Introduceți datele pentru efectivul de animale crescute în grup/flock/familii.
         </p>
+        <!-- Info banner for snapshot mode -->
+        <div class="snapshot-info-box" *ngIf="isSnapshotMode">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+          </svg>
+          Modelul este <strong>append-only (ANSVSA)</strong> — înregistrarea anterioară rămâne în istoricul efectivului.
+          Introduceți noul număr de capete și data actualizării.
+        </div>
       </div>
 
       <form (ngSubmit)="save()" #grupForm="ngForm" class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 20px;">
-        
+
         <!-- Gospodarie Selector -->
         <div class="form-group">
           <label for="gospodarie">Gospodărie asociată *</label>
@@ -40,7 +46,7 @@
             <select id="gospodarie" [(ngModel)]="gospodarieId" name="gospodarieId" required>
               <option [ngValue]="undefined" disabled>Selectați Gospodăria</option>
               <option *ngFor="let g of gospodariiList" [ngValue]="g.id">
-                {{ g.codGospodarie }} - {{ g.adresa.street || '' }} {{ g.adresa.streetNumber || '' }} ({{ g.adresa.localitate || '' }})
+                {{ g.codGospodarie }} - {{ g.adresa?.street || '' }} {{ g.adresa?.streetNumber || '' }} ({{ g.adresa?.localitate || '' }})
               </option>
             </select>
           </div>
@@ -59,7 +65,7 @@
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
           <!-- Specie -->
           <div class="form-group">
             <label for="specie">Specie *</label>
@@ -73,25 +79,35 @@
           <!-- Numar Capete / Familii -->
           <div class="form-group">
             <label for="numarCapeteFamilii">Număr Capete / Familii *</label>
-            <input type="number" id="numarCapeteFamilii" [(ngModel)]="numarCapeteFamilii" name="numarCapeteFamilii" placeholder="Ex: 50" min="1" required>
+            <input type="number" id="numarCapeteFamilii" [(ngModel)]="numarCapeteFamilii"
+                   name="numarCapeteFamilii" placeholder="Ex: 50" min="1" required>
+          </div>
+
+          <!-- Data inregistrare (ANSVSA obligatoriu) -->
+          <div class="form-group">
+            <label for="dataInregistrare">Data Înregistrării *</label>
+            <input type="date" id="dataInregistrare" [(ngModel)]="dataInregistrare"
+                   name="dataInregistrare" required>
           </div>
         </div>
 
         <!-- Detalii -->
         <div class="form-group">
           <label for="detalii">Detalii suplimentare</label>
-          <textarea id="detalii" [(ngModel)]="detalii" name="detalii" placeholder="Detalii referitoare la grup (vârstă medie, scopul creșterii etc.)" rows="3"></textarea>
+          <textarea id="detalii" [(ngModel)]="detalii" name="detalii"
+            placeholder="Detalii referitoare la grup (vârstă medie, scopul creșterii, motiv modificare efectiv etc.)"
+            rows="3"></textarea>
         </div>
 
         <!-- Action Buttons -->
         <div style="display: flex; gap: 12px; margin-top: 10px; justify-content: flex-end;">
           <button type="button" class="btn-secondary" (click)="cancel()">Anulează</button>
           <button type="submit" class="btn-primary" [disabled]="!grupForm.valid">
-            {{ isEditMode ? 'Salvează modificările' : 'Adaugă grup' }}
+            {{ isSnapshotMode ? 'Salvează Snapshot' : 'Adaugă efectiv' }}
           </button>
         </div>
       </form>
-      
+
     </div>
   </main>
 </div>

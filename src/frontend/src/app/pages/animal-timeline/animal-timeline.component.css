@@ -288,3 +288,81 @@
 .btn-secondary:hover { background: var(--card-border); }
 .btn-secondary:disabled,
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ===== Transfer Button ===== */
+.btn-transfer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.btn-transfer:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+.btn-transfer:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* ===== Transfer Modal ===== */
+.transfer-modal {
+  max-width: 560px;
+}
+
+.transfer-info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #1e40af;
+  line-height: 1.5;
+}
+.transfer-info-box svg { flex-shrink: 0; margin-top: 1px; color: #3b82f6; }
+
+.transfer-success-banner {
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  color: #166534;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ===== Danger Button ===== */
+.btn-danger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-danger:hover:not(:disabled) { opacity: 0.88; }
+.btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ===== Transfer Badge on Event Card ===== */
+.ev-transfer-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #f59e0b;
+  font-weight: 600;
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+

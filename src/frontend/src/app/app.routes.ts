@@ -40,7 +40,8 @@ export const routes: Routes = [
   { path: 'animale/individual/new', component: AnimalIndividualFormComponent },
   { path: 'animale/individual/edit/:id', component: AnimalIndividualFormComponent },
   { path: 'animale/grup/new', component: EfectivGrupFormComponent },
-  { path: 'animale/grup/edit/:id', component: EfectivGrupFormComponent },
+  // Snapshot route: adaugă un rând nou la efectivul existent (model append-only ANSVSA)
+  { path: 'animale/grup/:id/snapshot', component: EfectivGrupFormComponent },
   { path: 'animale/individual/:id/istoric', component: AnimalTimelineComponent },
   { path: 'harta',          component: ParcelaMapComponent },
   { path: '',               redirectTo: '/login', pathMatch: 'full' }

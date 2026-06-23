@@ -10,6 +10,16 @@ import { Gospodarie } from '../../models/gospodarie.model';
 import { Persoana } from '../../models/persoana.model';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 
+/**
+ * Formular pentru înregistrarea efectivelor de grup (model snapshot ANSVSA).
+ *
+ * Semantică:
+ *  - Route /animale/grup/new → creează un snapshot nou de efectiv
+ *  - Route /animale/grup/:id/snapshot → adaugă un snapshot actualizat
+ *    (numărul de capete s-a modificat; rândul vechi rămâne în istoric)
+ *
+ * Modul "editare" clasică NU mai există — modelul este append-only.
+ */
 @Component({
   selector: 'app-efectiv-grup-form',
   standalone: true,
@@ -17,20 +27,19 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
   templateUrl: './efectiv-grup-form.component.html'
 })
 export class EfectivGrupFormComponent implements OnInit {
-  isEditMode = false;
-  grupId?: number;
+  /** Snapshot mode: adăugăm un snapshot nou la un efectiv existent */
+  isSnapshotMode = false;
+  referenceGrupId?: number;
 
   // Form fields
   specie: SpecieAnimal = SpecieAnimal.OVINE;
   numarCapeteFamilii = 1;
+  dataInregistrare: string = new Date().toISOString().substring(0, 10);
   detalii = '';
   gospodarieId?: number;
   proprietarId?: number;
 
-  // Enum Options
   speciesOptions = Object.values(SpecieAnimal);
-
-  // Dropdown lists
   gospodariiList: Gospodarie[] = [];
   personsList: Persoana[] = [];
 
@@ -48,9 +57,10 @@ export class EfectivGrupFormComponent implements OnInit {
     this.route.paramMap.subscribe(params => {
       const idParam = params.get('id');
       if (idParam) {
-        this.isEditMode = true;
-        this.grupId = +idParam;
-        this.loadGroup(this.grupId);
+        // Route /animale/grup/:id/snapshot → snapshot mode
+        this.isSnapshotMode = true;
+        this.referenceGrupId = +idParam;
+        this.loadReferenceGroup(this.referenceGrupId);
       }
     });
   }
@@ -60,23 +70,23 @@ export class EfectivGrupFormComponent implements OnInit {
       next: (data) => this.gospodariiList = data,
       error: (err) => console.error('Error fetching households', err)
     });
-
     this.persoanaService.getAllPersons().subscribe({
       next: (data) => this.personsList = data,
       error: (err) => console.error('Error fetching persons', err)
     });
   }
 
-  loadGroup(id: number) {
+  /** Preîncarcă gospodăria și proprietarul din snapshot-ul de referință */
+  loadReferenceGroup(id: number) {
     this.animalService.getGroupById(id).subscribe({
       next: (g) => {
         this.specie = g.specie;
         this.numarCapeteFamilii = g.numarCapeteFamilii;
-        this.detalii = g.detalii || '';
+        this.detalii = '';  // detalii noi pentru noul snapshot
         this.gospodarieId = g.gospodarie?.id;
         this.proprietarId = g.proprietar?.id;
       },
-      error: (err) => console.error('Error loading group flock', err)
+      error: (err) => console.error('Error loading reference group', err)
     });
   }
 
@@ -97,26 +107,28 @@ export class EfectivGrupFormComponent implements OnInit {
     }
 
     const payload: EfectivGrup = {
-      id: this.grupId,
       specie: this.specie,
       numarCapeteFamilii: this.numarCapeteFamilii,
-      detalii: this.detalii,
+      dataInregistrare: this.dataInregistrare,
+      detalii: this.detalii || undefined,
       gospodarieId: this.gospodarieId,
       proprietarId: this.proprietarId
     } as any;
 
-    if (this.isEditMode && this.grupId) {
-      this.animalService.updateGroup(this.grupId, payload).subscribe({
+    if (this.isSnapshotMode && this.referenceGrupId) {
+      // Adăugăm un snapshot nou la efectivul existent
+      this.animalService.addGrupSnapshot(this.referenceGrupId, payload).subscribe({
         next: () => this.router.navigate(['/animale']),
         error: (err) => {
-          alert('Eroare la actualizarea grupului: ' + (err.error?.message || err.message));
+          alert('Eroare la adăugarea snapshot-ului: ' + (err.error?.message || err.message));
         }
       });
     } else {
+      // Creăm un efectiv nou (primul snapshot)
       this.animalService.createGroup(payload).subscribe({
         next: () => this.router.navigate(['/animale']),
         error: (err) => {
-          alert('Eroare la înregistrarea grupului: ' + (err.error?.message || err.message));
+          alert('Eroare la înregistrarea efectivului: ' + (err.error?.message || err.message));
         }
       });
     }

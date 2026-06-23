@@ -11,7 +11,7 @@
   </div>
 
   <!-- UAT SELECTOR — doar pentru non-superadmin -->
-  <div class="uat-selector" *ngIf="user?.role !== 'ROLE_SUPER_ADMIN'">
+  <div class="uat-selector" *ngIf="user?.role !== 'ROLE_SUPER_ADMIN' || isImpersonating">
     <div class="uat-selector-label">UAT Activ</div>
 
     <div class="uat-dropdown-wrapper" *ngIf="user?.role === 'ROLE_ADMIN' || isImpersonating">
@@ -132,6 +132,18 @@
           <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
         </svg>
         Persoane
+      </a>
+
+      <a class="nav-item" routerLink="/animale" routerLinkActive="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="10" r="3"/>
+          <circle cx="6" cy="7" r="2"/>
+          <circle cx="18" cy="7" r="2"/>
+          <circle cx="3" cy="12" r="2"/>
+          <circle cx="21" cy="12" r="2"/>
+          <path d="M12 21c3.5 0 6-2.5 6-6.5S15.5 8 12 8s-6 2.5-6 6.5S8.5 21 12 21z"/>
+        </svg>
+        Animale
       </a>
 
       <div class="nav-separator">Administrare</div>
@@ -271,6 +283,18 @@
           <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
         </svg>
         Persoane
+      </a>
+
+      <a class="nav-item" routerLink="/animale" routerLinkActive="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="10" r="3"/>
+          <circle cx="6" cy="7" r="2"/>
+          <circle cx="18" cy="7" r="2"/>
+          <circle cx="3" cy="12" r="2"/>
+          <circle cx="21" cy="12" r="2"/>
+          <path d="M12 21c3.5 0 6-2.5 6-6.5S15.5 8 12 8s-6 2.5-6 6.5S8.5 21 12 21z"/>
+        </svg>
+        Animale
       </a>
 
       <div class="nav-separator">Administrare</div>

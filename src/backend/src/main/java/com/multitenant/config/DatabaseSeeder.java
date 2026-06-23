@@ -76,16 +76,21 @@ public class DatabaseSeeder implements CommandLineRunner {
             // Tenant schemas are created and migrated natively by TenantService.migrateAllTenants() 
             // the UATs and Tenants have been inserted by the V3 migration.
             
-            // Seed tenant users in public schema (required for authentication/login)
-            System.out.println("[DatabaseSeeder] Seeding tenant users in public schema...");
+            try {
+                // Seed tenant users in public schema (required for authentication/login)
+                System.out.println("[DatabaseSeeder] Seeding tenant users in public schema...");
+                Uat clujNapoca = uatRepository.findByCodSiruta("54975").orElse(null);
+                Uat bucurestiUat = uatRepository.findByCodSiruta("1017").orElse(null);
+
             if (userRepository.findByUsername("cluj_admin").isEmpty()) {
                 User publicAdmin = new User();
                 publicAdmin.setUsername("cluj_admin");
                 publicAdmin.setPassword(passwordEncoder.encode("password123"));
                 publicAdmin.setRole("ROLE_ADMIN");
-                publicAdmin.setNume("Administrator Local");
+                publicAdmin.setNume("Administrator Local Cluj");
                 publicAdmin.setEmail("admin.cluj@registru.ro");
                 publicAdmin.setActiv(true);
+                publicAdmin.setUat(clujNapoca);
                 publicAdmin.setTenantId("cluj");
                 userRepository.save(publicAdmin);
             }
@@ -95,60 +100,26 @@ public class DatabaseSeeder implements CommandLineRunner {
                 publicUser.setUsername("cluj_user");
                 publicUser.setPassword(passwordEncoder.encode("password123"));
                 publicUser.setRole("ROLE_USER");
-                publicUser.setNume("Operator Registru");
+                publicUser.setNume("Operator Registru Cluj");
                 publicUser.setEmail("operator.cluj@registru.ro");
                 publicUser.setActiv(true);
+                publicUser.setUat(clujNapoca);
                 publicUser.setTenantId("cluj");
                 userRepository.save(publicUser);
             }
 
-            try {
-                System.out.println("[DatabaseSeeder] Seeding Tenant Users in tenant schema...");
-                
-                Uat clujNapoca = uatRepository.findByCodSiruta("54975").orElseThrow();
-                Uat bucurestiUat = uatRepository.findByCodSiruta("1017").orElseThrow();
-
-                // Tenant Admin user Cluj
-                if (userRepository.findByUsername("cluj_admin").isEmpty()) {
-                    User admin = new User();
-                    admin.setUsername("cluj_admin");
-                    admin.setPassword(passwordEncoder.encode("password123"));
-                    admin.setRole("ROLE_ADMIN");
-                    admin.setNume("Administrator Local Cluj");
-                    admin.setEmail("admin.cluj@registru.ro");
-                    admin.setActiv(true);
-                    admin.setUat(clujNapoca);
-                    admin.setTenantId("cluj");
-                    userRepository.save(admin);
-                }
-
-                // Tenant Regular user Cluj
-                if (userRepository.findByUsername("cluj_user").isEmpty()) {
-                    User user = new User();
-                    user.setUsername("cluj_user");
-                    user.setPassword(passwordEncoder.encode("password123"));
-                    user.setRole("ROLE_USER");
-                    user.setNume("Operator Registru Cluj");
-                    user.setEmail("operator.cluj@registru.ro");
-                    user.setActiv(true);
-                    user.setUat(clujNapoca);
-                    user.setTenantId("cluj");
-                    userRepository.save(user);
-                }
-
-                // Tenant Admin user Bucuresti
-                if (userRepository.findByUsername("buc_admin").isEmpty()) {
-                    User adminBuc = new User();
-                    adminBuc.setUsername("buc_admin");
-                    adminBuc.setPassword(passwordEncoder.encode("password123"));
-                    adminBuc.setRole("ROLE_ADMIN");
-                    adminBuc.setNume("Administrator Local Bucuresti");
-                    adminBuc.setEmail("admin.buc@registru.ro");
-                    adminBuc.setActiv(true);
-                    adminBuc.setUat(bucurestiUat);
-                    adminBuc.setTenantId("bucuresti");
-                    userRepository.save(adminBuc);
-                }
+            if (userRepository.findByUsername("buc_admin").isEmpty()) {
+                User adminBuc = new User();
+                adminBuc.setUsername("buc_admin");
+                adminBuc.setPassword(passwordEncoder.encode("password123"));
+                adminBuc.setRole("ROLE_ADMIN");
+                adminBuc.setNume("Administrator Local Bucuresti");
+                adminBuc.setEmail("admin.buc@registru.ro");
+                adminBuc.setActiv(true);
+                adminBuc.setUat(bucurestiUat);
+                adminBuc.setTenantId("bucuresti");
+                userRepository.save(adminBuc);
+            }
 
                 // Switch current thread to "cluj" tenant context for entity seeding
                 TenantContext.setCurrentTenant("cluj");

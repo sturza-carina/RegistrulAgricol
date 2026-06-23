@@ -109,10 +109,15 @@
           </div>
         </div>
 
-        <!-- Stare Activa -->
-        <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px;">
-          <input type="checkbox" id="stareActiva" [(ngModel)]="stareActiva" name="stareActiva" style="width: 18px; height: 18px; cursor: pointer;">
-          <label for="stareActiva" style="cursor: pointer; margin-bottom: 0;">Animalul este activ / viu</label>
+        <!-- Nota: stareActiva NU se poate seta manual.
+             Starea animalului se controlează EXCLUSIV prin evenimentele din timeline
+             (Naștere, Vânzare, Moarte etc.) conform cerințelor ANSVSA. -->
+        <div class="stare-info-notice" *ngIf="isEditMode">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+          </svg>
+          Starea animalului (activ/inactiv) se modifică exclusiv prin adăugarea de evenimente
+          în <a [routerLink]="['/animale/individual', animalId, 'istoric']" class="link-to-timeline">istoricul mișcărilor</a>.
         </div>
 
         <!-- Action Buttons -->

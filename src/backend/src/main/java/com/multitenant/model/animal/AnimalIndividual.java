@@ -41,8 +41,11 @@ public class AnimalIndividual {
     @JsonProperty(value = "proprietarId", access = JsonProperty.Access.WRITE_ONLY)
     private Long proprietarId;
 
-    @Column(name = "numar_crotal")
-    private String numarCrotal;
+    // SNIIA: Codul de crotaliere (ear-tag) este unic per fermă și global în registrul național.
+    // Partial UNIQUE index (on non-null values only) is defined in V13 migration.
+    // Cross-schema global uniqueness is enforced by public.crotal_registry via CrotalRegistryService.
+    @Column(name = "numar_crotal", unique = true)
+    private String numarCrotal; // nullable — animals may lack a tag at birth (ANSVSA allows it)
 
     @Enumerated(EnumType.STRING)
     @Column(name = "specie", nullable = false)

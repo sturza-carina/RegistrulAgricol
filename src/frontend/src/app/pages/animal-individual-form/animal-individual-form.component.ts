@@ -14,7 +14,8 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
   selector: 'app-animal-individual-form',
   standalone: true,
   imports: [CommonModule, FormsModule, SidebarComponent, RouterModule],
-  templateUrl: './animal-individual-form.component.html'
+  templateUrl: './animal-individual-form.component.html',
+  styleUrls: ['./animal-individual-form.component.css']
 })
 export class AnimalIndividualFormComponent implements OnInit {
   isEditMode = false;
@@ -107,13 +108,13 @@ export class AnimalIndividualFormComponent implements OnInit {
 
     const payload: AnimalIndividual = {
       id: this.animalId,
-      numarCrotal: this.numarCrotal,
+      numarCrotal: this.numarCrotal || undefined,
       specie: this.specie,
-      rasa: this.rasa,
+      rasa: this.rasa || undefined,
       sex: this.sex,
       dataNastere: this.dataNastere ? this.dataNastere : undefined,
       greutateKg: this.greutateKg,
-      stareActiva: this.stareActiva,
+      stareActiva: true, // Server ignores this on update; set true on create
       gospodarieId: this.gospodarieId,
       proprietarId: this.proprietarId
     } as any;

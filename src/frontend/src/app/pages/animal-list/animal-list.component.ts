@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -6,6 +6,10 @@ import { AnimalService } from '../../services/animal.service';
 import { AnimalIndividual, EfectivGrup } from '../../models/animal.model';
 import { AuthService } from '../../services/auth.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { UatContextService } from '../../services/uat-context.service';
+import { Uat } from '../../models/gospodarie.model';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-animal-list',
@@ -14,23 +18,31 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
   templateUrl: './animal-list.component.html',
   styleUrls: ['./animal-list.component.css']
 })
-export class AnimalListComponent implements OnInit {
+export class AnimalListComponent implements OnInit, OnChanges, OnDestroy {
   activeTab: 'individual' | 'grup' = 'individual';
   individuals: AnimalIndividual[] = [];
   groups: EfectivGrup[] = [];
   user: any;
+  activeUat: Uat | null = null;
+  private destroy$ = new Subject<void>();
 
   @Input() gospodarieId?: number;
 
   constructor(
     private animalService: AnimalService,
     private authService: AuthService,
+    private uatContext: UatContextService,
     private router: Router
   ) {}
 
   ngOnInit() {
     this.user = this.authService.currentUserSubject.value;
-    this.loadData();
+    this.uatContext.activeUat$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(uat => {
+        this.activeUat = uat;
+        this.loadData();
+      });
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -42,14 +54,26 @@ export class AnimalListComponent implements OnInit {
   loadData() {
     this.animalService.getAllIndividuals().subscribe({
       next: (data) => {
-        this.individuals = this.gospodarieId ? data.filter(a => a.gospodarie?.id === this.gospodarieId) : data;
+        if (this.gospodarieId) {
+          this.individuals = data.filter(a => a.gospodarie?.id === this.gospodarieId);
+        } else if (this.activeUat) {
+          this.individuals = data.filter(a => a.gospodarie?.uat?.codSiruta === this.activeUat?.codSiruta);
+        } else {
+          this.individuals = data;
+        }
       },
       error: (err) => console.error('Error fetching individuals', err)
     });
 
     this.animalService.getAllGroups().subscribe({
       next: (data) => {
-        this.groups = this.gospodarieId ? data.filter(g => g.gospodarie?.id === this.gospodarieId) : data;
+        if (this.gospodarieId) {
+          this.groups = data.filter(g => g.gospodarie?.id === this.gospodarieId);
+        } else if (this.activeUat) {
+          this.groups = data.filter(g => g.gospodarie?.uat?.codSiruta === this.activeUat?.codSiruta);
+        } else {
+          this.groups = data;
+        }
       },
       error: (err) => console.error('Error fetching groups', err)
     });
@@ -93,5 +117,10 @@ export class AnimalListComponent implements OnInit {
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
