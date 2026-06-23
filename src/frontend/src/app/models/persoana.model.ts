@@ -13,7 +13,7 @@ export interface Adresa {
 export interface Persoana {
   id?: number;
   personType: 'PHYSICAL_PERSON' | 'LEGAL_ENTITY';
-  address?: Adresa;
+  adresa?: Adresa;
   phoneNumber?: string;
   email?: string;
   registerVolume?: string;

@@ -7,6 +7,7 @@ import javax.sql.DataSource;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.lang.NonNull;
 
 @Service
 public class TenantService {
@@ -56,7 +57,7 @@ public class TenantService {
         return saved;
     }
 
-    public Tenant updateTenant(String tenantId, String newName) {
+    public Tenant updateTenant(@NonNull String tenantId, String newName) {
         if (newName == null || newName.trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name must not be empty");
         }
@@ -85,7 +86,7 @@ public class TenantService {
         }
     }
 
-    public Tenant assignUatToTenant(String tenantId, String codSiruta) {
+    public Tenant assignUatToTenant(@NonNull String tenantId, String codSiruta) {
         String originalTenant = com.multitenant.config.tenant.TenantContext.getCurrentTenant();
         try {
             com.multitenant.config.tenant.TenantContext.setCurrentTenant("public");
@@ -104,12 +105,13 @@ public class TenantService {
         }
     }
 
-    public void removeUatFromTenant(String tenantId, String codSiruta) {
+    public void removeUatFromTenant(@NonNull String tenantId, String codSiruta) {
         String originalTenant = com.multitenant.config.tenant.TenantContext.getCurrentTenant();
         try {
             com.multitenant.config.tenant.TenantContext.setCurrentTenant("public");
-            Tenant tenant = tenantRepository.findById(tenantId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found"));
+            if (!tenantRepository.existsById(tenantId)) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+            }
 
             com.multitenant.model.core.Uat uat = uatRepository.findByCodSiruta(codSiruta)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "UAT not found"));

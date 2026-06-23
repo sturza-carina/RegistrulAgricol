@@ -63,12 +63,23 @@ public abstract class Persoana {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "gospodarie_id")
-    @com.fasterxml.jackson.annotation.JsonIgnore
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Gospodarie gospodarie;
 
     @Transient
     public Long getGospodarieId() {
         return gospodarie != null ? gospodarie.getId() : null;
+    }
+
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
+    public void setGospodarieId(Long id) {
+        if (id != null) {
+            if (this.gospodarie == null) {
+                this.gospodarie = new Gospodarie();
+            }
+            this.gospodarie.setId(id);
+        }
     }
 }
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Gospodarie } from '../models/gospodarie.model';
 
@@ -11,8 +11,12 @@ export class GospodarieService {
 
   constructor(private http: HttpClient) {}
 
-  getAllGospodarii(): Observable<Gospodarie[]> {
-    return this.http.get<Gospodarie[]>(this.apiUrl);
+  getAllGospodarii(uatCode?: string): Observable<Gospodarie[]> {
+    let params = new HttpParams();
+    if (uatCode) {
+      params = params.set('uatCode', uatCode);
+    }
+    return this.http.get<Gospodarie[]>(this.apiUrl, { params });
   }
 
   getGospodarieById(id: number): Observable<Gospodarie> {

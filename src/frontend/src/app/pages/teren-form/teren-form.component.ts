@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -9,15 +9,20 @@ import { GospodarieService } from '../../services/gospodarie.service';
 import { CoordConversionService } from '../../services/coord-conversion.service';
 import { Teren } from '../../models/teren.model';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 
 @Component({
   selector: 'app-teren-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent, BreadcrumbsComponent],
   templateUrl: './teren-form.component.html',
   styleUrls: ['./teren-form.component.css']
 })
 export class TerenFormComponent implements OnInit, OnDestroy {
+  @Input() isModal = false;
+  @Input() inputGospodarieId?: number;
+  @Output() closeForm = new EventEmitter<void>();
+
   gospodarieId!: number;
   map!: L.Map;
   mapInitialized = false;
@@ -42,6 +47,7 @@ export class TerenFormComponent implements OnInit, OnDestroy {
   calculatedArea: number | null = null;
   saving = false;
   uatName = '';
+  breadcrumbItems: BreadcrumbItem[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -54,19 +60,36 @@ export class TerenFormComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    this.route.queryParams.subscribe(params => {
-      if (params['gospodarieId']) {
-        this.gospodarieId = +params['gospodarieId'];
-      }
+    if (this.isModal && this.inputGospodarieId) {
+      this.gospodarieId = this.inputGospodarieId;
       setTimeout(() => {
         this.initMap();
         this.loadUatBoundary();
-      }, 150);
-    });
+      }, 300); // Give modal time to render
+    } else {
+      this.route.queryParams.subscribe(params => {
+        if (params['gospodarieId']) {
+          this.gospodarieId = +params['gospodarieId'];
+        }
+        this.updateBreadcrumbs();
+        setTimeout(() => {
+          this.initMap();
+          this.loadUatBoundary();
+        }, 150);
+      });
+    }
   }
 
   ngOnDestroy() {
     if (this.map) this.map.remove();
+  }
+
+  updateBreadcrumbs() {
+    this.breadcrumbItems = [
+      { label: 'Gospodării', link: '/gospodarii' },
+      { label: 'Detalii Gospodărie', link: `/gospodarii/${this.gospodarieId}`, queryParams: { tab: 'TERENURI' } },
+      { label: 'Adăugare Teren' }
+    ];
   }
 
   private initMap() {
@@ -208,7 +231,11 @@ export class TerenFormComponent implements OnInit, OnDestroy {
   }
 
   cancel() {
-    this.router.navigate(['/gospodarii', this.gospodarieId]);
+    if (this.isModal) {
+      this.closeForm.emit();
+    } else {
+      this.router.navigate(['/gospodarii', this.gospodarieId]);
+    }
   }
 
   save() {
@@ -231,7 +258,14 @@ export class TerenFormComponent implements OnInit, OnDestroy {
 
     this.saving = true;
     this.terenService.createTeren(payload).subscribe({
-      next: () => { this.saving = false; this.router.navigate(['/gospodarii', this.gospodarieId]); },
+      next: () => { 
+        this.saving = false; 
+        if (this.isModal) {
+          this.closeForm.emit();
+        } else {
+          this.router.navigate(['/gospodarii', this.gospodarieId]);
+        }
+      },
       error: (err) => { this.saving = false; console.error(err); alert('Eroare la salvare teren.'); }
     });
   }

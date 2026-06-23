@@ -1,0 +1,128 @@
+<div class="app-shell">
+  <app-sidebar></app-sidebar>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-spacer"></div>
+    </header>
+
+    <div class="page-content">
+
+      <app-breadcrumbs [items]="breadcrumbItems"></app-breadcrumbs>
+
+      <!-- Header -->
+      <div class="page-header-row">
+        <div>
+          <h1 class="page-title">
+            <span class="crotal-badge" *ngIf="animal">{{ animal.numarCrotal || 'Fără crotal' }}</span>
+            Istoricul Mișcărilor
+          </h1>
+          <p class="page-subtitle" *ngIf="animal">
+            {{ animal.specie }} &bull; {{ animal.sex === 'MASCULIN' ? 'Mascul' : 'Femelă' }}
+            &bull;
+            <span class="stare-badge" [class.activ]="animal.stareActiva" [class.inactiv]="!animal.stareActiva">
+              {{ animal.stareActiva ? 'Activ' : 'Inactiv' }}
+            </span>
+          </p>
+        </div>
+        <button class="btn-primary" (click)="openModal()" [disabled]="animal && !animal.stareActiva">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          Adaugă Eveniment
+        </button>
+      </div>
+
+      <!-- Error state -->
+      <div class="error-banner" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+      <!-- Loading -->
+      <div class="loading-state" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <span>Se încarcă istoricul...</span>
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-state" *ngIf="!isLoading && timeline.length === 0 && !errorMsg">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+        </svg>
+        <p>Niciun eveniment înregistrat pentru acest animal.</p>
+        <button class="btn-primary" (click)="openModal()">Adaugă primul eveniment</button>
+      </div>
+
+      <!-- Timeline -->
+      <div class="timeline-wrapper" *ngIf="!isLoading && timeline.length > 0">
+        <div class="timeline-track">
+          <div class="timeline-item" *ngFor="let ev of timeline; let last = last">
+            <!-- Dot + linie -->
+            <div class="timeline-left">
+              <div class="timeline-dot" [style.background]="getTipColor(ev.tipEveniment)"></div>
+              <div class="timeline-line" *ngIf="!last"></div>
+            </div>
+
+            <!-- Card eveniment -->
+            <div class="timeline-card">
+              <div class="timeline-card-header">
+                <span class="ev-tip-badge" [style.background]="getTipColor(ev.tipEveniment) + '22'" [style.color]="getTipColor(ev.tipEveniment)" [style.border-color]="getTipColor(ev.tipEveniment) + '55'">
+                  {{ getTipLabel(ev.tipEveniment) }}
+                </span>
+                <span class="ev-date">{{ formatDate(ev.dataEveniment) }}</span>
+              </div>
+              <p class="ev-detalii" *ngIf="ev.detalii">{{ ev.detalii }}</p>
+              <p class="ev-detalii no-details" *ngIf="!ev.detalii">Fără observații suplimentare.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ========== Modal Adaugă Eveniment ========== -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h2>Adaugă Eveniment</h2>
+      <button class="modal-close" (click)="closeModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Error inline în modal -->
+      <div class="modal-error" *ngIf="modalError">{{ modalError }}</div>
+
+      <div class="form-group">
+        <label for="tipEveniment">Tip Eveniment *</label>
+        <select id="tipEveniment" [(ngModel)]="tipEveniment">
+          <option *ngFor="let t of tipuriEveniment" [value]="t">{{ tipLabels[t] }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="dataEveniment">Data Evenimentului *</label>
+        <input id="dataEveniment" type="date" [(ngModel)]="dataEveniment" />
+      </div>
+
+      <div class="form-group">
+        <label for="detalii">Observații (opțional)</label>
+        <textarea id="detalii" [(ngModel)]="detalii" rows="3"
+          placeholder="Ex: Factură nr. 1234, cumpărător Ion Popescu, motiv deces...">
+        </textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeModal()" [disabled]="isSaving">Anulează</button>
+      <button class="btn-primary" (click)="saveEveniment()" [disabled]="isSaving">
+        <span *ngIf="!isSaving">Salvează</span>
+        <span *ngIf="isSaving">Se salvează...</span>
+      </button>
+    </div>
+  </div>
+</div>

@@ -12,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/terenuri")
+@SuppressWarnings("null")
 public class TerenController {
 
     private final TerenService terenService;
