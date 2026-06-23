@@ -71,6 +71,16 @@ public class PersoanaController {
         persoanaService.deletePerson(id);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/{persoanaId}/gospodarii/{gospodarieId}")
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
+    public ResponseEntity<?> addPersonToGospodarie(@PathVariable Long persoanaId, @PathVariable Long gospodarieId) {
+        if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
+            return ResponseEntity.badRequest().body("Cannot modify a Persoana outside of a specific tenant context.");
+        }
+        persoanaService.addPersonToGospodarie(persoanaId, gospodarieId);
+        return ResponseEntity.ok().build();
+    }
 }
 
 

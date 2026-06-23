@@ -39,6 +39,9 @@ export class GospodarieDetailsComponent implements OnInit {
   
   showTerenModal = false;
 
+  isAddingMember = false;
+  toatePersoanele: any[] = [];
+
   searchMembriText: string = '';
   searchTerenuriText: string = '';
   selectedTipTeren: string = '';
@@ -55,6 +58,10 @@ export class GospodarieDetailsComponent implements OnInit {
 
   membriActions: TableAction[] = [
     { icon: 'edit', tooltip: 'Detalii / Editare', action: (row) => this.editPerson(row.id) }
+  ];
+
+  toatePersoaneleActions: TableAction[] = [
+    { icon: 'add', tooltip: 'Adaugă Membru', action: (row) => this.addExistingPersonToGospodarie(row.id) }
   ];
 
   terenuriColumns: TableColumn[] = [
@@ -97,6 +104,8 @@ export class GospodarieDetailsComponent implements OnInit {
       } else {
         this.activeTab = 'GENERAL';
       }
+      this.isAddingMember = false; // Reset sub-view on tab change
+      this.updateBreadcrumbs();
     });
   }
 
@@ -129,10 +138,30 @@ export class GospodarieDetailsComponent implements OnInit {
   }
 
   updateBreadcrumbs() {
+    let tabName = '';
+    switch (this.activeTab) {
+      case 'GENERAL': tabName = 'General'; break;
+      case 'TERENURI': tabName = 'Terenuri Agricole'; break;
+      case 'BUILDINGS': tabName = 'Clădiri'; break;
+      case 'MEMBERS': tabName = 'Membri'; break;
+      case 'ANIMALS': tabName = 'Animale'; break;
+      case 'MACHINERY': tabName = 'Utilaje'; break;
+      case 'DOCUMENTS': tabName = 'Documente'; break;
+      default: tabName = this.activeTab;
+    }
+
     this.breadcrumbItems = [
       { label: 'Gospodării', link: '/gospodarii' },
-      { label: this.gospodarie?.codGospodarie || 'Detalii' }
+      { label: `Detalii - ${this.gospodarie?.codGospodarie || ''}` }
     ];
+
+    if (tabName) {
+      this.breadcrumbItems.push({ label: tabName });
+    }
+
+    if (this.isAddingMember) {
+      this.breadcrumbItems.push({ label: 'Adaugă membrii' });
+    }
   }
 
   editGospodarie() {
@@ -140,6 +169,35 @@ export class GospodarieDetailsComponent implements OnInit {
   }
 
   addPerson() {
+    this.isAddingMember = true;
+    this.updateBreadcrumbs();
+    this.loadToatePersoanele();
+  }
+
+  cancelAddPerson() {
+    this.isAddingMember = false;
+    this.updateBreadcrumbs();
+  }
+
+  loadToatePersoanele() {
+    this.persoanaService.getAllPersons().subscribe(data => {
+      // Filter out persons that are already members
+      const existingMemberIds = new Set(this.persoane.map(p => p.id));
+      this.toatePersoanele = (data as any[]).filter(p => !existingMemberIds.has(p.id));
+    });
+  }
+
+  addExistingPersonToGospodarie(persoanaId: number) {
+    this.persoanaService.addPersonToGospodarie(persoanaId, this.gospodarieId).subscribe({
+      next: () => {
+        this.isAddingMember = false;
+        this.loadDetails(); // Refresh members list and close sub-view
+      },
+      error: () => alert('Eroare la adăugarea persoanei în gospodărie.')
+    });
+  }
+
+  createNewPerson() {
     this.editPersonId = undefined;
     this.showPersonModal = true;
   }
@@ -151,7 +209,13 @@ export class GospodarieDetailsComponent implements OnInit {
 
   closePersonModal() {
     this.showPersonModal = false;
-    this.loadDetails(); // Refresh members list
+    if (this.isAddingMember) {
+      // If we just created a new person while in adding mode, ideally we want to select them.
+      // But for now, we can just reload the "toatePersoanele" list to let the user select them.
+      this.loadToatePersoanele();
+    } else {
+      this.loadDetails(); // Refresh members list
+    }
   }
 
   viewMap() {

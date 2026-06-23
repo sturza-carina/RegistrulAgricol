@@ -1,4 +1,4 @@
-export type FieldType = 'text' | 'number' | 'email' | 'password' | 'date' | 'select' | 'checkbox' | 'textarea';
+export type FieldType = 'text' | 'number' | 'email' | 'password' | 'date' | 'select' | 'multi-select' | 'checkbox' | 'textarea';
 
 export interface FormFieldOption {
   label: string;

@@ -61,24 +61,33 @@ public abstract class Persoana {
     @OneToMany(mappedBy = "persoana", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RelatieRudenie> relations = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "gospodarie_id")
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "persoana_gospodarie",
+        joinColumns = @JoinColumn(name = "persoana_id"),
+        inverseJoinColumns = @JoinColumn(name = "gospodarie_id")
+    )
     @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private Gospodarie gospodarie;
+    private List<Gospodarie> gospodarii = new ArrayList<>();
 
     @Transient
-    public Long getGospodarieId() {
-        return gospodarie != null ? gospodarie.getId() : null;
+    public List<Long> getGospodarieIds() {
+        if (gospodarii == null) return new ArrayList<>();
+        return gospodarii.stream().map(Gospodarie::getId).toList();
     }
 
     @Transient
     @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
-    public void setGospodarieId(Long id) {
-        if (id != null) {
-            if (this.gospodarie == null) {
-                this.gospodarie = new Gospodarie();
+    public void setGospodarieIds(List<Long> ids) {
+        if (ids != null) {
+            this.gospodarii = new ArrayList<>();
+            for (Long id : ids) {
+                Gospodarie g = new Gospodarie();
+                g.setId(id);
+                this.gospodarii.add(g);
             }
-            this.gospodarie.setId(id);
+        } else {
+            this.gospodarii = new ArrayList<>();
         }
     }
 }

@@ -1,10 +1,6 @@
 <app-layout [activeGospodarieId]="gospodarieId" [activeTab]="activeTab">
     <ng-container *ngIf="gospodarie">
-      <div class="breadcrumbs" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-        <a routerLink="/gospodarii" style="color: var(--text-primary); text-decoration: none; font-weight: 500;">Gospodării</a>
-        <span>&gt;</span>
-        <span style="color: var(--text-muted);">Detalii - {{ gospodarie.codGospodarie }}</span>
-      </div>
+      <app-breadcrumbs [items]="breadcrumbItems"></app-breadcrumbs>
 
       <div class="page-header-row">
         <div style="display: flex; align-items: center; gap: 15px;">
@@ -48,18 +44,43 @@
         </div>
       </div>
 
-      <div class="management-container" *ngIf="activeTab === 'MEMBERS'" style="padding-top: 15px;">
-        <app-generic-table
-          [data]="persoane"
-          [columns]="membriColumns"
-          [filters]="membriFilters"
-          [actions]="membriActions"
-          [title]="'Membrii Gospodăriei'"
-          [itemsPerPage]="6"
-          [primaryActionText]="'Adaugă Membru'"
-          (primaryAction)="addPerson()">
-        </app-generic-table>
+    <!-- TAB: MEMBRI -->
+    <div *ngIf="activeTab === 'MEMBERS'" class="tab-pane fade show active">
+      <div class="content-card">
+        <ng-container *ngIf="!isAddingMember">
+          <div class="card-header">
+            <h3>Persoane / Membri Gospodărie</h3>
+            <button class="btn btn-primary btn-sm" (click)="addPerson()">Adaugă Membru</button>
+          </div>
+          
+          <app-generic-table
+            [data]="persoane"
+            [columns]="membriColumns"
+            [filters]="membriFilters"
+            [actions]="membriActions"
+            emptyMessage="Nu există membri adăugați.">
+          </app-generic-table>
+        </ng-container>
+
+        <ng-container *ngIf="isAddingMember">
+          <div class="card-header">
+            <h3>Selectează o Persoană existentă sau Adaugă una nouă</h3>
+            <div class="d-flex gap-2">
+              <button class="btn btn-secondary btn-sm" (click)="cancelAddPerson()">Înapoi la Membri</button>
+              <button class="btn btn-primary btn-sm" (click)="createNewPerson()">Adaugă Persoană Nouă</button>
+            </div>
+          </div>
+          
+          <app-generic-table
+            [data]="toatePersoanele"
+            [columns]="membriColumns"
+            [filters]="membriFilters"
+            [actions]="toatePersoaneleActions"
+            emptyMessage="Nu există alte persoane în UAT.">
+          </app-generic-table>
+        </ng-container>
       </div>
+    </div>
 
       <div class="management-container" *ngIf="activeTab === 'TERENURI'" style="padding-top: 15px;">
         <app-generic-table
