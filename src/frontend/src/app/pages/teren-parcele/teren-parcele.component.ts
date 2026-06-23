@@ -14,6 +14,8 @@ import { CulturaParcela } from '../../models/cultura-parcela.model';
 import { CulturaParcelaService } from '../../services/cultura-parcela.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
+import { SursaApa } from '../../models/sursa-apa.model';
+import { SursaApaService } from '../../services/sursa-apa.service';
 
 @Component({
   selector: 'app-teren-parcele',
@@ -74,6 +76,20 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   editingCultura: CulturaParcela | null = null;
   newCultura: Partial<CulturaParcela> = {};
 
+  surse: SursaApa[] = [];
+  isAddingSursa = false;
+  editingSursa: SursaApa | null = null;
+  newSursa: Partial<SursaApa> = { stareFunctionare: true };
+
+  tipuriSursa = [
+    'Puț forat',
+    'Fântână',
+    'Rețea irigații',
+    'Râu / Canal',
+    'Acumulare',
+    'Altul'
+  ];
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -81,6 +97,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     private parcelaService: ParcelaService,
     private categorieService: CategorieFolosintaService,
     private culturaService: CulturaParcelaService,
+    private sursaApaService: SursaApaService,
     private conv: CoordConversionService,
     private zone: NgZone
   ) {}
@@ -448,6 +465,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     this.culturi = [];
     if (p.id) {
       this.loadCulturi(p.id);
+      this.loadSurse(p.id);
     }
   }
 
@@ -455,6 +473,22 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     this.viewingParcela = null;
     this.isAddingCultura = false;
     this.editingCultura = null;
+    this.surse = [];
+    this.isAddingSursa = false;
+    this.editingSursa = null;
+  }
+
+  deleteParcela(p: Parcela) {
+    if (!p.id) return;
+    if (!confirm(`Ștergeți parcela "${p.denumire}"?`)) return;
+    this.parcelaService.deleteParcela(p.id).subscribe({
+      next: () => {
+        this.parcele = this.parcele.filter(x => x.id !== p.id);
+        this.renderParcele();
+        this.viewingParcela = null;
+      },
+      error: () => alert('Eroare la ștergere.')
+    });
   }
 
   loadCulturi(parcelaId: number) {
@@ -527,16 +561,67 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     });
   }
 
-  deleteParcela(p: Parcela) {
-    if (!p.id) return;
-    if (!confirm(`Ștergeți parcela "${p.denumire}"?`)) return;
-    this.parcelaService.deleteParcela(p.id).subscribe({
+  loadSurse(parcelaId: number) {
+    this.sursaApaService.getSurse(parcelaId).subscribe({
+      next: data => this.surse = data || [],
+      error: () => this.surse = []
+    });
+  }
+
+  openAddSursaForm() {
+    this.isAddingSursa = true;
+    this.editingSursa = null;
+    this.newSursa = { tipSursa: '', stareFunctionare: true };
+  }
+
+  openEditSursa(sursa: SursaApa) {
+    this.isAddingSursa = true;
+    this.editingSursa = sursa;
+    this.newSursa = { ...sursa };
+  }
+
+  cancelAddSursa() {
+    this.isAddingSursa = false;
+    this.editingSursa = null;
+    this.newSursa = { stareFunctionare: true };
+  }
+
+  saveSursa() {
+    if (!this.viewingParcela?.id) return;
+
+    this.saving = true;
+    const payload = this.newSursa as SursaApa;
+
+    if (this.editingSursa && this.editingSursa.id) {
+      this.sursaApaService.updateSursa(this.viewingParcela.id, this.editingSursa.id, payload).subscribe({
+        next: updated => {
+          this.saving = false;
+          const idx = this.surse.findIndex(s => s.id === updated.id);
+          if (idx >= 0) this.surse[idx] = updated;
+          this.cancelAddSursa();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare sursă apă.'); }
+      });
+    } else {
+      this.sursaApaService.createSursa(this.viewingParcela.id, payload).subscribe({
+        next: saved => {
+          this.saving = false;
+          this.surse.push(saved);
+          this.cancelAddSursa();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare sursă apă.'); }
+      });
+    }
+  }
+
+  deleteSursa(sursa: SursaApa) {
+    if (!sursa.id || !this.viewingParcela?.id) return;
+    if (!confirm(`Ștergeți sursa de apă "${sursa.tipSursa || 'fără tip'}"?`)) return;
+    this.sursaApaService.deleteSursa(this.viewingParcela.id, sursa.id).subscribe({
       next: () => {
-        this.parcele = this.parcele.filter(x => x.id !== p.id);
-        this.renderParcele();
-        this.viewingParcela = null;
+        this.surse = this.surse.filter(s => s.id !== sursa.id);
       },
-      error: () => alert('Eroare la ștergere.')
+      error: () => alert('Eroare la ștergere sursă apă.')
     });
   }
 
