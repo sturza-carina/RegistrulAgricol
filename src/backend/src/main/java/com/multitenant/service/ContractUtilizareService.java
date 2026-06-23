@@ -1,27 +1,31 @@
 package com.multitenant.service;
 
+import com.multitenant.dto.ContractUtilizareDTO;
 import com.multitenant.model.registru.ContractUtilizare;
+import com.multitenant.model.registru.StatusContractUtilizare;
+import com.multitenant.model.persoana.Persoana;
 import com.multitenant.repository.ContractUtilizareRepository;
 import com.multitenant.repository.TerenRepository;
-import com.multitenant.repository.UserRepository;
+import com.multitenant.repository.PersoanaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.time.LocalDate;
 
 @Service
 public class ContractUtilizareService {
 
     private final ContractUtilizareRepository contractUtilizareRepository;
     private final TerenRepository terenRepository;
-    private final UserRepository userRepository;
+    private final PersoanaRepository persoanaRepository;
 
     public ContractUtilizareService(ContractUtilizareRepository contractUtilizareRepository,
                                     TerenRepository terenRepository,
-                                    UserRepository userRepository) {
+                                    PersoanaRepository persoanaRepository) {
         this.contractUtilizareRepository = contractUtilizareRepository;
         this.terenRepository = terenRepository;
-        this.userRepository = userRepository;
+        this.persoanaRepository = persoanaRepository;
     }
 
     public List<ContractUtilizare> getAllContracts() {
@@ -37,72 +41,39 @@ public class ContractUtilizareService {
     }
 
     @Transactional
-    public ContractUtilizare createContract(ContractUtilizare contract) {
-        if (contract == null) {
+    public ContractUtilizare createContract(ContractUtilizareDTO dto) {
+        if (dto == null) {
             throw new IllegalArgumentException("Contract cannot be null");
         }
-        // Verify relationship targets if provided
-        if (contract.getTeren() != null && contract.getTeren().getId() != null) {
-            contract.setTeren(terenRepository.findById(contract.getTeren().getId())
-                    .orElseThrow(() -> new RuntimeException("Terenul asociat nu a fost găsit")));
-        }
-        if (contract.getLocatorProprietar() != null && contract.getLocatorProprietar().getId() != null) {
-            contract.setLocatorProprietar(userRepository.findById(contract.getLocatorProprietar().getId())
-                    .orElseThrow(() -> new RuntimeException("Proprietarul locator nu a fost găsit")));
-        }
-        if (contract.getLocatorUtilizator() != null && contract.getLocatorUtilizator().getId() != null) {
-            contract.setLocatorUtilizator(userRepository.findById(contract.getLocatorUtilizator().getId())
-                    .orElseThrow(() -> new RuntimeException("Utilizatorul locator nu a fost găsit")));
-        }
-        if (contract.getUtilizatorOperare() != null && contract.getUtilizatorOperare().getId() != null) {
-            contract.setUtilizatorOperare(userRepository.findById(contract.getUtilizatorOperare().getId())
-                    .orElseThrow(() -> new RuntimeException("Utilizatorul de operare nu a fost găsit")));
-        }
+        ContractUtilizare contract = mapFromDto(dto, null);
         return contractUtilizareRepository.save(contract);
     }
 
     @Transactional
-    public ContractUtilizare updateContract(Long id, ContractUtilizare updated) {
-        if (updated == null) {
+    public ContractUtilizare updateContract(Long id, ContractUtilizareDTO dto) {
+        if (dto == null) {
             throw new IllegalArgumentException("Contract cannot be null");
         }
         ContractUtilizare existing = getContractById(id);
-
-        if (updated.getTeren() != null && updated.getTeren().getId() != null) {
-            existing.setTeren(terenRepository.findById(updated.getTeren().getId())
-                    .orElseThrow(() -> new RuntimeException("Terenul asociat nu a fost găsit")));
+        ContractUtilizare mapped = mapFromDto(dto, existing);
+        existing.setTeren(mapped.getTeren());
+        existing.setLocatorProprietar(mapped.getLocatorProprietar());
+        existing.setLocatorUtilizator(mapped.getLocatorUtilizator());
+        existing.setUtilizatorOperare(mapped.getUtilizatorOperare());
+        existing.setTipContract(mapped.getTipContract());
+        existing.setNumarContract(mapped.getNumarContract());
+        existing.setDataSemnare(mapped.getDataSemnare());
+        existing.setDataInceput(mapped.getDataInceput());
+        existing.setDataSfarsit(mapped.getDataSfarsit());
+        existing.setPretArendaRonAn(mapped.getPretArendaRonAn());
+        existing.setPretArendaGrauKgHa(mapped.getPretArendaGrauKgHa());
+        existing.setIndexarePret(mapped.isIndexarePret());
+        existing.setStatusContract(mapped.getStatusContract());
+        existing.setMotivIncetare(mapped.getMotivIncetare());
+        if (dto.getDataOperare() != null) {
+            existing.setDataOperare(dto.getDataOperare());
         }
-        if (updated.getLocatorProprietar() != null && updated.getLocatorProprietar().getId() != null) {
-            existing.setLocatorProprietar(userRepository.findById(updated.getLocatorProprietar().getId())
-                    .orElseThrow(() -> new RuntimeException("Proprietarul locator nu a fost găsit")));
-        } else {
-            existing.setLocatorProprietar(null);
-        }
-        if (updated.getLocatorUtilizator() != null && updated.getLocatorUtilizator().getId() != null) {
-            existing.setLocatorUtilizator(userRepository.findById(updated.getLocatorUtilizator().getId())
-                    .orElseThrow(() -> new RuntimeException("Utilizatorul locator nu a fost găsit")));
-        } else {
-            existing.setLocatorUtilizator(null);
-        }
-        if (updated.getUtilizatorOperare() != null && updated.getUtilizatorOperare().getId() != null) {
-            existing.setUtilizatorOperare(userRepository.findById(updated.getUtilizatorOperare().getId())
-                    .orElseThrow(() -> new RuntimeException("Utilizatorul de operare nu a fost găsit")));
-        } else {
-            existing.setUtilizatorOperare(null);
-        }
-
-        existing.setTipContract(updated.getTipContract());
-        existing.setNumarContract(updated.getNumarContract());
-        existing.setDataSemnare(updated.getDataSemnare());
-        existing.setDataInceput(updated.getDataInceput());
-        existing.setDataSfarsit(updated.getDataSfarsit());
-        existing.setPretArendaRonAn(updated.getPretArendaRonAn());
-        existing.setPretArendaGrauKgHa(updated.getPretArendaGrauKgHa());
-        existing.setIndexarePret(updated.isIndexarePret());
-        existing.setStatusContract(updated.getStatusContract());
-        existing.setMotivIncetare(updated.getMotivIncetare());
-        existing.setDataOperare(updated.getDataOperare());
-        existing.setEsteActiv(updated.isEsteActiv());
+        existing.setEsteActiv(dto.isEsteActiv());
 
         return contractUtilizareRepository.save(existing);
     }
@@ -112,5 +83,66 @@ public class ContractUtilizareService {
             throw new IllegalArgumentException("ID cannot be null");
         }
         contractUtilizareRepository.deleteById(id);
+    }
+
+    @Transactional
+    public int expireActiveContracts(LocalDate currentDate) {
+        if (currentDate == null) {
+            throw new IllegalArgumentException("currentDate cannot be null");
+        }
+        return contractUtilizareRepository.markExpiredContracts(
+                StatusContractUtilizare.ACTIV,
+                StatusContractUtilizare.EXPIRAT,
+                currentDate);
+    }
+
+    private Persoana resolvePersoana(Persoana persoana, String errorMessage) {
+        if (persoana == null) {
+            return null;
+        }
+        if (persoana.getId() == null) {
+            throw new IllegalArgumentException("Persoana referită trebuie să aibă un ID valid");
+        }
+        return persoanaRepository.findById(persoana.getId())
+                .orElseThrow(() -> new RuntimeException(errorMessage));
+    }
+
+    private ContractUtilizare mapFromDto(ContractUtilizareDTO dto, ContractUtilizare target) {
+        ContractUtilizare contract = target != null ? target : new ContractUtilizare();
+
+        if (dto.getTerenId() == null) {
+            throw new IllegalArgumentException("Terenul asociat este obligatoriu");
+        }
+        contract.setTeren(terenRepository.findById(dto.getTerenId())
+                .orElseThrow(() -> new RuntimeException("Terenul asociat nu a fost găsit")));
+
+        contract.setLocatorProprietar(resolvePersoanaId(dto.getLocatorProprietarId(), "Proprietarul locator nu a fost găsit"));
+        contract.setLocatorUtilizator(resolvePersoanaId(dto.getLocatorUtilizatorId(), "Utilizatorul locator nu a fost găsit"));
+        contract.setUtilizatorOperare(resolvePersoanaId(dto.getUtilizatorOperareId(), "Persoana de operare nu a fost găsită"));
+
+        contract.setTipContract(dto.getTipContract());
+        contract.setNumarContract(dto.getNumarContract());
+        contract.setDataSemnare(dto.getDataSemnare());
+        contract.setDataInceput(dto.getDataInceput());
+        contract.setDataSfarsit(dto.getDataSfarsit());
+        contract.setPretArendaRonAn(dto.getPretArendaRonAn());
+        contract.setPretArendaGrauKgHa(dto.getPretArendaGrauKgHa());
+        contract.setIndexarePret(dto.isIndexarePret());
+        contract.setStatusContract(dto.getStatusContract());
+        contract.setMotivIncetare(dto.getMotivIncetare());
+        if (dto.getDataOperare() != null) {
+            contract.setDataOperare(dto.getDataOperare());
+        }
+        contract.setEsteActiv(dto.isEsteActiv());
+
+        return contract;
+    }
+
+    private Persoana resolvePersoanaId(Long id, String errorMessage) {
+        if (id == null) {
+            return null;
+        }
+        return persoanaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(errorMessage));
     }
 }

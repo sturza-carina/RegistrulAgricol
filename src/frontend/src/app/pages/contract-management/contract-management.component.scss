@@ -67,3 +67,53 @@
   transform: translateY(0);
 }
 
+.person-selection-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.person-selection-display,
+.person-readonly-display {
+  flex: 1;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  color: var(--text-primary);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.person-selection-display.is-empty {
+  color: var(--text-muted);
+}
+
+.person-selection-display.has-value {
+  background: var(--primary-light);
+  border-color: #c6e8d3;
+  color: var(--text-primary);
+}
+
+.person-readonly-display {
+  color: var(--text-secondary);
+  background: #f8fafc;
+}
+
+.person-selection-clear {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.person-selection-clear:hover {
+  color: var(--primary);
+}

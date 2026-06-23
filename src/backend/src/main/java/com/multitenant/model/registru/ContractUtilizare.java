@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
-import com.multitenant.model.core.User;
+import com.multitenant.model.persoana.Persoana;
 
 @Entity
 @Table(name = "contract_utilizare")
@@ -22,11 +22,11 @@ public class ContractUtilizare {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "locator_proprietar_id")
-    private User locatorProprietar;
+    private Persoana locatorProprietar;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "locator_utilizator_id")
-    private User locatorUtilizator;
+    private Persoana locatorUtilizator;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tip_contract", nullable = false, length = 50)
@@ -65,7 +65,7 @@ public class ContractUtilizare {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "utilizator_operare_id")
-    private User utilizatorOperare;
+    private Persoana utilizatorOperare;
 
     @Column(name = "este_activ")
     private boolean esteActiv = true;
