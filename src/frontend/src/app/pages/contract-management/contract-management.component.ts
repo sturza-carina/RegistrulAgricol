@@ -1,33 +1,44 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
-import { SidebarComponent } from '../../components/sidebar/sidebar.component';
-import { PersonSearchModalComponent } from '../../components/person-search-modal/person-search-modal.component';
-import { ContractUtilizareService, ContractUtilizare, ContractUtilizareRequest, PersoanaRef } from '../../services/contract-utilizare.service';
+import { ContractUtilizareService, ContractUtilizare, ContractUtilizareRequest } from '../../services/contract-utilizare.service';
 import { PersoanaService } from '../../services/persoana.service';
 import { Persoana } from '../../models/persoana.model';
+
 import { GenericTableComponent, TableColumn, TableFilter, TableAction } from '../../components/generic-table/generic-table.component';
+import { GenericFormComponent } from '../../components/generic-form/generic-form.component';
+import { FormConfig } from '../../components/generic-form/generic-form.models';
+import { PageHeaderComponent } from '../../components/page-header/page-header.component';
+import { LayoutComponent } from '../../components/layout/layout.component';
+import { BreadcrumbsComponent } from '../../components/breadcrumbs/breadcrumbs.component';
 
 @Component({
   selector: 'app-contract-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, SidebarComponent, PersonSearchModalComponent, GenericTableComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    GenericTableComponent,
+    GenericFormComponent,
+    PageHeaderComponent,
+    LayoutComponent,
+    BreadcrumbsComponent
+  ],
   templateUrl: './contract-management.component.html',
   styleUrls: ['./contract-management.component.scss']
 })
 export class ContractManagementComponent implements OnInit {
   user: any = null;
-  uatId: string = '';
+  tenants: any[] = [];
+  selectedTenantId: string = '';
 
   contracts: ContractUtilizare[] = [];
-  tableContracts: any[] = [];
   terenuri: any[] = [];
   persoane: Persoana[] = [];
 
-  contractForm: FormGroup;
   creatingContract = false;
   editingContract: ContractUtilizare | null = null;
   viewingContract: ContractUtilizare | null = null;
@@ -36,35 +47,36 @@ export class ContractManagementComponent implements OnInit {
   errorMessage = '';
   loadError = '';
 
-  // Modal state
-  showLocatorProprietarModal = false;
-  showLocatorUtilizatorModal = false;
-  selectedLocatorProprietar: Persoana | PersoanaRef | null = null;
-  selectedLocatorUtilizator: Persoana | PersoanaRef | null = null;
-
   tipuriContract = ['ARENDA', 'COMODAT', 'CONCESIUNE', 'INCHIRIERE', 'ALTELE'];
   statusuriContract = ['ACTIV', 'EXPIRAT', 'REZILIAT', 'SUSPENDAT'];
 
-  // Generic Table Configuration
   columns: TableColumn[] = [
-    { field: 'numarContract', header: 'Nr. Contract', type: 'text' },
-    { field: 'tipContract', header: 'Tip', type: 'badge', badgeClasses: { 'ARENDA': 'admin', 'COMODAT': 'viewer', 'CONCESIUNE': 'editor', 'INCHIRIERE': 'admin', 'ALTELE': 'viewer' } },
-    { field: 'terenDenumire', header: 'Teren Asociat', format: val => val || '-' },
-    { field: 'valabilitate', header: 'Valabilitate', format: val => val || 'N/A' },
-    { field: 'pretArendaRonAn', header: 'Preț/An (RON)', format: val => val ? `${val} RON` : '-' },
+    { field: 'numarContract', header: 'Nr. Contract', type: 'text', format: (val, row) => `${val} (Semnat: ${row.dataSemnare || '-'})` },
+    { field: 'tipContract', header: 'Tip', type: 'badge' },
+    { field: 'teren.denumire', header: 'Teren Asoc.', type: 'text', format: (val) => val || '-' },
+    { field: 'dataInceput', header: 'Valabilitate', type: 'text', format: (val, row) => `${row.dataInceput || 'N/A'} → ${row.dataSfarsit || 'Nedefinit'}` },
+    { field: 'pretArendaRonAn', header: 'Preț Arendă An', type: 'text', format: (val, row) => val ? `${val} RON` : (row.pretArendaGrauKgHa ? `${row.pretArendaGrauKgHa} Kg Grâu/Ha` : '-') },
     { field: 'statusContract', header: 'Status', type: 'badge', badgeClasses: { 'ACTIV': 'active', 'EXPIRAT': 'archived', 'REZILIAT': 'archived', 'SUSPENDAT': 'archived' } }
   ];
 
   filters: TableFilter[] = [
-    { field: 'search', label: 'Caută după nr. contract sau teren...', type: 'search', searchFields: ['numarContract', 'terenDenumire'] },
+    { field: 'search', label: 'Căutare', type: 'search', searchFields: ['numarContract', 'teren.denumire'] },
     { field: 'tipContract', label: 'Tip Contract', type: 'select', options: [{label: 'Toate', value: ''}, ...this.tipuriContract.map(t => ({label: t, value: t}))] },
     { field: 'statusContract', label: 'Status', type: 'select', options: [{label: 'Toate', value: ''}, ...this.statusuriContract.map(s => ({label: s, value: s}))] }
   ];
 
   actions: TableAction[] = [
-    { icon: 'view', tooltip: 'Detalii', action: (row) => this.viewContract(row.raw) },
-    { icon: 'edit', tooltip: 'Editare', action: (row) => this.editContract(row.raw) },
-    { icon: 'delete', tooltip: 'Ștergere', action: (row) => this.deleteContract(row.raw) }
+    { icon: 'view', tooltip: 'Detalii', action: (row) => this.viewContract(row) },
+    { icon: 'edit', tooltip: 'Editare', action: (row) => this.editContract(row) },
+    { icon: 'delete', tooltip: 'Ștergere', action: (row) => this.deleteContract(row) }
+  ];
+
+  formConfig!: FormConfig;
+  formInitialData: any = {};
+
+  breadcrumbItems = [
+    { label: 'Acasă', link: '/' },
+    { label: 'Contracte Utilizare', link: '/contracte' }
   ];
 
   constructor(
@@ -72,27 +84,8 @@ export class ContractManagementComponent implements OnInit {
     private authService: AuthService,
     private contractService: ContractUtilizareService,
     private http: HttpClient,
-    private persoanaService: PersoanaService,
-    private fb: FormBuilder
-  ) {
-    this.contractForm = this.fb.group({
-      terenId: ['', [Validators.required]],
-      locatorProprietarId: [''],
-      locatorUtilizatorId: [''],
-      utilizatorOperareId: [''],
-      tipContract: ['ARENDA', [Validators.required]],
-      numarContract: ['', [Validators.required]],
-      dataSemnare: [''],
-      dataInceput: [''],
-      dataSfarsit: [''],
-      pretArendaRonAn: [''],
-      pretArendaGrauKgHa: [''],
-      indexarePret: [false],
-      statusContract: ['ACTIV', [Validators.required]],
-      motivIncetare: [''],
-      esteActiv: [true]
-    });
-  }
+    private persoanaService: PersoanaService
+  ) {}
 
   ngOnInit(): void {
     this.authService.currentUser.subscribe(user => {
@@ -100,13 +93,37 @@ export class ContractManagementComponent implements OnInit {
         this.router.navigate(['/login']);
       } else {
         this.user = user;
+        if (this.user.role === 'ROLE_SUPER_ADMIN') {
+          this.loadTenants();
+        }
+
         const activeTenant = this.authService.currentTenantId;
         if (activeTenant && activeTenant !== 'public') {
-          this.uatId = activeTenant;
+          this.selectedTenantId = activeTenant;
           this.loadTenantData();
         }
       }
     });
+    this.buildFormConfig();
+  }
+
+  loadTenants(): void {
+    this.http.get<any[]>('/api/tenants').subscribe({
+      next: (data) => this.tenants = data,
+      error: (err) => console.error('Eroare la încărcarea tenantilor', err)
+    });
+  }
+
+  onTenantChange(): void {
+    if (this.selectedTenantId) {
+      this.authService.setImpersonation(this.selectedTenantId);
+      this.loadTenantData();
+    } else {
+      this.authService.stopImpersonation();
+      this.contracts = [];
+      this.terenuri = [];
+      this.persoane = [];
+    }
   }
 
   loadTenantData(): void {
@@ -117,68 +134,125 @@ export class ContractManagementComponent implements OnInit {
     this.contractService.getAllContracts().subscribe({
       next: (data) => {
         this.contracts = data;
-        this.buildTableData();
+        this.buildFormConfig();
       },
       error: (err) => {
         this.contracts = [];
-        this.tableContracts = [];
-        this.loadError = 'Nu s-au putut încărca contractele pentru tenantul selectat.';
+        this.loadError = 'Nu s-au putut încărca contractele. ' + (err.error?.message || err.error || err.message || JSON.stringify(err));
       }
     });
 
     this.http.get<any[]>('/api/terenuri').subscribe({
       next: (data) => {
         this.terenuri = data;
+        this.buildFormConfig();
       },
-      error: (err) => console.error('Eroare la încărcarea terenurilor', err)
+      error: (err) => console.error('Eroare terenuri', err)
     });
 
     this.persoanaService.getAllPersons().subscribe({
       next: (data) => {
         this.persoane = data;
+        this.buildFormConfig();
       },
-      error: (err) => console.error('Eroare la încărcarea persoanelor', err)
+      error: (err) => console.error('Eroare persoane', err)
     });
   }
 
-  buildTableData(): void {
-    this.tableContracts = this.contracts.map(c => ({
-      raw: c,
-      numarContract: c.numarContract,
-      tipContract: c.tipContract,
-      terenDenumire: c.teren?.denumire || '-',
-      valabilitate: `${c.dataInceput || 'N/A'} → ${c.dataSfarsit || 'Nedefinit'}`,
-      pretArendaRonAn: c.pretArendaRonAn,
-      statusContract: c.statusContract
-    }));
+  buildFormConfig(): void {
+    const terenOptions = this.terenuri.map(t => ({ label: `${t.denumire} (ID: ${t.id})`, value: t.id }));
+    const persoanaOptions = [{ label: '-- Niciun selectat --', value: '' }, ...this.persoane.map(p => ({ label: this.getPersonDisplayName(p), value: p.id }))];
+
+    this.formConfig = {
+      sections: [
+        {
+          title: 'Informații Generale',
+          icon: '📝',
+          fields: [
+            { name: 'numarContract', label: 'Număr Contract', type: 'text', required: true, width: 'half' },
+            { name: 'tipContract', label: 'Tip Contract', type: 'select', required: true, width: 'half', options: this.tipuriContract.map(t => ({label: t, value: t})) },
+            { name: 'terenId', label: 'Teren Asociat', type: 'select', required: true, width: 'full', options: [{ label: '-- Alegeți Teren --', value: '' }, ...terenOptions] }
+          ]
+        },
+        {
+          title: 'Părți Contractuale',
+          icon: '👥',
+          fields: [
+            { name: 'locatorProprietarId', label: 'Proprietar Locator (Persoană)', type: 'select', width: 'half', options: persoanaOptions },
+            { name: 'locatorUtilizatorId', label: 'Utilizator Locatar (Persoană)', type: 'select', width: 'half', options: persoanaOptions }
+          ]
+        },
+        {
+          title: 'Perioadă și Valabilitate',
+          icon: '📅',
+          fields: [
+            { name: 'dataSemnare', label: 'Data Semnare', type: 'date', width: 'third' },
+            { name: 'dataInceput', label: 'Dată Început', type: 'date', width: 'third' },
+            { name: 'dataSfarsit', label: 'Dată Sfârșit', type: 'date', width: 'third' }
+          ]
+        },
+        {
+          title: 'Detalii Financiare',
+          icon: '💰',
+          fields: [
+            { name: 'pretArendaRonAn', label: 'Arendă RON / An', type: 'number', width: 'half' },
+            { name: 'pretArendaGrauKgHa', label: 'Arendă Grâu (Kg/Ha)', type: 'number', width: 'half' },
+            { name: 'indexarePret', label: 'Indexare Preț', type: 'checkbox', width: 'full' }
+          ]
+        },
+        {
+          title: 'Status Contract',
+          icon: '⚙️',
+          fields: [
+            { name: 'statusContract', label: 'Status Contract', type: 'select', required: true, width: 'half', options: this.statusuriContract.map(s => ({label: s, value: s})) },
+            { name: 'esteActiv', label: 'Contract Activ (Valabil)', type: 'checkbox', width: 'half' },
+            { name: 'motivIncetare', label: 'Motiv Încetare / Reziliere', type: 'textarea', width: 'full', showIf: (val) => val?.statusContract !== 'ACTIV' }
+          ]
+        }
+      ],
+      submitText: 'Salvează Contract',
+      cancelText: 'Anulare'
+    };
+  }
+
+  getPersonDisplayName(person: any): string {
+    if (!person) return '-';
+    if (person.personType === 'PHYSICAL_PERSON') {
+      return [person.firstName, person.lastName].filter(Boolean).join(' ') || `Persoană #${person.id}`;
+    }
+    if (person.personType === 'LEGAL_ENTITY') {
+      return person.companyName || `Persoană #${person.id}`;
+    }
+    return `Persoană #${person.id}`;
   }
 
   openAddForm(): void {
-    if (!this.uatId) {
-      alert('Vă rugăm să selectați mai întâi un Tenant/UAT din sidebar.');
+    if (!this.selectedTenantId) {
+      alert('Vă rugăm să selectați mai întâi un Tenant/UAT.');
       return;
     }
     this.creatingContract = true;
     this.viewingContract = null;
     this.editingContract = null;
-    this.selectedLocatorProprietar = null;
-    this.selectedLocatorUtilizator = null;
-    this.contractForm.reset({
+    this.formInitialData = {
       tipContract: 'ARENDA',
       statusContract: 'ACTIV',
       indexarePret: false,
       esteActiv: true,
-      utilizatorOperareId: this.user?.id || ''
-    });
+      terenId: '',
+      locatorProprietarId: '',
+      locatorUtilizatorId: ''
+    };
     this.successMessage = '';
     this.errorMessage = '';
+    this.updateBreadcrumbs();
   }
 
-  closeAddForm(): void {
+  closeForm(): void {
     this.creatingContract = false;
-    this.selectedLocatorProprietar = null;
-    this.selectedLocatorUtilizator = null;
+    this.editingContract = null;
     this.errorMessage = '';
+    this.updateBreadcrumbs();
   }
 
   viewContract(contract: ContractUtilizare): void {
@@ -187,10 +261,12 @@ export class ContractManagementComponent implements OnInit {
     this.editingContract = null;
     this.errorMessage = '';
     this.successMessage = '';
+    this.updateBreadcrumbs();
   }
 
   closeViewContract(): void {
     this.viewingContract = null;
+    this.updateBreadcrumbs();
   }
 
   editContract(contract: ContractUtilizare): void {
@@ -198,18 +274,10 @@ export class ContractManagementComponent implements OnInit {
     this.viewingContract = null;
     this.creatingContract = false;
 
-    if (contract.locatorProprietar) {
-      this.selectedLocatorProprietar = contract.locatorProprietar;
-    }
-    if (contract.locatorUtilizator) {
-      this.selectedLocatorUtilizator = contract.locatorUtilizator;
-    }
-
-    this.contractForm.patchValue({
-      terenId: contract.teren?.id,
+    this.formInitialData = {
+      terenId: contract.teren?.id || '',
       locatorProprietarId: contract.locatorProprietar?.id || '',
       locatorUtilizatorId: contract.locatorUtilizator?.id || '',
-      utilizatorOperareId: contract.utilizatorOperare?.id || '',
       tipContract: contract.tipContract,
       numarContract: contract.numarContract,
       dataSemnare: contract.dataSemnare,
@@ -221,31 +289,19 @@ export class ContractManagementComponent implements OnInit {
       statusContract: contract.statusContract,
       motivIncetare: contract.motivIncetare,
       esteActiv: contract.esteActiv
-    });
+    };
 
     this.errorMessage = '';
     this.successMessage = '';
+    this.updateBreadcrumbs();
   }
 
-  closeEditContract(): void {
-    this.editingContract = null;
-    this.selectedLocatorProprietar = null;
-    this.selectedLocatorUtilizator = null;
-    this.errorMessage = '';
-  }
-
-  saveContract(): void {
-    if (this.contractForm.invalid) {
-      this.errorMessage = 'Vă rugăm să completați toate câmpurile obligatorii.';
-      return;
-    }
-
-    const formVal = this.contractForm.value;
+  saveContract(formVal: any): void {
     const contractPayload: ContractUtilizareRequest = {
       terenId: +formVal.terenId,
       locatorProprietarId: formVal.locatorProprietarId ? +formVal.locatorProprietarId : null,
       locatorUtilizatorId: formVal.locatorUtilizatorId ? +formVal.locatorUtilizatorId : null,
-      utilizatorOperareId: formVal.utilizatorOperareId ? +formVal.utilizatorOperareId : null,
+      utilizatorOperareId: null,
       tipContract: formVal.tipContract,
       numarContract: formVal.numarContract,
       dataSemnare: formVal.dataSemnare || null,
@@ -264,10 +320,10 @@ export class ContractManagementComponent implements OnInit {
         next: () => {
           this.successMessage = 'Contractul a fost actualizat cu succes!';
           this.loadTenantData();
-          this.closeEditContract();
+          this.closeForm();
         },
         error: (err) => {
-          this.errorMessage = err.error || 'A apărut o eroare la actualizarea contractului.';
+          this.errorMessage = err.error?.message || err.error || 'A apărut o eroare la actualizarea contractului.';
         }
       });
     } else {
@@ -275,10 +331,10 @@ export class ContractManagementComponent implements OnInit {
         next: () => {
           this.successMessage = 'Contractul a fost înregistrat cu succes!';
           this.loadTenantData();
-          this.closeAddForm();
+          this.closeForm();
         },
         error: (err) => {
-          this.errorMessage = err.error || 'A apărut o eroare la crearea contractului.';
+          this.errorMessage = err.error?.message || err.error || 'A apărut o eroare la crearea contractului.';
         }
       });
     }
@@ -291,79 +347,27 @@ export class ContractManagementComponent implements OnInit {
           this.successMessage = 'Contractul a fost șters cu succes!';
           this.loadTenantData();
           if (this.viewingContract?.id === contract.id) this.closeViewContract();
-          if (this.editingContract?.id === contract.id) this.closeEditContract();
+          if (this.editingContract?.id === contract.id) this.closeForm();
         },
         error: (err) => {
-          this.errorMessage = err.error || 'A apărut o eroare la ștergerea contractului.';
+          this.errorMessage = err.error?.message || err.error || 'A apărut o eroare la ștergerea contractului.';
         }
       });
     }
   }
 
-  getPersonDisplayName(person: Persoana | PersoanaRef | null | undefined): string {
-    if (!person) return '-';
-
-    if (person.personType === 'PHYSICAL_PERSON') {
-      const physical = person as { id?: number; firstName?: string; lastName?: string };
-      return [physical.firstName, physical.lastName].filter(Boolean).join(' ') || `Persoană #${person.id}`;
+  updateBreadcrumbs(): void {
+    this.breadcrumbItems = [
+      { label: 'Acasă', link: '/' },
+      { label: 'Contracte Utilizare', link: '/contracte' }
+    ];
+    
+    if (this.creatingContract) {
+      this.breadcrumbItems.push({ label: 'Creare Contract', link: '' });
+    } else if (this.editingContract) {
+      this.breadcrumbItems.push({ label: `Editare: ${this.editingContract.numarContract}`, link: '' });
+    } else if (this.viewingContract) {
+      this.breadcrumbItems.push({ label: `Detalii: ${this.viewingContract.numarContract}`, link: '' });
     }
-
-    if (person.personType === 'LEGAL_ENTITY') {
-      const legal = person as { id?: number; companyName?: string };
-      return legal.companyName || `Persoană #${person.id}`;
-    }
-
-    return `Persoană #${person.id}`;
-  }
-
-  openLocatorProprietarModal(): void {
-    this.showLocatorProprietarModal = true;
-  }
-
-  closeLocatorProprietarModal(): void {
-    this.showLocatorProprietarModal = false;
-  }
-
-  selectLocatorProprietar(person: Persoana): void {
-    this.selectedLocatorProprietar = person;
-    this.contractForm.patchValue({
-      locatorProprietarId: person.id
-    });
-    this.closeLocatorProprietarModal();
-  }
-
-  openLocatorUtilizatorModal(): void {
-    this.showLocatorUtilizatorModal = true;
-  }
-
-  closeLocatorUtilizatorModal(): void {
-    this.showLocatorUtilizatorModal = false;
-  }
-
-  selectLocatorUtilizator(person: Persoana): void {
-    this.selectedLocatorUtilizator = person;
-    this.contractForm.patchValue({
-      locatorUtilizatorId: person.id
-    });
-    this.closeLocatorUtilizatorModal();
-  }
-
-  clearLocatorProprietar(): void {
-    this.selectedLocatorProprietar = null;
-    this.contractForm.patchValue({
-      locatorProprietarId: ''
-    });
-  }
-
-  clearLocatorUtilizator(): void {
-    this.selectedLocatorUtilizator = null;
-    this.contractForm.patchValue({
-      locatorUtilizatorId: ''
-    });
-  }
-
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
   }
 }

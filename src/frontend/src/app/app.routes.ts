@@ -35,6 +35,7 @@ export const routes: Routes = [
   { path: 'terenuri/new',   component: TerenFormComponent },
   { path: 'terenuri/:id/parcele', component: TerenParceleComponent },
   { path: 'harta',          component: ParcelaMapComponent },
+  { path: 'contracte',      component: ContractManagementComponent },
   { path: '',               redirectTo: '/login', pathMatch: 'full' }
 ];
 

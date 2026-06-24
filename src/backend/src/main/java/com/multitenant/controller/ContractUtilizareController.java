@@ -22,7 +22,7 @@ public class ContractUtilizareController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> getAllContracts() {
         if (isPublicContext()) {
             return ResponseEntity.badRequest().body("Trebuie să selectați un context de UAT/Tenant.");
@@ -31,7 +31,7 @@ public class ContractUtilizareController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> getContractById(@PathVariable Long id) {
         if (isPublicContext()) {
             return ResponseEntity.badRequest().body("Trebuie să selectați un context de UAT/Tenant.");
@@ -40,7 +40,7 @@ public class ContractUtilizareController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> createContract(@RequestBody ContractUtilizareDTO contract) {
         if (isPublicContext()) {
             return ResponseEntity.badRequest().body("Nu se poate crea un contract în afara unui context de UAT/Tenant.");
@@ -48,12 +48,13 @@ public class ContractUtilizareController {
         try {
             return ResponseEntity.ok(contractUtilizareService.createContract(contract));
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest().body("Eroare la crearea contractului: " + e.getMessage());
         }
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> updateContract(@PathVariable Long id, @RequestBody ContractUtilizareDTO contract) {
         if (isPublicContext()) {
             return ResponseEntity.badRequest().body("Nu se poate edita un contract în afara unui context de UAT/Tenant.");
@@ -66,7 +67,7 @@ public class ContractUtilizareController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> deleteContract(@PathVariable Long id) {
         if (isPublicContext()) {
             return ResponseEntity.badRequest().body("Nu se poate șterge un contract în afara unui context de UAT/Tenant.");
