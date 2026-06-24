@@ -31,6 +31,7 @@ export const routes: Routes = [
   { path: 'persoane',        component: PersonListComponent },
   { path: 'persoane/new',    component: PersonFormComponent },
   { path: 'persoane/edit/:id', component: PersonFormComponent },
+  { path: 'contracte',      component: ContractManagementComponent },
   { path: 'uats',           component: UatManagementComponent },
   { path: 'gospodarii',     component: GospodarieListComponent },
   { path: 'gospodarii/new', component: GospodarieFormComponent },
