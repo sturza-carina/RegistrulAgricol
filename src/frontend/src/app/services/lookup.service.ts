@@ -1,0 +1,22 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+@Injectable({ providedIn: 'root' })
+export class LookupService {
+  private base = '/api/lookup';
+
+  constructor(private http: HttpClient) {}
+
+  getTipuriSol(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.base}/tip-sol`);
+  }
+
+  getCategoriiFolosinta(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.base}/categorie-folosinta`);
+  }
+
+  getTipuriSursaApa(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.base}/tip-sursa-apa`);
+  }
+}
