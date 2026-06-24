@@ -9,21 +9,21 @@ import { PersonSearchModalComponent } from '../../components/person-search-modal
 import { ContractUtilizareService, ContractUtilizare, ContractUtilizareRequest, PersoanaRef } from '../../services/contract-utilizare.service';
 import { PersoanaService } from '../../services/persoana.service';
 import { Persoana } from '../../models/persoana.model';
+import { GenericTableComponent, TableColumn, TableFilter, TableAction } from '../../components/generic-table/generic-table.component';
 
 @Component({
   selector: 'app-contract-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, SidebarComponent, PersonSearchModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, SidebarComponent, PersonSearchModalComponent, GenericTableComponent],
   templateUrl: './contract-management.component.html',
   styleUrls: ['./contract-management.component.scss']
 })
 export class ContractManagementComponent implements OnInit {
   user: any = null;
-  tenants: any[] = [];
-  selectedTenantId: string = '';
+  uatId: string = '';
 
   contracts: ContractUtilizare[] = [];
-  filteredContracts: ContractUtilizare[] = [];
+  tableContracts: any[] = [];
   terenuri: any[] = [];
   persoane: Persoana[] = [];
 
@@ -31,10 +31,6 @@ export class ContractManagementComponent implements OnInit {
   creatingContract = false;
   editingContract: ContractUtilizare | null = null;
   viewingContract: ContractUtilizare | null = null;
-
-  searchTerm = '';
-  tipContractFilter = 'Toate';
-  statusContractFilter = 'Toate';
 
   successMessage = '';
   errorMessage = '';
@@ -48,6 +44,28 @@ export class ContractManagementComponent implements OnInit {
 
   tipuriContract = ['ARENDA', 'COMODAT', 'CONCESIUNE', 'INCHIRIERE', 'ALTELE'];
   statusuriContract = ['ACTIV', 'EXPIRAT', 'REZILIAT', 'SUSPENDAT'];
+
+  // Generic Table Configuration
+  columns: TableColumn[] = [
+    { field: 'numarContract', header: 'Nr. Contract', type: 'text' },
+    { field: 'tipContract', header: 'Tip', type: 'badge', badgeClasses: { 'ARENDA': 'admin', 'COMODAT': 'viewer', 'CONCESIUNE': 'editor', 'INCHIRIERE': 'admin', 'ALTELE': 'viewer' } },
+    { field: 'terenDenumire', header: 'Teren Asociat', format: val => val || '-' },
+    { field: 'valabilitate', header: 'Valabilitate', format: val => val || 'N/A' },
+    { field: 'pretArendaRonAn', header: 'Preț/An (RON)', format: val => val ? `${val} RON` : '-' },
+    { field: 'statusContract', header: 'Status', type: 'badge', badgeClasses: { 'ACTIV': 'active', 'EXPIRAT': 'archived', 'REZILIAT': 'archived', 'SUSPENDAT': 'archived' } }
+  ];
+
+  filters: TableFilter[] = [
+    { field: 'search', label: 'Caută după nr. contract sau teren...', type: 'search', searchFields: ['numarContract', 'terenDenumire'] },
+    { field: 'tipContract', label: 'Tip Contract', type: 'select', options: [{label: 'Toate', value: ''}, ...this.tipuriContract.map(t => ({label: t, value: t}))] },
+    { field: 'statusContract', label: 'Status', type: 'select', options: [{label: 'Toate', value: ''}, ...this.statusuriContract.map(s => ({label: s, value: s}))] }
+  ];
+
+  actions: TableAction[] = [
+    { icon: 'view', tooltip: 'Detalii', action: (row) => this.viewContract(row.raw) },
+    { icon: 'edit', tooltip: 'Editare', action: (row) => this.editContract(row.raw) },
+    { icon: 'delete', tooltip: 'Ștergere', action: (row) => this.deleteContract(row.raw) }
+  ];
 
   constructor(
     private router: Router,
@@ -82,42 +100,13 @@ export class ContractManagementComponent implements OnInit {
         this.router.navigate(['/login']);
       } else {
         this.user = user;
-        if (this.user.role === 'ROLE_SUPER_ADMIN') {
-          this.loadTenants();
-        }
-
-        // If already impersonating a tenant, set it
         const activeTenant = this.authService.currentTenantId;
         if (activeTenant && activeTenant !== 'public') {
-          this.selectedTenantId = activeTenant;
+          this.uatId = activeTenant;
           this.loadTenantData();
         }
       }
     });
-  }
-
-  loadTenants(): void {
-    this.http.get<any[]>('/api/tenants').subscribe({
-      next: (data) => {
-        this.tenants = data;
-      },
-      error: (err) => {
-        console.error('Eroare la încărcarea tenantilor', err);
-      }
-    });
-  }
-
-  onTenantChange(): void {
-    if (this.selectedTenantId) {
-      this.authService.setImpersonation(this.selectedTenantId);
-      this.loadTenantData();
-    } else {
-      this.authService.stopImpersonation();
-      this.contracts = [];
-      this.filteredContracts = [];
-      this.terenuri = [];
-      this.persoane = [];
-    }
   }
 
   loadTenantData(): void {
@@ -125,20 +114,18 @@ export class ContractManagementComponent implements OnInit {
     this.successMessage = '';
     this.errorMessage = '';
 
-    // Load contracts
     this.contractService.getAllContracts().subscribe({
       next: (data) => {
         this.contracts = data;
-        this.applyFilter();
+        this.buildTableData();
       },
       error: (err) => {
         this.contracts = [];
-        this.filteredContracts = [];
+        this.tableContracts = [];
         this.loadError = 'Nu s-au putut încărca contractele pentru tenantul selectat.';
       }
     });
 
-    // Load land records (terenuri)
     this.http.get<any[]>('/api/terenuri').subscribe({
       next: (data) => {
         this.terenuri = data;
@@ -146,7 +133,6 @@ export class ContractManagementComponent implements OnInit {
       error: (err) => console.error('Eroare la încărcarea terenurilor', err)
     });
 
-    // Load persons
     this.persoanaService.getAllPersons().subscribe({
       next: (data) => {
         this.persoane = data;
@@ -155,24 +141,21 @@ export class ContractManagementComponent implements OnInit {
     });
   }
 
-  onSearch(event: any): void {
-    this.searchTerm = event.target.value.toLowerCase();
-    this.applyFilter();
-  }
-
-  applyFilter(): void {
-    this.filteredContracts = this.contracts.filter(c => {
-      const matchesSearch = c.numarContract.toLowerCase().includes(this.searchTerm) ||
-                            (c.teren?.denumire || '').toLowerCase().includes(this.searchTerm);
-      const matchesTip = this.tipContractFilter === 'Toate' || c.tipContract === this.tipContractFilter;
-      const matchesStatus = this.statusContractFilter === 'Toate' || c.statusContract === this.statusContractFilter;
-      return matchesSearch && matchesTip && matchesStatus;
-    });
+  buildTableData(): void {
+    this.tableContracts = this.contracts.map(c => ({
+      raw: c,
+      numarContract: c.numarContract,
+      tipContract: c.tipContract,
+      terenDenumire: c.teren?.denumire || '-',
+      valabilitate: `${c.dataInceput || 'N/A'} → ${c.dataSfarsit || 'Nedefinit'}`,
+      pretArendaRonAn: c.pretArendaRonAn,
+      statusContract: c.statusContract
+    }));
   }
 
   openAddForm(): void {
-    if (!this.selectedTenantId) {
-      alert('Vă rugăm să selectați mai întâi un Tenant/UAT.');
+    if (!this.uatId) {
+      alert('Vă rugăm să selectați mai întâi un Tenant/UAT din sidebar.');
       return;
     }
     this.creatingContract = true;
@@ -215,7 +198,6 @@ export class ContractManagementComponent implements OnInit {
     this.viewingContract = null;
     this.creatingContract = false;
 
-    // Set selected persons if they exist
     if (contract.locatorProprietar) {
       this.selectedLocatorProprietar = contract.locatorProprietar;
     }
@@ -334,7 +316,6 @@ export class ContractManagementComponent implements OnInit {
     return `Persoană #${person.id}`;
   }
 
-  // Modal methods for Locator Proprietar
   openLocatorProprietarModal(): void {
     this.showLocatorProprietarModal = true;
   }
@@ -351,7 +332,6 @@ export class ContractManagementComponent implements OnInit {
     this.closeLocatorProprietarModal();
   }
 
-  // Modal methods for Locator Utilizator
   openLocatorUtilizatorModal(): void {
     this.showLocatorUtilizatorModal = true;
   }
