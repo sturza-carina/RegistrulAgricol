@@ -307,6 +307,7 @@
         <div class="form-group">
           <label>Categorie Folosință</label>
           <select class="form-control" [(ngModel)]="newParcela.categorieFolosinta">
+            <option value="">Selectează...</option>
             <option *ngFor="let cat of categoriiFolosinta" [value]="cat">{{ cat }}</option>
           </select>
         </div>

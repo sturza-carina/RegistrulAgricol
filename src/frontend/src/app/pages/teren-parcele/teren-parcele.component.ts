@@ -18,6 +18,7 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 import { SursaApa } from '../../models/sursa-apa.model';
 import { SursaApaService } from '../../services/sursa-apa.service';
+import { LookupService } from '../../services/lookup.service';
 
 @Component({
   selector: 'app-teren-parcele',
@@ -59,18 +60,6 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   calculatedArea: number | null = null;
   saving = false;
 
-  categoriiFolosinta = ['Arabil', 'Pășune', 'Fânețe', 'Livadă', 'Vii', 'Pădure', 'Ape', 'Alte'];
-  tipuriSol = [
-    'Cernoziom',     // tip genetic
-    'Podzol',        // tip genetic
-    'Aluvial',       // origine
-    'Nisipos',       // textura
-    'Argilos',       // textura
-    'Lutos',         // textura
-    'Sărăturat',     // caracteristica
-    'Altul'
-  ];
-
   categorii: CategorieFolosinta[] = [];
   isAddingCategorie = false;
   editingCategorie: CategorieFolosinta | null = null;
@@ -86,14 +75,9 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   editingSursa: SursaApa | null = null;
   newSursa: Partial<SursaApa> = { stareFunctionare: true };
 
-  tipuriSursa = [
-    'Puț forat',
-    'Fântână',
-    'Rețea irigații',
-    'Râu / Canal',
-    'Acumulare',
-    'Altul'
-  ];
+  categoriiFolosinta: string[] = [];
+  tipuriSol: string[] = [];
+  tipuriSursa: string[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -106,6 +90,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     private conv: CoordConversionService,
     private googleMapsLoader: GoogleMapsLoaderService,
     private gospodarieService: GospodarieService,
+    private lookupService: LookupService,
     private http: HttpClient,
     private zone: NgZone
   ) {}
@@ -134,6 +119,10 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
         if (g?.uat?.judet) this.loadJudetBoundary(g.uat.judet);
       });
     }
+
+    this.lookupService.getCategoriiFolosinta().subscribe(v => this.categoriiFolosinta = v);
+    this.lookupService.getTipuriSol().subscribe(v => this.tipuriSol = v);
+    this.lookupService.getTipuriSursaApa().subscribe(v => this.tipuriSursa = v);
   }
 
   private pendingJudetPaths: google.maps.LatLngLiteral[][] | null = null;
@@ -447,7 +436,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
 
   openAddParcelaForm() {
     this.viewingParcela = null;
-    this.newParcela = { denumire: '', suprafata: 0, categorieFolosinta: 'Arabil', polygon: null, stereo70Coordinates: '' };
+    this.newParcela = { denumire: '', suprafata: 0, categorieFolosinta: '', polygon: null, stereo70Coordinates: '' };
     this.points = [{ x: '', y: '' }, { x: '', y: '' }, { x: '', y: '' }];
     this.calculatedArea = null;
     this.isAddingParcela = true;
