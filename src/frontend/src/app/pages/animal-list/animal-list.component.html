@@ -1,0 +1,80 @@
+<ng-container *ngIf="!gospodarieId">
+  <app-layout>
+    <app-breadcrumbs [items]="breadcrumbItems" style="display: block; margin-bottom: 15px;"></app-breadcrumbs>
+    <app-page-header 
+      title="Gestionare Animale & Efective de Animale" 
+      description="Înregistrați și gestionați animalele individuale și efectivele de grup (flock stock) din registrul agricol.">
+    </app-page-header>
+    <ng-container *ngTemplateOutlet="animalContent"></ng-container>
+  </app-layout>
+</ng-container>
+
+<ng-container *ngIf="gospodarieId">
+  <div class="page-header-row">
+    <h1 style="font-size:18px;font-weight:600;color:var(--text-primary);margin-bottom:3px">
+      Animale în Gospodărie
+    </h1>
+  </div>
+  <ng-container *ngTemplateOutlet="animalContent"></ng-container>
+</ng-container>
+
+<ng-template #animalContent>
+  <!-- Tab Selection -->
+  <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--card-border); padding-bottom: 1px;">
+    <button 
+      (click)="setTab('individual')" 
+      [style.border-bottom]="activeTab === 'individual' ? '3px solid var(--primary)' : 'none'"
+      [style.color]="activeTab === 'individual' ? 'var(--primary)' : 'var(--text-secondary)'"
+      style="background: transparent; border: none; padding: 10px 16px; font-weight: 600; cursor: pointer; outline: none; transition: all 0.2s;">
+      Animale Individuale
+    </button>
+    <button 
+      (click)="setTab('grup')" 
+      [style.border-bottom]="activeTab === 'grup' ? '3px solid var(--primary)' : 'none'"
+      [style.color]="activeTab === 'grup' ? 'var(--primary)' : 'var(--text-secondary)'"
+      style="background: transparent; border: none; padding: 10px 16px; font-weight: 600; cursor: pointer; outline: none; transition: all 0.2s;">
+      Efective de Grup (Flock)
+    </button>
+  </div>
+
+  <!-- Individual Animals Table -->
+  <app-generic-table *ngIf="activeTab === 'individual'"
+    [data]="individuals"
+    [columns]="individualsColumns"
+    [filters]="individualsFilters"
+    [actions]="individualsActions"
+    [title]="'Animale înregistrate individual'"
+    [itemsPerPage]="6"
+    [primaryActionText]="'Adaugă Individual'"
+    (primaryAction)="goToAddIndividual()">
+  </app-generic-table>
+
+  <!-- Group Stocks Table -->
+  <app-generic-table *ngIf="activeTab === 'grup'"
+    [data]="groups"
+    [columns]="groupsColumns"
+    [filters]="groupsFilters"
+    [actions]="groupsActions"
+    [title]="'Efective de grup (Flock / familii)'"
+    [itemsPerPage]="6"
+    [primaryActionText]="'Adaugă Grup'"
+    (primaryAction)="goToAddGroup()">
+  </app-generic-table>
+</ng-template>
+
+<!-- Modals -->
+<app-animal-individual-form
+  *ngIf="showIndividualModal"
+  [isModal]="true"
+  [inputGospodarieId]="gospodarieId"
+  [editId]="editIndividualId"
+  (closeForm)="closeIndividualModal()">
+</app-animal-individual-form>
+
+<app-efectiv-grup-form
+  *ngIf="showGroupModal"
+  [isModal]="true"
+  [inputGospodarieId]="gospodarieId"
+  [editId]="editGroupId"
+  (closeForm)="closeGroupModal()">
+</app-efectiv-grup-form>

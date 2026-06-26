@@ -6,3 +6,10 @@ tmp
 out-tsc
 .gitignore
 README.md
+npm-debug.log*
+.DS_Store
+.cache
+.idea
+.env
+src/environments/environment.ts
+src/environments/environment.prod.ts

@@ -2,18 +2,28 @@ import { Component, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import * as L from 'leaflet';
+import { HttpClient } from '@angular/common/http';
 import { TerenService } from '../../services/teren.service';
 import { ParcelaService } from '../../services/parcela.service';
 import { CoordConversionService } from '../../services/coord-conversion.service';
+import { CategorieFolosintaService } from '../../services/categorie-folosinta.service';
+import { GoogleMapsLoaderService } from '../../services/google-maps-loader.service';
+import { GospodarieService } from '../../services/gospodarie.service';
 import { Teren } from '../../models/teren.model';
 import { Parcela } from '../../models/parcela.model';
+import { CategorieFolosinta } from '../../models/categorie-folosinta.model';
+import { CulturaParcela } from '../../models/cultura-parcela.model';
+import { CulturaParcelaService } from '../../services/cultura-parcela.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
+import { SursaApa } from '../../models/sursa-apa.model';
+import { SursaApaService } from '../../services/sursa-apa.service';
+import { LookupService } from '../../services/lookup.service';
 
 @Component({
   selector: 'app-teren-parcele',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, SidebarComponent, BreadcrumbsComponent],
   templateUrl: './teren-parcele.component.html',
   styleUrls: ['./teren-parcele.component.css']
 })
@@ -22,17 +32,21 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   gospodarieId!: number;
   teren: Teren | null = null;
   parcele: Parcela[] = [];
+  breadcrumbItems: BreadcrumbItem[] = [];
 
-  map!: L.Map;
+  map!: google.maps.Map;
   mapInitialized = false;
+  infoWindow!: google.maps.InfoWindow;
 
   // Map layers
-  terenOutlineLayer: L.GeoJSON | L.Polygon | null = null;
-  terenMaskLayer: L.Polygon | null = null;
-  parcelaLayerGroup = L.featureGroup();
-  markerGroup = L.featureGroup();
-  previewPolygon: L.Polygon | null = null;
-  previewPolyline: L.Polyline | null = null;
+  terenOutlineLayer: google.maps.Polygon | null = null;
+  terenMaskLayer: google.maps.Polygon | null = null;
+  judetOutlineLayer: google.maps.Polygon | null = null;
+  parcelaPolygons: google.maps.Polygon[] = [];
+  parcelaLayers: { parcela: Parcela; polygon: google.maps.Polygon }[] = [];
+  previewMarkers: google.maps.Marker[] = [];
+  previewPolygon: google.maps.Polygon | null = null;
+  previewPolyline: google.maps.Polyline | null = null;
 
   isAddingParcela = false;
   viewingParcela: Parcela | null = null;
@@ -46,14 +60,38 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   calculatedArea: number | null = null;
   saving = false;
 
-  categoriiFolosinta = ['Arabil', 'Pășune', 'Fânețe', 'Livadă', 'Vii', 'Pădure', 'Ape', 'Alte'];
+  categorii: CategorieFolosinta[] = [];
+  isAddingCategorie = false;
+  editingCategorie: CategorieFolosinta | null = null;
+  newCategorie: CategorieFolosinta = { denumire: '', descriere: '' };
+
+  culturi: CulturaParcela[] = [];
+  isAddingCultura = false;
+  editingCultura: CulturaParcela | null = null;
+  newCultura: Partial<CulturaParcela> = {};
+
+  surse: SursaApa[] = [];
+  isAddingSursa = false;
+  editingSursa: SursaApa | null = null;
+  newSursa: Partial<SursaApa> = { stareFunctionare: true };
+
+  categoriiFolosinta: string[] = [];
+  tipuriSol: string[] = [];
+  tipuriSursa: string[] = [];
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private terenService: TerenService,
     private parcelaService: ParcelaService,
+    private categorieService: CategorieFolosintaService,
+    private culturaService: CulturaParcelaService,
+    private sursaApaService: SursaApaService,
     private conv: CoordConversionService,
+    private googleMapsLoader: GoogleMapsLoaderService,
+    private gospodarieService: GospodarieService,
+    private lookupService: LookupService,
+    private http: HttpClient,
     private zone: NgZone
   ) {}
 
@@ -67,126 +105,193 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
 
     this.terenService.getTerenById(this.terenId).subscribe(t => {
       this.teren = t;
+      this.updateBreadcrumbs();
       console.log('LOADED TEREN:', t);
       setTimeout(() => {
         this.initMap();
         this.loadParcele();
+        this.loadCategorii();
       }, 150);
+    });
+
+    if (this.gospodarieId) {
+      this.gospodarieService.getGospodarieById(this.gospodarieId).subscribe(g => {
+        if (g?.uat?.judet) this.loadJudetBoundary(g.uat.judet);
+      });
+    }
+
+    this.lookupService.getCategoriiFolosinta().subscribe(v => this.categoriiFolosinta = v);
+    this.lookupService.getTipuriSol().subscribe(v => this.tipuriSol = v);
+    this.lookupService.getTipuriSursaApa().subscribe(v => this.tipuriSursa = v);
+  }
+
+  private pendingJudetPaths: google.maps.LatLngLiteral[][] | null = null;
+
+  /** Fetches the outline of the county (județ) the gospodărie belongs to. */
+  private loadJudetBoundary(judet: string) {
+    const url = `https://nominatim.openstreetmap.org/search?county=${encodeURIComponent(judet)}&country=Romania&format=geojson&polygon_geojson=1&email=admin@registru.ro`;
+    this.http.get(url).subscribe((res: any) => {
+      const feature = res?.features?.find((f: any) => f.geometry && (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon'));
+      if (!feature) return;
+
+      const paths = this.extractPaths(feature.geometry);
+      if (!paths.length) return;
+
+      if (this.mapInitialized) {
+        this.drawJudetOutline(paths);
+      } else {
+        this.pendingJudetPaths = paths;
+      }
     });
   }
 
-  ngOnDestroy() {
-    if (this.map) this.map.remove();
+  /** Draws the county outline on the map (no fill — just a contextual boundary line). */
+  private drawJudetOutline(paths: google.maps.LatLngLiteral[][]) {
+    if (this.judetOutlineLayer) this.judetOutlineLayer.setMap(null);
+    this.judetOutlineLayer = new google.maps.Polygon({
+      paths,
+      strokeColor: '#d97706', strokeWeight: 2, strokeOpacity: 0.8,
+      fillOpacity: 0,
+      clickable: false,
+      zIndex: 0,
+      map: this.map
+    });
   }
 
-  private initMap() {
+  updateBreadcrumbs() {
+    this.breadcrumbItems = [
+      { label: 'Gospodării', link: '/gospodarii' },
+      { label: 'Detalii Gospodărie', link: `/gospodarii/${this.gospodarieId}?tab=TERENURI` },
+      { label: `Teren: ${this.teren?.denumire || ''}` }
+    ];
+  }
+
+  ngOnDestroy() {
+    this.parcelaPolygons.forEach(p => p.setMap(null));
+    this.previewMarkers.forEach(m => m.setMap(null));
+    if (this.terenOutlineLayer) this.terenOutlineLayer.setMap(null);
+    if (this.terenMaskLayer) this.terenMaskLayer.setMap(null);
+    if (this.judetOutlineLayer) this.judetOutlineLayer.setMap(null);
+    if (this.previewPolygon) this.previewPolygon.setMap(null);
+    if (this.previewPolyline) this.previewPolyline.setMap(null);
+  }
+
+  /** Parses a (possibly doubly-stringified) GeoJSON value and returns the geometry object. */
+  private parseGeoJson(raw: any): any | null {
+    let geoJson = raw;
+    try {
+      if (typeof geoJson === 'string') {
+        let parsed = JSON.parse(geoJson);
+        while (typeof parsed === 'string') { parsed = JSON.parse(parsed); }
+        geoJson = parsed;
+      }
+    } catch (e) {
+      console.error('Failed to parse polygon JSON:', e, raw);
+      return null;
+    }
+    return geoJson.geometry ?? geoJson;
+  }
+
+  /** Converts a Polygon/MultiPolygon geometry into Google Maps paths (rings, including holes). */
+  private extractPaths(geom: any): google.maps.LatLngLiteral[][] {
+    if (!geom) return [];
+    if (geom.type === 'Polygon') {
+      return geom.coordinates.map((ring: any[]) => ring.map((c: number[]) => ({ lat: c[1], lng: c[0] })));
+    }
+    if (geom.type === 'MultiPolygon') {
+      const paths: google.maps.LatLngLiteral[][] = [];
+      geom.coordinates.forEach((poly: any[]) => {
+        poly.forEach((ring: any[]) => paths.push(ring.map((c: number[]) => ({ lat: c[1], lng: c[0] }))));
+      });
+      return paths;
+    }
+    return [];
+  }
+
+  private async initMap() {
     const el = document.getElementById('teren-parcele-map');
     if (!el || this.mapInitialized) return;
-    this.map = L.map('teren-parcele-map').setView([45.9432, 24.9668], 7);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(this.map);
-    this.parcelaLayerGroup.addTo(this.map);
-    this.markerGroup.addTo(this.map);
+
+    await this.googleMapsLoader.load();
+
+    this.map = new google.maps.Map(el, {
+      center: { lat: 45.9432, lng: 24.9668 },
+      zoom: 7,
+      mapTypeId: google.maps.MapTypeId.HYBRID,
+      streetViewControl: false,
+      fullscreenControl: true
+    });
+    this.infoWindow = new google.maps.InfoWindow();
     this.mapInitialized = true;
+
+    if (this.pendingJudetPaths) {
+      this.drawJudetOutline(this.pendingJudetPaths);
+      this.pendingJudetPaths = null;
+    }
 
     // Draw teren boundary
     if (this.teren?.polygon) {
-      let geoJson = this.teren.polygon;
-      try {
-        if (typeof geoJson === 'string') {
-          let parsed = JSON.parse(geoJson);
-          while(typeof parsed === 'string') { parsed = JSON.parse(parsed); }
-          geoJson = parsed;
-        }
-        
-        const geom = geoJson.geometry || geoJson;
-        if (geom.type === 'Polygon') {
-          const latlngs = geom.coordinates[0].map((c: any[]) => [c[1], c[0]]);
-          this.terenOutlineLayer = L.polygon(latlngs, {
-            color: '#1e40af', weight: 4, fillColor: '#bfdbfe', fillOpacity: 0.15, dashArray: '8 5'
-          }).addTo(this.map);
-        } else if (geom.type === 'MultiPolygon') {
-          const latlngs = geom.coordinates[0][0].map((c: any[]) => [c[1], c[0]]);
-          this.terenOutlineLayer = L.polygon(latlngs, {
-            color: '#1e40af', weight: 4, fillColor: '#bfdbfe', fillOpacity: 0.15, dashArray: '8 5'
-          }).addTo(this.map);
-        } else {
-          // Fallback
-          this.terenOutlineLayer = L.geoJSON(geoJson as any, {
-            style: { color: '#1e40af', weight: 4, fillColor: '#bfdbfe', fillOpacity: 0.15, dashArray: '8 5' }
-          }).addTo(this.map) as any;
-        }
-      } catch (e) {
-        console.error('Failed to parse Teren polygon:', e, this.teren.polygon);
+      const geom = this.parseGeoJson(this.teren.polygon);
+      const paths = this.extractPaths(geom);
+      if (paths.length) {
+        this.terenOutlineLayer = new google.maps.Polygon({
+          paths,
+          strokeColor: '#1e40af', strokeWeight: 4, strokeOpacity: 0.9,
+          fillColor: '#bfdbfe', fillOpacity: 0.15,
+          zIndex: 2,
+          map: this.map
+        });
+
+        const bounds = new google.maps.LatLngBounds();
+        paths.forEach(ring => ring.forEach(pt => bounds.extend(pt)));
+        this.map.fitBounds(bounds, 25);
       }
 
-      // Ensure the map resizes perfectly and zooms when the layout is established
-      const el = document.getElementById('teren-parcele-map');
-      if (el) {
-        const ro = new ResizeObserver(() => {
-          if (!this.map) return;
-          this.map.invalidateSize();
-          
-          let bounds = this.terenOutlineLayer ? this.terenOutlineLayer.getBounds() : null;
-          if (!bounds || !bounds.isValid()) {
-              bounds = this.parcelaLayerGroup.getBounds();
-          }
-          if (bounds && bounds.isValid()) {
-              this.map.fitBounds(bounds, { padding: [25, 25] });
-          }
-        });
-        ro.observe(el);
-      }
+      const ro = new ResizeObserver(() => {
+        if (!this.map) return;
+        google.maps.event.trigger(this.map, 'resize');
+      });
+      ro.observe(el);
     }
+
+    this.renderParcele();
   }
 
   private applyTerenMask() {
     if (!this.map || !this.teren?.polygon) return;
-    if (this.terenMaskLayer) { this.map.removeLayer(this.terenMaskLayer); }
+    if (this.terenMaskLayer) { this.terenMaskLayer.setMap(null); this.terenMaskLayer = null; }
 
-    let geoJson = this.teren.polygon;
-    try {
-      if (typeof geoJson === 'string') {
-        let parsed = JSON.parse(geoJson);
-        while(typeof parsed === 'string') { parsed = JSON.parse(parsed); }
-        geoJson = parsed;
-      }
-    } catch(e) {}
+    const geom = this.parseGeoJson(this.teren.polygon);
+    const holes = this.extractPaths(geom);
+    if (!holes.length) return;
 
-    const worldBox: [number, number][] = [[-90, -180], [90, -180], [90, 180], [-90, 180]];
-    const geom = (geoJson as any).geometry ?? geoJson;
-    const holes: [number, number][][] = [];
+    const worldBox: google.maps.LatLngLiteral[] = [
+      { lat: -85, lng: -180 }, { lat: 85, lng: -180 }, { lat: 85, lng: 180 }, { lat: -85, lng: 180 }
+    ];
 
-    if (geom.type === 'Polygon') {
-      holes.push(geom.coordinates[0].map((c: any) => [c[1], c[0]] as [number, number]));
-    } else if (geom.type === 'MultiPolygon') {
-      geom.coordinates.forEach((poly: any) =>
-        holes.push(poly[0].map((c: any) => [c[1], c[0]] as [number, number]))
-      );
-    }
-
-    this.terenMaskLayer = L.polygon([worldBox, ...holes] as any, {
-      color: '#1e293b', fillColor: '#1e293b', fillOpacity: 0.55,
-      weight: 0, stroke: false, interactive: false
-    } as any).addTo(this.map);
-
-    if (this.terenOutlineLayer) this.terenOutlineLayer.bringToFront();
-    this.parcelaLayerGroup.bringToFront();
-    this.markerGroup.bringToFront();
+    this.terenMaskLayer = new google.maps.Polygon({
+      paths: [worldBox, ...holes],
+      strokeWeight: 0,
+      fillColor: '#1e293b',
+      fillOpacity: 0.55,
+      clickable: false,
+      zIndex: 1,
+      map: this.map
+    });
   }
 
   private removeTerenMask() {
-    if (this.terenMaskLayer && this.map) {
-      this.map.removeLayer(this.terenMaskLayer);
+    if (this.terenMaskLayer) {
+      this.terenMaskLayer.setMap(null);
       this.terenMaskLayer = null;
     }
   }
 
   private clearPreviewLayers() {
-    if (this.previewPolygon && this.map) { this.map.removeLayer(this.previewPolygon); this.previewPolygon = null; }
-    if (this.previewPolyline && this.map) { this.map.removeLayer(this.previewPolyline); this.previewPolyline = null; }
-    this.markerGroup.clearLayers();
+    if (this.previewPolygon) { this.previewPolygon.setMap(null); this.previewPolygon = null; }
+    if (this.previewPolyline) { this.previewPolyline.setMap(null); this.previewPolyline = null; }
+    this.previewMarkers.forEach(m => m.setMap(null));
+    this.previewMarkers = [];
   }
 
   // --- Load & render parcels ---
@@ -199,29 +304,55 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
 
   renderParcele() {
     if (!this.mapInitialized) return;
-    this.parcelaLayerGroup.clearLayers();
-    this.parcele.forEach(p => {
-      if (p.polygon) {
-        let geoJson = p.polygon;
-        try {
-          if (typeof geoJson === 'string') {
-            let parsed = JSON.parse(geoJson);
-            while(typeof parsed === 'string') { parsed = JSON.parse(parsed); }
-            geoJson = parsed;
-          }
-        } catch(e) {}
-        const layer = L.geoJSON(geoJson as any, {
-          style: { color: '#dc2626', weight: 2, fillColor: '#fca5a5', fillOpacity: 0.5 }
-        });
-        layer.bindTooltip(`<b>${p.denumire}</b><br>${p.suprafata} ha<br>${p.categorieFolosinta}`);
-        layer.on('click', () => this.zone.run(() => { this.viewingParcela = p; this.isAddingParcela = false; }));
-        layer.addTo(this.parcelaLayerGroup);
-      }
-    });
+    this.parcelaPolygons.forEach(p => p.setMap(null));
+    this.parcelaPolygons = [];
+    this.parcelaLayers = [];
 
-    if (this.terenOutlineLayer) {
-      this.terenOutlineLayer.bringToFront();
-    }
+    this.parcele.forEach(p => {
+      if (!p.polygon) return;
+      const geom = this.parseGeoJson(p.polygon);
+      const paths = this.extractPaths(geom);
+      if (!paths.length) return;
+
+      const polygon = new google.maps.Polygon({
+        paths,
+        strokeColor: '#dc2626', strokeWeight: 2, strokeOpacity: 1,
+        fillColor: '#fca5a5', fillOpacity: 0.5,
+        zIndex: 3,
+        map: this.map
+      });
+
+      const content = `<b>${p.denumire}</b><br>${p.suprafata} ha<br>${p.categorieFolosinta}`;
+      polygon.addListener('mouseover', (e: google.maps.PolyMouseEvent) => {
+        if (!e.latLng) return;
+        this.infoWindow.setContent(content);
+        this.infoWindow.setPosition(e.latLng);
+        this.infoWindow.open(this.map);
+      });
+      polygon.addListener('mouseout', () => this.infoWindow.close());
+      polygon.addListener('click', () => {
+        this.zone.run(() => this.viewParcelaOnMap(p));
+      });
+
+      this.parcelaPolygons.push(polygon);
+      this.parcelaLayers.push({ parcela: p, polygon });
+    });
+  }
+
+  /** Pans/zooms the map to the given parcel and briefly highlights its outline. */
+  viewParcelaOnMap(p: Parcela) {
+    this.viewingParcela = p;
+    this.isAddingParcela = false;
+
+    const layer = this.parcelaLayers.find(l => l.parcela.id === p.id);
+    if (!layer || !this.map) return;
+
+    const bounds = new google.maps.LatLngBounds();
+    layer.polygon.getPaths().forEach(path => path.forEach(latLng => bounds.extend(latLng)));
+    if (!bounds.isEmpty()) this.map.fitBounds(bounds, 80);
+
+    layer.polygon.setOptions({ strokeColor: '#2563eb', strokeWeight: 4, zIndex: 6 });
+    setTimeout(() => layer.polygon.setOptions({ strokeColor: '#dc2626', strokeWeight: 2, zIndex: 3 }), 1500);
   }
 
   // --- Point / polygon management ---
@@ -251,48 +382,61 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     if (!this.mapInitialized) return;
 
     // 1. Markers for every valid point
-    this.markerGroup.clearLayers();
-    const latlngs: [number, number][] = valid.map((p, idx) => {
-      const ll = this.conv.stereo70ToWgs84(p.x, p.y);
-      const marker = L.circleMarker(ll, {
-        radius: 6, color: '#1e40af', fillColor: '#3b82f6', fillOpacity: 1, weight: 2
+    this.previewMarkers.forEach(m => m.setMap(null));
+    this.previewMarkers = [];
+
+    const latlngs: google.maps.LatLngLiteral[] = valid.map((p, idx) => {
+      const [lat, lng] = this.conv.stereo70ToWgs84(p.x, p.y);
+      const marker = new google.maps.Marker({
+        position: { lat, lng },
+        map: this.map,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 6,
+          fillColor: '#3b82f6', fillOpacity: 1,
+          strokeColor: '#1e40af', strokeWeight: 2
+        },
+        title: `Punct ${idx + 1}\nX: ${p.x}\nY: ${p.y}`,
+        zIndex: 5
       });
-      marker.bindTooltip(`Punct ${idx + 1}<br>X: ${p.x}<br>Y: ${p.y}`, { permanent: false });
-      this.markerGroup.addLayer(marker);
-      return ll;
+      this.previewMarkers.push(marker);
+      return { lat, lng };
     });
 
     // 2. Remove old preview shapes
-    if (this.previewPolygon) { this.map.removeLayer(this.previewPolygon); this.previewPolygon = null; }
-    if (this.previewPolyline) { this.map.removeLayer(this.previewPolyline); this.previewPolyline = null; }
+    if (this.previewPolygon) { this.previewPolygon.setMap(null); this.previewPolygon = null; }
+    if (this.previewPolyline) { this.previewPolyline.setMap(null); this.previewPolyline = null; }
 
     if (latlngs.length === 0) return;
 
     if (latlngs.length === 1) {
-      this.map.setView(latlngs[0], Math.max(this.map.getZoom(), 15));
+      this.map.setCenter(latlngs[0]);
+      this.map.setZoom(Math.max(this.map.getZoom() ?? 0, 15));
     } else if (latlngs.length === 2) {
-      this.previewPolyline = L.polyline(latlngs, { color: '#3b82f6', weight: 2, dashArray: '5 4' }).addTo(this.map);
-      this.map.fitBounds(this.previewPolyline.getBounds(), { padding: [40, 40] });
+      this.previewPolyline = new google.maps.Polyline({
+        path: latlngs, strokeColor: '#3b82f6', strokeWeight: 2, strokeOpacity: 0.8, map: this.map
+      });
+      const bounds = new google.maps.LatLngBounds();
+      latlngs.forEach(pt => bounds.extend(pt));
+      this.map.fitBounds(bounds, 40);
     } else {
-      this.previewPolygon = L.polygon(latlngs, {
-        color: '#16a34a', weight: 2.5, fillColor: '#86efac', fillOpacity: 0.45
-      }).addTo(this.map);
+      this.previewPolygon = new google.maps.Polygon({
+        paths: latlngs,
+        strokeColor: '#16a34a', strokeWeight: 2.5,
+        fillColor: '#86efac', fillOpacity: 0.45,
+        zIndex: 4,
+        map: this.map
+      });
 
-      // Keep mask + outline on top, markers last
-      if (this.terenMaskLayer) this.terenMaskLayer.bringToFront();
-      if (this.terenOutlineLayer) this.terenOutlineLayer.bringToFront();
-      this.parcelaLayerGroup.bringToFront();
-      this.markerGroup.bringToFront();
-
-      if (this.previewPolygon.getBounds().isValid()) {
-        this.map.fitBounds(this.previewPolygon.getBounds(), { padding: [25, 25] });
-      }
+      const bounds = new google.maps.LatLngBounds();
+      latlngs.forEach(pt => bounds.extend(pt));
+      if (!bounds.isEmpty()) this.map.fitBounds(bounds, 25);
     }
   }
 
   openAddParcelaForm() {
     this.viewingParcela = null;
-    this.newParcela = { denumire: '', suprafata: 0, categorieFolosinta: 'Arabil', polygon: null, stereo70Coordinates: '' };
+    this.newParcela = { denumire: '', suprafata: 0, categorieFolosinta: '', polygon: null, stereo70Coordinates: '' };
     this.points = [{ x: '', y: '' }, { x: '', y: '' }, { x: '', y: '' }];
     this.calculatedArea = null;
     this.isAddingParcela = true;
@@ -300,8 +444,9 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
 
     // Zoom to teren
     if (this.terenOutlineLayer) {
-      const b = this.terenOutlineLayer.getBounds();
-      if (b.isValid()) this.map.fitBounds(b, { padding: [20, 20] });
+      const bounds = new google.maps.LatLngBounds();
+      this.terenOutlineLayer.getPaths().forEach(path => path.forEach(latLng => bounds.extend(latLng)));
+      if (!bounds.isEmpty()) this.map.fitBounds(bounds, 20);
     }
   }
 
@@ -337,6 +482,92 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     });
   }
 
+  loadCategorii() {
+    this.categorieService.getCategoriiForTeren(this.terenId).subscribe({
+      next: categorii => this.categorii = categorii || [],
+      error: () => this.categorii = []
+    });
+  }
+
+  openAddCategorieForm() {
+    this.isAddingCategorie = true;
+    this.editingCategorie = null;
+    this.newCategorie = { denumire: '', descriere: '' };
+  }
+
+  openEditCategorie(categorie: CategorieFolosinta) {
+    this.isAddingCategorie = true;
+    this.editingCategorie = categorie;
+    this.newCategorie = { ...categorie };
+  }
+
+  cancelAddCategorie() {
+    this.isAddingCategorie = false;
+    this.editingCategorie = null;
+    this.newCategorie = { denumire: '', descriere: '' };
+  }
+
+  saveCategorie() {
+    if (!this.newCategorie.denumire?.trim()) {
+      alert('Introduceți denumirea categoriei.');
+      return;
+    }
+
+    this.saving = true;
+    if (this.editingCategorie && this.editingCategorie.id) {
+      this.categorieService.updateCategorie(this.editingCategorie.id, this.newCategorie).subscribe({
+        next: (updated) => {
+          this.saving = false;
+          const idx = this.categorii.findIndex(c => c.id === updated.id);
+          if (idx >= 0) this.categorii[idx] = updated;
+          this.cancelAddCategorie();
+        },
+        error: (err) => { this.saving = false; console.error(err); alert('Eroare la actualizare categorie.'); }
+      });
+    } else {
+      this.categorieService.createCategorie(this.terenId, this.newCategorie).subscribe({
+        next: (saved) => {
+          this.saving = false;
+          this.categorii.push(saved);
+          this.cancelAddCategorie();
+        },
+        error: (err) => { this.saving = false; console.error(err); alert('Eroare la salvare categorie.'); }
+      });
+    }
+  }
+
+  deleteCategorie(categorie: CategorieFolosinta) {
+    if (!categorie.id) return;
+    if (!confirm(`Ștergeți categoria "${categorie.denumire}"?`)) return;
+    this.categorieService.deleteCategorie(categorie.id).subscribe({
+      next: () => {
+        this.categorii = this.categorii.filter(c => c.id !== categorie.id);
+      },
+      error: () => alert('Eroare la ștergere categorie.')
+    });
+  }
+
+  selectParcela(p: Parcela) {
+    this.viewingParcela = p;
+    this.isAddingParcela = false;
+    this.isAddingCultura = false;
+    this.editingCultura = null;
+    this.culturi = [];
+    if (p.id) {
+      this.loadCulturi(p.id);
+      this.loadSurse(p.id);
+    }
+  }
+
+  closeParcela() {
+    this.viewingParcela = null;
+    this.isAddingCultura = false;
+    this.editingCultura = null;
+    this.surse = [];
+    this.isAddingSursa = false;
+    this.editingSursa = null;
+  }
+
   deleteParcela(p: Parcela) {
     if (!p.id) return;
     if (!confirm(`Ștergeți parcela "${p.denumire}"?`)) return;
@@ -347,6 +578,140 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
         this.viewingParcela = null;
       },
       error: () => alert('Eroare la ștergere.')
+    });
+  }
+
+  loadCulturi(parcelaId: number) {
+    this.culturaService.getCulturi(parcelaId).subscribe({
+      next: data => this.culturi = data || [],
+      error: () => this.culturi = []
+    });
+  }
+
+  openAddCulturaForm() {
+    this.isAddingCultura = true;
+    this.editingCultura = null;
+    this.newCultura = {
+      anAgricol: new Date().getFullYear(),
+      specieCultura: '',
+      suprafataCultivataHa: this.viewingParcela?.suprafata || 0
+    };
+  }
+
+  openEditCultura(cultura: CulturaParcela) {
+    this.isAddingCultura = true;
+    this.editingCultura = cultura;
+    this.newCultura = { ...cultura, tipSol: cultura.tipSol || '' };
+  }
+
+  cancelAddCultura() {
+    this.isAddingCultura = false;
+    this.editingCultura = null;
+    this.newCultura = {};
+  }
+
+  saveCultura() {
+    if (!this.newCultura.specieCultura?.trim() || !this.newCultura.anAgricol || !this.newCultura.suprafataCultivataHa) {
+      alert('Completați anul agricol, specia și suprafața.');
+      return;
+    }
+    if (!this.viewingParcela?.id) return;
+
+    this.saving = true;
+    if (this.editingCultura && this.editingCultura.id) {
+      this.culturaService.updateCultura(this.viewingParcela.id, this.editingCultura.id, this.newCultura as CulturaParcela).subscribe({
+        next: updated => {
+          this.saving = false;
+          const idx = this.culturi.findIndex(c => c.id === updated.id);
+          if (idx >= 0) this.culturi[idx] = updated;
+          this.cancelAddCultura();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare cultura.'); }
+      });
+    } else {
+      this.culturaService.createCultura(this.viewingParcela.id, this.newCultura as CulturaParcela).subscribe({
+        next: saved => {
+          this.saving = false;
+          this.culturi.push(saved);
+          this.cancelAddCultura();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare cultura.'); }
+      });
+    }
+  }
+
+  deleteCultura(cultura: CulturaParcela) {
+    if (!cultura.id || !this.viewingParcela?.id) return;
+    if (!confirm(`Ștergeți cultura "${cultura.specieCultura}"?`)) return;
+    this.culturaService.deleteCultura(this.viewingParcela.id, cultura.id).subscribe({
+      next: () => {
+        this.culturi = this.culturi.filter(c => c.id !== cultura.id);
+      },
+      error: () => alert('Eroare la ștergere cultura.')
+    });
+  }
+
+  loadSurse(parcelaId: number) {
+    this.sursaApaService.getSurse(parcelaId).subscribe({
+      next: data => this.surse = data || [],
+      error: () => this.surse = []
+    });
+  }
+
+  openAddSursaForm() {
+    this.isAddingSursa = true;
+    this.editingSursa = null;
+    this.newSursa = { tipSursa: '', stareFunctionare: true };
+  }
+
+  openEditSursa(sursa: SursaApa) {
+    this.isAddingSursa = true;
+    this.editingSursa = sursa;
+    this.newSursa = { ...sursa };
+  }
+
+  cancelAddSursa() {
+    this.isAddingSursa = false;
+    this.editingSursa = null;
+    this.newSursa = { stareFunctionare: true };
+  }
+
+  saveSursa() {
+    if (!this.viewingParcela?.id) return;
+
+    this.saving = true;
+    const payload = this.newSursa as SursaApa;
+
+    if (this.editingSursa && this.editingSursa.id) {
+      this.sursaApaService.updateSursa(this.viewingParcela.id, this.editingSursa.id, payload).subscribe({
+        next: updated => {
+          this.saving = false;
+          const idx = this.surse.findIndex(s => s.id === updated.id);
+          if (idx >= 0) this.surse[idx] = updated;
+          this.cancelAddSursa();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare sursă apă.'); }
+      });
+    } else {
+      this.sursaApaService.createSursa(this.viewingParcela.id, payload).subscribe({
+        next: saved => {
+          this.saving = false;
+          this.surse.push(saved);
+          this.cancelAddSursa();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare sursă apă.'); }
+      });
+    }
+  }
+
+  deleteSursa(sursa: SursaApa) {
+    if (!sursa.id || !this.viewingParcela?.id) return;
+    if (!confirm(`Ștergeți sursa de apă "${sursa.tipSursa || 'fără tip'}"?`)) return;
+    this.sursaApaService.deleteSursa(this.viewingParcela.id, sursa.id).subscribe({
+      next: () => {
+        this.surse = this.surse.filter(s => s.id !== sursa.id);
+      },
+      error: () => alert('Eroare la ștergere sursă apă.')
     });
   }
 

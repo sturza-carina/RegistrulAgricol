@@ -7,7 +7,7 @@ import { Persoana } from '../models/persoana.model';
   providedIn: 'root'
 })
 export class PersoanaService {
-  private apiUrl = '/api/persoane';
+  private apiUrl = '/api/persons';
 
   constructor(private http: HttpClient) { }
 
@@ -37,6 +37,10 @@ export class PersoanaService {
 
   deletePerson(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  addPersonToGospodarie(persoanaId: number, gospodarieId: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${persoanaId}/gospodarii/${gospodarieId}`, {});
   }
 }
 

@@ -1,31 +1,34 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { GospodarieService } from '../../services/gospodarie.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { UatService } from '../../services/uat.service';
+import { UatContextService } from '../../services/uat-context.service';
+import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 
 @Component({
   selector: 'app-gospodarie-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, SidebarComponent],
-  templateUrl: './gospodarie-form.component.html',
-  styleUrls: ['./gospodarie-form.component.css']
+  imports: [CommonModule, RouterLink, SidebarComponent, BreadcrumbsComponent, ReactiveFormsModule],
+  templateUrl: './gospodarie-form.component.html'
 })
 export class GospodarieFormComponent implements OnInit {
-  gospodarieForm: FormGroup;
   isEditMode = false;
   gospodarieId: number | null = null;
   judete: string[] = [];
   localitati: any[] = [];
   selectedJudet = '';
-  user: any = null;
+  isSaving = false;
+  gospodarieForm: FormGroup;
+  breadcrumbItems: BreadcrumbItem[] = [];
 
   constructor(
     private fb: FormBuilder,
     private gospodarieService: GospodarieService,
     private uatService: UatService,
+    private uatContextService: UatContextService,
     private router: Router,
     private route: ActivatedRoute
   ) {
@@ -56,8 +59,31 @@ export class GospodarieFormComponent implements OnInit {
         this.isEditMode = true;
         this.gospodarieId = +id;
         this.loadGospodarie(this.gospodarieId);
+      } else {
+        const activeUat = this.uatContextService.getActiveUat();
+        if (activeUat) {
+          const county = activeUat.judet;
+          this.gospodarieForm.patchValue({
+            uatId: activeUat.id,
+            adresa: {
+              county: county,
+              localitate: activeUat.denumire
+            }
+          });
+          if (county) {
+            this.onJudetChange({ target: { value: county } }, activeUat.id);
+          }
+        }
       }
+      this.updateBreadcrumbs();
     });
+  }
+
+  updateBreadcrumbs() {
+    this.breadcrumbItems = [
+      { label: 'Gospodării', link: '/gospodarii' },
+      { label: this.isEditMode ? 'Editare' : 'Adăugare' }
+    ];
   }
 
   loadJudete() {
@@ -121,18 +147,9 @@ export class GospodarieFormComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.gospodarieForm.invalid) {
-      this.gospodarieForm.markAllAsTouched();
-      return;
-    }
-
+    if (this.gospodarieForm.invalid) return;
     const formData = this.gospodarieForm.value;
-    
-    // Sanitize numeric fields that might be empty strings to avoid Java Jackson parse errors
-    if (formData.adresa) {
-      if (formData.adresa.floor === '') formData.adresa.floor = null;
-      if (formData.adresa.apartmentNumber === '') formData.adresa.apartmentNumber = null;
-    }
+    this.isSaving = true;
 
     const selectedUatId = formData.uatId ? Number(formData.uatId) : null;
     const selectedLocalitate = selectedUatId
@@ -144,23 +161,44 @@ export class GospodarieFormComponent implements OnInit {
     }
 
     const payload = {
-      ...formData,
+      codGospodarie: formData.codGospodarie,
+      tipGospodarie: formData.tipGospodarie,
+      activa: formData.activa,
       uatId: selectedUatId,
-      uat: selectedUatId ? { id: selectedUatId } : null
+      uat: selectedUatId ? { id: selectedUatId } : null,
+      adresa: {
+        county: formData.adresa.county,
+        localitate: formData.adresa.localitate,
+        street: formData.adresa.street,
+        streetNumber: formData.adresa.streetNumber,
+        building: formData.adresa.building,
+        staircase: formData.adresa.staircase,
+        floor: formData.adresa.floor ? Number(formData.adresa.floor) : undefined,
+        apartmentNumber: formData.adresa.apartmentNumber ? Number(formData.adresa.apartmentNumber) : undefined,
+        postalCode: formData.adresa.postalCode
+      }
     };
 
     if (this.isEditMode && this.gospodarieId) {
-      this.gospodarieService.updateGospodarie(this.gospodarieId, payload).subscribe({
-        next: () => this.router.navigate(['/gospodarii']),
+      this.gospodarieService.updateGospodarie(this.gospodarieId, payload as any).subscribe({
+        next: () => {
+          this.isSaving = false;
+          this.router.navigate(['/gospodarii']);
+        },
         error: (err) => {
+          this.isSaving = false;
           console.error(err);
           alert('Eroare la salvare');
         }
       });
     } else {
-      this.gospodarieService.createGospodarie(payload).subscribe({
-        next: () => this.router.navigate(['/gospodarii']),
+      this.gospodarieService.createGospodarie(payload as any).subscribe({
+        next: () => {
+          this.isSaving = false;
+          this.router.navigate(['/gospodarii']);
+        },
         error: (err) => {
+          this.isSaving = false;
           console.error(err);
           alert('Eroare la salvare');
         }

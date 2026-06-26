@@ -1,0 +1,70 @@
+<form *ngIf="config && formGroup" [formGroup]="formGroup" (ngSubmit)="onSubmit()" class="generic-form">
+  <div *ngFor="let section of config.sections" class="form-section">
+    <div class="section-title" *ngIf="section.title">
+      <div class="section-icon" *ngIf="section.icon" [innerHTML]="section.icon"></div>
+      {{ section.title }}
+    </div>
+    <div class="section-description" *ngIf="section.description">{{ section.description }}</div>
+
+    <div class="form-grid">
+      <ng-container *ngFor="let field of section.fields">
+        <div class="form-group" [ngClass]="field.width || 'half'" *ngIf="shouldShowField(field)">
+          <label *ngIf="field.type !== 'checkbox'" [for]="field.name">
+            {{ field.label }} <span *ngIf="field.required" class="required-asterisk">*</span>
+          </label>
+
+          <!-- Input Types -->
+          <ng-container [ngSwitch]="field.type">
+            <!-- Text, Number, Email, Password, Date -->
+            <input *ngSwitchCase="'text'" type="text" [id]="field.name" [formControlName]="field.name" class="form-control" [placeholder]="field.placeholder || ''">
+            <input *ngSwitchCase="'number'" type="number" [id]="field.name" [formControlName]="field.name" class="form-control" [placeholder]="field.placeholder || ''" [min]="field.min || ''" [max]="field.max || ''" [step]="field.step || 'any'">
+            <input *ngSwitchCase="'email'" type="email" [id]="field.name" [formControlName]="field.name" class="form-control" [placeholder]="field.placeholder || ''">
+            <input *ngSwitchCase="'password'" type="password" [id]="field.name" [formControlName]="field.name" class="form-control" [placeholder]="field.placeholder || ''">
+            <input *ngSwitchCase="'date'" type="date" [id]="field.name" [formControlName]="field.name" class="form-control">
+
+            <!-- Textarea -->
+            <textarea *ngSwitchCase="'textarea'" [id]="field.name" [formControlName]="field.name" class="form-control" [placeholder]="field.placeholder || ''" rows="3"></textarea>
+
+            <!-- Select -->
+            <div *ngSwitchCase="'select'" class="select-wrapper">
+              <select [id]="field.name" [formControlName]="field.name" class="form-control">
+                <option *ngIf="field.placeholder" [value]="''">{{ field.placeholder }}</option>
+                <option *ngFor="let opt of field.options" [value]="opt.value">{{ opt.label }}</option>
+              </select>
+            </div>
+
+            <!-- Multi Select -->
+            <div *ngSwitchCase="'multi-select'" class="select-wrapper">
+              <select multiple [id]="field.name" [formControlName]="field.name" class="form-control" style="min-height: 120px;">
+                <option *ngFor="let opt of field.options" [value]="opt.value">{{ opt.label }}</option>
+              </select>
+              <small style="color: var(--text-muted); font-size: 11px; margin-top: 4px; display: block;">Țineți apăsat CTRL (sau CMD pe Mac) pentru a selecta mai multe opțiuni.</small>
+            </div>
+
+            <!-- Checkbox -->
+            <div *ngSwitchCase="'checkbox'" class="checkbox-wrapper" style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" [id]="field.name" [formControlName]="field.name" style="width: 18px; height: 18px; cursor: pointer;">
+              <label [for]="field.name" style="cursor: pointer; margin-bottom: 0;">
+                {{ field.label }} <span *ngIf="field.required" class="required-asterisk">*</span>
+              </label>
+            </div>
+          </ng-container>
+
+          <span class="hint" *ngIf="field.hint">{{ field.hint }}</span>
+          
+          <div class="error-message" *ngIf="formGroup.get(field.name)?.invalid && formGroup.get(field.name)?.touched">
+            <small *ngIf="formGroup.get(field.name)?.errors?.['required']">Acest câmp este obligatoriu.</small>
+            <small *ngIf="formGroup.get(field.name)?.errors?.['email']">Adresa de email nu este validă.</small>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <div class="form-actions" style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
+    <button type="button" class="btn-secondary" (click)="onCancel()" *ngIf="config.cancelText !== null">{{ config.cancelText || 'Anulare' }}</button>
+    <button type="button" class="btn-primary" [disabled]="isSubmitting" (click)="onSubmit()">
+      {{ isSubmitting ? 'Se salvează...' : (config.submitText || 'Salvare') }}
+    </button>
+  </div>
+</form>

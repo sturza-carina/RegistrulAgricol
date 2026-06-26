@@ -1,18 +1,28 @@
-<div class="app-shell">
-  <app-sidebar></app-sidebar>
+<ng-container *ngIf="!isModal">
+  <div class="app-shell">
+    <app-sidebar></app-sidebar>
+    <main class="main-content" style="padding: 0; display: flex; flex-direction: row; height: 100vh; overflow: hidden;">
+      <ng-container *ngTemplateOutlet="formContent"></ng-container>
+    </main>
+  </div>
+</ng-container>
 
-  <main class="main-content" style="padding: 0; display: flex; flex-direction: row; height: 100vh; overflow: hidden;">
+<ng-container *ngIf="isModal">
+  <div class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px;">
+    <div class="modal-content" style="width: 100%; max-width: 1100px; height: 85vh; max-height: 750px; background: white; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); display: flex; flex-direction: row; overflow: hidden; position: relative;">
+      
+      <button (click)="cancel()" style="position: absolute; top: 15px; left: 355px; z-index: 1000; background: none; border: none; font-size: 26px; line-height: 1; cursor: pointer; color: var(--text-muted); transition: color 0.2s;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-muted)'" title="Închide">&times;</button>
+      
+      <ng-container *ngTemplateOutlet="formContent"></ng-container>
+    </div>
+  </div>
+</ng-container>
 
+<ng-template #formContent>
     <!-- Left Panel: Form -->
-    <div class="teren-form-panel">
+    <div class="teren-form-panel" style="width: 400px; overflow-y: auto;">
       <!-- Breadcrumb -->
-      <div class="breadcrumbs">
-        <a [routerLink]="['/gospodarii']" style="color: var(--text-primary); text-decoration: none; font-weight: 500;">Gospodării</a>
-        <span>&gt;</span>
-        <a [routerLink]="['/gospodarii', gospodarieId]" style="color: var(--text-primary); text-decoration: none;">Detalii</a>
-        <span>&gt;</span>
-        <span style="color: var(--text-muted);">Adăugare Teren</span>
-      </div>
+      <app-breadcrumbs *ngIf="!isModal" [items]="breadcrumbItems"></app-breadcrumbs>
 
       <h2 class="form-title">Adăugare Teren Agricol</h2>
 
@@ -85,8 +95,6 @@
           &bull; {{ calculatedArea }} ha
         </span>
       </div>
-      <div id="teren-map" style="flex: 1;"></div>
+      <div id="teren-map" style="flex: 1; z-index: 1;"></div>
     </div>
-
-  </main>
-</div>
+</ng-template>

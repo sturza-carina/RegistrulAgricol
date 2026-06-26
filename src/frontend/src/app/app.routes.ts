@@ -14,6 +14,12 @@ import { GospodarieFormComponent } from './pages/gospodarie-form/gospodarie-form
 import { GospodarieDetailsComponent } from './pages/gospodarie-details/gospodarie-details.component';
 import { TerenFormComponent } from './pages/teren-form/teren-form.component';
 import { TerenParceleComponent } from './pages/teren-parcele/teren-parcele.component';
+import { GoogleMapComponent } from './components/google-map/google-map.component';
+import { ContractManagementComponent } from './pages/contract-management/contract-management.component';
+import { AnimalListComponent } from './pages/animal-list/animal-list.component';
+import { AnimalIndividualFormComponent } from './pages/animal-individual-form/animal-individual-form.component';
+import { EfectivGrupFormComponent } from './pages/efectiv-grup-form/efectiv-grup-form.component';
+import { AnimalTimelineComponent } from './pages/animal-timeline/animal-timeline.component';
 
 export const routes: Routes = [
   { path: 'login',          component: LoginComponent },
@@ -25,6 +31,7 @@ export const routes: Routes = [
   { path: 'persoane',        component: PersonListComponent },
   { path: 'persoane/new',    component: PersonFormComponent },
   { path: 'persoane/edit/:id', component: PersonFormComponent },
+  { path: 'contracte',      component: ContractManagementComponent },
   { path: 'uats',           component: UatManagementComponent },
   { path: 'gospodarii',     component: GospodarieListComponent },
   { path: 'gospodarii/new', component: GospodarieFormComponent },
@@ -32,7 +39,16 @@ export const routes: Routes = [
   { path: 'gospodarii/:id', component: GospodarieDetailsComponent },
   { path: 'terenuri/new',   component: TerenFormComponent },
   { path: 'terenuri/:id/parcele', component: TerenParceleComponent },
+  { path: 'animale',         component: AnimalListComponent },
+  { path: 'animale/individual/new', component: AnimalIndividualFormComponent },
+  { path: 'animale/individual/edit/:id', component: AnimalIndividualFormComponent },
+  { path: 'animale/grup/new', component: EfectivGrupFormComponent },
+  // Snapshot route: adaugă un rând nou la efectivul existent (model append-only ANSVSA)
+  { path: 'animale/grup/:id/snapshot', component: EfectivGrupFormComponent },
+  { path: 'animale/individual/:id/istoric', component: AnimalTimelineComponent },
   { path: 'harta',          component: ParcelaMapComponent },
+  { path: 'google-harta',   component: GoogleMapComponent },
+  { path: 'contracte',      component: ContractManagementComponent },
   { path: '',               redirectTo: '/login', pathMatch: 'full' }
 ];
 

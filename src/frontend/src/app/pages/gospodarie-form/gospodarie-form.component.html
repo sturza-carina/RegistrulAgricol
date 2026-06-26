@@ -3,16 +3,12 @@
 
   <main class="main-content">
     <header class="topbar">
-      <div class="topbar-title">Registru Agricol - Gospodării</div>
+      <div class="topbar-title">Registru Agricol</div>
       <div class="topbar-spacer"></div>
     </header>
 
     <div class="page-content">
-      <div class="breadcrumbs" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-        <a routerLink="/gospodarii" style="color: var(--text-primary); text-decoration: none; font-weight: 500;">Gospodării</a>
-        <span>&gt;</span>
-        <span style="color: var(--text-muted);">{{ isEditMode ? 'Editare' : 'Adăugare gospodărie' }}</span>
-      </div>
+      <app-breadcrumbs [items]="breadcrumbItems"></app-breadcrumbs>
       <div class="page-header-row" style="max-width: 800px; margin: 0 auto 20px;">
         <div style="display: flex; align-items: center; gap: 15px;">
           <button class="back-btn" (click)="cancel()" style="background:none; border:none; color:var(--text-secondary); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:8px; border-radius:50%; transition:background 0.2s;" onmouseover="this.style.background='var(--body-bg)'" onmouseout="this.style.background='none'" title="Înapoi">
@@ -22,7 +18,7 @@
             </svg>
           </button>
           <h1 style="font-size:24px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--text-primary);margin:0;">
-            {{ isEditMode ? 'Editare Gospodărie' : 'Adăugare Gospodărie Nouă' }}
+            {{ isEditMode ? 'Editare Gospodărie' : 'Adăugare Gospodărie' }}
           </h1>
         </div>
       </div>

@@ -4,12 +4,14 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 
-import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { LayoutComponent } from '../../components/layout/layout.component';
+import { PageHeaderComponent } from '../../components/page-header/page-header.component';
+import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 
 @Component({
   selector: 'app-super-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, SidebarComponent],
+  imports: [CommonModule, LayoutComponent, PageHeaderComponent, BreadcrumbsComponent],
   templateUrl: './super-admin-dashboard.component.html',
 })
 export class SuperAdminDashboardComponent implements OnInit {
@@ -18,6 +20,30 @@ export class SuperAdminDashboardComponent implements OnInit {
 
   recentTenants: any[] = [];
   totalUsers: number = 0;
+
+  breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Super Admin Dashboard', link: '/dashboard' }
+  ];
+
+  currentPage = 1;
+  itemsPerPage = 5;
+
+  get paginatedItems() {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    return this.recentTenants.slice(startIndex, startIndex + this.itemsPerPage);
+  }
+
+  get totalPages() {
+    return Math.ceil(this.recentTenants.length / this.itemsPerPage) || 1;
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) this.currentPage++;
+  }
+
+  prevPage() {
+    if (this.currentPage > 1) this.currentPage--;
+  }
 
   constructor(
     private router: Router,
@@ -64,6 +90,7 @@ export class SuperAdminDashboardComponent implements OnInit {
             numUats: t.uatsCount || 1 // Backend will supply this, defaults to 1 for demo
           };
         });
+        this.currentPage = 1;
       },
       error: (err) => console.error('Failed to load tenants', err)
     });
@@ -94,9 +121,6 @@ export class SuperAdminDashboardComponent implements OnInit {
     this.router.navigate(['/users']);
   }
 
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
+
 }
 
