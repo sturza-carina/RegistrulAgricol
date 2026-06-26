@@ -57,25 +57,16 @@
         {{ loadError }}
       </div>
 
-      <!-- Search & Filter -->
-      <div class="card" *ngIf="!creatingUat && !viewingUat && !editingUat" style="padding: 12px 20px; margin-bottom: 20px;">
-        <div style="display: flex; gap: 16px; align-items: center; width: 100%;">
-          <div class="search-bar" style="flex: 1; margin: 0;">
-            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-            <input type="text" placeholder="Caută după nume sau județ..." (input)="onSearch($event)">
-          </div>
-          <div style="display: flex; align-items: center; background: #f8fafc; border: 1px solid var(--input-border, #e2e8f0); border-radius: 20px; padding: 4px 16px; gap: 6px;">
-            <span style="font-size: 13px; color: var(--text-secondary); font-weight: 500; white-space: nowrap;">Tip UAT:</span>
-            <select [(ngModel)]="tipUatFilter" (change)="applyFilter()" style="border: none; background: transparent; font-size: 13px; font-weight: 600; color: var(--text-primary); outline: none; cursor: pointer; padding: 4px 0;">
-              <option value="Toate">Toate Tipurile</option>
-              <option value="Municipiu">Municipiu</option>
-              <option value="Oraș">Oraș</option>
-              <option value="Comună">Comună</option>
-            </select>
-          </div>
-        </div>
+      <!-- Search -->
+      <div class="card" *ngIf="!creatingUat && !viewingUat && !editingUat" style="padding: 16px 20px; margin-bottom: 20px;">
+        <input
+          #uatSearch
+          type="text"
+          placeholder="Caută după județ sau localitate..."
+          (input)="onSearch(uatSearch.value)"
+          class="w-full p-2 border rounded mb-4"
+          style="margin-bottom:0;"
+        >
       </div>
 
       <!-- Table -->
@@ -95,7 +86,7 @@
           </tr>
           </thead>
           <tbody>
-          <tr *ngFor="let uat of filteredUats" class="hoverable-row">
+          <tr *ngFor="let uat of paginatedUats" class="hoverable-row">
             <td>{{ uat.codSiruta }}</td>
             <td><strong>{{ uat.denumire }}</strong></td>
             <td>{{ uat.judet }}</td>
@@ -125,13 +116,34 @@
               </button>
             </td>
           </tr>
-          <tr *ngIf="filteredUats.length === 0">
+          <tr *ngIf="paginatedUats.length === 0">
             <td colspan="6" class="empty-state">Niciun rezultat găsit.</td>
           </tr>
           </tbody>
         </table>
-        <div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--card-border)">
-          <span style="font-size:12.5px;color:var(--text-muted)">Se afișează {{ filteredUats.length }} UAT-uri</span>
+        <div class="flex flex-col gap-3 border-t border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <span class="text-sm text-slate-500">Se afișează {{ filteredUats.length }} din {{ allUats.length }} UAT-uri</span>
+          <div class="flex items-center gap-3">
+            <span class="text-sm font-medium text-slate-600">Pagina {{ currentPage }} din {{ totalPages }}</span>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                [disabled]="currentPage === 1"
+                (click)="goToPage(currentPage - 1)"
+              >
+                Anterior
+              </button>
+              <button
+                type="button"
+                class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                [disabled]="currentPage === totalPages"
+                (click)="goToPage(currentPage + 1)"
+              >
+                Următor
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

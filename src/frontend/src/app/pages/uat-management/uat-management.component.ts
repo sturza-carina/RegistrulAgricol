@@ -35,15 +35,18 @@ export class UatManagementComponent implements OnInit {
   ];
 
   user: any = null;
-  uats: UAT[] = [];
+  allUats: UAT[] = [];
   filteredUats: UAT[] = [];
+  paginatedUats: UAT[] = [];
   uatForm: FormGroup;
   creatingUat = false;
   viewingUat: UAT | null = null;
   editingUat: UAT | null = null;
 
   searchTerm = '';
-  tipUatFilter = 'Toate';
+  currentPage = 1;
+  pageSize = 10;
+  totalPages = 1;
   loadError = '';
   successMessage = '';
   errorMessage = '';
@@ -88,28 +91,49 @@ export class UatManagementComponent implements OnInit {
     this.loadError = '';
     this.http.get<UAT[]>(this.apiUrl).subscribe({
       next: (data) => {
-        this.uats = data;
-        this.applyFilter();
+        this.allUats = data ?? [];
+        this.filterAndPaginate();
       },
       error: () => {
-        this.uats = [];
+        this.allUats = [];
         this.filteredUats = [];
+        this.paginatedUats = [];
+        this.totalPages = 1;
         this.loadError = 'Nu s-au putut încărca UAT-urile. Verifică dacă backend-ul rulează.';
       }
     });
   }
 
-  onSearch(event: any): void {
-    this.searchTerm = event.target.value.toLowerCase();
-    this.applyFilter();
+  onSearch(term: string): void {
+    this.searchTerm = term;
+    this.currentPage = 1;
+    this.filterAndPaginate();
   }
 
-  applyFilter(): void {
-    this.filteredUats = this.uats.filter(uat => {
-      const matchesSearch = uat.denumire.toLowerCase().includes(this.searchTerm) || uat.judet.toLowerCase().includes(this.searchTerm);
-      const matchesTip = this.tipUatFilter === 'Toate' || uat.tipUat === this.tipUatFilter;
-      return matchesSearch && matchesTip;
+  filterAndPaginate(): void {
+    const normalizedSearchTerm = this.searchTerm.trim().toLowerCase();
+
+    this.filteredUats = this.allUats.filter(uat => {
+      const denumire = (uat.denumire || '').toLowerCase();
+      const judet = (uat.judet || '').toLowerCase();
+      return !normalizedSearchTerm || denumire.includes(normalizedSearchTerm) || judet.includes(normalizedSearchTerm);
     });
+
+    this.totalPages = Math.max(1, Math.ceil(this.filteredUats.length / this.pageSize));
+    this.currentPage = Math.min(Math.max(this.currentPage, 1), this.totalPages);
+
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.paginatedUats = this.filteredUats.slice(startIndex, endIndex);
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages || page === this.currentPage) {
+      return;
+    }
+
+    this.currentPage = page;
+    this.filterAndPaginate();
   }
 
   openAddForm(): void {
