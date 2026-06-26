@@ -52,6 +52,7 @@ public class GospodarieController {
 
 
     @GetMapping
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> getAllGospodarii(
             @RequestParam(required = false) String uatCode) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {

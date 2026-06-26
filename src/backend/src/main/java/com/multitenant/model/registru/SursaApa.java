@@ -14,9 +14,8 @@ public class SursaApa {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "tip_sursa", length = 100, nullable = false)
-    private TipSursaApa tipSursa;
+    @Column(name = "tip_sursa", length = 100)
+    private String tipSursa;
 
     @Column(name = "debit_mc_ora")
     private Double debitMcOra;

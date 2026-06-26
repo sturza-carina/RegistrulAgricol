@@ -21,7 +21,7 @@ public class AnimalIndividual {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "gospodarie_id", nullable = false)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Gospodarie gospodarie;
@@ -31,7 +31,7 @@ public class AnimalIndividual {
     @JsonProperty(value = "gospodarieId", access = JsonProperty.Access.WRITE_ONLY)
     private Long gospodarieId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "proprietar_id", nullable = false)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Persoana proprietar;

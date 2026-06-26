@@ -1,46 +1,56 @@
 package com.multitenant.controller;
 
 import com.multitenant.model.core.Uat;
+import com.multitenant.repository.UatRepository;
 import com.multitenant.service.UatService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/uats")
-@PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN')")
+@CrossOrigin(origins = "*")
 public class UatController {
 
+    private final UatRepository uatRepository;
     private final UatService uatService;
 
-    public UatController(UatService uatService) {
+    public UatController(UatRepository uatRepository, UatService uatService) {
+        this.uatRepository = uatRepository;
         this.uatService = uatService;
     }
 
-    @PostMapping
-    public Uat createUat(@RequestBody Uat uat) {
-        return uatService.createUat(uat);
-    }
-
     @GetMapping
-    public List<Uat> getAllUats() {
-        return uatService.getAllUats();
+    public ResponseEntity<List<Uat>> getAllUats() {
+        return ResponseEntity.ok(uatService.getAllUats());
     }
 
-    @GetMapping("/{codSiruta}")
-    public Uat getUat(@PathVariable String codSiruta) {
-        return uatService.getUatByCodSiruta(codSiruta);
+    @PostMapping
+    public ResponseEntity<Uat> createUat(@RequestBody Uat uat) {
+        return ResponseEntity.ok(uatService.createUat(uat));
     }
 
     @PutMapping("/{codSiruta}")
-    public Uat updateUat(@PathVariable String codSiruta, @RequestBody Uat uat) {
-        return uatService.updateUat(codSiruta, uat);
+    public ResponseEntity<Uat> updateUat(@PathVariable String codSiruta, @RequestBody Uat request) {
+        return ResponseEntity.ok(uatService.updateUat(codSiruta, request));
     }
 
     @DeleteMapping("/{codSiruta}")
-    public void deleteUat(@PathVariable String codSiruta) {
+    public ResponseEntity<Void> deleteUat(@PathVariable String codSiruta) {
         uatService.deleteUat(codSiruta);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/judete")
+    public ResponseEntity<List<String>> getJudete() {
+        return ResponseEntity.ok(uatRepository.findDistinctJudeteOrderByJudetAsc());
+    }
+
+    @GetMapping("/localitati")
+    public ResponseEntity<List<Uat>> getLocalitatiByJudet(@RequestParam String judet) {
+        return ResponseEntity.ok(uatRepository.findByJudetOrderByDenumireAsc(judet));
     }
 }
+
 

@@ -15,12 +15,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/parcele/{parcelaId}/surse-apa")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
 public class SursaApaController {
 
     private final SursaApaService sursaApaService;
 
     @GetMapping
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> getSurse(@PathVariable Long parcelaId) {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.ok(Collections.emptyList());
@@ -29,6 +29,7 @@ public class SursaApaController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> addSursa(
             @PathVariable Long parcelaId,
             @RequestBody SursaApaDTO dto) {
@@ -40,6 +41,7 @@ public class SursaApaController {
     }
 
     @PutMapping("/{sursaId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> updateSursa(
             @PathVariable Long parcelaId,
             @PathVariable Long sursaId,
@@ -51,6 +53,7 @@ public class SursaApaController {
     }
 
     @DeleteMapping("/{sursaId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> deleteSursa(
             @PathVariable Long parcelaId,
             @PathVariable Long sursaId) {

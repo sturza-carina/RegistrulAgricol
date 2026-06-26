@@ -1,5 +1,11 @@
 target
 .mvn
+.idea
 .git
 .gitignore
+.settings
+.classpath
+.project
+*.class
+*.jar
 .DS_Store

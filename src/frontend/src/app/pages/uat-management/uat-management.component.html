@@ -6,81 +6,172 @@
     [description]="!creatingUat && !editingUat && !viewingUat ? 'Gestionare unități administrativ-teritoriale.' : (creatingUat ? 'Înregistrați o nouă unitate administrativ-teritorială (UAT).' : (editingUat ? 'Modificați detaliile UAT-ului selectat.' : ''))">
   </app-page-header>
 
-      <div *ngIf="successMessage" style="background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px">
-        {{ successMessage }}
-      </div>
-      <div *ngIf="errorMessage" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px">
-        {{ errorMessage }}
-      </div>
-      <div *ngIf="loadError" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px">
-        {{ loadError }}
-      </div>
+  <div *ngIf="successMessage" style="background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px">
+    {{ successMessage }}
+  </div>
+  <div *ngIf="errorMessage" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px">
+    {{ errorMessage }}
+  </div>
+  <div *ngIf="loadError" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px">
+    {{ loadError }}
+  </div>
 
-      <app-generic-table
-        [data]="uats"
-        [columns]="columns"
-        [filters]="filters"
-        [actions]="actions"
-        [title]="'UAT-uri Înregistrate'"
-        [itemsPerPage]="6"
-        [primaryActionText]="'Creare UAT'"
-        (primaryAction)="openAddForm()">
-      </app-generic-table>
+  <!-- Search & Create Button -->
+  <div class="card" *ngIf="!creatingUat && !viewingUat && !editingUat" style="padding: 16px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap;">
+    <input
+      #uatSearch
+      type="text"
+      placeholder="Caută după județ sau localitate..."
+      (input)="onSearch(uatSearch.value)"
+      class="form-control"
+      style="margin-bottom: 0; max-width: 400px; flex: 1;"
+    >
+    <button class="btn-primary" (click)="openAddForm()">
+      Adăugare UAT
+    </button>
+  </div>
 
-      <!-- UAT Details View -->
-      <div class="modal-overlay" *ngIf="viewingUat" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; overflow-y: auto; padding: 20px;">
-        <div class="modal-content card" style="width: 100%; max-width: 600px; background: var(--card-bg); padding: 30px; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); position: relative;">
-          
-          <button (click)="closeViewUat()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted);">&times;</button>
-          
-          <div class="form-section">
-            <div class="section-title">
-              <div class="section-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-              </div>
-              Detalii UAT
-            </div>
-            
-            <div style="margin-top: 15px;">
-              <p><strong>Nume:</strong> {{ viewingUat.denumire }}</p>
-              <p><strong>Cod SIRUTA:</strong> <span style="font-family: monospace; color: var(--text-secondary);">{{ viewingUat.codSiruta }}</span></p>
-              <p><strong>Județ:</strong> {{ viewingUat.judet }}</p>
-              <p><strong>Tip UAT:</strong> {{ viewingUat.tipUat }}</p>
-              <p><strong>Status:</strong> 
-                <span class="badge" [ngClass]="viewingUat.isActive ? 'active' : 'archived'" style="margin-left: 8px;">
-                  {{ viewingUat.isActive ? 'Activ' : 'Inactiv' }}
-                </span>
-              </p>
-            </div>
-          </div>
+  <!-- Table -->
+  <div class="card table-container" *ngIf="!creatingUat && !viewingUat && !editingUat">
+    <div class="card-header">
+      <h3>UAT-uri</h3>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Cod SIRUTA</th>
+          <th>Nume</th>
+          <th>Județ</th>
+          <th>Tip UAT</th>
+          <th>Status</th>
+          <th style="text-align:right">Acțiuni</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let uat of paginatedUats" class="hoverable-row">
+          <td>{{ uat.codSiruta }}</td>
+          <td><strong>{{ uat.denumire }}</strong></td>
+          <td>{{ uat.judet }}</td>
+          <td>{{ uat.tipUat }}</td>
+          <td>
+            <span class="badge" [ngClass]="uat.isActive ? 'active' : 'archived'">
+              {{ uat.isActive ? 'Activ' : 'Inactiv' }}
+            </span>
+          </td>
+          <td style="text-align:right; display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
+            <button *ngIf="uat.isActive" style="background:none; border:none; color:#10b981; cursor:pointer; padding: 4px;" (click)="manageUat(uat)" title="Accesare Context UAT">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 3h6v6"></path>
+                <path d="M10 14L21 3"></path>
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              </svg>
+            </button>
+            <button style="background:none; border:none; color:var(--primary); cursor:pointer; padding: 4px;" (click)="viewUat(uat)" title="Detalii">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+            <button style="background:none; border:none; color:var(--primary); cursor:pointer; padding: 4px;" (click)="editUat(uat)" title="Edit">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+            <button style="background:none; border:none; color:red; cursor:pointer; padding: 4px;" (click)="deleteUat(uat)" title="Delete">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="paginatedUats.length === 0">
+          <td colspan="6" class="empty-state" style="text-align: center; padding: 20px; color: var(--text-muted);">Niciun rezultat găsit.</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; border-top: 1px solid var(--border-color, #e2e8f0); flex-wrap: wrap; gap: 15px;">
+      <span style="font-size: 13px; color: var(--text-muted);">Se afișează {{ filteredUats.length }} din {{ allUats.length }} UAT-uri</span>
+      <div style="display: flex; align-items: center; gap: 15px;">
+        <span style="font-size: 13px; font-weight: 500; color: var(--text-secondary);">Pagina {{ currentPage }} din {{ totalPages }}</span>
+        <div style="display: flex; gap: 8px;">
+          <button
+            type="button"
+            class="btn-secondary"
+            style="padding: 6px 12px; font-size: 13px;"
+            [disabled]="currentPage === 1"
+            (click)="goToPage(currentPage - 1)"
+          >
+            Anterior
+          </button>
+          <button
+            type="button"
+            class="btn-secondary"
+            style="padding: 6px 12px; font-size: 13px;"
+            [disabled]="currentPage === totalPages"
+            (click)="goToPage(currentPage + 1)"
+          >
+            Următor
+          </button>
         </div>
       </div>
+    </div>
+  </div>
 
-      <!-- Form View (Create/Edit) -->
-      <div class="modal-overlay" *ngIf="creatingUat || editingUat" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; overflow-y: auto; padding: 20px;">
-        <div class="modal-content card" style="width: 100%; max-width: 600px; background: var(--card-bg); padding: 30px; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); position: relative;">
-          
-          <button (click)="creatingUat ? closeAddForm() : closeEditUat()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted);">&times;</button>
-          
-          <div class="form-section" style="margin-top: 10px;">
-            <div class="section-title">
-              <div class="section-icon">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="2" y="7" width="20" height="14" rx="2"/>
-                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                </svg>
-              </div>
-              {{ editingUat ? 'Editare UAT' : 'Adăugare UAT Nou' }}
-            </div>
-
-            <app-generic-form 
-              [config]="formConfig" 
-              [initialData]="formInitialData"
-              (formSubmit)="saveUat($event)"
-              (formCancel)="creatingUat ? closeAddForm() : closeEditUat()">
-            </app-generic-form>
+  <!-- UAT Details View -->
+  <div class="modal-overlay" *ngIf="viewingUat" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; overflow-y: auto; padding: 20px;">
+    <div class="modal-content card" style="width: 100%; max-width: 600px; background: var(--card-bg); padding: 30px; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); position: relative;">
+      
+      <button (click)="closeViewUat()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted);">&times;</button>
+      
+      <div class="form-section">
+        <div class="section-title">
+          <div class="section-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
           </div>
+          Detalii UAT
+        </div>
+        
+        <div style="margin-top: 15px;">
+          <p><strong>Nume:</strong> {{ viewingUat.denumire }}</p>
+          <p><strong>Cod SIRUTA:</strong> <span style="font-family: monospace; color: var(--text-secondary);">{{ viewingUat.codSiruta }}</span></p>
+          <p><strong>Județ:</strong> {{ viewingUat.judet }}</p>
+          <p><strong>Tip UAT:</strong> {{ viewingUat.tipUat }}</p>
+          <p><strong>Status:</strong> 
+            <span class="badge" [ngClass]="viewingUat.isActive ? 'active' : 'archived'" style="margin-left: 8px;">
+              {{ viewingUat.isActive ? 'Activ' : 'Inactiv' }}
+            </span>
+          </p>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Form View (Create/Edit) -->
+  <div class="modal-overlay" *ngIf="creatingUat || editingUat" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; overflow-y: auto; padding: 20px;">
+    <div class="modal-content card" style="width: 100%; max-width: 600px; background: var(--card-bg); padding: 30px; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); position: relative;">
+      
+      <button (click)="creatingUat ? closeAddForm() : closeEditUat()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted);">&times;</button>
+      
+      <div class="form-section" style="margin-top: 10px;">
+        <div class="section-title">
+          <div class="section-icon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="7" width="20" height="14" rx="2"/>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            </svg>
+          </div>
+          {{ editingUat ? 'Editare UAT' : 'Adăugare UAT Nou' }}
+        </div>
+
+        <app-generic-form 
+          [config]="formConfig" 
+          [initialData]="formInitialData"
+          (formSubmit)="saveUat($event)"
+          (formCancel)="creatingUat ? closeAddForm() : closeEditUat()">
+        </app-generic-form>
+      </div>
+    </div>
+  </div>
 
 </app-layout>

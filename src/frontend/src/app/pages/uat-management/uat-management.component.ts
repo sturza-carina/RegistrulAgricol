@@ -38,8 +38,10 @@ export class UatManagementComponent implements OnInit {
     'Timiș', 'Tulcea', 'Vâlcea', 'Vaslui', 'Vrancea'
   ];
 
-
-  uats: UAT[] = [];
+  user: any = null;
+  allUats: UAT[] = [];
+  filteredUats: UAT[] = [];
+  paginatedUats: UAT[] = [];
   breadcrumbItems: BreadcrumbItem[] = [
     { label: 'UAT-uri', link: '/uats' }
   ];
@@ -75,25 +77,10 @@ export class UatManagementComponent implements OnInit {
     ]
   };
 
-  columns: TableColumn[] = [
-    { field: 'denumire', header: 'Denumire', type: 'text', subField: 'judet' },
-    { field: 'codSiruta', header: 'Cod SIRUTA', format: val => val },
-    { field: 'tipUat', header: 'Tip UAT', type: 'badge', badgeClasses: { 'Comună': 'viewer', 'Oraș': 'viewer', 'Municipiu': 'viewer' } },
-    { field: 'isActive', header: 'Status', type: 'badge', format: val => val ? 'Activ' : 'Inactiv', badgeClasses: { 'true': 'activ', 'false': 'inactiv' } }
-  ];
-
-  filters: TableFilter[] = [
-    { field: 'search', label: 'Caută după denumire, județ...', type: 'search', searchFields: ['denumire', 'judet', 'codSiruta'] },
-    { field: 'tipUat', label: 'Tip UAT', type: 'select', options: [{label: 'Comună', value: 'Comună'}, {label: 'Oraș', value: 'Oraș'}, {label: 'Municipiu', value: 'Municipiu'}] },
-    { field: 'isActive', label: 'Status', type: 'select', options: [{label: 'Activ', value: true}, {label: 'Inactiv', value: false}] }
-  ];
-
-  actions: TableAction[] = [
-    { icon: 'view', tooltip: 'Accesare Context UAT', action: (row) => this.manageUat(row), showIf: (row) => row.isActive },
-    { icon: 'edit', tooltip: 'Editare UAT', action: (row) => this.editUat(row) },
-    { icon: 'delete', tooltip: 'Ștergere UAT', action: (row) => this.deleteUat(row) }
-  ];
-
+  searchTerm = '';
+  currentPage = 1;
+  pageSize = 10;
+  totalPages = 1;
   loadError = '';
   successMessage = '';
   errorMessage = '';
@@ -128,13 +115,49 @@ export class UatManagementComponent implements OnInit {
     this.loadError = '';
     this.http.get<UAT[]>(this.apiUrl).subscribe({
       next: (data) => {
-        this.uats = data;
+        this.allUats = data ?? [];
+        this.filterAndPaginate();
       },
       error: () => {
-        this.uats = [];
+        this.allUats = [];
+        this.filteredUats = [];
+        this.paginatedUats = [];
+        this.totalPages = 1;
         this.loadError = 'Nu s-au putut încărca UAT-urile. Verifică dacă backend-ul rulează.';
       }
     });
+  }
+
+  onSearch(term: string): void {
+    this.searchTerm = term;
+    this.currentPage = 1;
+    this.filterAndPaginate();
+  }
+
+  filterAndPaginate(): void {
+    const normalizedSearchTerm = this.searchTerm.trim().toLowerCase();
+
+    this.filteredUats = this.allUats.filter(uat => {
+      const denumire = (uat.denumire || '').toLowerCase();
+      const judet = (uat.judet || '').toLowerCase();
+      return !normalizedSearchTerm || denumire.includes(normalizedSearchTerm) || judet.includes(normalizedSearchTerm);
+    });
+
+    this.totalPages = Math.max(1, Math.ceil(this.filteredUats.length / this.pageSize));
+    this.currentPage = Math.min(Math.max(this.currentPage, 1), this.totalPages);
+
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.paginatedUats = this.filteredUats.slice(startIndex, endIndex);
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages || page === this.currentPage) {
+      return;
+    }
+
+    this.currentPage = page;
+    this.filterAndPaginate();
   }
 
   openAddForm(): void {
@@ -266,6 +289,4 @@ export class UatManagementComponent implements OnInit {
       });
     }
   }
-
-
 }

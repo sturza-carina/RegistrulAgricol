@@ -12,7 +12,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/tenants")
 @SuppressWarnings("null")
-@PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
 public class TenantController {
 
     private final TenantService tenantService;
@@ -49,6 +48,7 @@ public class TenantController {
     }
 
     @PostMapping("/migrate-all")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
     public void migrateAllTenants() {
         tenantService.migrateAllTenants();
     }

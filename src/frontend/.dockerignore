@@ -1,10 +1,15 @@
 node_modules
-npm-debug.log*
+.angular
 dist
+.vscode
+tmp
+out-tsc
+.gitignore
+README.md
+npm-debug.log*
 .DS_Store
 .cache
 .idea
-.vscode
 .env
 src/environments/environment.ts
 src/environments/environment.prod.ts

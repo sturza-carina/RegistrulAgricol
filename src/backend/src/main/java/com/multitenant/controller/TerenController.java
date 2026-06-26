@@ -13,7 +13,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/terenuri")
 @SuppressWarnings("null")
-@PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
 public class TerenController {
 
     private final TerenService terenService;

@@ -15,18 +15,6 @@ import java.time.LocalDate;
 public interface ContractUtilizareRepository extends JpaRepository<ContractUtilizare, Long> {
     List<ContractUtilizare> findByTerenId(Long terenId);
 
-    @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM ContractUtilizare c " +
-           "WHERE c.teren.id = :terenId " +
-           "AND c.statusContract = :status " +
-           "AND (:endDate IS NULL OR c.dataInceput <= :endDate) " +
-           "AND (c.dataSfarsit IS NULL OR c.dataSfarsit >= :startDate) " +
-           "AND (:excludeId IS NULL OR c.id <> :excludeId)")
-    boolean existsActiveOverlap(@Param("terenId") Long terenId,
-                                @Param("status") StatusContractUtilizare status,
-                                @Param("startDate") LocalDate startDate,
-                                @Param("endDate") LocalDate endDate,
-                                @Param("excludeId") Long excludeId);
-
     @Modifying
     @Query("UPDATE ContractUtilizare c " +
            "SET c.statusContract = :expiredStatus, c.esteActiv = false " +

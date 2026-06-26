@@ -9,31 +9,33 @@
 
     <div class="page-content">
       <app-breadcrumbs [items]="breadcrumbItems"></app-breadcrumbs>
+
       <div class="page-header-row" style="max-width: 800px; margin: 0 auto 20px;">
         <div style="display: flex; align-items: center; gap: 15px;">
-          <button class="back-btn" (click)="cancel()" style="background:none; border:none; color:var(--text-secondary); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:8px; border-radius:50%; transition:background 0.2s;" onmouseover="this.style.background='var(--body-bg)'" onmouseout="this.style.background='none'" title="Înapoi">
+          <button class="back-btn" (click)="cancel()"
+            style="background:none; border:none; color:var(--text-secondary); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:8px; border-radius:50%; transition:background 0.2s;"
+            onmouseover="this.style.background='var(--body-bg)'" onmouseout="this.style.background='none'"
+            title="Înapoi">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="19" y1="12" x2="5" y2="12"></line>
               <polyline points="12 19 5 12 12 5"></polyline>
             </svg>
           </button>
-          <h1 style="font-size:24px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--text-primary);margin:0;">
+          <h1
+            style="font-size:24px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--text-primary);margin:0;">
             {{ isEditMode ? 'Editare Gospodărie' : 'Adăugare Gospodărie' }}
           </h1>
         </div>
       </div>
 
-      <div class="card" style="padding: 30px; max-width: 800px; margin: 0 auto;">
+      <div class="card gospodarie-form-card" style="padding: 30px; max-width: 800px; margin: 0 auto;">
         <div style="padding: 0; margin-top: -10px;">
-          <app-generic-form
-            [config]="formConfig"
-            [initialData]="formInitialData"
-            [isSubmitting]="isSaving"
-            (formSubmit)="save($event)"
-            (formCancel)="cancel()">
+          <app-generic-form [config]="formConfig" [initialData]="formInitialData" [isSubmitting]="isSaving"
+            (fieldChange)="onFieldValueChange($event)" (formSubmit)="save($event)" (formCancel)="cancel()">
           </app-generic-form>
         </div>
       </div>
+
     </div>
   </main>
 </div>

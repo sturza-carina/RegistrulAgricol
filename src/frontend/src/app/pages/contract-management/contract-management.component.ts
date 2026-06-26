@@ -97,28 +97,18 @@ export class ContractManagementComponent implements OnInit {
         this.uatContextService.activeUat$.subscribe(uat => {
           if (uat && uat.tenantId) {
             if (this.user.role === 'ROLE_SUPER_ADMIN') {
-              this.authService.setImpersonation(uat.tenantId).subscribe(() => {
-                this.selectedTenantId = uat.tenantId;
-                this.loadTenantData();
-              });
-            } else {
-              this.selectedTenantId = uat.tenantId;
-              this.loadTenantData();
+              this.authService.setImpersonation(uat.tenantId);
             }
+            this.selectedTenantId = uat.tenantId;
+            this.loadTenantData();
           } else {
             if (this.user.role === 'ROLE_SUPER_ADMIN') {
-              this.authService.stopImpersonation().subscribe(() => {
-                this.selectedTenantId = '';
-                this.contracts = [];
-                this.terenuri = [];
-                this.persoane = [];
-              });
-            } else {
-              this.selectedTenantId = '';
-              this.contracts = [];
-              this.terenuri = [];
-              this.persoane = [];
+              this.authService.stopImpersonation();
             }
+            this.selectedTenantId = '';
+            this.contracts = [];
+            this.terenuri = [];
+            this.persoane = [];
           }
         });
       }
