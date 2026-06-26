@@ -18,6 +18,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/animals")
+@PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
 public class AnimalController {
 
     private final AnimalIndividualService animalIndividualService;
@@ -40,7 +41,6 @@ public class AnimalController {
     // =========================================================================
 
     @GetMapping("/individual")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<List<AnimalIndividual>> getAllIndividuals() {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.ok(Collections.emptyList());
@@ -49,7 +49,6 @@ public class AnimalController {
     }
 
     @GetMapping("/individual/{id}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> getIndividualById(@PathVariable Long id) {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot fetch outside tenant context.");
@@ -58,7 +57,6 @@ public class AnimalController {
     }
 
     @PostMapping("/individual")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> createIndividual(@RequestBody AnimalIndividual animal) {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot create outside tenant context.");
@@ -67,7 +65,6 @@ public class AnimalController {
     }
 
     @PutMapping("/individual/{id}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> updateIndividual(@PathVariable Long id, @RequestBody AnimalIndividual animal) {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot update outside tenant context.");
@@ -76,7 +73,6 @@ public class AnimalController {
     }
 
     @DeleteMapping("/individual/{id}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> deleteIndividual(@PathVariable Long id) {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot delete outside tenant context.");
@@ -94,7 +90,6 @@ public class AnimalController {
      * Adaugă un eveniment nou în istoricul unui animal (NASTERE, TRATAMENT_VETERINAR, VANZARE etc.)
      */
     @PostMapping("/individual/{id}/evenimente")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> adaugaEveniment(
             @PathVariable Long id,
             @RequestBody EvenimentAnimal eveniment) {
@@ -109,7 +104,6 @@ public class AnimalController {
      * Returnează timeline-ul complet al unui animal, ordonat descrescător după dată.
      */
     @GetMapping("/individual/{id}/evenimente")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> getTimeline(@PathVariable Long id) {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot fetch outside tenant context.");
@@ -129,7 +123,6 @@ public class AnimalController {
      * Body: { destinatarTenantId, destinatarGospodarieId, destinatarProprietarId, detaliiTransfer? }
      */
     @PostMapping("/individual/{id}/transfer")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> transferAnimal(
             @PathVariable Long id,
             @RequestBody CrossTenantTransferService.TransferRequest request) {
@@ -150,7 +143,6 @@ public class AnimalController {
     // =========================================================================
 
     @GetMapping("/grup")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<List<EfectivGrup>> getAllGroups() {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.ok(Collections.emptyList());
@@ -159,7 +151,6 @@ public class AnimalController {
     }
 
     @GetMapping("/grup/{id}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> getGroupById(@PathVariable Long id) {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot fetch outside tenant context.");
@@ -168,7 +159,6 @@ public class AnimalController {
     }
 
     @PostMapping("/grup")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> createGroup(@RequestBody EfectivGrup grup) {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot create outside tenant context.");
@@ -182,7 +172,6 @@ public class AnimalController {
      * NU modifică rândul existent — modelul este append-only (ANSVSA traceability).
      */
     @PostMapping("/grup/{id}/snapshot")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> addGrupSnapshot(@PathVariable Long id, @RequestBody EfectivGrup grup) {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot update outside tenant context.");
@@ -195,7 +184,6 @@ public class AnimalController {
      * Returnează istoricul complet al efectivelor de grup pentru o gospodărie.
      */
     @GetMapping("/grup/{gospodarieId}/history")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> getGrupHistory(@PathVariable Long gospodarieId) {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot fetch outside tenant context.");
@@ -204,7 +192,6 @@ public class AnimalController {
     }
 
     @DeleteMapping("/grup/{id}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> deleteGroup(@PathVariable Long id) {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot delete outside tenant context.");
@@ -222,7 +209,6 @@ public class AnimalController {
      * Returnează toate animalele (individuale + grupuri) ale unui proprietar.
      */
     @GetMapping("/proprietar/{proprietarId}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> getAnimalsByProprietar(@PathVariable Long proprietarId) {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot fetch outside tenant context.");
@@ -239,7 +225,6 @@ public class AnimalController {
      * dintr-o gospodărie specificată. Necesar pentru view-ul gospodărie-details.
      */
     @GetMapping("/gospodarie/{gospodarieId}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> getAnimalsByGospodarie(@PathVariable Long gospodarieId) {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot fetch outside tenant context.");

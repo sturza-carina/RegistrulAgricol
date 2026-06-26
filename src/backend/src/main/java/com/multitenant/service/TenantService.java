@@ -38,9 +38,6 @@ public class TenantService {
         tenant.setName(name);
         tenant.setSchemaName(schemaName);
 
-        // Save to public schema
-        Tenant saved = tenantRepository.save(tenant);
-
         // Create schema and run flyway migrations for this new tenant
         try {
             org.flywaydb.core.Flyway flyway = org.flywaydb.core.Flyway.configure()
@@ -54,7 +51,8 @@ public class TenantService {
             throw new RuntimeException("Could not provision schema and run migrations for UAT: " + schemaName, e);
         }
 
-        return saved;
+        // Save to public schema
+        return tenantRepository.save(tenant);
     }
 
     public Tenant updateTenant(@NonNull String tenantId, String newName) {

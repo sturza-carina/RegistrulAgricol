@@ -12,6 +12,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/tenants")
 @SuppressWarnings("null")
+@PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
 public class TenantController {
 
     private final TenantService tenantService;
@@ -23,37 +24,31 @@ public class TenantController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
     public Tenant createTenant(@RequestBody TenantCreateRequest request) {
         return tenantService.createTenant(request.getSirutaCode(), request.getName());
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
     public List<Tenant> getAllTenants() {
         return tenantRepository.findAll();
     }
 
     @PostMapping("/{tenantId}/uats/{codSiruta}")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
     public Tenant assignUatToTenant(@PathVariable String tenantId, @PathVariable String codSiruta) {
         return tenantService.assignUatToTenant(tenantId, codSiruta);
     }
 
     @DeleteMapping("/{tenantId}/uats/{codSiruta}")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
     public void removeUatFromTenant(@PathVariable String tenantId, @PathVariable String codSiruta) {
         tenantService.removeUatFromTenant(tenantId, codSiruta);
     }
 
     @PutMapping("/{tenantId}")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
     public Tenant updateTenant(@PathVariable String tenantId, @RequestBody TenantCreateRequest request) {
         return tenantService.updateTenant(tenantId, request.getName());
     }
 
     @PostMapping("/migrate-all")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
     public void migrateAllTenants() {
         tenantService.migrateAllTenants();
     }

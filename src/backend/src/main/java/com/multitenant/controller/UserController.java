@@ -14,9 +14,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import com.multitenant.dto.UserDTO;
 
 @RestController
 @RequestMapping("/api/users")
+@PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
 public class UserController {
 
     private final UserRepository userRepository;
@@ -38,7 +41,6 @@ public class UserController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> createUser(@RequestBody User user) {
         if (user == null) {
             return ResponseEntity.badRequest().body("User data is missing");
@@ -62,24 +64,24 @@ public class UserController {
         }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return ResponseEntity.ok(userRepository.save(user));
+        return ResponseEntity.ok(UserDTO.fromEntity(userRepository.save(user)));
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
         UserDetailsImpl currentUser = getCurrentUser();
 
+        List<User> users;
         if (isSuperAdmin(currentUser)) {
-            return ResponseEntity.ok(userRepository.findAll());
+            users = userRepository.findAll();
         } else {
             // Return only users belonging to the admin's tenant
-            return ResponseEntity.ok(userRepository.findByTenantId(currentUser.getTenantId()));
+            users = userRepository.findByTenantId(currentUser.getTenantId());
         }
+        return ResponseEntity.ok(users.stream().map(UserDTO::fromEntity).collect(Collectors.toList()));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> getUser(@PathVariable long id) {
         UserDetailsImpl currentUser = getCurrentUser();
         Optional<User> userOpt = userRepository.findById(id);
@@ -96,11 +98,10 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You do not have permission to view this user.");
         }
 
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(UserDTO.fromEntity(user));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> updateUser(@PathVariable long id, @RequestBody User userDetails) {
         UserDetailsImpl currentUser = getCurrentUser();
         Optional<User> userOpt = userRepository.findById(id);
@@ -145,11 +146,10 @@ public class UserController {
             user.setUat(requestUat);
         }
 
-        return ResponseEntity.ok(userRepository.save(user));
+        return ResponseEntity.ok(UserDTO.fromEntity(userRepository.save(user)));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable long id) {
         UserDetailsImpl currentUser = getCurrentUser();
         Optional<User> userOpt = userRepository.findById(id);

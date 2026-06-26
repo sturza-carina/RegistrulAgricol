@@ -1,6 +1,7 @@
 package com.multitenant.service;
 
 import com.multitenant.dto.ContractUtilizareDTO;
+import com.multitenant.dto.ContractUtilizareResponseDTO;
 import com.multitenant.model.registru.ContractUtilizare;
 import com.multitenant.model.registru.StatusContractUtilizare;
 import com.multitenant.model.persoana.Persoana;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import java.time.LocalDate;
 
 @Service
@@ -28,33 +30,50 @@ public class ContractUtilizareService {
         this.persoanaRepository = persoanaRepository;
     }
 
-    public List<ContractUtilizare> getAllContracts() {
-        return contractUtilizareRepository.findAll();
+    @Transactional(readOnly = true)
+    public List<ContractUtilizareResponseDTO> getAllContracts() {
+        return contractUtilizareRepository.findAll().stream()
+                .map(this::toResponseDto)
+                .collect(Collectors.toList());
     }
 
-    public ContractUtilizare getContractById(Long id) {
+    @Transactional(readOnly = true)
+    public ContractUtilizareResponseDTO getContractById(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("ID cannot be null");
         }
-        return contractUtilizareRepository.findById(id)
+        ContractUtilizare entity = contractUtilizareRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Contractul de utilizare nu a fost găsit"));
+        return toResponseDto(entity);
     }
 
     @Transactional
-    public ContractUtilizare createContract(ContractUtilizareDTO dto) {
+    public ContractUtilizareResponseDTO createContract(ContractUtilizareDTO dto) {
         if (dto == null) {
             throw new IllegalArgumentException("Contract cannot be null");
+        }
+        if (dto.getStatusContract() == StatusContractUtilizare.ACTIV) {
+            if (contractUtilizareRepository.existsActiveOverlap(dto.getTerenId(), StatusContractUtilizare.ACTIV, dto.getDataInceput(), dto.getDataSfarsit(), null)) {
+                throw new RuntimeException("Terenul are deja un contract activ în această perioadă");
+            }
         }
         ContractUtilizare contract = mapFromDto(dto, null);
-        return contractUtilizareRepository.save(contract);
+        contract = contractUtilizareRepository.save(contract);
+        return toResponseDto(contract);
     }
 
     @Transactional
-    public ContractUtilizare updateContract(Long id, ContractUtilizareDTO dto) {
+    public ContractUtilizareResponseDTO updateContract(Long id, ContractUtilizareDTO dto) {
         if (dto == null) {
             throw new IllegalArgumentException("Contract cannot be null");
         }
-        ContractUtilizare existing = getContractById(id);
+        if (dto.getStatusContract() == StatusContractUtilizare.ACTIV) {
+            if (contractUtilizareRepository.existsActiveOverlap(dto.getTerenId(), StatusContractUtilizare.ACTIV, dto.getDataInceput(), dto.getDataSfarsit(), id)) {
+                throw new RuntimeException("Terenul are deja un contract activ în această perioadă");
+            }
+        }
+        ContractUtilizare existing = contractUtilizareRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Contractul de utilizare nu a fost găsit"));
         ContractUtilizare mapped = mapFromDto(dto, existing);
         existing.setTeren(mapped.getTeren());
         existing.setLocatorProprietar(mapped.getLocatorProprietar());
@@ -75,7 +94,8 @@ public class ContractUtilizareService {
         }
         existing.setEsteActiv(dto.isEsteActiv());
 
-        return contractUtilizareRepository.save(existing);
+        existing = contractUtilizareRepository.save(existing);
+        return toResponseDto(existing);
     }
 
     public void deleteContract(Long id) {
@@ -144,5 +164,35 @@ public class ContractUtilizareService {
         }
         return persoanaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(errorMessage));
+    }
+
+    private ContractUtilizareResponseDTO toResponseDto(ContractUtilizare entity) {
+        ContractUtilizareResponseDTO dto = new ContractUtilizareResponseDTO();
+        dto.setId(entity.getId());
+        if (entity.getTeren() != null) {
+            dto.setTeren(new ContractUtilizareResponseDTO.TerenRef(entity.getTeren().getId(), entity.getTeren().getDenumire()));
+        }
+        if (entity.getLocatorProprietar() != null) {
+            dto.setLocatorProprietar(new ContractUtilizareResponseDTO.PersoanaRef(entity.getLocatorProprietar().getId()));
+        }
+        if (entity.getLocatorUtilizator() != null) {
+            dto.setLocatorUtilizator(new ContractUtilizareResponseDTO.PersoanaRef(entity.getLocatorUtilizator().getId()));
+        }
+        if (entity.getUtilizatorOperare() != null) {
+            dto.setUtilizatorOperare(new ContractUtilizareResponseDTO.PersoanaRef(entity.getUtilizatorOperare().getId()));
+        }
+        dto.setTipContract(entity.getTipContract());
+        dto.setNumarContract(entity.getNumarContract());
+        dto.setDataSemnare(entity.getDataSemnare());
+        dto.setDataInceput(entity.getDataInceput());
+        dto.setDataSfarsit(entity.getDataSfarsit());
+        dto.setPretArendaRonAn(entity.getPretArendaRonAn());
+        dto.setPretArendaGrauKgHa(entity.getPretArendaGrauKgHa());
+        dto.setIndexarePret(entity.isIndexarePret());
+        dto.setStatusContract(entity.getStatusContract());
+        dto.setMotivIncetare(entity.getMotivIncetare());
+        dto.setDataOperare(entity.getDataOperare());
+        dto.setEsteActiv(entity.isEsteActiv());
+        return dto;
     }
 }

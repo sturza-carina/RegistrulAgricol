@@ -31,7 +31,7 @@ public class RelatieRudenie {
     @JsonIgnore
     private Persoana persoana;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "related_person_id")
     @JsonIgnoreProperties({"relations", "identityDocuments"})
     private Persoana relatedPerson;

@@ -65,14 +65,20 @@ export class PersonListComponent implements OnInit {
         this.uatContextService.activeUat$.subscribe(uat => {
           if (uat && uat.tenantId) {
             if (user.role === 'ROLE_SUPER_ADMIN') {
-              this.authService.setImpersonation(uat.tenantId);
+              this.authService.setImpersonation(uat.tenantId).subscribe(() => {
+                this.loadPersons();
+              });
+            } else {
+              this.loadPersons();
             }
-            this.loadPersons();
           } else {
             if (user.role === 'ROLE_SUPER_ADMIN') {
-              this.authService.stopImpersonation();
+              this.authService.stopImpersonation().subscribe(() => {
+                this.persoane = [];
+              });
+            } else {
+              this.persoane = [];
             }
-            this.persoane = [];
           }
         });
       }

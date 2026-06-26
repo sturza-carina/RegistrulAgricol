@@ -24,7 +24,7 @@ public class EvenimentAnimal {
      * Animalul căruia îi aparține acest eveniment.
      * READ_ONLY la serializare; scris prin evenimentAnimalId în service.
      */
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "animal_id", nullable = false)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private AnimalIndividual animal;

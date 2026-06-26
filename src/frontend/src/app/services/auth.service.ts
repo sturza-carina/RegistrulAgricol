@@ -41,15 +41,29 @@ export class AuthService {
   logout() {
     localStorage.removeItem('currentUser');
     this.currentUserSubject.next(null);
-    this.stopImpersonation();
-  }
-
-  setImpersonation(tenantId: string) {
-    this.impersonatedTenantSubject.next(tenantId);
-  }
-
-  stopImpersonation() {
     this.impersonatedTenantSubject.next(null);
+  }
+
+  setImpersonation(tenantId: string): Observable<JwtResponse> {
+    return this.http.post<JwtResponse>(`${this.apiUrl}/impersonate`, { tenantId })
+      .pipe(
+        tap(user => {
+          localStorage.setItem('currentUser', JSON.stringify(user));
+          this.currentUserSubject.next(user);
+          this.impersonatedTenantSubject.next(tenantId);
+        })
+      );
+  }
+
+  stopImpersonation(): Observable<JwtResponse> {
+    return this.http.post<JwtResponse>(`${this.apiUrl}/impersonate`, { tenantId: 'public' })
+      .pipe(
+        tap(user => {
+          localStorage.setItem('currentUser', JSON.stringify(user));
+          this.currentUserSubject.next(user);
+          this.impersonatedTenantSubject.next(null);
+        })
+      );
   }
 
   get currentTenantId(): string {
