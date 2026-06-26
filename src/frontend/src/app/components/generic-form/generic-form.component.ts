@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormControl } from '@angular/forms';
 import { FormConfig, FormField } from './generic-form.models';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-generic-form',
@@ -10,7 +11,7 @@ import { FormConfig, FormField } from './generic-form.models';
   templateUrl: './generic-form.component.html',
   styleUrls: ['./generic-form.component.css']
 })
-export class GenericFormComponent implements OnInit, OnChanges {
+export class GenericFormComponent implements OnInit, OnChanges, OnDestroy {
   @Input() config!: FormConfig;
   @Input() initialData: any = {};
   @Input() isSubmitting = false;
@@ -19,6 +20,7 @@ export class GenericFormComponent implements OnInit, OnChanges {
   @Output() formCancel = new EventEmitter<void>();
 
   formGroup!: FormGroup;
+  private valueChangesSub?: Subscription;
 
   constructor(private fb: FormBuilder) {}
 
@@ -32,6 +34,12 @@ export class GenericFormComponent implements OnInit, OnChanges {
     }
     if (changes['initialData'] && !changes['initialData'].firstChange && this.formGroup) {
       this.formGroup.patchValue(this.initialData || {});
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.valueChangesSub) {
+      this.valueChangesSub.unsubscribe();
     }
   }
 
@@ -63,8 +71,12 @@ export class GenericFormComponent implements OnInit, OnChanges {
     // Initial check for visibility to disable hidden fields
     this.updateFieldVisibility();
 
+    if (this.valueChangesSub) {
+      this.valueChangesSub.unsubscribe();
+    }
+
     // Subscribe to changes to update visibility dynamically
-    this.formGroup.valueChanges.subscribe(() => {
+    this.valueChangesSub = this.formGroup.valueChanges.subscribe(() => {
       this.updateFieldVisibility();
     });
   }

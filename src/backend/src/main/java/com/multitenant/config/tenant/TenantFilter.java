@@ -12,20 +12,23 @@ import java.io.IOException;
 @Component
 public class TenantFilter extends OncePerRequestFilter {
 
-    private static final String TENANT_HEADER = "X-Tenant-ID";
-
     @Override
     protected void doFilterInternal(@org.springframework.lang.NonNull HttpServletRequest request,
                                     @org.springframework.lang.NonNull HttpServletResponse response,
                                     @org.springframework.lang.NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        String tenantId = request.getHeader(TENANT_HEADER);
-        if (tenantId != null && !tenantId.isBlank()) {
-            TenantContext.setCurrentTenant(tenantId);
-        } else {
-            TenantContext.setCurrentTenant("public"); // default
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        String tenantId = "public";
+
+        if (auth != null && auth.getPrincipal() instanceof com.multitenant.security.UserDetailsImpl) {
+            com.multitenant.security.UserDetailsImpl userDetails = (com.multitenant.security.UserDetailsImpl) auth.getPrincipal();
+            if (userDetails.getTenantId() != null && !userDetails.getTenantId().isBlank()) {
+                tenantId = userDetails.getTenantId();
+            }
         }
+
+        TenantContext.setCurrentTenant(tenantId);
 
         try {
             filterChain.doFilter(request, response);

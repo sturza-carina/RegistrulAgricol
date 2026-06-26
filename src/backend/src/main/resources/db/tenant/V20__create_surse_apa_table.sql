@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS surse_apa (
     id                SERIAL PRIMARY KEY,
     parcela_id        INT             NOT NULL REFERENCES parcele(id) ON DELETE CASCADE,
-    tip_sursa         VARCHAR(100),
+    tip_sursa         VARCHAR(100)    NOT NULL,
     debit_mc_ora      DOUBLE PRECISION,
     stare_functionare BOOLEAN         NOT NULL DEFAULT TRUE
 );

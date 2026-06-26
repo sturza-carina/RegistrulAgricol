@@ -16,15 +16,15 @@ public class ContractUtilizare {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teren_id", nullable = false)
     private Teren teren;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "locator_proprietar_id")
     private Persoana locatorProprietar;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "locator_utilizator_id")
     private Persoana locatorUtilizator;
 
@@ -63,7 +63,7 @@ public class ContractUtilizare {
     @Column(name = "data_operare")
     private LocalDate dataOperare = LocalDate.now();
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "utilizator_operare_id")
     private Persoana utilizatorOperare;
 

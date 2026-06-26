@@ -12,8 +12,7 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   if (user && user.token) {
     clonedReq = req.clone({
       setHeaders: {
-        Authorization: `Bearer ${user.token}`,
-        'X-Tenant-ID': authService.currentTenantId
+        Authorization: `Bearer ${user.token}`
       }
     });
   }

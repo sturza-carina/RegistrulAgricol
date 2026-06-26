@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/machinery")
+@PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
 public class MachineryController {
 
     private final MachineryService machineryService;
@@ -18,7 +19,6 @@ public class MachineryController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> getAllMachinery() {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.ok(java.util.Collections.emptyList());
@@ -27,7 +27,6 @@ public class MachineryController {
     }
 
     @GetMapping("/gospodarie/{gospodarieId}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> getMachineryByGospodarie(@PathVariable Long gospodarieId) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot fetch machinery outside of a specific tenant context.");
@@ -36,7 +35,6 @@ public class MachineryController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> getMachineryById(@PathVariable Long id) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot fetch machinery outside of a specific tenant context.");
@@ -45,7 +43,6 @@ public class MachineryController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> createMachinery(@RequestBody MachineryDTO dto) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot create machinery outside of a specific tenant context.");
@@ -54,7 +51,6 @@ public class MachineryController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> updateMachinery(@PathVariable Long id, @RequestBody MachineryDTO dto) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot update machinery outside of a specific tenant context.");
@@ -63,7 +59,6 @@ public class MachineryController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> deleteMachinery(@PathVariable Long id) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot delete machinery outside of a specific tenant context.");

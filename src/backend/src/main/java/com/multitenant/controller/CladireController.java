@@ -7,11 +7,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/gospodarii/{gospodarieId}/cladiri")
 @CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
 @SuppressWarnings("null")
+@PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
 public class CladireController {
 
     private final CladireService cladireService;

@@ -29,7 +29,7 @@ public class Machinery {
     @Column(name = "numar_inmatriculare", length = 50)
     private String numarInmatriculare;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "gospodarie_id", nullable = false)
     private Gospodarie gospodarie;
 

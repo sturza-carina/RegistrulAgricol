@@ -220,8 +220,9 @@ export class UatManagementComponent implements OnInit {
       alert('This UAT does not have an active tenant associated with it.');
       return;
     }
-    this.authService.setImpersonation(uat.tenantId);
-    this.router.navigate(['/gospodarii']);
+    this.authService.setImpersonation(uat.tenantId).subscribe(() => {
+      this.router.navigate(['/gospodarii']);
+    });
   }
 
   saveUat(uatData: any): void {

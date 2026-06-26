@@ -9,6 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/uats")
+@PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN')")
 public class UatController {
 
     private final UatService uatService;
@@ -18,31 +19,26 @@ public class UatController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN')")
     public Uat createUat(@RequestBody Uat uat) {
         return uatService.createUat(uat);
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
     public List<Uat> getAllUats() {
         return uatService.getAllUats();
     }
 
     @GetMapping("/{codSiruta}")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
     public Uat getUat(@PathVariable String codSiruta) {
         return uatService.getUatByCodSiruta(codSiruta);
     }
 
     @PutMapping("/{codSiruta}")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN')")
     public Uat updateUat(@PathVariable String codSiruta, @RequestBody Uat uat) {
         return uatService.updateUat(codSiruta, uat);
     }
 
     @DeleteMapping("/{codSiruta}")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN')")
     public void deleteUat(@PathVariable String codSiruta) {
         uatService.deleteUat(codSiruta);
     }

@@ -35,7 +35,7 @@ public class User {
     @Column(nullable = false)
     private boolean activ = true;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "uat_id")
     private Uat uat;
 }

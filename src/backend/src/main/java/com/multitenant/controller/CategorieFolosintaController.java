@@ -10,6 +10,7 @@ import java.util.List;
 
 @RestController
 @SuppressWarnings("null")
+@PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
 public class CategorieFolosintaController {
 
     private final CategorieFolosintaService categorieFolosintaService;
@@ -19,7 +20,6 @@ public class CategorieFolosintaController {
     }
 
     @GetMapping("/api/terenuri/{terenId}/categorii-folosinta")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> getCategoriiForTeren(@PathVariable Long terenId) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.ok(java.util.Collections.emptyList());
@@ -29,7 +29,6 @@ public class CategorieFolosintaController {
     }
 
     @PostMapping("/api/terenuri/{terenId}/categorii-folosinta")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> createCategorie(@PathVariable Long terenId, @RequestBody CategorieFolosinta categorie) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot create categorie outside of a specific tenant context.");
@@ -38,7 +37,6 @@ public class CategorieFolosintaController {
     }
 
     @PutMapping("/api/categorii-folosinta/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> updateCategorie(@PathVariable Long id, @RequestBody CategorieFolosinta categorie) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot update categorie outside of a specific tenant context.");
@@ -47,7 +45,6 @@ public class CategorieFolosintaController {
     }
 
     @DeleteMapping("/api/categorii-folosinta/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> deleteCategorie(@PathVariable Long id) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot delete categorie outside of a specific tenant context.");
