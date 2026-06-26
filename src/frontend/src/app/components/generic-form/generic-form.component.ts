@@ -14,13 +14,15 @@ export class GenericFormComponent implements OnInit, OnChanges {
   @Input() config!: FormConfig;
   @Input() initialData: any = {};
   @Input() isSubmitting = false;
-  
+
   @Output() formSubmit = new EventEmitter<any>();
   @Output() formCancel = new EventEmitter<void>();
+  // 1. Adăugăm decoratorul de Output pentru a anunța părintele când se modifică un câmp
+  @Output() fieldChange = new EventEmitter<{ fieldName: string, value: any }>();
 
   formGroup!: FormGroup;
 
-  constructor(private fb: FormBuilder) {}
+  constructor(private fb: FormBuilder) { }
 
   ngOnInit(): void {
     this.initForm();
@@ -28,10 +30,30 @@ export class GenericFormComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['config'] && !changes['config'].firstChange) {
+      const currentValues = this.formGroup ? this.formGroup.getRawValue() : {};
       this.initForm();
+      if (this.formGroup && currentValues) {
+        this.formGroup.patchValue(currentValues, { emitEvent: false });
+      }
+    }
+    // Când config-ul se schimbă din exterior (de exemplu când modificăm opțiunile unui select din părinte)
+    // vrem să ne asigurăm că valorile deja selectate în formular sunt păstrate corect și dropdown-urile dezactivate se reactivează dacă e cazul
+    if (changes['config'] && this.formGroup) {
+      this.config.sections.forEach(section => {
+        section.fields.forEach(field => {
+          const control = this.formGroup.get(field.name);
+          if (control) {
+            if (field.disabled && control.enabled) {
+              control.disable({ emitEvent: false });
+            } else if (!field.disabled && control.disabled && this.shouldShowField(field)) {
+              control.enable({ emitEvent: false });
+            }
+          }
+        });
+      });
     }
     if (changes['initialData'] && !changes['initialData'].firstChange && this.formGroup) {
-      this.formGroup.patchValue(this.initialData || {});
+      this.formGroup.patchValue(this.initialData || {}, { emitEvent: false });
     }
   }
 
@@ -60,12 +82,20 @@ export class GenericFormComponent implements OnInit, OnChanges {
 
     this.formGroup = this.fb.group(group);
 
-    // Initial check for visibility to disable hidden fields
     this.updateFieldVisibility();
 
-    // Subscribe to changes to update visibility dynamically
-    this.formGroup.valueChanges.subscribe(() => {
-      this.updateFieldVisibility();
+    // 2. Înregistrăm un ascultător inteligent pe fiecare câmp din formular în mod individual
+    this.config.sections.forEach(section => {
+      section.fields.forEach(field => {
+        const control = this.formGroup.get(field.name);
+        if (control) {
+          control.valueChanges.subscribe(value => {
+            // Trimitem evenimentul către componenta părinte (GospodarieFormComponent)
+            this.fieldChange.emit({ fieldName: field.name, value: value });
+            this.updateFieldVisibility();
+          });
+        }
+      });
     });
   }
 
