@@ -48,9 +48,10 @@ public class SecurityConfig {
                     .anyRequest().authenticated()
             );
 
-        // Add tenant filter before auth filter to ensure the context has the tenant before hitting DB if needed
-        http.addFilterBefore(tenantFilter, UsernamePasswordAuthenticationFilter.class);
+        // Parse JWT first to populate SecurityContext
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        // Then set tenant context based on parsed JWT
+        http.addFilterAfter(tenantFilter, JwtAuthenticationFilter.class);
         
         return http.build();
     }

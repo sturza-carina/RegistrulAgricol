@@ -19,7 +19,6 @@ public class PersoanaController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> createPerson(@RequestBody Persoana persoana) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot create a Persoana outside of a specific tenant context. Please log in as a Tenant Administrator.");
@@ -28,7 +27,6 @@ public class PersoanaController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> getAllPersons(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String type) {
@@ -39,13 +37,11 @@ public class PersoanaController {
     }
 
     @GetMapping("/gospodarie/{gospodarieId}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<List<Persoana>> getPersonsByGospodarieId(@PathVariable Long gospodarieId) {
         return ResponseEntity.ok(persoanaService.getPersonsByGospodarieId(gospodarieId));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> getPersonById(@PathVariable Long id) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot fetch a Persoana outside of a specific tenant context.");
@@ -54,7 +50,6 @@ public class PersoanaController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> updatePerson(@PathVariable Long id, @RequestBody Persoana persoana) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot update a Persoana outside of a specific tenant context.");
@@ -63,7 +58,6 @@ public class PersoanaController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> deletePerson(@PathVariable Long id) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot delete a Persoana outside of a specific tenant context.");

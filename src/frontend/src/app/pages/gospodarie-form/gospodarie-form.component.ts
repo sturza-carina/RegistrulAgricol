@@ -25,7 +25,6 @@ export class GospodarieFormComponent implements OnInit {
   breadcrumbItems: BreadcrumbItem[] = [];
 
   constructor(
-    private fb: FormBuilder,
     private gospodarieService: GospodarieService,
     private uatService: UatService,
     private uatContextService: UatContextService,
