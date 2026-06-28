@@ -8,6 +8,7 @@ import { CreateTenantComponent } from './pages/create-tenant/create-tenant.compo
 import { PersonListComponent } from './pages/persoana-list/persoana-list.component';
 import { PersonFormComponent } from './pages/persoana-form/persoana-form.component';
 import { UatManagementComponent } from './pages/uat-management/uat-management.component';
+import { UatDetailsComponent } from './pages/uat-details/uat-details.component';
 import { ParcelaMapComponent } from './components/parcela-map/parcela-map.component';
 import { GospodarieListComponent } from './pages/gospodarie-list/gospodarie-list.component';
 import { GospodarieFormComponent } from './pages/gospodarie-form/gospodarie-form.component';
@@ -33,6 +34,7 @@ export const routes: Routes = [
   { path: 'persoane/edit/:id', component: PersonFormComponent },
   { path: 'contracte',      component: ContractManagementComponent },
   { path: 'uats',           component: UatManagementComponent },
+  { path: 'uats/:id',       component: UatDetailsComponent },
   { path: 'gospodarii',     component: GospodarieListComponent },
   { path: 'gospodarii/new', component: GospodarieFormComponent },
   { path: 'gospodarii/edit/:id', component: GospodarieFormComponent },

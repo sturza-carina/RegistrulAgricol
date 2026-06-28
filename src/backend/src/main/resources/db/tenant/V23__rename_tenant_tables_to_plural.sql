@@ -1,0 +1,9 @@
+ALTER TABLE IF EXISTS gospodarie RENAME TO gospodarii;
+ALTER TABLE IF EXISTS teren RENAME TO terenuri;
+ALTER TABLE IF EXISTS categorie_folosinta RENAME TO categorii_folosinta;
+ALTER TABLE IF EXISTS animal_individual RENAME TO animale_individuale;
+ALTER TABLE IF EXISTS efectiv_grup RENAME TO efective_grup;
+ALTER TABLE IF EXISTS eveniment_animal RENAME TO evenimente_animale;
+ALTER TABLE IF EXISTS cultura_parcela RENAME TO culturi_parcele;
+ALTER TABLE IF EXISTS contract_utilizare RENAME TO contracte_utilizare;
+ALTER TABLE IF EXISTS persoana_gospodarie RENAME TO persoane_gospodarii;

@@ -1,6 +1,8 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormControl } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { FormConfig, FormField } from './generic-form.models';
 
 @Component({
@@ -10,7 +12,7 @@ import { FormConfig, FormField } from './generic-form.models';
   templateUrl: './generic-form.component.html',
   styleUrls: ['./generic-form.component.css']
 })
-export class GenericFormComponent implements OnInit, OnChanges {
+export class GenericFormComponent implements OnInit, OnChanges, OnDestroy {
   @Input() config!: FormConfig;
   @Input() initialData: any = {};
   @Input() isSubmitting = false;
@@ -21,6 +23,7 @@ export class GenericFormComponent implements OnInit, OnChanges {
   @Output() fieldChange = new EventEmitter<{ fieldName: string, value: any }>();
 
   formGroup!: FormGroup;
+  private destroy$ = new Subject<void>();
 
   constructor(private fb: FormBuilder) { }
 
@@ -60,6 +63,9 @@ export class GenericFormComponent implements OnInit, OnChanges {
   initForm(): void {
     if (!this.config) return;
 
+    // Destroy previous subscriptions if we are re-initializing the form
+    this.destroy$.next();
+
     const group: any = {};
 
     this.config.sections.forEach(section => {
@@ -89,7 +95,7 @@ export class GenericFormComponent implements OnInit, OnChanges {
       section.fields.forEach(field => {
         const control = this.formGroup.get(field.name);
         if (control) {
-          control.valueChanges.subscribe(value => {
+          control.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(value => {
             // Trimitem evenimentul către componenta părinte (GospodarieFormComponent)
             this.fieldChange.emit({ fieldName: field.name, value: value });
             this.updateFieldVisibility();
@@ -97,6 +103,11 @@ export class GenericFormComponent implements OnInit, OnChanges {
         }
       });
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   updateFieldVisibility(): void {

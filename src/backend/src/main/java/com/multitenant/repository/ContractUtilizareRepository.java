@@ -15,6 +15,9 @@ import java.time.LocalDate;
 public interface ContractUtilizareRepository extends JpaRepository<ContractUtilizare, Long> {
     List<ContractUtilizare> findByTerenId(Long terenId);
 
+    @Query("SELECT c FROM ContractUtilizare c WHERE c.teren.gospodarie.uat.codSiruta = :uatCode")
+    List<ContractUtilizare> findByUatCode(@Param("uatCode") String uatCode);
+
     @Modifying
     @Query("UPDATE ContractUtilizare c " +
            "SET c.statusContract = :expiredStatus, c.esteActiv = false " +

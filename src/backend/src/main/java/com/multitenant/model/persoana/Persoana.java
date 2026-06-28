@@ -58,12 +58,12 @@ public abstract class Persoana {
     @Column(name = "tenant_id")
     private String tenantId;
 
-    @OneToMany(mappedBy = "persoana", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "persoana", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RelatieRudenie> relations = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "persoana_gospodarie",
+        name = "persoane_gospodarii",
         joinColumns = @JoinColumn(name = "persoana_id"),
         inverseJoinColumns = @JoinColumn(name = "gospodarie_id")
     )

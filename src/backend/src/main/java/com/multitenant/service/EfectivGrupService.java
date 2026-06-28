@@ -7,12 +7,15 @@ import com.multitenant.model.registru.Gospodarie;
 import com.multitenant.repository.EfectivGrupRepository;
 import com.multitenant.repository.GospodarieRepository;
 import com.multitenant.repository.PersoanaRepository;
+import com.multitenant.dto.EfectivGrupDTO;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Serviciu pentru gestionarea efectivelor de animale crescute în grup (păsări, albine etc.).
@@ -31,20 +34,23 @@ public class EfectivGrupService {
     private final EfectivGrupRepository efectivGrupRepository;
     private final GospodarieRepository gospodarieRepository;
     private final PersoanaRepository persoanaRepository;
+    private final ModelMapper modelMapper;
 
     public EfectivGrupService(EfectivGrupRepository efectivGrupRepository,
                               GospodarieRepository gospodarieRepository,
-                              PersoanaRepository persoanaRepository) {
+                              PersoanaRepository persoanaRepository,
+                              ModelMapper modelMapper) {
         this.efectivGrupRepository = efectivGrupRepository;
         this.gospodarieRepository = gospodarieRepository;
         this.persoanaRepository = persoanaRepository;
+        this.modelMapper = modelMapper;
     }
 
     /**
      * Creează un snapshot nou al efectivului.
      * Nu editează rândul existent — fiecare apel creează un rând nou în BD.
      */
-    public EfectivGrup create(EfectivGrup grup) {
+    public EfectivGrupDTO create(EfectivGrup grup) {
         String currentTenant = TenantContext.getCurrentTenant();
         if (currentTenant != null && !currentTenant.equals("public")) {
             grup.setTenantId(currentTenant);
@@ -73,7 +79,8 @@ public class EfectivGrupService {
             grup.setDataInregistrare(LocalDate.now());
         }
 
-        return efectivGrupRepository.save(grup);
+        EfectivGrup saved = efectivGrupRepository.save(grup);
+        return modelMapper.map(saved, EfectivGrupDTO.class);
     }
 
     /**
@@ -83,9 +90,10 @@ public class EfectivGrupService {
      * @param id ID-ul snapshot-ului de referință (pentru a copia gospodăria/proprietarul dacă nu sunt furnizați)
      * @param updated Datele noului snapshot
      */
-    public EfectivGrup addSnapshot(Long id, EfectivGrup updated) {
+    public EfectivGrupDTO addSnapshot(Long id, EfectivGrup updated) {
         // Încărcăm snapshot-ul de referință pentru a moșteni gospodăria/proprietarul dacă lipsesc
-        EfectivGrup reference = getById(id);
+        EfectivGrup reference = efectivGrupRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Group stock not found with id: " + id));
 
         EfectivGrup snapshot = new EfectivGrup();
         snapshot.setSpecie(updated.getSpecie() != null ? updated.getSpecie() : reference.getSpecie());
@@ -103,30 +111,38 @@ public class EfectivGrupService {
         snapshot.setProprietar(persoanaRepository.findById(pId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proprietar not found")));
 
-        return efectivGrupRepository.save(snapshot);
+        EfectivGrup saved = efectivGrupRepository.save(snapshot);
+        return modelMapper.map(saved, EfectivGrupDTO.class);
     }
 
     @Transactional(readOnly = true)
-    public List<EfectivGrup> getAll() {
-        return efectivGrupRepository.findAll();
+    public List<EfectivGrupDTO> getAll() {
+        return efectivGrupRepository.findAll().stream()
+                .map(entity -> modelMapper.map(entity, EfectivGrupDTO.class))
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public EfectivGrup getById(Long id) {
-        return efectivGrupRepository.findById(id)
+    public EfectivGrupDTO getById(Long id) {
+        EfectivGrup entity = efectivGrupRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Group stock not found with id: " + id));
+        return modelMapper.map(entity, EfectivGrupDTO.class);
     }
 
     /** Returnează toate snapshot-urile pentru o gospodărie (istoricul complet al efectivului). */
     @Transactional(readOnly = true)
-    public List<EfectivGrup> getHistoryByGospodarieId(Long gospodarieId) {
-        return efectivGrupRepository.findByGospodarieIdOrderByDataInregistrareDesc(gospodarieId);
+    public List<EfectivGrupDTO> getHistoryByGospodarieId(Long gospodarieId) {
+        return efectivGrupRepository.findByGospodarieIdOrderByDataInregistrareDesc(gospodarieId).stream()
+                .map(entity -> modelMapper.map(entity, EfectivGrupDTO.class))
+                .collect(Collectors.toList());
     }
 
     /** Returnează cel mai recent snapshot per specie pentru o gospodărie (starea curentă). */
     @Transactional(readOnly = true)
-    public List<EfectivGrup> getLatestByGospodarieId(Long gospodarieId) {
-        return efectivGrupRepository.findLatestSnapshotByGospodarieId(gospodarieId);
+    public List<EfectivGrupDTO> getLatestByGospodarieId(Long gospodarieId) {
+        return efectivGrupRepository.findLatestSnapshotByGospodarieId(gospodarieId).stream()
+                .map(entity -> modelMapper.map(entity, EfectivGrupDTO.class))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -134,12 +150,15 @@ public class EfectivGrupService {
      * NU se permite ștergerea întregului istoric al unui efectiv.
      */
     public void delete(Long id) {
-        EfectivGrup grup = getById(id);
+        EfectivGrup grup = efectivGrupRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Group stock not found with id: " + id));
         efectivGrupRepository.delete(grup);
     }
 
     @Transactional(readOnly = true)
-    public List<EfectivGrup> getByProprietarId(Long proprietarId) {
-        return efectivGrupRepository.findByProprietarId(proprietarId);
+    public List<EfectivGrupDTO> getByProprietarId(Long proprietarId) {
+        return efectivGrupRepository.findByProprietarId(proprietarId).stream()
+                .map(entity -> modelMapper.map(entity, EfectivGrupDTO.class))
+                .collect(Collectors.toList());
     }
 }

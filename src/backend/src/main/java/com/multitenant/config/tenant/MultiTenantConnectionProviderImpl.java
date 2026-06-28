@@ -27,7 +27,7 @@ public class MultiTenantConnectionProviderImpl implements MultiTenantConnectionP
         if (!tenantIdentifier.matches(TENANT_ID_PATTERN)) {
             throw new SQLException("Invalid tenant identifier: " + tenantIdentifier);
         }
-        return "uat_" + tenantIdentifier;
+        return "tenant_" + tenantIdentifier;
     }
 
     @Override

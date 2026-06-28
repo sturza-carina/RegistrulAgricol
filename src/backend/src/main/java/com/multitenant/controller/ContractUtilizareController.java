@@ -5,6 +5,8 @@ import com.multitenant.model.registru.ContractUtilizare;
 import com.multitenant.service.ContractUtilizareService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.multitenant.security.UserDetailsImpl;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,11 +25,11 @@ public class ContractUtilizareController {
 
     @GetMapping
     @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
-    public ResponseEntity<?> getAllContracts() {
+    public ResponseEntity<?> getAllContracts(@RequestParam(required = false) String uatCode) {
         if (isPublicContext()) {
             return ResponseEntity.badRequest().body("Trebuie să selectați un context de UAT/Tenant.");
         }
-        return ResponseEntity.ok(contractUtilizareService.getAllContracts());
+        return ResponseEntity.ok(contractUtilizareService.getAllContracts(uatCode));
     }
 
     @GetMapping("/{id}")
@@ -46,7 +48,8 @@ public class ContractUtilizareController {
             return ResponseEntity.badRequest().body("Nu se poate crea un contract în afara unui context de UAT/Tenant.");
         }
         try {
-            return ResponseEntity.ok(contractUtilizareService.createContract(contract));
+            UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            return ResponseEntity.ok(contractUtilizareService.createContract(contract, userDetails.getId()));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body("Eroare la crearea contractului: " + e.getMessage());
@@ -60,7 +63,8 @@ public class ContractUtilizareController {
             return ResponseEntity.badRequest().body("Nu se poate edita un contract în afara unui context de UAT/Tenant.");
         }
         try {
-            return ResponseEntity.ok(contractUtilizareService.updateContract(id, contract));
+            UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            return ResponseEntity.ok(contractUtilizareService.updateContract(id, contract, userDetails.getId()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Eroare la actualizarea contractului: " + e.getMessage());
         }

@@ -1,7 +1,11 @@
-INSERT INTO public.tenants (id, name, schema_name) VALUES 
-('cluj', 'Cluj-Napoca', 'uat_cluj'),
-('bucuresti', 'Bucuresti', 'uat_bucuresti');
+-- Seed default tenants with new schema naming convention: tenant_<id>
+INSERT INTO public.tenants (id, name, schema_name) VALUES
+('cluj', 'Cluj', 'tenant_cluj'),
+('bucuresti', 'Bucuresti', 'tenant_bucuresti');
 
+-- Global UAT master registry (managed by Super Admin).
+-- All Romanian UATs are registered here by the Super Admin.
+-- Tenant admins then "claim" UATs from this list into their tenant schema.
 CREATE TABLE public.uat (
     id SERIAL PRIMARY KEY,
     cod_siruta VARCHAR(50) NOT NULL UNIQUE,
@@ -16,3 +20,4 @@ INSERT INTO public.uat (cod_siruta, denumire, judet, tip_uat, is_active, tenant_
 ('54975', 'Cluj-Napoca', 'Cluj', 'Municipiu', true, 'cluj'),
 ('55311', 'Florești', 'Cluj', 'Comună', true, 'cluj'),
 ('1017', 'București', 'București', 'Municipiu', true, 'bucuresti');
+

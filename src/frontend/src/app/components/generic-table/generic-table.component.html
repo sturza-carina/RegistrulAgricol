@@ -1,4 +1,36 @@
-<!-- generic-table.component.html -->
+<!-- Filters & Search Card -->
+<div class="card" *ngIf="filters && filters.length > 0" style="padding: 12px 20px; margin-bottom: 20px;">
+  <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+    <ng-container *ngFor="let filter of filters">
+      
+      <!-- Search Input (Styled like tenants tab) -->
+      <div *ngIf="filter.type === 'search'" class="search-bar" style="flex-grow: 1; min-width: 300px;">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text"
+               [placeholder]="filter.label"
+               [(ngModel)]="filterValues[filter.field]"
+               (input)="applyFilters()"
+               autocomplete="off"
+        >
+      </div>
+      
+      <!-- Select Filter -->
+      <select *ngIf="filter.type === 'select'"
+              [(ngModel)]="filterValues[filter.field]" 
+              (change)="applyFilters()"
+              class="input-field"
+              style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border, #cbd5e1); min-width: 150px; background: white; cursor: pointer;">
+        <option [ngValue]="''">{{ filter.label }} (Toate)</option>
+        <option *ngFor="let opt of filter.options" [ngValue]="opt.value">{{ opt.label }}</option>
+      </select>
+
+    </ng-container>
+  </div>
+</div>
+
+<!-- Main Table Card -->
 <div class="card" style="padding: 24px; margin-bottom: 20px;">
   
   <!-- Header Actions -->
@@ -7,31 +39,6 @@
     <h3 *ngIf="title" style="margin: 0; font-size: 1.25rem; color: var(--text-primary);">{{ title }}</h3>
     
     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-left: auto;">
-      
-      <ng-container *ngFor="let filter of filters">
-        
-        <!-- Search Input -->
-        <input *ngIf="filter.type === 'search'"
-               type="text"
-               class="input-field"
-               [placeholder]="filter.label"
-               [(ngModel)]="filterValues[filter.field]"
-               (input)="applyFilters()"
-               autocomplete="off"
-               style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border, #cbd5e1); width: 250px;"
-        >
-        
-        <select *ngIf="filter.type === 'select'"
-                [(ngModel)]="filterValues[filter.field]" 
-                (change)="applyFilters()"
-                class="input-field"
-                style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border, #cbd5e1); min-width: 150px; background: white; cursor: pointer;">
-          <option [ngValue]="''">{{ filter.label }} (Toate)</option>
-          <option *ngFor="let opt of filter.options" [ngValue]="opt.value">{{ opt.label }}</option>
-        </select>
-
-      </ng-container>
-
       <button *ngIf="primaryActionText" class="btn-primary" (click)="onPrimaryAction()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px; vertical-align: middle; display: inline-block;">
           <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -39,7 +46,6 @@
         </svg>
         {{ primaryActionText }}
       </button>
-
     </div>
   </div>
 

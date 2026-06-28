@@ -6,6 +6,13 @@
     description="Înregistrați și gestionați persoanele fizice și juridice în registrul agricol.">
   </app-page-header>
 
+  <!-- Banner UAT activ — apare doar pentru non-superadmin -->
+  <app-active-uat-banner 
+    *ngIf="activeUat && user?.role !== 'ROLE_SUPER_ADMIN'"
+    [prefix]="'Persoane din:'"
+    [uatName]="activeUat.denumire">
+  </app-active-uat-banner>
+
   <div class="card" *ngIf="!persoane.length && uatContextService?.getActiveUat() == null && user?.role === 'ROLE_SUPER_ADMIN'" style="padding: 40px; text-align: center; margin-bottom: 20px;">
     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" style="margin-bottom: 16px;">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>

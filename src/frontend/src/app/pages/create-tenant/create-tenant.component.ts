@@ -9,11 +9,12 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 import { GenericFormComponent } from '../../components/generic-form/generic-form.component';
 import { FormConfig } from '../../components/generic-form/generic-form.models';
+import { GenericTableComponent, TableColumn, TableFilter, TableAction } from '../../components/generic-table/generic-table.component';
 
 @Component({
   selector: 'app-create-tenant',
   standalone: true,
-  imports: [CommonModule, FormsModule, SidebarComponent, BreadcrumbsComponent, GenericFormComponent],
+  imports: [CommonModule, FormsModule, SidebarComponent, BreadcrumbsComponent, GenericFormComponent, GenericTableComponent],
   templateUrl: './create-tenant.component.html',
 })
 export class CreateTenantComponent implements OnInit {
@@ -50,6 +51,22 @@ export class CreateTenantComponent implements OnInit {
       }
     ]
   };
+
+  tableColumns: TableColumn[] = [
+    { field: 'id', header: 'Cod SIRUTA (ID)' },
+    { field: 'name', header: 'Nume Organizație' },
+    { field: 'schemaName', header: 'Nume Schemă' }
+  ];
+
+  tableFilters: TableFilter[] = [
+    { field: 'search', label: 'Caută după nume, ID sau schemă...', type: 'search', searchFields: ['name', 'id', 'schemaName'] }
+  ];
+
+  tableActions: TableAction[] = [
+    { icon: 'view', tooltip: 'Detalii', action: (row) => this.selectTenant(row) },
+    { icon: 'edit', tooltip: 'Edit', action: (row) => this.editTenant(row) },
+    { icon: 'delete', tooltip: 'Delete', action: (row) => this.deleteTenant(row) }
+  ];
 
   constructor(
     private router: Router,

@@ -6,19 +6,20 @@ CREATE TABLE public.tenants (
     is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
--- Super admin should not belong to a specific tenant, but let's put superadmins in public schema for simplicity.
+-- All users (SUPER_ADMIN, ADMIN, USER) live in the public schema.
+-- uat_id is a plain BIGINT (no FK) — the referenced UAT lives in the tenant schema, not public.
 CREATE TABLE public.users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL, -- SUPER_ADMIN
-    tenant_id VARCHAR(255) REFERENCES public.tenants(id), -- Nullable for SUPER_ADMIN
+    role VARCHAR(50) NOT NULL,
+    tenant_id VARCHAR(255) REFERENCES public.tenants(id),
     nume VARCHAR(255),
     email VARCHAR(255),
     activ BOOLEAN DEFAULT TRUE,
-    uat_id INTEGER
+    uat_id BIGINT
 );
 
 -- Insert default super admin (password: superadmin)
-INSERT INTO public.users (username, password, role, nume, email, activ) 
+INSERT INTO public.users (username, password, role, nume, email, activ)
 VALUES ('superadmin', '$2a$10$wE1mG1h8/r5q9aK5/r6/GOCvU33f9m6m/G.s8uT0s8P9X00V2YmUa', 'ROLE_SUPER_ADMIN', 'Super Admin', 'admin@registru.ro', true);

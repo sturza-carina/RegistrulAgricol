@@ -23,7 +23,6 @@ export interface ContractUtilizare {
   statusContract?: string; // ACTIV, EXPIRAT, REZILIAT, SUSPENDAT
   motivIncetare?: string | null;
   dataOperare?: string | null;
-  utilizatorOperare?: PersoanaRef | null;
   esteActiv?: boolean;
 }
 
@@ -31,7 +30,6 @@ export interface ContractUtilizareRequest {
   terenId: number;
   locatorProprietarId?: number | null;
   locatorUtilizatorId?: number | null;
-  utilizatorOperareId?: number | null;
   tipContract: string;
   numarContract: string;
   dataSemnare?: string | null;
@@ -54,8 +52,9 @@ export class ContractUtilizareService {
 
   constructor(private http: HttpClient) {}
 
-  getAllContracts(): Observable<ContractUtilizare[]> {
-    return this.http.get<ContractUtilizare[]>(this.apiUrl);
+  getAllContracts(uatCode?: string): Observable<ContractUtilizare[]> {
+    const url = uatCode ? `${this.apiUrl}?uatCode=${uatCode}` : this.apiUrl;
+    return this.http.get<ContractUtilizare[]>(url);
   }
 
   getContractById(id: number): Observable<ContractUtilizare> {

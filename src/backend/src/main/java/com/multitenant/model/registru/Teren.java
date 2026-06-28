@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.NotBlank;
 
 @Entity
-@Table(name = "teren")
+@Table(name = "terenuri")
 @Data
 @NoArgsConstructor
 public class Teren {

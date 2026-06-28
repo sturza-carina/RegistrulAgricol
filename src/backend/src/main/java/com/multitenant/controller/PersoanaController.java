@@ -37,7 +37,7 @@ public class PersoanaController {
     }
 
     @GetMapping("/gospodarie/{gospodarieId}")
-    public ResponseEntity<List<Persoana>> getPersonsByGospodarieId(@PathVariable Long gospodarieId) {
+    public ResponseEntity<?> getPersonsByGospodarieId(@PathVariable Long gospodarieId) {
         return ResponseEntity.ok(persoanaService.getPersonsByGospodarieId(gospodarieId));
     }
 

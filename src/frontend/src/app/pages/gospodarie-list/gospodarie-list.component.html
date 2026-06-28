@@ -7,18 +7,11 @@
   </app-page-header>
 
       <!-- Banner UAT activ — apare doar pentru non-superadmin -->
-      <div *ngIf="activeUat && user?.role !== 'ROLE_SUPER_ADMIN'"
-           style="display:flex; align-items:center; gap:8px;
-            background:var(--primary-light); color:var(--primary);
-            padding:8px 14px; border-radius:8px; font-size:13px;
-            margin-bottom:16px; font-weight:500; border: 1px solid var(--primary-light);">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-          <circle cx="12" cy="10" r="3"/>
-        </svg>
-        Gospodării din: <strong style="margin-left: 4px;">{{ activeUat.denumire }}</strong>
-      </div>
+      <app-active-uat-banner 
+        *ngIf="activeUat && user?.role !== 'ROLE_SUPER_ADMIN'"
+        [prefix]="'Gospodării din:'"
+        [uatName]="activeUat.denumire">
+      </app-active-uat-banner>
 
       <!-- Action Bar when a row is selected -->
       <div class="action-bar" *ngIf="selectedGospodarie">

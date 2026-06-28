@@ -22,7 +22,6 @@ public class User {
     @Column(nullable = false)
     private String role; // SUPER_ADMIN, ADMIN, USER
 
-    // Optional relation for tracking. The physical FK is in the DB.
     @Column(name = "tenant_id")
     private String tenantId;
 
@@ -35,7 +34,7 @@ public class User {
     @Column(nullable = false)
     private boolean activ = true;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "uat_id")
-    private Uat uat;
+    // Plain Long — references uat.id in the tenant schema (no JPA cross-schema FK)
+    @Column(name = "uat_id")
+    private Long uatId;
 }

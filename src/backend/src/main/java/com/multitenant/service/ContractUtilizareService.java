@@ -28,7 +28,10 @@ public class ContractUtilizareService {
         this.persoanaRepository = persoanaRepository;
     }
 
-    public List<ContractUtilizare> getAllContracts() {
+    public List<ContractUtilizare> getAllContracts(String uatCode) {
+        if (uatCode != null && !uatCode.isBlank()) {
+            return contractUtilizareRepository.findByUatCode(uatCode);
+        }
         return contractUtilizareRepository.findAll();
     }
 
@@ -41,16 +44,17 @@ public class ContractUtilizareService {
     }
 
     @Transactional
-    public ContractUtilizare createContract(ContractUtilizareDTO dto) {
+    public ContractUtilizare createContract(ContractUtilizareDTO dto, Long currentUserId) {
         if (dto == null) {
             throw new IllegalArgumentException("Contract cannot be null");
         }
         ContractUtilizare contract = mapFromDto(dto, null);
+        contract.setUtilizatorOperareId(currentUserId);
         return contractUtilizareRepository.save(contract);
     }
 
     @Transactional
-    public ContractUtilizare updateContract(Long id, ContractUtilizareDTO dto) {
+    public ContractUtilizare updateContract(Long id, ContractUtilizareDTO dto, Long currentUserId) {
         if (dto == null) {
             throw new IllegalArgumentException("Contract cannot be null");
         }
@@ -59,7 +63,7 @@ public class ContractUtilizareService {
         existing.setTeren(mapped.getTeren());
         existing.setLocatorProprietar(mapped.getLocatorProprietar());
         existing.setLocatorUtilizator(mapped.getLocatorUtilizator());
-        existing.setUtilizatorOperare(mapped.getUtilizatorOperare());
+        existing.setUtilizatorOperareId(currentUserId);
         existing.setTipContract(mapped.getTipContract());
         existing.setNumarContract(mapped.getNumarContract());
         existing.setDataSemnare(mapped.getDataSemnare());
@@ -118,7 +122,6 @@ public class ContractUtilizareService {
 
         contract.setLocatorProprietar(resolvePersoanaId(dto.getLocatorProprietarId(), "Proprietarul locator nu a fost găsit"));
         contract.setLocatorUtilizator(resolvePersoanaId(dto.getLocatorUtilizatorId(), "Utilizatorul locator nu a fost găsit"));
-        contract.setUtilizatorOperare(resolvePersoanaId(dto.getUtilizatorOperareId(), "Persoana de operare nu a fost găsită"));
 
         contract.setTipContract(dto.getTipContract());
         contract.setNumarContract(dto.getNumarContract());

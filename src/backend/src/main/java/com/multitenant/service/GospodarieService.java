@@ -8,33 +8,42 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import com.multitenant.dto.GospodarieDTO;
+import org.modelmapper.ModelMapper;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.stream.Collectors;
 
 @Service
 public class GospodarieService {
 
     private final GospodarieRepository gospodarieRepository;
     private final UatRepository uatRepository;
+    private final ModelMapper modelMapper;
 
-    public GospodarieService(GospodarieRepository gospodarieRepository, UatRepository uatRepository) {
+    public GospodarieService(GospodarieRepository gospodarieRepository, UatRepository uatRepository, ModelMapper modelMapper) {
         this.gospodarieRepository = gospodarieRepository;
         this.uatRepository = uatRepository;
+        this.modelMapper = modelMapper;
     }
 
-    public List<Gospodarie> getAllGospodarii() {
-        return gospodarieRepository.findAllByOrderByIdDesc();
+    public List<GospodarieDTO> getAllGospodarii() {
+        return gospodarieRepository.findAllByOrderByIdDesc().stream()
+                .map(entity -> modelMapper.map(entity, GospodarieDTO.class))
+                .collect(Collectors.toList());
     }
 
-    public Gospodarie getGospodarieById(Long id) {
+    public GospodarieDTO getGospodarieById(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("ID cannot be null");
         }
-        return gospodarieRepository.findById(id)
+        Gospodarie entity = gospodarieRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Gospodarie not found"));
+        return modelMapper.map(entity, GospodarieDTO.class);
     }
 
     @Transactional
-    public Gospodarie createGospodarie(Gospodarie gospodarie) {
+    public GospodarieDTO createGospodarie(Gospodarie gospodarie) {
         if (gospodarie == null) {
             throw new IllegalArgumentException("Gospodarie cannot be null");
         }
@@ -45,14 +54,16 @@ public class GospodarieService {
             gospodarie.setUat(managedUat);
         }
         
-        return gospodarieRepository.save(gospodarie);
+        Gospodarie saved = gospodarieRepository.save(gospodarie);
+        return modelMapper.map(saved, GospodarieDTO.class);
     }
 
-    public Gospodarie updateGospodarie(Long id, Gospodarie updatedGospodarie) {
+    public GospodarieDTO updateGospodarie(Long id, Gospodarie updatedGospodarie) {
         if (updatedGospodarie == null) {
             throw new IllegalArgumentException("Gospodarie cannot be null");
         }
-        Gospodarie existing = getGospodarieById(id);
+        Gospodarie existing = gospodarieRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Gospodarie not found"));
         
         if (updatedGospodarie.getCodGospodarie() != null) existing.setCodGospodarie(updatedGospodarie.getCodGospodarie());
         if (updatedGospodarie.getAdresa() != null) existing.setAdresa(updatedGospodarie.getAdresa());
@@ -68,7 +79,8 @@ public class GospodarieService {
             }
         }
 
-        return gospodarieRepository.save(existing);
+        Gospodarie saved = gospodarieRepository.save(existing);
+        return modelMapper.map(saved, GospodarieDTO.class);
     }
 
     public void deleteGospodarie(Long id) {
@@ -78,10 +90,15 @@ public class GospodarieService {
         gospodarieRepository.deleteById(id);
     }
 
-    public List<Gospodarie> getAllGospodarii(String uatCode) {
+    public List<GospodarieDTO> getAllGospodarii(String uatCode) {
+        List<Gospodarie> result;
         if (uatCode != null && !uatCode.isBlank()) {
-            return gospodarieRepository.findByUat_CodSirutaOrderByIdDesc(uatCode);
+            result = gospodarieRepository.findByUat_CodSirutaOrderByIdDesc(uatCode);
+        } else {
+            result = gospodarieRepository.findAllByOrderByIdDesc();
         }
-        return gospodarieRepository.findAllByOrderByIdDesc();
+        return result.stream()
+                .map(entity -> modelMapper.map(entity, GospodarieDTO.class))
+                .collect(Collectors.toList());
     }
 }

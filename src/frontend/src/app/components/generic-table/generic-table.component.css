@@ -124,31 +124,6 @@
   color: var(--text-primary);
 }
 
-.search-bar {
-  display: flex;
-  align-items: center;
-  background: #f8fafc;
-  border: 1px solid var(--input-border, #e2e8f0);
-  border-radius: 20px;
-  padding: 4px 16px;
-}
-
-.search-bar input {
-  border: none;
-  background: transparent;
-  width: 100%;
-  padding: 6px 0;
-  outline: none;
-  font-size: 14px;
-}
-
-.search-icon {
-  width: 16px;
-  height: 16px;
-  color: var(--text-muted);
-  margin-right: 8px;
-}
-
 .action-btn-icon {
   background: none;
   border: none;

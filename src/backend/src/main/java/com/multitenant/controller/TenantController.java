@@ -4,6 +4,7 @@ import com.multitenant.model.core.Tenant;
 import com.multitenant.repository.TenantRepository;
 import com.multitenant.service.TenantService;
 import com.multitenant.payload.TenantCreateRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tenants")
-@SuppressWarnings("null")
+@PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
 public class TenantController {
 
     private final TenantService tenantService;
@@ -23,34 +24,23 @@ public class TenantController {
     }
 
     @PostMapping
-    public Tenant createTenant(@RequestBody TenantCreateRequest request) {
-        return tenantService.createTenant(request.getSirutaCode(), request.getName());
+    public ResponseEntity<Tenant> createTenant(@RequestBody TenantCreateRequest request) {
+        return ResponseEntity.ok(tenantService.createTenant(request.getTenantId(), request.getName()));
     }
 
     @GetMapping
-    public List<Tenant> getAllTenants() {
-        return tenantRepository.findAll();
-    }
-
-    @PostMapping("/{tenantId}/uats/{codSiruta}")
-    public Tenant assignUatToTenant(@PathVariable String tenantId, @PathVariable String codSiruta) {
-        return tenantService.assignUatToTenant(tenantId, codSiruta);
-    }
-
-    @DeleteMapping("/{tenantId}/uats/{codSiruta}")
-    public void removeUatFromTenant(@PathVariable String tenantId, @PathVariable String codSiruta) {
-        tenantService.removeUatFromTenant(tenantId, codSiruta);
+    public ResponseEntity<List<Tenant>> getAllTenants() {
+        return ResponseEntity.ok(tenantRepository.findAll());
     }
 
     @PutMapping("/{tenantId}")
-    public Tenant updateTenant(@PathVariable String tenantId, @RequestBody TenantCreateRequest request) {
-        return tenantService.updateTenant(tenantId, request.getName());
+    public ResponseEntity<Tenant> updateTenant(@PathVariable String tenantId, @RequestBody TenantCreateRequest request) {
+        return ResponseEntity.ok(tenantService.updateTenant(tenantId, request.getName()));
     }
 
     @PostMapping("/migrate-all")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
-    public void migrateAllTenants() {
+    public ResponseEntity<Void> migrateAllTenants() {
         tenantService.migrateAllTenants();
+        return ResponseEntity.ok().build();
     }
 }
-

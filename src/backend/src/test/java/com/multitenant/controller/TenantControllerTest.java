@@ -105,9 +105,9 @@ class TenantControllerTest {
         return tenant;
     }
 
-    private TenantCreateRequest buildRequest(String sirutaCode, String name) {
+    private TenantCreateRequest buildRequest(String tenantId, String name) {
         TenantCreateRequest req = new TenantCreateRequest();
-        req.setSirutaCode(sirutaCode);
+        req.setTenantId(tenantId);
         req.setName(name);
         return req;
     }

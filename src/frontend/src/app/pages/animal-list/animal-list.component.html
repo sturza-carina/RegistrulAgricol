@@ -5,6 +5,14 @@
       title="Gestionare Animale & Efective de Animale" 
       description="Înregistrați și gestionați animalele individuale și efectivele de grup (flock stock) din registrul agricol.">
     </app-page-header>
+
+    <!-- Banner UAT activ — apare doar pentru non-superadmin -->
+    <app-active-uat-banner 
+      *ngIf="activeUat && user?.role !== 'ROLE_SUPER_ADMIN'"
+      [prefix]="'Animale din:'"
+      [uatName]="activeUat.denumire">
+    </app-active-uat-banner>
+
     <ng-container *ngTemplateOutlet="animalContent"></ng-container>
   </app-layout>
 </ng-container>

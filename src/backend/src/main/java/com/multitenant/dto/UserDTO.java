@@ -1,6 +1,5 @@
 package com.multitenant.dto;
 
-import com.multitenant.model.core.Uat;
 import com.multitenant.model.core.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,7 +16,7 @@ public class UserDTO {
     private String nume;
     private String email;
     private boolean activ;
-    private Uat uat;
+    private Long uatId;
 
     public static UserDTO fromEntity(User user) {
         if (user == null) {
@@ -31,7 +30,7 @@ public class UserDTO {
                 user.getNume(),
                 user.getEmail(),
                 user.isActiv(),
-                user.getUat()
+                user.getUatId()
         );
     }
 }
