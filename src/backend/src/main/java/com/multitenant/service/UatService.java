@@ -1,6 +1,9 @@
 package com.multitenant.service;
 
+import com.multitenant.config.tenant.TenantContext;
+import com.multitenant.model.core.PublicUat;
 import com.multitenant.model.core.Uat;
+import com.multitenant.repository.PublicUatRepository;
 import com.multitenant.repository.UatRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -12,57 +15,103 @@ import java.util.List;
 public class UatService {
 
     private final UatRepository uatRepository;
+    private final PublicUatRepository publicUatRepository;
 
-    public UatService(UatRepository uatRepository) {
+    public UatService(UatRepository uatRepository, PublicUatRepository publicUatRepository) {
         this.uatRepository = uatRepository;
+        this.publicUatRepository = publicUatRepository;
     }
 
-    public Uat createUat(Uat uat) {
+    // ─────────────────────────────────────────────────────────────────────────
+    // GLOBAL public.uat operations (Super Admin only)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public List<PublicUat> getAllPublicUats() {
+        return publicUatRepository.findAll();
+    }
+
+    public PublicUat createPublicUat(PublicUat uat) {
         if (uat.getCodSiruta() == null || uat.getCodSiruta().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "codSiruta is required");
         }
-        if (uatRepository.existsByCodSiruta(uat.getCodSiruta())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "UAT with codSiruta " + uat.getCodSiruta() + " already exists.");
+        if (publicUatRepository.existsByCodSiruta(uat.getCodSiruta())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "UAT with codSiruta " + uat.getCodSiruta() + " already exists in the global registry.");
         }
-        if (uat.getIsActive() == null) {
-            uat.setIsActive(true);
-        }
-        return uatRepository.save(uat);
+        if (uat.getIsActive() == null) uat.setIsActive(true);
+        return publicUatRepository.save(uat);
     }
 
-    public List<Uat> getAllUats() {
+    public PublicUat updatePublicUat(String codSiruta, PublicUat request) {
+        PublicUat existing = publicUatRepository.findByCodSiruta(codSiruta)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "UAT with codSiruta " + codSiruta + " not found in global registry."));
+        if (request.getDenumire() != null) existing.setDenumire(request.getDenumire());
+        if (request.getJudet() != null) existing.setJudet(request.getJudet());
+        if (request.getTipUat() != null) existing.setTipUat(request.getTipUat());
+        if (request.getIsActive() != null) existing.setIsActive(request.getIsActive());
+        return publicUatRepository.save(existing);
+    }
+
+    public void deletePublicUat(String codSiruta) {
+        PublicUat existing = publicUatRepository.findByCodSiruta(codSiruta)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "UAT with codSiruta " + codSiruta + " not found in global registry."));
+        publicUatRepository.delete(existing);
+    }
+
+    public List<String> getDistinctJudete() {
+        return publicUatRepository.findDistinctJudeteOrderByJudetAsc();
+    }
+
+    public List<PublicUat> getLocalitatiByJudet(String judet) {
+        return publicUatRepository.findByJudetOrderByDenumireAsc(judet);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // TENANT-LOCAL uat operations (Tenant Admin / User)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Returns the UATs in the current tenant's local schema.
+     */
+    public List<Uat> getTenantUats() {
         return uatRepository.findAll();
     }
 
-    public Uat getUatByCodSiruta(String codSiruta) {
-        if (codSiruta == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "codSiruta must not be null");
+    /**
+     * Assigns a UAT from the global registry into the current tenant's local uat table.
+     * The UAT data is copied from public.uat into tenant_X.uat.
+     */
+    public Uat assignUatToTenant(String codSiruta) {
+        // Verify it exists in the global registry
+        PublicUat globalUat = publicUatRepository.findByCodSiruta(codSiruta)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "UAT " + codSiruta + " not found in the global registry."));
+
+        // Check if already assigned in this tenant
+        if (uatRepository.existsByCodSiruta(codSiruta)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "UAT " + codSiruta + " is already assigned to this tenant.");
         }
-        return uatRepository.findByCodSiruta(codSiruta)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "UAT with codSiruta " + codSiruta + " not found."));
+
+        // Copy from global into tenant-local table
+        Uat tenantUat = new Uat();
+        tenantUat.setCodSiruta(globalUat.getCodSiruta());
+        tenantUat.setDenumire(globalUat.getDenumire());
+        tenantUat.setJudet(globalUat.getJudet());
+        tenantUat.setTipUat(globalUat.getTipUat());
+        tenantUat.setIsActive(globalUat.getIsActive());
+        return uatRepository.save(tenantUat);
     }
 
-    public Uat updateUat(String codSiruta, Uat request) {
-        Uat existing = getUatByCodSiruta(codSiruta);
-
-        if (request.getDenumire() != null) {
-            existing.setDenumire(request.getDenumire());
-        }
-        if (request.getJudet() != null) {
-            existing.setJudet(request.getJudet());
-        }
-        if (request.getTipUat() != null) {
-            existing.setTipUat(request.getTipUat());
-        }
-        if (request.getIsActive() != null) {
-            existing.setIsActive(request.getIsActive());
-        }
-
-        return uatRepository.save(existing);
-    }
-
-    public void deleteUat(String codSiruta) {
-        Uat existing = getUatByCodSiruta(codSiruta);
+    /**
+     * Removes a UAT from the current tenant's local uat table.
+     */
+    public void removeUatFromTenant(String codSiruta) {
+        Uat existing = uatRepository.findByCodSiruta(codSiruta)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "UAT " + codSiruta + " is not assigned to this tenant."));
         uatRepository.delete(existing);
     }
 }
