@@ -14,31 +14,24 @@ public class TenantService {
 
     private final TenantRepository tenantRepository;
     private final DataSource dataSource;
-    private final com.multitenant.repository.UatRepository uatRepository;
 
-    public TenantService(TenantRepository tenantRepository, DataSource dataSource, com.multitenant.repository.UatRepository uatRepository) {
+    public TenantService(TenantRepository tenantRepository, DataSource dataSource) {
         this.tenantRepository = tenantRepository;
         this.dataSource = dataSource;
-        this.uatRepository = uatRepository;
     }
 
-    public Tenant createTenant(String sirutaCode, String name) {
-        if (sirutaCode == null || name == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "SIRUTA code and name must not be null");
+    public Tenant createTenant(String tenantId, String name) {
+        if (tenantId == null || name == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tenant ID and name must not be null");
         }
-        if (tenantRepository.existsById(sirutaCode)) {
+        if (tenantRepository.existsById(tenantId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "A UAT with SIRUTA code " + sirutaCode + " already exists.");
+                    "A tenant with ID '" + tenantId + "' already exists.");
         }
 
-        String schemaName = "uat_" + sirutaCode;
+        String schemaName = "tenant_" + tenantId;
 
-        Tenant tenant = new Tenant();
-        tenant.setId(sirutaCode);
-        tenant.setName(name);
-        tenant.setSchemaName(schemaName);
-
-        // Create schema and run flyway migrations for this new tenant
+        // Create schema and run Flyway migrations BEFORE saving to DB
         try {
             org.flywaydb.core.Flyway flyway = org.flywaydb.core.Flyway.configure()
                     .dataSource(dataSource)
@@ -48,10 +41,15 @@ public class TenantService {
             flyway.repair();
             flyway.migrate();
         } catch (Exception e) {
-            throw new RuntimeException("Could not provision schema and run migrations for UAT: " + schemaName, e);
+            throw new RuntimeException("Could not provision schema and run migrations for tenant: " + schemaName, e);
         }
 
-        // Save to public schema
+        Tenant tenant = new Tenant();
+        tenant.setId(tenantId);
+        tenant.setName(name);
+        tenant.setSchemaName(schemaName);
+
+        // Save to public schema only after schema is successfully provisioned
         return tenantRepository.save(tenant);
     }
 
@@ -78,49 +76,9 @@ public class TenantService {
                 flyway.migrate();
                 System.out.println("Successfully migrated schema: " + tenant.getSchemaName());
             } catch (Exception e) {
-                System.err.println("Could not run migrations for UAT: " + tenant.getSchemaName());
+                System.err.println("Could not run migrations for tenant: " + tenant.getSchemaName());
                 e.printStackTrace();
             }
-        }
-    }
-
-    public Tenant assignUatToTenant(@NonNull String tenantId, String codSiruta) {
-        String originalTenant = com.multitenant.config.tenant.TenantContext.getCurrentTenant();
-        try {
-            com.multitenant.config.tenant.TenantContext.setCurrentTenant("public");
-            Tenant tenant = tenantRepository.findById(tenantId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found"));
-
-            com.multitenant.model.core.Uat uat = uatRepository.findByCodSiruta(codSiruta)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "UAT not found"));
-
-            uat.setTenant(tenant);
-            uatRepository.save(uat);
-            
-            return tenant;
-        } finally {
-            com.multitenant.config.tenant.TenantContext.setCurrentTenant(originalTenant);
-        }
-    }
-
-    public void removeUatFromTenant(@NonNull String tenantId, String codSiruta) {
-        String originalTenant = com.multitenant.config.tenant.TenantContext.getCurrentTenant();
-        try {
-            com.multitenant.config.tenant.TenantContext.setCurrentTenant("public");
-            if (!tenantRepository.existsById(tenantId)) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
-            }
-
-            com.multitenant.model.core.Uat uat = uatRepository.findByCodSiruta(codSiruta)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "UAT not found"));
-
-            // Check if it belongs to this tenant
-            if (uat.getTenant() != null && uat.getTenant().getId().equals(tenantId)) {
-                uat.setTenant(null);
-                uatRepository.save(uat);
-            }
-        } finally {
-            com.multitenant.config.tenant.TenantContext.setCurrentTenant(originalTenant);
         }
     }
 }

@@ -1,8 +1,6 @@
 package com.multitenant.controller;
 
-import com.multitenant.model.core.Uat;
 import com.multitenant.model.core.User;
-import com.multitenant.repository.UatRepository;
 import com.multitenant.repository.UserRepository;
 import com.multitenant.security.UserDetailsImpl;
 import org.springframework.http.HttpStatus;
@@ -23,12 +21,10 @@ import com.multitenant.dto.UserDTO;
 public class UserController {
 
     private final UserRepository userRepository;
-    private final UatRepository uatRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserController(UserRepository userRepository, UatRepository uatRepository, PasswordEncoder passwordEncoder) {
+    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
-        this.uatRepository = uatRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -51,20 +47,9 @@ public class UserController {
             // Admin must create users in their own tenant
             user.setTenantId(currentUser.getTenantId());
 
-            // Fix — prevent tenant admins from assigning superior roles
+            // Prevent tenant admins from assigning superior roles
             if ("ROLE_SUPER_ADMIN".equals(user.getRole())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Cannot assign super admin role.");
-            }
-
-            Uat requestUat = user.getUat();
-            if (requestUat != null) {
-                Long uatId = requestUat.getId();
-                if (uatId != null) {
-                    Optional<Uat> uatOpt = uatRepository.findById(uatId);
-                    if (uatOpt.isEmpty() || !uatOpt.get().getTenant().getId().equals(currentUser.getTenantId())) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("UAT does not belong to your tenant.");
-                    }
-                }
             }
         }
 
@@ -80,7 +65,6 @@ public class UserController {
         if (isSuperAdmin(currentUser)) {
             users = userRepository.findAll();
         } else {
-            // Return only users belonging to the admin's tenant
             users = userRepository.findByTenantId(currentUser.getTenantId());
         }
         return ResponseEntity.ok(users.stream().map(UserDTO::fromEntity).collect(Collectors.toList()));
@@ -96,9 +80,6 @@ public class UserController {
         }
 
         User user = userOpt.get();
-        if (user == null) {
-            return ResponseEntity.notFound().build();
-        }
         if (!isSuperAdmin(currentUser) && !user.getTenantId().equals(currentUser.getTenantId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You do not have permission to view this user.");
         }
@@ -116,9 +97,6 @@ public class UserController {
         }
 
         User user = userOpt.get();
-        if (user == null) {
-            return ResponseEntity.notFound().build();
-        }
         if (!isSuperAdmin(currentUser) && !user.getTenantId().equals(currentUser.getTenantId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You do not have permission to modify this user.");
         }
@@ -126,7 +104,7 @@ public class UserController {
         if (userDetails.getUsername() != null)
             user.setUsername(userDetails.getUsername());
         if (userDetails.getRole() != null) {
-            // Fix — prevent tenant admins from assigning superior roles
+            // Prevent tenant admins from assigning superior roles
             if (!isSuperAdmin(currentUser) && "ROLE_SUPER_ADMIN".equals(userDetails.getRole())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Cannot assign super admin role.");
             }
@@ -143,18 +121,9 @@ public class UserController {
             user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
         }
 
-        Uat requestUat = userDetails.getUat();
-        if (requestUat != null) {
-            if (!isSuperAdmin(currentUser)) {
-                Long uatId = requestUat.getId();
-                if (uatId != null) {
-                    Optional<Uat> uatOpt = uatRepository.findById(uatId);
-                    if (uatOpt.isEmpty() || !uatOpt.get().getTenant().getId().equals(currentUser.getTenantId())) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("UAT does not belong to your tenant.");
-                    }
-                }
-            }
-            user.setUat(requestUat);
+        // Store uatId as a plain Long — no cross-schema FK validation needed
+        if (userDetails.getUatId() != null) {
+            user.setUatId(userDetails.getUatId());
         }
 
         return ResponseEntity.ok(UserDTO.fromEntity(userRepository.save(user)));
@@ -170,9 +139,6 @@ public class UserController {
         }
 
         User user = userOpt.get();
-        if (user == null) {
-            return ResponseEntity.notFound().build();
-        }
         if (!isSuperAdmin(currentUser) && !user.getTenantId().equals(currentUser.getTenantId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You do not have permission to delete this user.");
         }
