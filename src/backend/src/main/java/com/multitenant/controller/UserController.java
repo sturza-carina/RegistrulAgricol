@@ -51,6 +51,11 @@ public class UserController {
             // Admin must create users in their own tenant
             user.setTenantId(currentUser.getTenantId());
 
+            // Fix — prevent tenant admins from assigning superior roles
+            if ("ROLE_SUPER_ADMIN".equals(user.getRole())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Cannot assign super admin role.");
+            }
+
             Uat requestUat = user.getUat();
             if (requestUat != null) {
                 Long uatId = requestUat.getId();
@@ -120,8 +125,14 @@ public class UserController {
 
         if (userDetails.getUsername() != null)
             user.setUsername(userDetails.getUsername());
-        if (userDetails.getRole() != null)
+        if (userDetails.getRole() != null) {
+            // Fix — prevent tenant admins from assigning superior roles
+            if (!isSuperAdmin(currentUser) && "ROLE_SUPER_ADMIN".equals(userDetails.getRole())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Cannot assign super admin role.");
+            }
             user.setRole(userDetails.getRole());
+        }
+
         if (userDetails.getNume() != null)
             user.setNume(userDetails.getNume());
         if (userDetails.getEmail() != null)
