@@ -29,5 +29,7 @@ public interface PersoanaRepository extends JpaRepository<Persoana, Long> {
 
     @Query("SELECT p FROM Persoana p JOIN p.gospodarii g WHERE g.id = :gospodarieId")
     List<Persoana> findByGospodarieId(@Param("gospodarieId") Long gospodarieId);
+
+    List<Persoana> findByPersonTypeOrderByIdDesc(String personType);
 }
 

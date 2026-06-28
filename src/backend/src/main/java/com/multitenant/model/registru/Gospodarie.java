@@ -7,7 +7,7 @@ import com.multitenant.model.common.Adresa;
 import com.multitenant.model.core.Uat;
 
 @Entity
-@Table(name = "gospodarie")
+@Table(name = "gospodarii")
 @Data
 @NoArgsConstructor
 public class Gospodarie {

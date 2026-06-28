@@ -27,7 +27,7 @@ public class PersoanaFizica extends Persoana {
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
-    @OneToMany(mappedBy = "persoana", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "persoana", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ActIdentitate> identityDocuments = new ArrayList<>();
 
     @Column(name = "is_head_of_household")

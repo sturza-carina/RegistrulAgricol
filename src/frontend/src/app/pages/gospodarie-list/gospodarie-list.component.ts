@@ -14,11 +14,12 @@ import { AuthService } from '../../services/auth.service';
 
 import { GenericTableComponent, TableColumn, TableFilter, TableAction } from '../../components/generic-table/generic-table.component';
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
+import { ActiveUatBannerComponent } from '../../components/active-uat-banner/active-uat-banner.component';
 
 @Component({
   selector: 'app-gospodarie-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, LayoutComponent, PageHeaderComponent, FormsModule, GenericTableComponent, BreadcrumbsComponent],
+  imports: [CommonModule, RouterLink, LayoutComponent, PageHeaderComponent, FormsModule, GenericTableComponent, BreadcrumbsComponent, ActiveUatBannerComponent],
   templateUrl: './gospodarie-list.component.html'
 })
 export class GospodarieListComponent implements OnInit, OnDestroy {

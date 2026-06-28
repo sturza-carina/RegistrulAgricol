@@ -33,10 +33,15 @@ public class TenantService {
 
         // Create schema and run Flyway migrations BEFORE saving to DB
         try {
+            try (java.sql.Connection conn = dataSource.getConnection();
+                 java.sql.Statement stmt = conn.createStatement()) {
+                stmt.execute("CREATE SCHEMA IF NOT EXISTS " + schemaName);
+            }
             org.flywaydb.core.Flyway flyway = org.flywaydb.core.Flyway.configure()
                     .dataSource(dataSource)
                     .schemas(schemaName)
                     .locations("classpath:db/tenant")
+                    .outOfOrder(true)
                     .load();
             flyway.repair();
             flyway.migrate();
@@ -67,10 +72,15 @@ public class TenantService {
         java.util.List<Tenant> tenants = tenantRepository.findAll();
         for (Tenant tenant : tenants) {
             try {
+                try (java.sql.Connection conn = dataSource.getConnection();
+                     java.sql.Statement stmt = conn.createStatement()) {
+                    stmt.execute("CREATE SCHEMA IF NOT EXISTS " + tenant.getSchemaName());
+                }
                 org.flywaydb.core.Flyway flyway = org.flywaydb.core.Flyway.configure()
                         .dataSource(dataSource)
                         .schemas(tenant.getSchemaName())
                         .locations("classpath:db/tenant")
+                        .outOfOrder(true)
                         .load();
                 flyway.repair();
                 flyway.migrate();

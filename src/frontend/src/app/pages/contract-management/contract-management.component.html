@@ -6,7 +6,12 @@
     [description]="!creatingContract && !editingContract && !viewingContract ? 'Gestionare contracte de arendă, comodat și alte tipuri de folosință terenuri.' : (creatingContract ? 'Înregistrați un contract de utilizare nou pentru UAT-ul activ.' : (editingContract ? 'Actualizați detaliile contractului selectat.' : 'Detalii contract de utilizare.'))">
   </app-page-header>
 
-
+  <!-- Banner UAT activ — apare doar pentru non-superadmin -->
+  <app-active-uat-banner 
+    *ngIf="activeUat && user?.role !== 'ROLE_SUPER_ADMIN'"
+    [prefix]="'Contracte din:'"
+    [uatName]="activeUat.denumire">
+  </app-active-uat-banner>
 
   <div *ngIf="successMessage" style="background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px">
     {{ successMessage }}
@@ -98,7 +103,6 @@
           <p><strong>Locator Proprietar:</strong> {{ getPersonDisplayName(viewingContract.locatorProprietar) }}</p>
           <p><strong>Locator Utilizator (Locatar):</strong> {{ getPersonDisplayName(viewingContract.locatorUtilizator) }}</p>
           <p><strong>Înregistrat la Data:</strong> {{ viewingContract.dataOperare || '-' }}</p>
-          <p><strong>Înregistrat de Persoană:</strong> {{ getPersonDisplayName(viewingContract.utilizatorOperare) }}</p>
         </div>
       </div>
       <div *ngIf="viewingContract.motivIncetare" style="margin-top: 15px; padding: 12px; background: #f8fafc; border-radius: 6px; border-left: 4px solid #b91c1c;">

@@ -24,7 +24,6 @@
           <p *ngIf="showCreateForm">Înregistrați o nouă organizație agricolă sau primărie în ecosistemul de management.</p>
           <p *ngIf="editingTenant">Modificați detaliile tenantului selectat.</p>
         </div>
-        <button class="btn-primary" *ngIf="!showCreateForm && !selectedTenant && !editingTenant" (click)="openCreateForm()">+ Creare Tenant nou</button>
       </div>
 
       <div *ngIf="successMessage" style="background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px">
@@ -34,72 +33,19 @@
         {{ errorMessage }}
       </div>
 
-      <!-- Search -->
-      <div class="card" *ngIf="!showCreateForm && !selectedTenant && !editingTenant" style="padding: 12px 20px; margin-top: 20px;">
-        <div class="search-bar" style="max-width: 100%;">
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-          </svg>
-          <input type="text" placeholder="Caută după nume, ID sau schemă..." (input)="onSearch($event)">
-        </div>
-      </div>
-
-      <!-- List View -->
-      <div *ngIf="!showCreateForm && !selectedTenant && !editingTenant" class="card table-container" style="margin-top: 20px;">
-        <div class="card-header">
-          <h3>Tenants</h3>
-        </div>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Cod SIRUTA (ID)</th>
-              <th>Nume Organizație</th>
-              <th>Nume Schemă</th>
-              <th style="text-align: right;">Acțiuni</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let t of paginatedTenants" class="hoverable-row">
-              <td>{{ t.id }}</td>
-              <td style="font-weight: bold;">{{ t.name }}</td>
-              <td style="color: var(--text-secondary);">{{ t.schemaName }}</td>
-              <td style="text-align: right; display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
-                <button style="background:none; border:none; color:var(--primary); cursor:pointer; padding: 4px;" (click)="selectTenant(t)" title="Detalii">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
-                </button>
-                <button style="background:none; border:none; color:var(--primary); cursor:pointer; padding: 4px;" (click)="editTenant(t)" title="Edit">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                  </svg>
-                </button>
-                <button style="background:none; border:none; color:red; cursor:pointer; padding: 4px;" (click)="deleteTenant(t)" title="Delete">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                  </svg>
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="paginatedTenants.length === 0">
-              <td colspan="4" class="empty-state">Nu există tenanți.</td>
-            </tr>
-          </tbody>
-        </table>
-        
-        <div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--card-border)">
-          <span style="font-size:12.5px;color:var(--text-muted)">
-            Pagina {{ currentPage }} din {{ totalPages }}
-          </span>
-          <div class="pagination" style="display: flex; gap: 4px;">
-            <button (click)="prevPage()" [disabled]="currentPage === 1">Înapoi</button>
-            <span class="pagination-info">{{ currentPage }} / {{ totalPages }}</span>
-            <button (click)="nextPage()" [disabled]="currentPage === totalPages">Următoarea</button>
-          </div>
-        </div>
-      </div>
+      <!-- Generic Table View -->
+      <ng-container *ngIf="!showCreateForm && !selectedTenant && !editingTenant">
+        <app-generic-table
+          title="Tenants"
+          [data]="tenants"
+          [columns]="tableColumns"
+          [actions]="tableActions"
+          [filters]="tableFilters"
+          primaryActionText="Creare Tenant Nou"
+          (primaryAction)="openCreateForm()"
+          emptyMessage="Nu există tenanți.">
+        </app-generic-table>
+      </ng-container>
 
       <!-- Tenant Details View -->
       <div *ngIf="selectedTenant" style="display:flex; justify-content: center; gap: 60px; margin-top: 40px; align-items: start; max-width: 1000px; margin-left: auto; margin-right: auto;">

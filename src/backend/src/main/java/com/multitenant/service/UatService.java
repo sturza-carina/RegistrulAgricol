@@ -27,7 +27,7 @@ public class UatService {
     // ─────────────────────────────────────────────────────────────────────────
 
     public List<PublicUat> getAllPublicUats() {
-        return publicUatRepository.findAll();
+        return publicUatRepository.findByTenantIdIsNull();
     }
 
     public PublicUat createPublicUat(PublicUat uat) {
@@ -89,10 +89,15 @@ public class UatService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "UAT " + codSiruta + " not found in the global registry."));
 
-        // Check if already assigned in this tenant
-        if (uatRepository.existsByCodSiruta(codSiruta)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "UAT " + codSiruta + " is already assigned to this tenant.");
+        // Check if already assigned in this tenant or another tenant
+        if (globalUat.getTenantId() != null) {
+            if (globalUat.getTenantId().equals(TenantContext.getCurrentTenant())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "UAT " + codSiruta + " is already assigned to this tenant.");
+            } else {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "UAT " + codSiruta + " is already claimed by another tenant.");
+            }
         }
 
         // Copy from global into tenant-local table
@@ -102,7 +107,13 @@ public class UatService {
         tenantUat.setJudet(globalUat.getJudet());
         tenantUat.setTipUat(globalUat.getTipUat());
         tenantUat.setIsActive(globalUat.getIsActive());
-        return uatRepository.save(tenantUat);
+        tenantUat = uatRepository.save(tenantUat);
+        
+        // Mark it as claimed in the global registry
+        globalUat.setTenantId(TenantContext.getCurrentTenant());
+        publicUatRepository.save(globalUat);
+        
+        return tenantUat;
     }
 
     /**
@@ -113,5 +124,11 @@ public class UatService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "UAT " + codSiruta + " is not assigned to this tenant."));
         uatRepository.delete(existing);
+        
+        // Free it in the global registry
+        publicUatRepository.findByCodSiruta(codSiruta).ifPresent(globalUat -> {
+            globalUat.setTenantId(null);
+            publicUatRepository.save(globalUat);
+        });
     }
 }

@@ -11,7 +11,7 @@ public class ContractUtilizareDTO {
     private Long terenId;
     private Long locatorProprietarId;
     private Long locatorUtilizatorId;
-    private Long utilizatorOperareId;
+
     private TipContractUtilizare tipContract;
     private String numarContract;
     private LocalDate dataSemnare;

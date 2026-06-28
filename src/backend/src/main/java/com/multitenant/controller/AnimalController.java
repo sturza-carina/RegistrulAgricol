@@ -41,7 +41,7 @@ public class AnimalController {
 
     @GetMapping("/individual")
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
-    public ResponseEntity<List<AnimalIndividual>> getAllIndividuals() {
+    public ResponseEntity<?> getAllIndividuals() {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.ok(Collections.emptyList());
         }
@@ -151,7 +151,7 @@ public class AnimalController {
 
     @GetMapping("/grup")
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
-    public ResponseEntity<List<EfectivGrup>> getAllGroups() {
+    public ResponseEntity<?> getAllGroups() {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.ok(Collections.emptyList());
         }

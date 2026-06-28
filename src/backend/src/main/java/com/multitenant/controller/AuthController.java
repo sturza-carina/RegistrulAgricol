@@ -45,11 +45,7 @@ public class AuthController {
         
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-        return ResponseEntity.ok(new JwtResponse(jwt,
-                userDetails.getId(), 
-                userDetails.getUsername(), 
-                userDetails.getRole(),
-                userDetails.getTenantId()));
+        return ResponseEntity.ok(new JwtResponse(jwt));
     }
 
     @PostMapping("/impersonate")
@@ -78,11 +74,7 @@ public class AuthController {
                 
         String jwt = jwtUtils.generateJwtToken(newAuth);
         
-        return ResponseEntity.ok(new JwtResponse(jwt,
-                impersonatedDetails.getId(), 
-                impersonatedDetails.getUsername(), 
-                impersonatedDetails.getRole(),
-                impersonatedDetails.getTenantId()));
+        return ResponseEntity.ok(new JwtResponse(jwt));
     }
 }
 

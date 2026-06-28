@@ -15,6 +15,7 @@ import { FormConfig } from '../../components/generic-form/generic-form.models';
 import { PageHeaderComponent } from '../../components/page-header/page-header.component';
 import { LayoutComponent } from '../../components/layout/layout.component';
 import { BreadcrumbsComponent } from '../../components/breadcrumbs/breadcrumbs.component';
+import { ActiveUatBannerComponent } from '../../components/active-uat-banner/active-uat-banner.component';
 
 @Component({
   selector: 'app-contract-management',
@@ -26,7 +27,8 @@ import { BreadcrumbsComponent } from '../../components/breadcrumbs/breadcrumbs.c
     GenericFormComponent,
     PageHeaderComponent,
     LayoutComponent,
-    BreadcrumbsComponent
+    BreadcrumbsComponent,
+    ActiveUatBannerComponent
   ],
   templateUrl: './contract-management.component.html',
   styleUrls: ['./contract-management.component.scss']
@@ -34,6 +36,7 @@ import { BreadcrumbsComponent } from '../../components/breadcrumbs/breadcrumbs.c
 export class ContractManagementComponent implements OnInit {
   user: any = null;
   selectedTenantId: string = '';
+  activeUat: any = null;
 
   contracts: ContractUtilizare[] = [];
   terenuri: any[] = [];
@@ -95,16 +98,12 @@ export class ContractManagementComponent implements OnInit {
       } else {
         this.user = user;
         this.uatContextService.activeUat$.subscribe(uat => {
-          if (uat && uat.tenantId) {
-            if (this.user.role === 'ROLE_SUPER_ADMIN') {
-              this.authService.setImpersonation(uat.tenantId);
-            }
-            this.selectedTenantId = uat.tenantId;
+          if (uat) {
+            this.activeUat = uat;
+            this.selectedTenantId = this.authService.currentTenantId;
             this.loadTenantData();
           } else {
-            if (this.user.role === 'ROLE_SUPER_ADMIN') {
-              this.authService.stopImpersonation();
-            }
+            this.activeUat = null;
             this.selectedTenantId = '';
             this.contracts = [];
             this.terenuri = [];
@@ -123,7 +122,10 @@ export class ContractManagementComponent implements OnInit {
     this.successMessage = '';
     this.errorMessage = '';
 
-    this.contractService.getAllContracts().subscribe({
+    const activeUat = this.uatContextService.getActiveUat();
+    const uatCode = activeUat ? activeUat.codSiruta : undefined;
+
+    this.contractService.getAllContracts(uatCode).subscribe({
       next: (data) => {
         this.contracts = data;
         this.buildFormConfig();
@@ -269,7 +271,7 @@ export class ContractManagementComponent implements OnInit {
     this.formInitialData = {
       terenId: contract.teren?.id || '',
       locatorProprietarId: contract.locatorProprietar?.id || '',
-      locatorUtilizatorId: contract.locatorUtilizator?.id || '',
+      locatorUtilizatorId: contract.locatorUtilizator?.id,
       tipContract: contract.tipContract,
       numarContract: contract.numarContract,
       dataSemnare: contract.dataSemnare,
@@ -293,7 +295,6 @@ export class ContractManagementComponent implements OnInit {
       terenId: +formVal.terenId,
       locatorProprietarId: formVal.locatorProprietarId ? +formVal.locatorProprietarId : null,
       locatorUtilizatorId: formVal.locatorUtilizatorId ? +formVal.locatorUtilizatorId : null,
-      utilizatorOperareId: null,
       tipContract: formVal.tipContract,
       numarContract: formVal.numarContract,
       dataSemnare: formVal.dataSemnare || null,

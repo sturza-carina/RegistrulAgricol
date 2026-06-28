@@ -28,7 +28,7 @@ export class UatContextService {
       } else {
         if (user.role !== 'ROLE_SUPER_ADMIN') {
           this.uatsLoaded = true;
-          this.loadUats(user.tenantId);
+          this.loadUats(user.tenantId || '');
         } else {
           this.reset();
         }
@@ -43,13 +43,13 @@ export class UatContextService {
       const impersonated = this.authService.impersonatedTenantSubject.value;
       if (!impersonated && user.role !== 'ROLE_SUPER_ADMIN' && !this.uatsLoaded) {
         this.uatsLoaded = true;
-        this.loadUats(user.tenantId);
+        this.loadUats(user.tenantId || '');
       }
     });
   }
 
   private loadUats(tenantId: string): void {
-    this.http.get<Uat[]>(`/api/uats?tenantId=${tenantId}`).subscribe({
+    this.http.get<Uat[]>(`/api/uats/tenant`).subscribe({
       next: (uats) => {
         this.availableUatsSubject.next(uats);
 

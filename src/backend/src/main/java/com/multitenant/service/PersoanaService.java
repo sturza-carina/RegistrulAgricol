@@ -4,6 +4,9 @@ import com.multitenant.config.tenant.TenantContext;
 import com.multitenant.model.registru.*;
 import com.multitenant.model.persoana.*;
 import com.multitenant.repository.PersoanaRepository;
+import com.multitenant.repository.GospodarieRepository;
+import com.multitenant.dto.PersoanaDTO;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,21 +14,25 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class PersoanaService {
 
     private final PersoanaRepository persoanaRepository;
-    private final com.multitenant.repository.GospodarieRepository gospodarieRepository;
+    private final GospodarieRepository gospodarieRepository;
+    private final ModelMapper modelMapper;
 
     public PersoanaService(PersoanaRepository persoanaRepository,
-            com.multitenant.repository.GospodarieRepository gospodarieRepository) {
+            GospodarieRepository gospodarieRepository,
+            ModelMapper modelMapper) {
         this.persoanaRepository = persoanaRepository;
         this.gospodarieRepository = gospodarieRepository;
+        this.modelMapper = modelMapper;
     }
 
-    public Persoana createPerson(Persoana persoana) {
+    public PersoanaDTO createPerson(Persoana persoana) {
         String currentTenant = TenantContext.getCurrentTenant();
         if (currentTenant != null && !currentTenant.equals("public")) {
             persoana.setTenantId(currentTenant);
@@ -58,31 +65,51 @@ public class PersoanaService {
             }
         }
 
-        return persoanaRepository.save(persoana);
+        Persoana saved = persoanaRepository.save(persoana);
+        return modelMapper.map(saved, PersoanaDTO.class);
     }
 
     @Transactional(readOnly = true)
-    public List<Persoana> getAllPersons(String search, String type) {
-        return persoanaRepository.searchPersons(search, type);
+    public List<PersoanaDTO> getAllPersoaneFizice() {
+        return persoanaRepository.findByPersonTypeOrderByIdDesc("PHYSICAL_PERSON").stream()
+                .map(entity -> modelMapper.map(entity, PersoanaDTO.class))
+                .collect(Collectors.toList());
+    }
+
+    public List<PersoanaDTO> getAllPersoaneJuridice() {
+        return persoanaRepository.findByPersonTypeOrderByIdDesc("LEGAL_ENTITY").stream()
+                .map(entity -> modelMapper.map(entity, PersoanaDTO.class))
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public List<Persoana> getPersonsByGospodarieId(Long gospodarieId) {
-        return persoanaRepository.findByGospodarieId(gospodarieId);
+    public List<PersoanaDTO> getAllPersons(String search, String type) {
+        return persoanaRepository.searchPersons(search, type).stream()
+                .map(entity -> modelMapper.map(entity, PersoanaDTO.class))
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public Persoana getPersonById(Long id) {
+    public List<PersoanaDTO> getPersonsByGospodarieId(Long gospodarieId) {
+        return persoanaRepository.findByGospodarieId(gospodarieId).stream()
+                .map(entity -> modelMapper.map(entity, PersoanaDTO.class))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public PersoanaDTO getPersonById(Long id) {
         if (id == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID must not be null");
         }
-        return persoanaRepository.findById(id)
+        Persoana entity = persoanaRepository.findById(id)
                 .orElseThrow(
                         () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Persoana not found with id: " + id));
+        return modelMapper.map(entity, PersoanaDTO.class);
     }
 
-    public Persoana updatePerson(Long id, Persoana updatedPerson) {
-        Persoana existing = getPersonById(id);
+    public PersoanaDTO updatePerson(Long id, Persoana updatedPerson) {
+        Persoana existing = persoanaRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Persoana not found"));
 
         if (!existing.getClass().equals(updatedPerson.getClass())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot change Persoana type");
@@ -150,11 +177,13 @@ public class PersoanaService {
             }
         }
 
-        return persoanaRepository.save(existing);
+        Persoana saved = persoanaRepository.save(existing);
+        return modelMapper.map(saved, PersoanaDTO.class);
     }
 
     public void deletePerson(Long id) {
-        Persoana persoana = getPersonById(id);
+        Persoana persoana = persoanaRepository.findById(id)
+                .orElse(null);
         if (persoana != null) {
             persoanaRepository.delete(persoana);
         }
@@ -175,7 +204,8 @@ public class PersoanaService {
     }
 
     public void addPersonToGospodarie(Long persoanaId, Long gospodarieId) {
-        Persoana persoana = getPersonById(persoanaId);
+        Persoana persoana = persoanaRepository.findById(persoanaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Persoana not found"));
         Gospodarie gospodarie = gospodarieRepository.findById(gospodarieId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Gospodarie not found with id: " + gospodarieId));
         

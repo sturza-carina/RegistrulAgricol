@@ -7,11 +7,14 @@ import com.multitenant.model.registru.Gospodarie;
 import com.multitenant.repository.AnimalIndividualRepository;
 import com.multitenant.repository.GospodarieRepository;
 import com.multitenant.repository.PersoanaRepository;
+import com.multitenant.dto.AnimalIndividualDTO;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -20,20 +23,22 @@ public class AnimalIndividualService {
     private final AnimalIndividualRepository animalIndividualRepository;
     private final GospodarieRepository gospodarieRepository;
     private final PersoanaRepository persoanaRepository;
-    // Injectat pentru verificarea unicității globale a crotalelor (SNIIA)
     private final CrotalRegistryService crotalRegistryService;
+    private final ModelMapper modelMapper;
 
     public AnimalIndividualService(AnimalIndividualRepository animalIndividualRepository,
                                    GospodarieRepository gospodarieRepository,
                                    PersoanaRepository persoanaRepository,
-                                   CrotalRegistryService crotalRegistryService) {
+                                   CrotalRegistryService crotalRegistryService,
+                                   ModelMapper modelMapper) {
         this.animalIndividualRepository = animalIndividualRepository;
         this.gospodarieRepository = gospodarieRepository;
         this.persoanaRepository = persoanaRepository;
         this.crotalRegistryService = crotalRegistryService;
+        this.modelMapper = modelMapper;
     }
 
-    public AnimalIndividual create(AnimalIndividual animal) {
+    public AnimalIndividualDTO create(AnimalIndividual animal) {
         String currentTenant = TenantContext.getCurrentTenant();
         if (currentTenant != null && !currentTenant.equals("public")) {
             animal.setTenantId(currentTenant);
@@ -51,11 +56,8 @@ public class AnimalIndividualService {
         Persoana proprietar = persoanaRepository.findById(animal.getProprietarId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proprietar not found"));
 
-        // Verificăm unicitatea crotalului GLOBAL (cross-tenant) înainte de save.
-        // Argumentul excludeId=null semnalează că e un animal nou (fără ID propriu încă).
         crotalRegistryService.validateCrotalGlobalUnic(animal.getNumarCrotal(), null, currentTenant);
 
-        // Verificăm unicitatea și local (în schema tenantului curent) — apărare în adâncime.
         if (animal.getNumarCrotal() != null && !animal.getNumarCrotal().isBlank()
                 && animalIndividualRepository.existsByNumarCrotalAndIdNot(animal.getNumarCrotal(), null)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
@@ -65,36 +67,39 @@ public class AnimalIndividualService {
         animal.setGospodarie(gospodarie);
         animal.setProprietar(proprietar);
 
-        // stareActiva se inițializează întotdeauna true la creare.
-        // Nu se poate seta direct — se modifică doar prin evenimentele din timeline.
         animal.setStareActiva(true);
 
         AnimalIndividual saved = animalIndividualRepository.save(animal);
 
-        // Rezervăm crotalul în registrul global DUPĂ salvare (avem ID-ul acum)
         crotalRegistryService.rezervaCrotal(saved.getNumarCrotal(), currentTenant, saved.getId());
 
-        return saved;
+        return modelMapper.map(saved, AnimalIndividualDTO.class);
     }
 
     @Transactional(readOnly = true)
-    public List<AnimalIndividual> getAll() {
-        return animalIndividualRepository.findAll();
+    public List<AnimalIndividualDTO> getAll() {
+        return animalIndividualRepository.findAll().stream()
+                .map(entity -> modelMapper.map(entity, AnimalIndividualDTO.class))
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public AnimalIndividual getById(Long id) {
-        return animalIndividualRepository.findById(id)
+    public AnimalIndividualDTO getById(Long id) {
+        AnimalIndividual entity = animalIndividualRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Animal not found with id: " + id));
+        return modelMapper.map(entity, AnimalIndividualDTO.class);
     }
 
     @Transactional(readOnly = true)
-    public List<AnimalIndividual> getByGospodarieId(Long gospodarieId) {
-        return animalIndividualRepository.findByGospodarieId(gospodarieId);
+    public List<AnimalIndividualDTO> getByGospodarieId(Long gospodarieId) {
+        return animalIndividualRepository.findByGospodarieId(gospodarieId).stream()
+                .map(entity -> modelMapper.map(entity, AnimalIndividualDTO.class))
+                .collect(Collectors.toList());
     }
 
-    public AnimalIndividual update(Long id, AnimalIndividual updated) {
-        AnimalIndividual existing = getById(id);
+    public AnimalIndividualDTO update(Long id, AnimalIndividual updated) {
+        AnimalIndividual existing = animalIndividualRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Animal not found with id: " + id));
         String currentTenant = TenantContext.getCurrentTenant();
 
         if (updated.getGospodarieId() == null) {
@@ -104,16 +109,13 @@ public class AnimalIndividualService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Proprietar is required");
         }
 
-        // Dacă crotalul se schimbă, validăm noul crotal global și local
         String crotalNou = updated.getNumarCrotal();
         String crotalVechi = existing.getNumarCrotal();
         boolean crotalSchimbat = crotalNou != null && !crotalNou.equals(crotalVechi);
 
         if (crotalSchimbat) {
-            // Validare globală — excludem animalul curent prin (id, tenantId)
             crotalRegistryService.validateCrotalGlobalUnic(crotalNou, existing.getId(), currentTenant);
 
-            // Validare locală (intra-tenant) — excludem explicit animalul curent
             if (animalIndividualRepository.existsByNumarCrotalAndIdNot(crotalNou, existing.getId())) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT,
                         "Crotalul '" + crotalNou + "' este deja înregistrat în această fermă.");
@@ -134,30 +136,28 @@ public class AnimalIndividualService {
         existing.setDataNastere(updated.getDataNastere());
         existing.setGreutateKg(updated.getGreutateKg());
 
-        // IMPORTANT: stareActiva NU se copiază din request.
-        // Starea se modifică EXCLUSIV prin evenimentele din timeline (EvenimentAnimalService).
-        // Dacă un animal este inactiv (vândut/decedat), nu poate deveni activ din nou prin edit.
-
         AnimalIndividual saved = animalIndividualRepository.save(existing);
 
-        // Actualizăm registrul global dacă crotalul s-a schimbat
         if (crotalSchimbat) {
             crotalRegistryService.elibereazaCrotal(crotalVechi);
             crotalRegistryService.rezervaCrotal(crotalNou, currentTenant, saved.getId());
         }
 
-        return saved;
+        return modelMapper.map(saved, AnimalIndividualDTO.class);
     }
 
     public void delete(Long id) {
-        AnimalIndividual animal = getById(id);
+        AnimalIndividual animal = animalIndividualRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Animal not found with id: " + id));
         // Eliberăm crotalul din registrul global la ștergere
         crotalRegistryService.elibereazaCrotal(animal.getNumarCrotal());
         animalIndividualRepository.delete(animal);
     }
 
     @Transactional(readOnly = true)
-    public List<AnimalIndividual> getByProprietarId(Long proprietarId) {
-        return animalIndividualRepository.findByProprietarId(proprietarId);
+    public List<AnimalIndividualDTO> getByProprietarId(Long proprietarId) {
+        return animalIndividualRepository.findByProprietarId(proprietarId).stream()
+                .map(entity -> modelMapper.map(entity, AnimalIndividualDTO.class))
+                .collect(Collectors.toList());
     }
 }

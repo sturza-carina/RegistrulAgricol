@@ -18,6 +18,7 @@ public interface PublicUatRepository extends JpaRepository<PublicUat, Long> {
     boolean existsByCodSiruta(String codSiruta);
 
     List<PublicUat> findByTenantId(String tenantId);
+    List<PublicUat> findByTenantIdIsNull();
     List<PublicUat> findByTenantIdOrTenantIdIsNull(String tenantId);
     List<PublicUat> findByJudetOrderByDenumireAsc(String judet);
 

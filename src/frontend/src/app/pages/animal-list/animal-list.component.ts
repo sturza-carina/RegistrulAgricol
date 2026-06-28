@@ -15,11 +15,12 @@ import { UatContextService } from '../../services/uat-context.service';
 import { Uat } from '../../models/gospodarie.model';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { ActiveUatBannerComponent } from '../../components/active-uat-banner/active-uat-banner.component';
 
 @Component({
   selector: 'app-animal-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, LayoutComponent, PageHeaderComponent, GenericTableComponent, BreadcrumbsComponent, AnimalIndividualFormComponent, EfectivGrupFormComponent],
+  imports: [CommonModule, RouterModule, FormsModule, LayoutComponent, PageHeaderComponent, GenericTableComponent, BreadcrumbsComponent, AnimalIndividualFormComponent, EfectivGrupFormComponent, ActiveUatBannerComponent],
   templateUrl: './animal-list.component.html'
 })
 export class AnimalListComponent implements OnInit, OnChanges, OnDestroy {

@@ -12,16 +12,18 @@ import { PageHeaderComponent } from '../../components/page-header/page-header.co
 import { GenericTableComponent, TableColumn, TableFilter, TableAction } from '../../components/generic-table/generic-table.component';
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 import { PersonFormComponent } from '../persoana-form/persoana-form.component';
+import { ActiveUatBannerComponent } from '../../components/active-uat-banner/active-uat-banner.component';
 
 @Component({
   selector: 'app-persoana-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, LayoutComponent, PageHeaderComponent, GenericTableComponent, BreadcrumbsComponent, PersonFormComponent],
+  imports: [CommonModule, RouterModule, FormsModule, LayoutComponent, PageHeaderComponent, GenericTableComponent, BreadcrumbsComponent, PersonFormComponent, ActiveUatBannerComponent],
   templateUrl: './persoana-list.component.html'
 })
 export class PersonListComponent implements OnInit {
   user: any = null;
   persoane: any[] = [];
+  activeUat: any = null;
 
 
   breadcrumbItems: BreadcrumbItem[] = [
@@ -58,24 +60,19 @@ export class PersonListComponent implements OnInit {
 
   ngOnInit() {
     this.authService.currentUser.subscribe(user => {
+      this.user = user;
       if (!user) {
         this.router.navigate(['/login']);
-      } else {
-        this.user = user;
-        this.uatContextService.activeUat$.subscribe(uat => {
-          if (uat && uat.tenantId) {
-            if (user.role === 'ROLE_SUPER_ADMIN') {
-              this.authService.setImpersonation(uat.tenantId);
-            }
-            this.loadPersons();
-          } else {
-            if (user.role === 'ROLE_SUPER_ADMIN') {
-              this.authService.stopImpersonation();
-            }
-            this.persoane = [];
-          }
-        });
+        return;
       }
+      this.uatContextService.activeUat$.subscribe(uat => {
+        this.activeUat = uat;
+        if (uat) {
+          this.loadPersons();
+        } else {
+          this.persoane = [];
+        }
+      });
     });
   }
 

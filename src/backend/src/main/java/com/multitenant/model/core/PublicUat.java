@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  * Tenant admins "claim" UATs from this list into their local tenant schema's uat table.
  */
 @Entity
-@Table(name = "uat", schema = "public")
+@Table(name = "uats", schema = "public")
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})

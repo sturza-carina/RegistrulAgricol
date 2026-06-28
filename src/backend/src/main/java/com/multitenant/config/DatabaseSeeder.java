@@ -23,6 +23,8 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final com.multitenant.repository.PersoanaRepository persoanaRepository;
     private final com.multitenant.repository.CladireRepository cladireRepository;
     private final com.multitenant.repository.MachineryRepository machineryRepository;
+    private final com.multitenant.repository.UatRepository uatRepository;
+    private final com.multitenant.repository.PublicUatRepository publicUatRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DatabaseSeeder(TenantService tenantService,
@@ -33,6 +35,8 @@ public class DatabaseSeeder implements CommandLineRunner {
                           com.multitenant.repository.PersoanaRepository persoanaRepository,
                           com.multitenant.repository.CladireRepository cladireRepository,
                           com.multitenant.repository.MachineryRepository machineryRepository,
+                          com.multitenant.repository.UatRepository uatRepository,
+                          com.multitenant.repository.PublicUatRepository publicUatRepository,
                           PasswordEncoder passwordEncoder) {
         this.tenantService = tenantService;
         this.userRepository = userRepository;
@@ -42,6 +46,8 @@ public class DatabaseSeeder implements CommandLineRunner {
         this.persoanaRepository = persoanaRepository;
         this.cladireRepository = cladireRepository;
         this.machineryRepository = machineryRepository;
+        this.uatRepository = uatRepository;
+        this.publicUatRepository = publicUatRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -120,8 +126,44 @@ public class DatabaseSeeder implements CommandLineRunner {
 
                 // Switch current thread to "cluj" tenant context for entity seeding
                 TenantContext.setCurrentTenant("cluj");
-                System.out.println("[DatabaseSeeder] Seeding Households (Gospodarii) for Cluj...");
-                if (gospodarieRepository.count() == 0) {
+                System.out.println("[DatabaseSeeder] Seeding UATs and Households for Cluj...");
+                
+                com.multitenant.model.core.Uat clujNapoca = null;
+                if (!uatRepository.existsByCodSiruta("54975")) {
+                    com.multitenant.model.core.PublicUat pUat = publicUatRepository.findByCodSiruta("54975").orElse(null);
+                    if (pUat != null) {
+                        clujNapoca = new com.multitenant.model.core.Uat();
+                        clujNapoca.setCodSiruta(pUat.getCodSiruta());
+                        clujNapoca.setDenumire(pUat.getDenumire());
+                        clujNapoca.setJudet(pUat.getJudet());
+                        clujNapoca.setTipUat(pUat.getTipUat());
+                        clujNapoca.setIsActive(true);
+                        clujNapoca = uatRepository.save(clujNapoca);
+                        
+                        pUat.setTenantId("cluj");
+                        publicUatRepository.save(pUat);
+                    }
+                } else {
+                    clujNapoca = uatRepository.findByCodSiruta("54975").orElse(null);
+                }
+
+                if (!uatRepository.existsByCodSiruta("57706")) {
+                    com.multitenant.model.core.PublicUat pUat = publicUatRepository.findByCodSiruta("57706").orElse(null);
+                    if (pUat != null) {
+                        com.multitenant.model.core.Uat floresti = new com.multitenant.model.core.Uat();
+                        floresti.setCodSiruta(pUat.getCodSiruta());
+                        floresti.setDenumire(pUat.getDenumire());
+                        floresti.setJudet(pUat.getJudet());
+                        floresti.setTipUat(pUat.getTipUat());
+                        floresti.setIsActive(true);
+                        uatRepository.save(floresti);
+                        
+                        pUat.setTenantId("cluj");
+                        publicUatRepository.save(pUat);
+                    }
+                }
+
+                if (gospodarieRepository.count() == 0 && clujNapoca != null) {
                     com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
                     for (int i = 1; i <= 10; i++) {
@@ -133,8 +175,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                         g.setAdresa(a);
                         g.setTipGospodarie(i % 2 == 0 ? TipGospodarie.INDIVIDUALA : TipGospodarie.COLECTIVA);
                         g.setActiva(true);
-                        // Set uat_id to null for now — UATs are seeded separately in the tenant schema
-                        g.setUat(null);
+                        g.setUat(clujNapoca);
                         Gospodarie savedG = gospodarieRepository.save(g);
 
                         com.multitenant.model.registru.Teren t = new com.multitenant.model.registru.Teren();
@@ -186,8 +227,28 @@ public class DatabaseSeeder implements CommandLineRunner {
                 
                 // Switch current thread to "bucuresti" tenant context for entity seeding
                 TenantContext.setCurrentTenant("bucuresti");
-                System.out.println("[DatabaseSeeder] Seeding Households (Gospodarii) for Bucuresti...");
-                if (gospodarieRepository.count() == 0) {
+                System.out.println("[DatabaseSeeder] Seeding UATs and Households for Bucuresti...");
+                
+                com.multitenant.model.core.Uat bucuresti = null;
+                if (!uatRepository.existsByCodSiruta("1017")) {
+                    com.multitenant.model.core.PublicUat pUat = publicUatRepository.findByCodSiruta("1017").orElse(null);
+                    if (pUat != null) {
+                        bucuresti = new com.multitenant.model.core.Uat();
+                        bucuresti.setCodSiruta(pUat.getCodSiruta());
+                        bucuresti.setDenumire(pUat.getDenumire());
+                        bucuresti.setJudet(pUat.getJudet());
+                        bucuresti.setTipUat(pUat.getTipUat());
+                        bucuresti.setIsActive(true);
+                        bucuresti = uatRepository.save(bucuresti);
+                        
+                        pUat.setTenantId("bucuresti");
+                        publicUatRepository.save(pUat);
+                    }
+                } else {
+                    bucuresti = uatRepository.findByCodSiruta("1017").orElse(null);
+                }
+
+                if (gospodarieRepository.count() == 0 && bucuresti != null) {
                     com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
                     for (int i = 1; i <= 10; i++) {
@@ -199,8 +260,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                         g.setAdresa(a);
                         g.setTipGospodarie(i % 2 == 0 ? TipGospodarie.COLECTIVA : TipGospodarie.INDIVIDUALA);
                         g.setActiva(true);
-                        // Set uat_id to null for now — UATs are seeded separately in the tenant schema
-                        g.setUat(null);
+                        g.setUat(bucuresti);
                         Gospodarie savedG = gospodarieRepository.save(g);
 
                         com.multitenant.model.registru.Teren t = new com.multitenant.model.registru.Teren();

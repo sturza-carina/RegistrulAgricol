@@ -4,10 +4,11 @@ import { BehaviorSubject, Observable, tap } from 'rxjs';
 
 export interface JwtResponse {
   token: string;
-  id: number;
-  username: string;
-  role: string;
-  tenantId: string;
+  // Extracted from token locally
+  id?: number;
+  username?: string;
+  role?: string;
+  tenantId?: string;
 }
 
 @Injectable({
@@ -24,15 +25,37 @@ export class AuthService {
   constructor(private http: HttpClient) {
     const userStr = localStorage.getItem('currentUser');
     if (userStr) {
-      this.currentUserSubject.next(JSON.parse(userStr));
+      const parsed = JSON.parse(userStr);
+      if (parsed && parsed.token) {
+        this.currentUserSubject.next(this.decodeToken(parsed.token));
+      }
+    }
+  }
+
+  private decodeToken(token: string): JwtResponse {
+    try {
+      const payloadBase64 = token.split('.')[1];
+      const payloadJson = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
+      const claims = JSON.parse(payloadJson);
+      return {
+        token,
+        id: claims.userId,
+        username: claims.sub,
+        role: claims.role,
+        tenantId: claims.tenantId
+      };
+    } catch (e) {
+      console.error('Error decoding JWT token', e);
+      return { token };
     }
   }
 
   login(credentials: any): Observable<JwtResponse> {
     return this.http.post<JwtResponse>(`${this.apiUrl}/signin`, credentials)
       .pipe(
-        tap(user => {
-          localStorage.setItem('currentUser', JSON.stringify(user));
+        tap(response => {
+          const user = this.decodeToken(response.token);
+          localStorage.setItem('currentUser', JSON.stringify({ token: response.token }));
           this.currentUserSubject.next(user);
         })
       );
@@ -47,8 +70,9 @@ export class AuthService {
   setImpersonation(tenantId: string): Observable<JwtResponse> {
     return this.http.post<JwtResponse>(`${this.apiUrl}/impersonate`, { tenantId })
       .pipe(
-        tap(user => {
-          localStorage.setItem('currentUser', JSON.stringify(user));
+        tap(response => {
+          const user = this.decodeToken(response.token);
+          localStorage.setItem('currentUser', JSON.stringify({ token: response.token }));
           this.currentUserSubject.next(user);
           this.impersonatedTenantSubject.next(tenantId);
         })
@@ -58,8 +82,9 @@ export class AuthService {
   stopImpersonation(): Observable<JwtResponse> {
     return this.http.post<JwtResponse>(`${this.apiUrl}/impersonate`, { tenantId: 'public' })
       .pipe(
-        tap(user => {
-          localStorage.setItem('currentUser', JSON.stringify(user));
+        tap(response => {
+          const user = this.decodeToken(response.token);
+          localStorage.setItem('currentUser', JSON.stringify({ token: response.token }));
           this.currentUserSubject.next(user);
           this.impersonatedTenantSubject.next(null);
         })

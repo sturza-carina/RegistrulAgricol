@@ -6,12 +6,15 @@ import com.multitenant.model.animal.EvenimentAnimal;
 import com.multitenant.model.animal.TipEvenimentAnimal;
 import com.multitenant.repository.AnimalIndividualRepository;
 import com.multitenant.repository.EvenimentAnimalRepository;
+import com.multitenant.dto.EvenimentAnimalDTO;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.Set;
 
 @Service
@@ -42,18 +45,21 @@ public class EvenimentAnimalService {
 
     private final EvenimentAnimalRepository evenimentAnimalRepository;
     private final AnimalIndividualRepository animalIndividualRepository;
+    private final ModelMapper modelMapper;
 
     public EvenimentAnimalService(EvenimentAnimalRepository evenimentAnimalRepository,
-                                  AnimalIndividualRepository animalIndividualRepository) {
+                                  AnimalIndividualRepository animalIndividualRepository,
+                                  ModelMapper modelMapper) {
         this.evenimentAnimalRepository = evenimentAnimalRepository;
         this.animalIndividualRepository = animalIndividualRepository;
+        this.modelMapper = modelMapper;
     }
 
     /**
      * Adaugă un eveniment nou unui animal existent.
      * Rulează toate validările de stare și cronologice înainte de salvare.
      */
-    public EvenimentAnimal adaugaEveniment(Long animalId, EvenimentAnimal eveniment) {
+    public EvenimentAnimalDTO adaugaEveniment(Long animalId, EvenimentAnimal eveniment) {
         AnimalIndividual animal = animalIndividualRepository.findById(animalId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Animalul cu id=" + animalId + " nu a fost găsit."));
@@ -80,7 +86,8 @@ public class EvenimentAnimalService {
             animalIndividualRepository.save(animal);
         }
 
-        return evenimentAnimalRepository.save(eveniment);
+        EvenimentAnimal saved = evenimentAnimalRepository.save(eveniment);
+        return modelMapper.map(saved, EvenimentAnimalDTO.class);
     }
 
     /**
@@ -88,12 +95,14 @@ public class EvenimentAnimalService {
      * ordonat descrescător după dată (cel mai recent primul).
      */
     @Transactional(readOnly = true)
-    public List<EvenimentAnimal> getTimeline(Long animalId) {
+    public List<EvenimentAnimalDTO> getTimeline(Long animalId) {
         if (!animalIndividualRepository.existsById(animalId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Animalul cu id=" + animalId + " nu a fost găsit.");
         }
-        return evenimentAnimalRepository.findByAnimalIdOrderByDataEvenimentDesc(animalId);
+        return evenimentAnimalRepository.findByAnimalIdOrderByDataEvenimentDesc(animalId).stream()
+                .map(entity -> modelMapper.map(entity, EvenimentAnimalDTO.class))
+                .collect(Collectors.toList());
     }
 
     // =========================================================================
