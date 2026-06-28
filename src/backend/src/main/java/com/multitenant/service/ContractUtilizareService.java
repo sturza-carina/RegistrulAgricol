@@ -5,6 +5,7 @@ import com.multitenant.model.registru.ContractUtilizare;
 import com.multitenant.model.registru.StatusContractUtilizare;
 import com.multitenant.model.persoana.Persoana;
 import com.multitenant.repository.ContractUtilizareRepository;
+import com.multitenant.repository.ParcelaRepository;
 import com.multitenant.repository.TerenRepository;
 import com.multitenant.repository.PersoanaRepository;
 import org.springframework.stereotype.Service;
@@ -17,13 +18,16 @@ import java.time.LocalDate;
 public class ContractUtilizareService {
 
     private final ContractUtilizareRepository contractUtilizareRepository;
+    private final ParcelaRepository parcelaRepository;
     private final TerenRepository terenRepository;
     private final PersoanaRepository persoanaRepository;
 
     public ContractUtilizareService(ContractUtilizareRepository contractUtilizareRepository,
+                                    ParcelaRepository parcelaRepository,
                                     TerenRepository terenRepository,
                                     PersoanaRepository persoanaRepository) {
         this.contractUtilizareRepository = contractUtilizareRepository;
+        this.parcelaRepository = parcelaRepository;
         this.terenRepository = terenRepository;
         this.persoanaRepository = persoanaRepository;
     }
@@ -46,6 +50,7 @@ public class ContractUtilizareService {
             throw new IllegalArgumentException("Contract cannot be null");
         }
         ContractUtilizare contract = mapFromDto(dto, null);
+        checkNoOverlap(dto.getParcelaId(), null, dto.getDataInceput(), dto.getDataSfarsit());
         return contractUtilizareRepository.save(contract);
     }
 
@@ -55,6 +60,7 @@ public class ContractUtilizareService {
             throw new IllegalArgumentException("Contract cannot be null");
         }
         ContractUtilizare existing = getContractById(id);
+        checkNoOverlap(dto.getParcelaId(), id, dto.getDataInceput(), dto.getDataSfarsit());
         ContractUtilizare mapped = mapFromDto(dto, existing);
         existing.setTeren(mapped.getTeren());
         existing.setLocatorProprietar(mapped.getLocatorProprietar());
@@ -74,6 +80,7 @@ public class ContractUtilizareService {
             existing.setDataOperare(dto.getDataOperare());
         }
         existing.setEsteActiv(dto.isEsteActiv());
+        existing.setParcela(mapped.getParcela());
 
         return contractUtilizareRepository.save(existing);
     }
@@ -96,15 +103,15 @@ public class ContractUtilizareService {
                 currentDate);
     }
 
-    private Persoana resolvePersoana(Persoana persoana, String errorMessage) {
-        if (persoana == null) {
-            return null;
+    private void checkNoOverlap(Long parcelaId, Long excludeContractId, LocalDate dataInceput, LocalDate dataSfarsit) {
+        if (parcelaId == null || dataInceput == null || dataSfarsit == null) {
+            return;
         }
-        if (persoana.getId() == null) {
-            throw new IllegalArgumentException("Persoana referită trebuie să aibă un ID valid");
+        Long exclude = excludeContractId != null ? excludeContractId : -1L;
+        if (contractUtilizareRepository.existsOverlappingContract(parcelaId, exclude, dataInceput, dataSfarsit)) {
+            throw new IllegalStateException(
+                "Există deja un contract activ pentru această parcelă în intervalul de date specificat.");
         }
-        return persoanaRepository.findById(persoana.getId())
-                .orElseThrow(() -> new RuntimeException(errorMessage));
     }
 
     private ContractUtilizare mapFromDto(ContractUtilizareDTO dto, ContractUtilizare target) {
@@ -115,6 +122,13 @@ public class ContractUtilizareService {
         }
         contract.setTeren(terenRepository.findById(dto.getTerenId())
                 .orElseThrow(() -> new RuntimeException("Terenul asociat nu a fost găsit")));
+
+        if (dto.getParcelaId() != null) {
+            contract.setParcela(parcelaRepository.findById(dto.getParcelaId())
+                    .orElseThrow(() -> new RuntimeException("Parcela asociată nu a fost găsită")));
+        } else {
+            contract.setParcela(null);
+        }
 
         contract.setLocatorProprietar(resolvePersoanaId(dto.getLocatorProprietarId(), "Proprietarul locator nu a fost găsit"));
         contract.setLocatorUtilizator(resolvePersoanaId(dto.getLocatorUtilizatorId(), "Utilizatorul locator nu a fost găsit"));

@@ -58,7 +58,7 @@ public class AnimalController {
     }
 
     @PostMapping("/individual")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> createIndividual(@RequestBody AnimalIndividual animal) {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot create outside tenant context.");
@@ -67,7 +67,7 @@ public class AnimalController {
     }
 
     @PutMapping("/individual/{id}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> updateIndividual(@PathVariable Long id, @RequestBody AnimalIndividual animal) {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot update outside tenant context.");
@@ -76,7 +76,7 @@ public class AnimalController {
     }
 
     @DeleteMapping("/individual/{id}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> deleteIndividual(@PathVariable Long id) {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot delete outside tenant context.");
@@ -94,7 +94,7 @@ public class AnimalController {
      * Adaugă un eveniment nou în istoricul unui animal (NASTERE, TRATAMENT_VETERINAR, VANZARE etc.)
      */
     @PostMapping("/individual/{id}/evenimente")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> adaugaEveniment(
             @PathVariable Long id,
             @RequestBody EvenimentAnimal eveniment) {
@@ -129,7 +129,7 @@ public class AnimalController {
      * Body: { destinatarTenantId, destinatarGospodarieId, destinatarProprietarId, detaliiTransfer? }
      */
     @PostMapping("/individual/{id}/transfer")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> transferAnimal(
             @PathVariable Long id,
             @RequestBody CrossTenantTransferService.TransferRequest request) {
@@ -168,7 +168,7 @@ public class AnimalController {
     }
 
     @PostMapping("/grup")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> createGroup(@RequestBody EfectivGrup grup) {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot create outside tenant context.");
@@ -182,7 +182,7 @@ public class AnimalController {
      * NU modifică rândul existent — modelul este append-only (ANSVSA traceability).
      */
     @PostMapping("/grup/{id}/snapshot")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> addGrupSnapshot(@PathVariable Long id, @RequestBody EfectivGrup grup) {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot update outside tenant context.");
@@ -204,7 +204,7 @@ public class AnimalController {
     }
 
     @DeleteMapping("/grup/{id}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> deleteGroup(@PathVariable Long id) {
         if ("public".equals(TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot delete outside tenant context.");

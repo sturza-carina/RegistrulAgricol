@@ -4,6 +4,7 @@ import com.multitenant.model.core.Uat;
 import com.multitenant.repository.UatRepository;
 import com.multitenant.service.UatService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,16 +28,19 @@ public class UatController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<Uat> createUat(@RequestBody Uat uat) {
         return ResponseEntity.ok(uatService.createUat(uat));
     }
 
     @PutMapping("/{codSiruta}")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<Uat> updateUat(@PathVariable String codSiruta, @RequestBody Uat request) {
         return ResponseEntity.ok(uatService.updateUat(codSiruta, request));
     }
 
     @DeleteMapping("/{codSiruta}")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<Void> deleteUat(@PathVariable String codSiruta) {
         uatService.deleteUat(codSiruta);
         return ResponseEntity.ok().build();

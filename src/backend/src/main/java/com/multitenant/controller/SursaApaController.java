@@ -10,8 +10,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/parcele/{parcelaId}/surse-apa")
 @RequiredArgsConstructor
@@ -29,7 +27,7 @@ public class SursaApaController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> addSursa(
             @PathVariable Long parcelaId,
             @RequestBody SursaApaDTO dto) {
@@ -41,7 +39,7 @@ public class SursaApaController {
     }
 
     @PutMapping("/{sursaId}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> updateSursa(
             @PathVariable Long parcelaId,
             @PathVariable Long sursaId,
@@ -53,7 +51,7 @@ public class SursaApaController {
     }
 
     @DeleteMapping("/{sursaId}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> deleteSursa(
             @PathVariable Long parcelaId,
             @PathVariable Long sursaId) {

@@ -8,17 +8,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/parcele/{parcelaId}/culturi")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
 public class CulturaParcelaController {
 
     private final CulturaParcelaService culturaParcelaService;
 
     @GetMapping
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> getCulturi(@PathVariable Long parcelaId) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.ok(java.util.Collections.emptyList());
@@ -27,6 +25,7 @@ public class CulturaParcelaController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> addCultura(
             @PathVariable Long parcelaId,
             @RequestBody CulturaParcelaDto dto) {
@@ -37,6 +36,7 @@ public class CulturaParcelaController {
     }
 
     @PutMapping("/{culturaId}")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> updateCultura(
             @PathVariable Long parcelaId,
             @PathVariable Long culturaId,
@@ -48,6 +48,7 @@ public class CulturaParcelaController {
     }
 
     @DeleteMapping("/{culturaId}")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> deleteCultura(
             @PathVariable Long parcelaId,
             @PathVariable Long culturaId) {

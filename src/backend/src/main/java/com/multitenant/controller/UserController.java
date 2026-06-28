@@ -19,7 +19,6 @@ import com.multitenant.dto.UserDTO;
 
 @RestController
 @RequestMapping("/api/users")
-@PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
 public class UserController {
 
     private final UserRepository userRepository;
@@ -41,6 +40,7 @@ public class UserController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> createUser(@RequestBody User user) {
         if (user == null) {
             return ResponseEntity.badRequest().body("User data is missing");
@@ -73,6 +73,7 @@ public class UserController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         UserDetailsImpl currentUser = getCurrentUser();
 
@@ -87,6 +88,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> getUser(@PathVariable long id) {
         UserDetailsImpl currentUser = getCurrentUser();
         Optional<User> userOpt = userRepository.findById(id);
@@ -107,6 +109,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> updateUser(@PathVariable long id, @RequestBody User userDetails) {
         UserDetailsImpl currentUser = getCurrentUser();
         Optional<User> userOpt = userRepository.findById(id);
@@ -161,6 +164,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable long id) {
         UserDetailsImpl currentUser = getCurrentUser();
         Optional<User> userOpt = userRepository.findById(id);

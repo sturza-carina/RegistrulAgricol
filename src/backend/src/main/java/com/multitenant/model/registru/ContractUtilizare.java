@@ -21,6 +21,10 @@ public class ContractUtilizare {
     private Teren teren;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "parcela_id")
+    private Parcela parcela;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "locator_proprietar_id")
     private Persoana locatorProprietar;
 

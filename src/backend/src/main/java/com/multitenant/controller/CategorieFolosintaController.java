@@ -29,7 +29,7 @@ public class CategorieFolosintaController {
     }
 
     @PostMapping("/api/terenuri/{terenId}/categorii-folosinta")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> createCategorie(@PathVariable Long terenId, @RequestBody CategorieFolosinta categorie) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot create categorie outside of a specific tenant context.");
@@ -38,7 +38,7 @@ public class CategorieFolosintaController {
     }
 
     @PutMapping("/api/categorii-folosinta/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> updateCategorie(@PathVariable Long id, @RequestBody CategorieFolosinta categorie) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot update categorie outside of a specific tenant context.");
@@ -47,7 +47,7 @@ public class CategorieFolosintaController {
     }
 
     @DeleteMapping("/api/categorii-folosinta/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> deleteCategorie(@PathVariable Long id) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot delete categorie outside of a specific tenant context.");

@@ -1,7 +1,6 @@
 package com.multitenant.controller;
 
 import com.multitenant.dto.ContractUtilizareDTO;
-import com.multitenant.model.registru.ContractUtilizare;
 import com.multitenant.service.ContractUtilizareService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -40,7 +39,7 @@ public class ContractUtilizareController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> createContract(@RequestBody ContractUtilizareDTO contract) {
         if (isPublicContext()) {
             return ResponseEntity.badRequest().body("Nu se poate crea un contract în afara unui context de UAT/Tenant.");
@@ -54,7 +53,7 @@ public class ContractUtilizareController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> updateContract(@PathVariable Long id, @RequestBody ContractUtilizareDTO contract) {
         if (isPublicContext()) {
             return ResponseEntity.badRequest().body("Nu se poate edita un contract în afara unui context de UAT/Tenant.");
@@ -67,7 +66,7 @@ public class ContractUtilizareController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> deleteContract(@PathVariable Long id) {
         if (isPublicContext()) {
             return ResponseEntity.badRequest().body("Nu se poate șterge un contract în afara unui context de UAT/Tenant.");

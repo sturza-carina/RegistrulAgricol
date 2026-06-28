@@ -24,4 +24,16 @@ public interface ContractUtilizareRepository extends JpaRepository<ContractUtili
     int markExpiredContracts(@Param("activeStatus") StatusContractUtilizare activeStatus,
                              @Param("expiredStatus") StatusContractUtilizare expiredStatus,
                              @Param("currentDate") LocalDate currentDate);
+
+    @Query("SELECT COUNT(c) > 0 FROM ContractUtilizare c " +
+           "WHERE c.parcela.id = :parcelaId " +
+           "AND c.id <> :excludeId " +
+           "AND c.statusContract <> com.multitenant.model.registru.StatusContractUtilizare.EXPIRAT " +
+           "AND c.esteActiv = true " +
+           "AND (c.dataSfarsit IS NULL OR c.dataSfarsit >= :dataInceput) " +
+           "AND (c.dataInceput IS NULL OR c.dataInceput <= :dataSfarsit)")
+    boolean existsOverlappingContract(@Param("parcelaId") Long parcelaId,
+                                      @Param("excludeId") Long excludeId,
+                                      @Param("dataInceput") LocalDate dataInceput,
+                                      @Param("dataSfarsit") LocalDate dataSfarsit);
 }

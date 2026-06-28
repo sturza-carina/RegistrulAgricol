@@ -20,36 +20,41 @@ import { AnimalListComponent } from './pages/animal-list/animal-list.component';
 import { AnimalIndividualFormComponent } from './pages/animal-individual-form/animal-individual-form.component';
 import { EfectivGrupFormComponent } from './pages/efectiv-grup-form/efectiv-grup-form.component';
 import { AnimalTimelineComponent } from './pages/animal-timeline/animal-timeline.component';
+import { authGuard } from './guards/auth.guard';
+import { roleGuard } from './guards/role.guard';
 
 export const routes: Routes = [
-  { path: 'login',          component: LoginComponent },
-  { path: 'dashboard',      component: DashboardComponent },
-  { path: 'super-admin',    component: SuperAdminDashboardComponent },
-  { path: 'tenant-admin',   component: TenantAdminDashboardComponent },
-  { path: 'user-management',component: UserManagementComponent },
-  { path: 'tenants',        component: CreateTenantComponent },
-  { path: 'persoane',        component: PersonListComponent },
-  { path: 'persoane/new',    component: PersonFormComponent },
-  { path: 'persoane/edit/:id', component: PersonFormComponent },
-  { path: 'contracte',      component: ContractManagementComponent },
-  { path: 'uats',           component: UatManagementComponent },
-  { path: 'gospodarii',     component: GospodarieListComponent },
-  { path: 'gospodarii/new', component: GospodarieFormComponent },
-  { path: 'gospodarii/edit/:id', component: GospodarieFormComponent },
-  { path: 'gospodarii/:id', component: GospodarieDetailsComponent },
-  { path: 'terenuri/new',   component: TerenFormComponent },
-  { path: 'terenuri/:id/parcele', component: TerenParceleComponent },
-  { path: 'animale',         component: AnimalListComponent },
-  { path: 'animale/individual/new', component: AnimalIndividualFormComponent },
-  { path: 'animale/individual/edit/:id', component: AnimalIndividualFormComponent },
-  { path: 'animale/grup/new', component: EfectivGrupFormComponent },
-  // Snapshot route: adaugă un rând nou la efectivul existent (model append-only ANSVSA)
-  { path: 'animale/grup/:id/snapshot', component: EfectivGrupFormComponent },
-  { path: 'animale/individual/:id/istoric', component: AnimalTimelineComponent },
-  { path: 'harta',          component: ParcelaMapComponent },
-  { path: 'google-harta',   component: GoogleMapComponent },
-  { path: 'contracte',      component: ContractManagementComponent },
-  { path: '',               redirectTo: '/login', pathMatch: 'full' }
+  { path: 'login', component: LoginComponent },
+
+  // ROLE_SUPER_ADMIN only
+  { path: 'super-admin', component: SuperAdminDashboardComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_SUPER_ADMIN'] } },
+  { path: 'tenants',     component: CreateTenantComponent,        canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_SUPER_ADMIN'] } },
+
+  // ROLE_ADMIN or ROLE_SUPER_ADMIN
+  { path: 'tenant-admin',    component: TenantAdminDashboardComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_SUPER_ADMIN'] } },
+  { path: 'user-management', component: UserManagementComponent,       canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_SUPER_ADMIN'] } },
+  { path: 'uats',            component: UatManagementComponent,        canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_SUPER_ADMIN'] } },
+
+  // Any authenticated user
+  { path: 'dashboard',                         component: DashboardComponent,           canActivate: [authGuard] },
+  { path: 'persoane',                          component: PersonListComponent,           canActivate: [authGuard] },
+  { path: 'persoane/new',                      component: PersonFormComponent,           canActivate: [authGuard] },
+  { path: 'persoane/edit/:id',                 component: PersonFormComponent,           canActivate: [authGuard] },
+  { path: 'contracte',                         component: ContractManagementComponent,   canActivate: [authGuard] },
+  { path: 'gospodarii',                        component: GospodarieListComponent,       canActivate: [authGuard] },
+  { path: 'gospodarii/new',                    component: GospodarieFormComponent,       canActivate: [authGuard] },
+  { path: 'gospodarii/edit/:id',               component: GospodarieFormComponent,       canActivate: [authGuard] },
+  { path: 'gospodarii/:id',                    component: GospodarieDetailsComponent,    canActivate: [authGuard] },
+  { path: 'terenuri/new',                      component: TerenFormComponent,            canActivate: [authGuard] },
+  { path: 'terenuri/:id/parcele',              component: TerenParceleComponent,         canActivate: [authGuard] },
+  { path: 'animale',                           component: AnimalListComponent,           canActivate: [authGuard] },
+  { path: 'animale/individual/new',            component: AnimalIndividualFormComponent, canActivate: [authGuard] },
+  { path: 'animale/individual/edit/:id',       component: AnimalIndividualFormComponent, canActivate: [authGuard] },
+  { path: 'animale/grup/new',                  component: EfectivGrupFormComponent,      canActivate: [authGuard] },
+  { path: 'animale/grup/:id/snapshot',         component: EfectivGrupFormComponent,      canActivate: [authGuard] },
+  { path: 'animale/individual/:id/istoric',    component: AnimalTimelineComponent,       canActivate: [authGuard] },
+  { path: 'harta',                             component: ParcelaMapComponent,           canActivate: [authGuard] },
+  { path: 'google-harta',                      component: GoogleMapComponent,            canActivate: [authGuard] },
+
+  { path: '', redirectTo: '/login', pathMatch: 'full' }
 ];
-
-

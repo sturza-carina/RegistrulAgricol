@@ -9,6 +9,7 @@ import java.time.LocalDate;
 @Data
 public class ContractUtilizareDTO {
     private Long terenId;
+    private Long parcelaId;
     private Long locatorProprietarId;
     private Long locatorUtilizatorId;
     private Long utilizatorOperareId;
