@@ -5,6 +5,7 @@ import com.multitenant.service.ParcelaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/parcele")
@@ -34,7 +35,7 @@ public class ParcelaController {
     }
 
     @PostMapping("/teren/{terenId}")
-    public ResponseEntity<?> addParcela(@PathVariable Long terenId, @RequestBody Parcela parcela) {
+    public ResponseEntity<?> addParcela(@PathVariable Long terenId, @Valid @RequestBody Parcela parcela) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot add a Parcela outside of a specific tenant context.");
         }
@@ -42,7 +43,7 @@ public class ParcelaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateParcela(@PathVariable Long id, @RequestBody Parcela parcela) {
+    public ResponseEntity<?> updateParcela(@PathVariable Long id, @Valid @RequestBody Parcela parcela) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot update a Parcela outside of a specific tenant context.");
         }

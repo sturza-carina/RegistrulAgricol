@@ -3,6 +3,7 @@ package com.multitenant.model.registru;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "teren")
@@ -14,6 +15,7 @@ public class Teren {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Denumirea terenului este obligatorie.")
     @Column(nullable = false, length = 255)
     private String denumire;
 

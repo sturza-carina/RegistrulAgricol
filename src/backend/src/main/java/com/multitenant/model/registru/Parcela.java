@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 @Entity
 @Table(name = "parcele")
@@ -15,9 +18,12 @@ public class Parcela {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Denumirea parcelei este obligatorie.")
     @Column(nullable = false, length = 255)
     private String denumire;
 
+    @NotNull(message = "Suprafata este obligatorie.")
+    @Positive(message = "Suprafata trebuie sa fie pozitiva.")
     @Column(nullable = false)
     private Double suprafata;
 

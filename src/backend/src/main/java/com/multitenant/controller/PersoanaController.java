@@ -5,7 +5,7 @@ import com.multitenant.service.PersoanaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -19,7 +19,7 @@ public class PersoanaController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createPerson(@RequestBody Persoana persoana) {
+    public ResponseEntity<?> createPerson(@Valid @RequestBody Persoana persoana) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot create a Persoana outside of a specific tenant context. Please log in as a Tenant Administrator.");
         }
@@ -50,7 +50,7 @@ public class PersoanaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updatePerson(@PathVariable Long id, @RequestBody Persoana persoana) {
+    public ResponseEntity<?> updatePerson(@PathVariable Long id, @Valid @RequestBody Persoana persoana) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot update a Persoana outside of a specific tenant context.");
         }

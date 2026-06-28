@@ -7,6 +7,7 @@ import com.multitenant.dto.TerenCreateDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -47,7 +48,7 @@ public class TerenController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createTeren(@RequestBody TerenCreateDTO dto) {
+    public ResponseEntity<?> createTeren(@Valid @RequestBody TerenCreateDTO dto) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot create a Teren outside of a specific tenant context.");
         }
@@ -59,7 +60,7 @@ public class TerenController {
     }
 
     @PostMapping("/with-parcela")
-    public ResponseEntity<?> createTerenWithParcela(@RequestBody TerenWithParcelaDTO dto) {
+    public ResponseEntity<?> createTerenWithParcela(@Valid @RequestBody TerenWithParcelaDTO dto) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot create a Teren outside of a specific tenant context.");
         }
@@ -67,7 +68,7 @@ public class TerenController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateTeren(@PathVariable Long id, @RequestBody Teren teren) {
+    public ResponseEntity<?> updateTeren(@PathVariable Long id, @Valid @RequestBody Teren teren) {
         if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
             return ResponseEntity.badRequest().body("Cannot update a Teren outside of a specific tenant context.");
         }
