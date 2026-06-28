@@ -4,10 +4,8 @@ import com.multitenant.config.tenant.TenantContext;
 import com.multitenant.model.registru.Gospodarie;
 import com.multitenant.model.common.Adresa;
 import com.multitenant.model.registru.TipGospodarie;
-import com.multitenant.model.core.Uat;
 import com.multitenant.model.core.User;
 import com.multitenant.repository.GospodarieRepository;
-import com.multitenant.repository.UatRepository;
 import com.multitenant.repository.UserRepository;
 import com.multitenant.service.TenantService;
 import org.springframework.boot.CommandLineRunner;
@@ -18,7 +16,6 @@ import org.springframework.stereotype.Component;
 public class DatabaseSeeder implements CommandLineRunner {
 
     private final TenantService tenantService;
-    private final UatRepository uatRepository;
     private final UserRepository userRepository;
     private final GospodarieRepository gospodarieRepository;
     private final com.multitenant.repository.TerenRepository terenRepository;
@@ -29,7 +26,6 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
 
     public DatabaseSeeder(TenantService tenantService,
-                          UatRepository uatRepository,
                           UserRepository userRepository,
                           GospodarieRepository gospodarieRepository,
                           com.multitenant.repository.TerenRepository terenRepository,
@@ -39,7 +35,6 @@ public class DatabaseSeeder implements CommandLineRunner {
                           com.multitenant.repository.MachineryRepository machineryRepository,
                           PasswordEncoder passwordEncoder) {
         this.tenantService = tenantService;
-        this.uatRepository = uatRepository;
         this.userRepository = userRepository;
         this.gospodarieRepository = gospodarieRepository;
         this.terenRepository = terenRepository;
@@ -79,8 +74,10 @@ public class DatabaseSeeder implements CommandLineRunner {
             try {
                 // Seed tenant users in public schema (required for authentication/login)
                 System.out.println("[DatabaseSeeder] Seeding tenant users in public schema...");
-                Uat clujNapoca = uatRepository.findByCodSiruta("54975").orElse(null);
-                Uat bucurestiUat = uatRepository.findByCodSiruta("1017").orElse(null);
+                // UATs are now in tenant schemas, not in public — reference by a known ID value
+                // These IDs correspond to the UATs seeded in each tenant's V1 migration (if applicable)
+                Long clujNapocaUatId = 1L;
+                Long bucurestiUatId = 1L;
 
             if (userRepository.findByUsername("cluj_admin").isEmpty()) {
                 User publicAdmin = new User();
@@ -90,7 +87,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 publicAdmin.setNume("Administrator Local Cluj");
                 publicAdmin.setEmail("admin.cluj@registru.ro");
                 publicAdmin.setActiv(true);
-                publicAdmin.setUat(clujNapoca);
+                publicAdmin.setUatId(clujNapocaUatId);
                 publicAdmin.setTenantId("cluj");
                 userRepository.save(publicAdmin);
             }
@@ -103,7 +100,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 publicUser.setNume("Operator Registru Cluj");
                 publicUser.setEmail("operator.cluj@registru.ro");
                 publicUser.setActiv(true);
-                publicUser.setUat(clujNapoca);
+                publicUser.setUatId(clujNapocaUatId);
                 publicUser.setTenantId("cluj");
                 userRepository.save(publicUser);
             }
@@ -116,7 +113,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 adminBuc.setNume("Administrator Local Bucuresti");
                 adminBuc.setEmail("admin.buc@registru.ro");
                 adminBuc.setActiv(true);
-                adminBuc.setUat(bucurestiUat);
+                adminBuc.setUatId(bucurestiUatId);
                 adminBuc.setTenantId("bucuresti");
                 userRepository.save(adminBuc);
             }
@@ -136,7 +133,8 @@ public class DatabaseSeeder implements CommandLineRunner {
                         g.setAdresa(a);
                         g.setTipGospodarie(i % 2 == 0 ? TipGospodarie.INDIVIDUALA : TipGospodarie.COLECTIVA);
                         g.setActiva(true);
-                        g.setUat(clujNapoca);
+                        // Set uat_id to null for now — UATs are seeded separately in the tenant schema
+                        g.setUat(null);
                         Gospodarie savedG = gospodarieRepository.save(g);
 
                         com.multitenant.model.registru.Teren t = new com.multitenant.model.registru.Teren();
@@ -201,7 +199,8 @@ public class DatabaseSeeder implements CommandLineRunner {
                         g.setAdresa(a);
                         g.setTipGospodarie(i % 2 == 0 ? TipGospodarie.COLECTIVA : TipGospodarie.INDIVIDUALA);
                         g.setActiva(true);
-                        g.setUat(bucurestiUat);
+                        // Set uat_id to null for now — UATs are seeded separately in the tenant schema
+                        g.setUat(null);
                         Gospodarie savedG = gospodarieRepository.save(g);
 
                         com.multitenant.model.registru.Teren t = new com.multitenant.model.registru.Teren();
