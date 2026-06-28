@@ -1,12 +1,9 @@
 package com.multitenant.service;
 
-import com.multitenant.config.tenant.TenantContext;
-import com.multitenant.model.core.Tenant;
+import com.multitenant.model.core.PublicUat;
 import com.multitenant.model.core.Uat;
-import com.multitenant.repository.TenantRepository;
+import com.multitenant.repository.PublicUatRepository;
 import com.multitenant.repository.UatRepository;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,171 +25,96 @@ class UatServiceTest {
     private UatRepository uatRepository;
 
     @Mock
-    private TenantRepository tenantRepository;
+    private PublicUatRepository publicUatRepository;
 
     @InjectMocks
     private UatService uatService;
 
-    @BeforeEach
-    void setUp() {
-        TenantContext.setCurrentTenant("public");
-    }
+    // ── createPublicUat ──────────────────────────────────────────────────────
 
-    @AfterEach
-    void tearDown() {
-        TenantContext.clear();
-    }
-
-    // createUat
     @Test
-    void createUat_success() {
-        Uat uat = buildUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
-        when(uatRepository.existsByCodSiruta("12345")).thenReturn(false);
-        when(uatRepository.save(uat)).thenReturn(uat);
+    void createPublicUat_success() {
+        PublicUat uat = buildPublicUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
+        when(publicUatRepository.existsByCodSiruta("12345")).thenReturn(false);
+        when(publicUatRepository.save(uat)).thenReturn(uat);
 
-        Uat result = uatService.createUat(uat);
+        PublicUat result = uatService.createPublicUat(uat);
 
         assertThat(result.getCodSiruta()).isEqualTo("12345");
-        verify(uatRepository).save(uat);
+        verify(publicUatRepository).save(uat);
     }
 
     @Test
-    void createUat_missingCodSiruta_throwsBadRequest() {
-        Uat uat = buildUat(null, "Cluj-Napoca", "Cluj", "Municipiu");
+    void createPublicUat_missingCodSiruta_throwsBadRequest() {
+        PublicUat uat = buildPublicUat(null, "Cluj-Napoca", "Cluj", "Municipiu");
 
-        assertThatThrownBy(() -> uatService.createUat(uat))
+        assertThatThrownBy(() -> uatService.createPublicUat(uat))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("codSiruta is required");
     }
 
     @Test
-    void createUat_blankCodSiruta_throwsBadRequest() {
-        Uat uat = buildUat("   ", "Cluj-Napoca", "Cluj", "Municipiu");
+    void createPublicUat_blankCodSiruta_throwsBadRequest() {
+        PublicUat uat = buildPublicUat("   ", "Cluj-Napoca", "Cluj", "Municipiu");
 
-        assertThatThrownBy(() -> uatService.createUat(uat))
+        assertThatThrownBy(() -> uatService.createPublicUat(uat))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("codSiruta is required");
     }
 
     @Test
-    void createUat_duplicateCodSiruta_throwsConflict() {
-        Uat uat = buildUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
-        when(uatRepository.existsByCodSiruta("12345")).thenReturn(true);
+    void createPublicUat_duplicateCodSiruta_throwsConflict() {
+        PublicUat uat = buildPublicUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
+        when(publicUatRepository.existsByCodSiruta("12345")).thenReturn(true);
 
-        assertThatThrownBy(() -> uatService.createUat(uat))
+        assertThatThrownBy(() -> uatService.createPublicUat(uat))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("already exists");
     }
 
     @Test
-    void createUat_setsIsActiveTrue_whenNull() {
-        Uat uat = buildUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
+    void createPublicUat_setsIsActiveTrue_whenNull() {
+        PublicUat uat = buildPublicUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
         uat.setIsActive(null);
-        when(uatRepository.existsByCodSiruta("12345")).thenReturn(false);
-        when(uatRepository.save(uat)).thenReturn(uat);
+        when(publicUatRepository.existsByCodSiruta("12345")).thenReturn(false);
+        when(publicUatRepository.save(uat)).thenReturn(uat);
 
-        uatService.createUat(uat);
+        uatService.createPublicUat(uat);
 
         assertThat(uat.getIsActive()).isTrue();
     }
 
-    @Test
-    void createUat_withTenantContext_setsTenant() {
-        TenantContext.setCurrentTenant("cluj");
-        Uat uat = buildUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
-        Tenant tenant = new Tenant();
-        tenant.setId("cluj");
-
-        when(uatRepository.existsByCodSiruta("12345")).thenReturn(false);
-        when(tenantRepository.findById("cluj")).thenReturn(Optional.of(tenant));
-        when(uatRepository.save(uat)).thenReturn(uat);
-
-        uatService.createUat(uat);
-
-        assertThat(uat.getTenant()).isEqualTo(tenant);
-    }
+    // ── getAllPublicUats ──────────────────────────────────────────────────────
 
     @Test
-    void createUat_withTenantContext_tenantNotFound_throwsNotFound() {
-        TenantContext.setCurrentTenant("inexistent");
-        Uat uat = buildUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
+    void getAllPublicUats_returnsAll() {
+        List<PublicUat> list = List.of(
+                buildPublicUat("1", "A", "X", "Municipiu"),
+                buildPublicUat("2", "B", "Y", "Comună")
+        );
+        when(publicUatRepository.findAll()).thenReturn(list);
 
-        when(uatRepository.existsByCodSiruta("12345")).thenReturn(false);
-        when(tenantRepository.findById("inexistent")).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> uatService.createUat(uat))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("Tenant not found");
-    }
-
-    // getAllUats
-    @Test
-    void getAllUats_publicContext_returnsAll() {
-        TenantContext.setCurrentTenant("public");
-        List<Uat> list = List.of(buildUat("1", "A", "X", "Municipiu"), buildUat("2", "B", "Y", "Comună"));
-        when(uatRepository.findAll()).thenReturn(list);
-
-        List<Uat> result = uatService.getAllUats();
+        List<PublicUat> result = uatService.getAllPublicUats();
 
         assertThat(result).hasSize(2);
-        verify(uatRepository).findAll();
-        verify(uatRepository, never()).findByTenant_Id(any());
+        verify(publicUatRepository).findAll();
     }
 
-    @Test
-    void getAllUats_tenantContext_returnsByTenant() {
-        TenantContext.setCurrentTenant("cluj");
-        List<Uat> list = List.of(buildUat("54975", "Cluj-Napoca", "Cluj", "Municipiu"));
-        when(uatRepository.findByTenant_Id("cluj")).thenReturn(list);
-
-        List<Uat> result = uatService.getAllUats();
-
-        assertThat(result).hasSize(1);
-        verify(uatRepository).findByTenant_Id("cluj");
-        verify(uatRepository, never()).findAll();
-    }
-
-    // getUatByCodSiruta
-    @Test
-    void getUatByCodSiruta_found_returnsUat() {
-        Uat uat = buildUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
-        when(uatRepository.findByCodSiruta("12345")).thenReturn(Optional.of(uat));
-
-        Uat result = uatService.getUatByCodSiruta("12345");
-
-        assertThat(result.getCodSiruta()).isEqualTo("12345");
-    }
+    // ── updatePublicUat ──────────────────────────────────────────────────────
 
     @Test
-    void getUatByCodSiruta_notFound_throwsNotFound() {
-        when(uatRepository.findByCodSiruta("99999")).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> uatService.getUatByCodSiruta("99999"))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("not found");
-    }
-
-    @Test
-    void getUatByCodSiruta_nullCodSiruta_throwsBadRequest() {
-        assertThatThrownBy(() -> uatService.getUatByCodSiruta(null))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("codSiruta must not be null");
-    }
-
-    // updateUat
-    @Test
-    void updateUat_success_updatesFields() {
-        Uat existing = buildUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
-        Uat request = new Uat();
+    void updatePublicUat_success_updatesFields() {
+        PublicUat existing = buildPublicUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
+        PublicUat request = new PublicUat();
         request.setDenumire("Cluj-Napoca Updated");
         request.setJudet("Cluj Updated");
         request.setTipUat("Oraș");
         request.setIsActive(false);
 
-        when(uatRepository.findByCodSiruta("12345")).thenReturn(Optional.of(existing));
-        when(uatRepository.save(existing)).thenReturn(existing);
+        when(publicUatRepository.findByCodSiruta("12345")).thenReturn(Optional.of(existing));
+        when(publicUatRepository.save(existing)).thenReturn(existing);
 
-        Uat result = uatService.updateUat("12345", request);
+        PublicUat result = uatService.updatePublicUat("12345", request);
 
         assertThat(result.getDenumire()).isEqualTo("Cluj-Napoca Updated");
         assertThat(result.getJudet()).isEqualTo("Cluj Updated");
@@ -201,16 +123,15 @@ class UatServiceTest {
     }
 
     @Test
-    void updateUat_partialUpdate_onlyChangesProvidedFields() {
-        Uat existing = buildUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
-        Uat request = new Uat();
+    void updatePublicUat_partialUpdate_onlyChangesProvidedFields() {
+        PublicUat existing = buildPublicUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
+        PublicUat request = new PublicUat();
         request.setDenumire("Nou Nume");
-        // judet, tipUat, isActive sunt null — nu trebuie modificate
 
-        when(uatRepository.findByCodSiruta("12345")).thenReturn(Optional.of(existing));
-        when(uatRepository.save(existing)).thenReturn(existing);
+        when(publicUatRepository.findByCodSiruta("12345")).thenReturn(Optional.of(existing));
+        when(publicUatRepository.save(existing)).thenReturn(existing);
 
-        Uat result = uatService.updateUat("12345", request);
+        PublicUat result = uatService.updatePublicUat("12345", request);
 
         assertThat(result.getDenumire()).isEqualTo("Nou Nume");
         assertThat(result.getJudet()).isEqualTo("Cluj");       // neschimbat
@@ -218,36 +139,119 @@ class UatServiceTest {
     }
 
     @Test
-    void updateUat_notFound_throwsNotFound() {
-        when(uatRepository.findByCodSiruta("99999")).thenReturn(Optional.empty());
+    void updatePublicUat_notFound_throwsNotFound() {
+        when(publicUatRepository.findByCodSiruta("99999")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> uatService.updateUat("99999", new Uat()))
+        assertThatThrownBy(() -> uatService.updatePublicUat("99999", new PublicUat()))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("not found");
     }
 
-    // deleteUat
+    // ── deletePublicUat ──────────────────────────────────────────────────────
+
     @Test
-    void deleteUat_success() {
-        Uat uat = buildUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
-        when(uatRepository.findByCodSiruta("12345")).thenReturn(Optional.of(uat));
+    void deletePublicUat_success() {
+        PublicUat uat = buildPublicUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
+        when(publicUatRepository.findByCodSiruta("12345")).thenReturn(Optional.of(uat));
 
-        uatService.deleteUat("12345");
+        uatService.deletePublicUat("12345");
 
-        verify(uatRepository).delete(uat);
+        verify(publicUatRepository).delete(uat);
     }
 
     @Test
-    void deleteUat_notFound_throwsNotFound() {
-        when(uatRepository.findByCodSiruta("99999")).thenReturn(Optional.empty());
+    void deletePublicUat_notFound_throwsNotFound() {
+        when(publicUatRepository.findByCodSiruta("99999")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> uatService.deleteUat("99999"))
+        assertThatThrownBy(() -> uatService.deletePublicUat("99999"))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("not found");
     }
 
-    // helper
-    private Uat buildUat(String codSiruta, String denumire, String judet, String tipUat) {
+    // ── assignUatToTenant ────────────────────────────────────────────────────
+
+    @Test
+    void assignUatToTenant_success_copiesFromPublic() {
+        PublicUat globalUat = buildPublicUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
+        when(publicUatRepository.findByCodSiruta("12345")).thenReturn(Optional.of(globalUat));
+        when(uatRepository.existsByCodSiruta("12345")).thenReturn(false);
+        when(uatRepository.save(any(Uat.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Uat result = uatService.assignUatToTenant("12345");
+
+        assertThat(result.getCodSiruta()).isEqualTo("12345");
+        assertThat(result.getDenumire()).isEqualTo("Cluj-Napoca");
+        verify(uatRepository).save(any(Uat.class));
+    }
+
+    @Test
+    void assignUatToTenant_notInGlobalRegistry_throwsNotFound() {
+        when(publicUatRepository.findByCodSiruta("99999")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> uatService.assignUatToTenant("99999"))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("not found in the global registry");
+    }
+
+    @Test
+    void assignUatToTenant_alreadyAssigned_throwsConflict() {
+        PublicUat globalUat = buildPublicUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
+        when(publicUatRepository.findByCodSiruta("12345")).thenReturn(Optional.of(globalUat));
+        when(uatRepository.existsByCodSiruta("12345")).thenReturn(true);
+
+        assertThatThrownBy(() -> uatService.assignUatToTenant("12345"))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("already assigned");
+    }
+
+    // ── removeUatFromTenant ──────────────────────────────────────────────────
+
+    @Test
+    void removeUatFromTenant_success() {
+        Uat tenantUat = buildTenantUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
+        when(uatRepository.findByCodSiruta("12345")).thenReturn(Optional.of(tenantUat));
+
+        uatService.removeUatFromTenant("12345");
+
+        verify(uatRepository).delete(tenantUat);
+    }
+
+    @Test
+    void removeUatFromTenant_notAssigned_throwsNotFound() {
+        when(uatRepository.findByCodSiruta("99999")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> uatService.removeUatFromTenant("99999"))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("not assigned to this tenant");
+    }
+
+    // ── getTenantUats ─────────────────────────────────────────────────────────
+
+    @Test
+    void getTenantUats_returnsAll() {
+        List<Uat> list = List.of(buildTenantUat("1", "A", "X", "Municipiu"));
+        when(uatRepository.findAll()).thenReturn(list);
+
+        List<Uat> result = uatService.getTenantUats();
+
+        assertThat(result).hasSize(1);
+        verify(uatRepository).findAll();
+    }
+
+    // ── helpers ───────────────────────────────────────────────────────────────
+
+    private PublicUat buildPublicUat(String codSiruta, String denumire, String judet, String tipUat) {
+        PublicUat uat = new PublicUat();
+        uat.setId(1L);
+        uat.setCodSiruta(codSiruta);
+        uat.setDenumire(denumire);
+        uat.setJudet(judet);
+        uat.setTipUat(tipUat);
+        uat.setIsActive(true);
+        return uat;
+    }
+
+    private Uat buildTenantUat(String codSiruta, String denumire, String judet, String tipUat) {
         Uat uat = new Uat();
         uat.setId(1L);
         uat.setCodSiruta(codSiruta);

@@ -2,9 +2,7 @@ package com.multitenant.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.multitenant.config.tenant.TenantFilter;
-import com.multitenant.model.core.Uat;
 import com.multitenant.model.core.User;
-import com.multitenant.repository.UatRepository;
 import com.multitenant.repository.UserRepository;
 import com.multitenant.security.JwtAuthenticationFilter;
 import com.multitenant.security.SecurityConfig;
@@ -46,9 +44,6 @@ class UserControllerTest {
 
     @MockBean
     private UserRepository userRepository;
-
-    @MockBean
-    private UatRepository uatRepository;
 
     @MockBean
     private PasswordEncoder passwordEncoder;
@@ -107,15 +102,6 @@ class UserControllerTest {
         user.setEmail("test@test.com");
         user.setActiv(true);
         return user;
-    }
-
-    private Uat buildUat(Long id, String tenantId) {
-        Uat uat = new Uat();
-        uat.setId(id);
-        com.multitenant.model.core.Tenant tenant = new com.multitenant.model.core.Tenant();
-        tenant.setId(tenantId);
-        uat.setTenant(tenant);
-        return uat;
     }
 
     // GET /api/users
@@ -240,19 +226,22 @@ class UserControllerTest {
     }
 
     @Test
-    void createUser_admin_withUatFromOtherTenant_forbidden() throws Exception {
+    void createUser_admin_withUatId_fromOtherTenant_isIgnoredNow() throws Exception {
+        // uatId is now a plain Long — no cross-tenant FK validation on create.
+        // The admin's tenantId is enforced instead.
         User newUser = buildUser(null, "newuser", null);
-        Uat uatFromOtherTenant = buildUat(99L, "bucuresti");
-        newUser.setUat(uatFromOtherTenant);
+        newUser.setUatId(99L);
+        User savedUser = buildUser(10L, "newuser", "cluj");
 
-        when(uatRepository.findById(99L)).thenReturn(Optional.of(uatFromOtherTenant));
+        when(passwordEncoder.encode(any())).thenReturn("encoded_pass");
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
         mockMvc.perform(post("/api/users")
                         .with(authentication(authToken(adminCluj())))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(newUser)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.multitenant.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.multitenant.config.tenant.TenantFilter;
+import com.multitenant.model.core.PublicUat;
 import com.multitenant.model.core.Uat;
 import com.multitenant.security.JwtAuthenticationFilter;
 import com.multitenant.security.SecurityConfig;
@@ -69,12 +70,13 @@ class UatControllerTest {
         }).when(jwtAuthenticationFilter).doFilter(any(), any(), any());
     }
 
-    // POST /api/uats
+    // ── POST /api/uats (global registry, SUPER_ADMIN only) ───────────────────
+
     @Test
     @WithMockUser(roles = "SUPER_ADMIN")
-    void createUat_returns200_withValidBody() throws Exception {
-        Uat uat = buildUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
-        when(uatService.createUat(any(Uat.class))).thenReturn(uat);
+    void createPublicUat_superAdmin_returns200() throws Exception {
+        PublicUat uat = buildPublicUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
+        when(uatService.createPublicUat(any(PublicUat.class))).thenReturn(uat);
 
         mockMvc.perform(post("/api/uats")
                         .with(csrf())
@@ -87,21 +89,20 @@ class UatControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    void createUat_adminRole_allowed() throws Exception {
-        Uat uat = buildUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
-        when(uatService.createUat(any(Uat.class))).thenReturn(uat);
+    void createPublicUat_adminRole_forbidden() throws Exception {
+        PublicUat uat = buildPublicUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
 
         mockMvc.perform(post("/api/uats")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(uat)))
-                .andExpect(status().isOk());
+                .andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(roles = "USER")
-    void createUat_userRole_forbidden() throws Exception {
-        Uat uat = buildUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
+    void createPublicUat_userRole_forbidden() throws Exception {
+        PublicUat uat = buildPublicUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
 
         mockMvc.perform(post("/api/uats")
                         .with(csrf())
@@ -112,9 +113,9 @@ class UatControllerTest {
 
     @Test
     @WithMockUser(roles = "SUPER_ADMIN")
-    void createUat_serviceThrowsConflict_returns409() throws Exception {
-        Uat uat = buildUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
-        when(uatService.createUat(any(Uat.class)))
+    void createPublicUat_serviceThrowsConflict_returns409() throws Exception {
+        PublicUat uat = buildPublicUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
+        when(uatService.createPublicUat(any(PublicUat.class)))
                 .thenThrow(new ResponseStatusException(HttpStatus.CONFLICT, "already exists"));
 
         mockMvc.perform(post("/api/uats")
@@ -124,15 +125,16 @@ class UatControllerTest {
                 .andExpect(status().isConflict());
     }
 
-    // GET /api/uats
+    // ── GET /api/uats (global registry, all authenticated roles) ─────────────
+
     @Test
     @WithMockUser(roles = "SUPER_ADMIN")
-    void getAllUats_returnsListOf200() throws Exception {
-        List<Uat> list = List.of(
-                buildUat("12345", "Cluj-Napoca", "Cluj", "Municipiu"),
-                buildUat("55311", "Florești", "Cluj", "Comună")
+    void getAllPublicUats_returns200() throws Exception {
+        List<PublicUat> list = List.of(
+                buildPublicUat("12345", "Cluj-Napoca", "Cluj", "Municipiu"),
+                buildPublicUat("55311", "Florești", "Cluj", "Comună")
         );
-        when(uatService.getAllUats()).thenReturn(list);
+        when(uatService.getAllPublicUats()).thenReturn(list);
 
         mockMvc.perform(get("/api/uats"))
                 .andExpect(status().isOk())
@@ -143,43 +145,21 @@ class UatControllerTest {
 
     @Test
     @WithMockUser(roles = "SUPER_ADMIN")
-    void getAllUats_emptyList_returns200() throws Exception {
-        when(uatService.getAllUats()).thenReturn(List.of());
+    void getAllPublicUats_emptyList_returns200() throws Exception {
+        when(uatService.getAllPublicUats()).thenReturn(List.of());
 
         mockMvc.perform(get("/api/uats"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
 
-    // GET /api/uats/{codSiruta}
-    @Test
-    @WithMockUser(roles = "SUPER_ADMIN")
-    void getUat_found_returns200() throws Exception {
-        Uat uat = buildUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
-        when(uatService.getUatByCodSiruta("12345")).thenReturn(uat);
-
-        mockMvc.perform(get("/api/uats/12345"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.codSiruta").value("12345"))
-                .andExpect(jsonPath("$.judet").value("Cluj"));
-    }
+    // ── PUT /api/uats/{codSiruta} ─────────────────────────────────────────────
 
     @Test
     @WithMockUser(roles = "SUPER_ADMIN")
-    void getUat_notFound_returns404() throws Exception {
-        when(uatService.getUatByCodSiruta("99999"))
-                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "UAT not found"));
-
-        mockMvc.perform(get("/api/uats/99999"))
-                .andExpect(status().isNotFound());
-    }
-
-    // PUT /api/uats/{codSiruta}
-    @Test
-    @WithMockUser(roles = "SUPER_ADMIN")
-    void updateUat_success_returns200() throws Exception {
-        Uat updated = buildUat("12345", "Cluj-Napoca Updated", "Cluj", "Municipiu");
-        when(uatService.updateUat(eq("12345"), any(Uat.class))).thenReturn(updated);
+    void updatePublicUat_success_returns200() throws Exception {
+        PublicUat updated = buildPublicUat("12345", "Cluj-Napoca Updated", "Cluj", "Municipiu");
+        when(uatService.updatePublicUat(eq("12345"), any(PublicUat.class))).thenReturn(updated);
 
         mockMvc.perform(put("/api/uats/12345")
                         .with(csrf())
@@ -191,22 +171,23 @@ class UatControllerTest {
 
     @Test
     @WithMockUser(roles = "SUPER_ADMIN")
-    void updateUat_notFound_returns404() throws Exception {
-        when(uatService.updateUat(eq("99999"), any(Uat.class)))
+    void updatePublicUat_notFound_returns404() throws Exception {
+        when(uatService.updatePublicUat(eq("99999"), any(PublicUat.class)))
                 .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "UAT not found"));
 
         mockMvc.perform(put("/api/uats/99999")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new Uat())))
+                        .content(objectMapper.writeValueAsString(new PublicUat())))
                 .andExpect(status().isNotFound());
     }
 
-    // DELETE /api/uats/{codSiruta}
+    // ── DELETE /api/uats/{codSiruta} ──────────────────────────────────────────
+
     @Test
     @WithMockUser(roles = "SUPER_ADMIN")
-    void deleteUat_success_returns200() throws Exception {
-        doNothing().when(uatService).deleteUat("12345");
+    void deletePublicUat_success_returns200() throws Exception {
+        doNothing().when(uatService).deletePublicUat("12345");
 
         mockMvc.perform(delete("/api/uats/12345").with(csrf()))
                 .andExpect(status().isOk());
@@ -214,9 +195,9 @@ class UatControllerTest {
 
     @Test
     @WithMockUser(roles = "SUPER_ADMIN")
-    void deleteUat_notFound_returns404() throws Exception {
+    void deletePublicUat_notFound_returns404() throws Exception {
         doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "UAT not found"))
-                .when(uatService).deleteUat("99999");
+                .when(uatService).deletePublicUat("99999");
 
         mockMvc.perform(delete("/api/uats/99999").with(csrf()))
                 .andExpect(status().isNotFound());
@@ -224,13 +205,56 @@ class UatControllerTest {
 
     @Test
     @WithMockUser(roles = "USER")
-    void deleteUat_userRole_forbidden() throws Exception {
+    void deletePublicUat_userRole_forbidden() throws Exception {
         mockMvc.perform(delete("/api/uats/12345").with(csrf()))
                 .andExpect(status().isForbidden());
     }
 
-    // helper
-    private Uat buildUat(String codSiruta, String denumire, String judet, String tipUat) {
+    // ── POST /api/uats/tenant/{codSiruta} ─────────────────────────────────────
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void assignUatToTenant_admin_success() throws Exception {
+        Uat tenantUat = buildTenantUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
+        when(uatService.assignUatToTenant("12345")).thenReturn(tenantUat);
+
+        mockMvc.perform(post("/api/uats/tenant/12345").with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.codSiruta").value("12345"));
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void assignUatToTenant_userRole_forbidden() throws Exception {
+        mockMvc.perform(post("/api/uats/tenant/12345").with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    // ── DELETE /api/uats/tenant/{codSiruta} ───────────────────────────────────
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void removeUatFromTenant_admin_success() throws Exception {
+        doNothing().when(uatService).removeUatFromTenant("12345");
+
+        mockMvc.perform(delete("/api/uats/tenant/12345").with(csrf()))
+                .andExpect(status().isOk());
+    }
+
+    // ── helpers ───────────────────────────────────────────────────────────────
+
+    private PublicUat buildPublicUat(String codSiruta, String denumire, String judet, String tipUat) {
+        PublicUat uat = new PublicUat();
+        uat.setId(1L);
+        uat.setCodSiruta(codSiruta);
+        uat.setDenumire(denumire);
+        uat.setJudet(judet);
+        uat.setTipUat(tipUat);
+        uat.setIsActive(true);
+        return uat;
+    }
+
+    private Uat buildTenantUat(String codSiruta, String denumire, String judet, String tipUat) {
         Uat uat = new Uat();
         uat.setId(1L);
         uat.setCodSiruta(codSiruta);
