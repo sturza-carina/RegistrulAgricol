@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Gospodarie } from '../models/gospodarie.model';
+import { PaginatedResponse } from '../models/paginated-response.model';
 
 @Injectable({
   providedIn: 'root'
@@ -11,12 +12,14 @@ export class GospodarieService {
 
   constructor(private http: HttpClient) {}
 
-  getAllGospodarii(uatCode?: string): Observable<Gospodarie[]> {
+  getAllGospodarii(uatCode?: string, page: number = 0, size: number = 20): Observable<PaginatedResponse<Gospodarie>> {
     let params = new HttpParams();
     if (uatCode) {
       params = params.set('uatCode', uatCode);
     }
-    return this.http.get<Gospodarie[]>(this.apiUrl, { params });
+    params = params.set('page', page.toString());
+    params = params.set('size', size.toString());
+    return this.http.get<PaginatedResponse<Gospodarie>>(this.apiUrl, { params });
   }
 
   getGospodarieById(id: number): Observable<Gospodarie> {

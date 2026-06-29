@@ -1,6 +1,8 @@
 package com.multitenant.repository;
 
 import com.multitenant.model.animal.EfectivGrup;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,14 +13,14 @@ import java.util.List;
 public interface EfectivGrupRepository extends JpaRepository<EfectivGrup, Long> {
 
     @Query("SELECT e FROM EfectivGrup e WHERE e.proprietar.id = :proprietarId")
-    List<EfectivGrup> findByProprietarId(@Param("proprietarId") Long proprietarId);
+    Page<EfectivGrup> findByProprietarId(@Param("proprietarId") Long proprietarId, Pageable pageable);
 
     /**
      * Returnează istoricul complet al snapshot-urilor de efectiv pentru o gospodărie,
      * ordonat descrescator după dată (cel mai recent întâi).
      */
     @Query("SELECT e FROM EfectivGrup e WHERE e.gospodarie.id = :gospodarieId ORDER BY e.dataInregistrare DESC")
-    List<EfectivGrup> findByGospodarieIdOrderByDataInregistrareDesc(@Param("gospodarieId") Long gospodarieId);
+    Page<EfectivGrup> findByGospodarieIdOrderByDataInregistrareDesc(@Param("gospodarieId") Long gospodarieId, Pageable pageable);
 
     /**
      * Returnează cel mai recent snapshot pentru fiecare specie dintr-o gospodărie.

@@ -119,9 +119,9 @@ export class UserManagementComponent implements OnInit {
   }
 
   loadUsers(): void {
-    this.http.get<any[]>('/api/users').subscribe({
-      next: (data) => {
-        this.users = data.map(u => ({
+    this.http.get<any>('/api/users?page=0&size=1000').subscribe({
+      next: (response) => {
+        this.users = response.content.map((u: any) => ({
           id: u.id,
           name: u.nume || u.username,
           initials: (u.nume ? u.nume.charAt(0) : u.username.charAt(0)).toUpperCase(),
@@ -134,7 +134,7 @@ export class UserManagementComponent implements OnInit {
           status: u.activ ? 'Activ' : 'Inactiv',
           lastLogin: 'Unknown',
           raw: u
-        })).sort((a, b) => (b.id || 0) - (a.id || 0));
+        })).sort((a: any, b: any) => (b.id || 0) - (a.id || 0));
       },
       error: () => {
         this.users = [];

@@ -84,7 +84,7 @@ export class ParcelaMapComponent implements OnInit, OnDestroy {
   }
 
   loadGospodarii() {
-    this.gospodarieService.getAllGospodarii().subscribe(data => this.gospodarii = data);
+    this.gospodarieService.getAllGospodarii(undefined, 0, 1000).subscribe(response => this.gospodarii = response.content);
   }
 
   onGospodarieChange() {
@@ -109,9 +109,9 @@ export class ParcelaMapComponent implements OnInit, OnDestroy {
         }
       });
 
-      this.terenService.getTerenByGospodarieId(this.selectedGospodarieId).subscribe(data => {
-        // Use first teren if available (map shows one at a time)
-        const firstTeren = data && data.length > 0 ? data[0] : null;
+      this.terenService.getTerenByGospodarieId(this.selectedGospodarieId, 0, 1000).subscribe(response => {
+        const terenuri = response.content;
+        const firstTeren = terenuri && terenuri.length > 0 ? terenuri[0] : null;
         this.teren = firstTeren;
         if (firstTeren && firstTeren.id) {
           this.selectedTerenId = firstTeren.id;
@@ -243,15 +243,15 @@ export class ParcelaMapComponent implements OnInit, OnDestroy {
   }
 
   loadAllParcele() {
-    this.parcelaService.getAllParcele().subscribe(data => {
-      this.parcele = data;
+    this.parcelaService.getAllParcele(0, 1000).subscribe(response => {
+      this.parcele = response.content;
       this.renderParcele();
     });
   }
 
   loadParceleForTeren(terenId: number) {
-    this.parcelaService.getParcele(terenId).subscribe(data => {
-      this.parcele = data;
+    this.parcelaService.getParcele(terenId, 0, 1000).subscribe(response => {
+      this.parcele = response.content;
       this.renderParcele();
     });
   }

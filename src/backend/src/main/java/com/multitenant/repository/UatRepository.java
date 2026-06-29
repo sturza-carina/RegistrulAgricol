@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface UatRepository extends JpaRepository<Uat, Long> {
@@ -14,7 +15,7 @@ public interface UatRepository extends JpaRepository<Uat, Long> {
     void deleteByCodSiruta(String codSiruta);
 
     @Query("select distinct u.judet from Uat u order by u.judet asc")
-    java.util.List<String> findDistinctJudeteOrderByJudetAsc();
+    List<String> findDistinctJudeteOrderByJudetAsc();
 
-    java.util.List<Uat> findByJudetOrderByDenumireAsc(String judet);
+    List<Uat> findByJudetOrderByDenumireAsc(String judet);
 }

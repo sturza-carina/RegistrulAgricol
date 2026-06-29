@@ -64,9 +64,9 @@ export class SuperAdminDashboardComponent implements OnInit {
   }
 
   loadUsers(): void {
-    this.http.get<any[]>('/api/users').subscribe({
-      next: (data) => {
-        this.totalUsers = data.length;
+    this.http.get<any>('/api/users?page=0&size=1000').subscribe({
+      next: (response) => {
+        this.totalUsers = response.totalElements;
       },
       error: (err) => console.error('Failed to load users', err)
     });

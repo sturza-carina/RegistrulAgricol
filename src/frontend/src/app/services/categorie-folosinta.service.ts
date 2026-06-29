@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CategorieFolosinta } from '../models/categorie-folosinta.model';
+import { PaginatedResponse } from '../models/paginated-response.model';
 
 @Injectable({
   providedIn: 'root'
@@ -11,8 +12,9 @@ export class CategorieFolosintaService {
 
   constructor(private http: HttpClient) {}
 
-  getCategoriiForTeren(terenId: number): Observable<CategorieFolosinta[]> {
-    return this.http.get<CategorieFolosinta[]>(`${this.apiUrl}/terenuri/${terenId}/categorii-folosinta`);
+  getCategoriiForTeren(terenId: number, page: number = 0, size: number = 20): Observable<PaginatedResponse<CategorieFolosinta>> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<PaginatedResponse<CategorieFolosinta>>(`${this.apiUrl}/terenuri/${terenId}/categorii-folosinta`, { params });
   }
 
   createCategorie(terenId: number, categorie: CategorieFolosinta): Observable<CategorieFolosinta> {

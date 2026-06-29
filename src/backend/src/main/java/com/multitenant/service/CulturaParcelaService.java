@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -20,10 +22,9 @@ public class CulturaParcelaService {
     private final ParcelaRepository parcelaRepository;
 
     @Transactional(readOnly = true)
-    public List<CulturaParcelaDto> getCulturiByParcelaId(Long parcelaId) {
-        return culturaParcelaRepository.findByParcela_Id(parcelaId).stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+    public Page<CulturaParcelaDto> getCulturiByParcelaId(Long parcelaId, Pageable pageable) {
+        return culturaParcelaRepository.findByParcela_Id(parcelaId, pageable)
+                .map(this::mapToDto);
     }
 
     @Transactional

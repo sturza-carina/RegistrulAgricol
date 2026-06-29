@@ -76,11 +76,17 @@ export class PersonListComponent implements OnInit {
     });
   }
 
+  currentPage: number = 1;
+  pageSize: number = 6;
+  totalPages: number = 1;
+  currentSearch: string = '';
+  currentType: string = '';
+
   loadPersons() {
-    // we fetch all and let generic table filter, so pass empty strings to api if it requires
-    this.persoanaService.getAllPersons('', '').subscribe({
-      next: (data) => {
-        this.persoane = data.map(p => ({
+    this.persoanaService.getAllPersons(this.currentSearch, this.currentType, this.currentPage - 1, this.pageSize).subscribe({
+      next: (response) => {
+        this.totalPages = response.totalPages;
+        this.persoane = response.content.map((p: any) => ({
            raw: p,
            displayName: this.getPersonName(p),
            displayHandle: this.getPersonTypeHandle(p),
@@ -90,10 +96,22 @@ export class PersonListComponent implements OnInit {
            localitate: p.adresa?.localitate || '',
            initials: this.getPersonName(p).substring(0, 1).toUpperCase(),
            avatarBg: p.personType === 'PHYSICAL_PERSON' ? '#3b82f6' : '#8b5cf6'
-        })).sort((a, b) => (b.raw.id || 0) - (a.raw.id || 0));
+        }));
       },
       error: (err) => console.error('Error fetching persoane', err)
     });
+  }
+
+  onPageChange(page: number) {
+    this.currentPage = page;
+    this.loadPersons();
+  }
+
+  onFilterChange(filters: Record<string, any>) {
+    this.currentSearch = filters['search'] || '';
+    this.currentType = filters['personType'] || '';
+    this.currentPage = 1;
+    this.loadPersons();
   }
 
   getPersonTypeHandle(p: Persoana): string {

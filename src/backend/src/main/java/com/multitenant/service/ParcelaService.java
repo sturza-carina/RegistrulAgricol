@@ -7,6 +7,8 @@ import com.multitenant.repository.ParcelaRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 public class ParcelaService {
@@ -19,12 +21,12 @@ public class ParcelaService {
         this.terenRepository = terenRepository;
     }
 
-    public List<Parcela> getAllParceleForTenant() {
-        return parcelaRepository.findAll();
+    public Page<Parcela> getAllParceleForTenant(Pageable pageable) {
+        return parcelaRepository.findAll(pageable);
     }
 
-    public List<Parcela> getParceleForTeren(long terenId) {
-        return parcelaRepository.findByTerenId(terenId);
+    public Page<Parcela> getParceleForTeren(long terenId, Pageable pageable) {
+        return parcelaRepository.findByTerenId(terenId, pageable);
     }
 
     public Parcela saveParcela(long terenId, Parcela parcela) {

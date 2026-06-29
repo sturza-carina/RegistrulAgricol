@@ -23,6 +23,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -57,8 +60,24 @@ class UserControllerTest {
     @MockBean
     private com.multitenant.security.UserDetailsServiceImpl userDetailsService;
 
+    @MockBean(name = "userSecurity")
+    private com.multitenant.security.UserSecurity userSecurity;
+
     @BeforeEach
     void setUp() throws Exception {
+        // Setup UserSecurity mock
+        when(userSecurity.canAccessUser(any(), anyLong())).thenAnswer(invocation -> {
+            UserDetailsImpl principal = invocation.getArgument(0);
+            Long targetUserId = invocation.getArgument(1);
+
+            if ("ROLE_SUPER_ADMIN".equals(principal.getRole())) return true;
+            
+            Optional<User> userOpt = userRepository.findById(targetUserId);
+            if (userOpt.isEmpty()) return false; 
+            
+            String userTenantId = userOpt.get().getTenantId();
+            return principal.getTenantId() != null && principal.getTenantId().equals(userTenantId);
+        });
         // Filtrele custom nu fac nimic — lasa request-ul sa treaca
         doAnswer(inv -> {
             inv.<FilterChain>getArgument(2).doFilter(inv.getArgument(0), inv.getArgument(1));
@@ -107,33 +126,33 @@ class UserControllerTest {
     // GET /api/users
     @Test
     void getAllUsers_superAdmin_returnsAllUsers() throws Exception {
-        List<User> allUsers = List.of(
+        Page<User> allUsers = new PageImpl<>(List.of(
                 buildUser(1L, "user1", "cluj"),
                 buildUser(2L, "user2", "bucuresti")
-        );
-        when(userRepository.findAll()).thenReturn(allUsers);
+        ));
+        when(userRepository.findAll(any(Pageable.class))).thenReturn(allUsers);
 
         mockMvc.perform(get("/api/users")
                         .with(authentication(authToken(superAdmin()))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$.content.length()").value(2));
 
-        verify(userRepository).findAll();
-        verify(userRepository, never()).findByTenantId(any());
+        verify(userRepository).findAll(any(Pageable.class));
+        verify(userRepository, never()).findByTenantId(any(), any());
     }
 
     @Test
     void getAllUsers_admin_returnsOnlyOwnTenantUsers() throws Exception {
-        List<User> clujUsers = List.of(buildUser(1L, "user1", "cluj"));
-        when(userRepository.findByTenantId("cluj")).thenReturn(clujUsers);
+        Page<User> clujUsers = new PageImpl<>(List.of(buildUser(1L, "user1", "cluj")));
+        when(userRepository.findByTenantId(eq("cluj"), any(Pageable.class))).thenReturn(clujUsers);
 
         mockMvc.perform(get("/api/users")
                         .with(authentication(authToken(adminCluj()))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.content.length()").value(1));
 
-        verify(userRepository).findByTenantId("cluj");
-        verify(userRepository, never()).findAll();
+        verify(userRepository).findByTenantId(eq("cluj"), any(Pageable.class));
+        verify(userRepository, never()).findAll(any(Pageable.class));
     }
 
     @Test

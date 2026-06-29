@@ -119,12 +119,13 @@ export class PersonFormComponent implements OnInit {
     });
 
     if (!this.hideGospodarieSelect) {
-      this.gospodarieService.getAllGospodarii().subscribe({
-        next: (gospodarii) => {
+      this.gospodarieService.getAllGospodarii(undefined, 0, 1000).subscribe({
+        next: (response) => {
+          const gospodarii = response.content;
           const section = this.formConfig.sections.find(s => s.title === 'Contact și Registru Agricol');
           const field = section?.fields.find(f => f.name === 'gospodarieIds');
           if (field) {
-            field.options = gospodarii.map(g => ({ label: `Gospodărie #${g.codGospodarie} (${g.tipGospodarie})`, value: g.id }));
+            field.options = gospodarii.map((g: any) => ({ label: `Gospodărie #${g.codGospodarie} (${g.tipGospodarie})`, value: g.id }));
           }
         }
       });

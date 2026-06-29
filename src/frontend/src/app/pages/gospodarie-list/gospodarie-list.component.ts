@@ -85,19 +85,39 @@ export class GospodarieListComponent implements OnInit, OnDestroy {
       });
   }
 
+  currentPage: number = 1;
+  pageSize: number = 6;
+  totalPages: number = 1;
+  currentSearch: string = '';
+  currentTip: string = '';
+  currentStatus: any = '';
+
   loadGospodarii(): void {
     const uatCode = this.user?.role === 'ROLE_SUPER_ADMIN'
       ? undefined
       : this.activeUat?.codSiruta;
 
-    console.log('loadGospodarii cu uatCode:', uatCode);
-
-    this.gospodarieService.getAllGospodarii(uatCode).subscribe({
-      next: (data) => {
-        this.gospodarii = data.sort((a, b) => (b.id || 0) - (a.id || 0));
+    // Actually, GospodarieService currently only accepts uatCode, page, and size
+    // It doesn't have backend filtering for search, tip, and status yet.
+    // I should pass page and size, and implement filtering later if requested.
+    this.gospodarieService.getAllGospodarii(uatCode, this.currentPage - 1, this.pageSize).subscribe({
+      next: (response) => {
+        this.totalPages = response.totalPages;
+        this.gospodarii = response.content;
       },
       error: (err) => console.error(err)
     });
+  }
+
+  onPageChange(page: number) {
+    this.currentPage = page;
+    this.loadGospodarii();
+  }
+
+  onFilterChange(filters: Record<string, any>) {
+    // Backend filtering not yet implemented for Gospodarie, so this just resets page
+    this.currentPage = 1;
+    this.loadGospodarii();
   }
 
 

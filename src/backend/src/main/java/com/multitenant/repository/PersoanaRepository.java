@@ -1,12 +1,12 @@
 package com.multitenant.repository;
 
 import com.multitenant.model.persoana.Persoana;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 @Repository
 public interface PersoanaRepository extends JpaRepository<Persoana, Long> {
@@ -25,11 +25,11 @@ public interface PersoanaRepository extends JpaRepository<Persoana, Long> {
            "   LOWER(COALESCE(TREAT(p AS PersoanaJuridica).companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS text), '%')) OR " +
            "   COALESCE(TREAT(p AS PersoanaJuridica).cui, '') LIKE CONCAT('%', CAST(:search AS text), '%') " +
            " )))")
-    List<Persoana> searchPersons(@Param("search") String search, @Param("type") String type);
+    Page<Persoana> searchPersons(@Param("search") String search, @Param("type") String type, Pageable pageable);
 
     @Query("SELECT p FROM Persoana p JOIN p.gospodarii g WHERE g.id = :gospodarieId")
-    List<Persoana> findByGospodarieId(@Param("gospodarieId") Long gospodarieId);
+    Page<Persoana> findByGospodarieId(@Param("gospodarieId") Long gospodarieId, Pageable pageable);
 
-    List<Persoana> findByPersonTypeOrderByIdDesc(String personType);
+    Page<Persoana> findByPersonTypeOrderByIdDesc(String personType, Pageable pageable);
 }
 

@@ -31,7 +31,12 @@
     [filters]="filters"
     [actions]="actions"
     [title]="'Persoane Înregistrate'"
-    [itemsPerPage]="6"
+    [itemsPerPage]="pageSize"
+    [serverSide]="true"
+    [totalServerPages]="totalPages"
+    [currentServerPage]="currentPage"
+    (pageChange)="onPageChange($event)"
+    (filterChange)="onFilterChange($event)"
     [primaryActionText]="'Adaugă Persoană'"
     (primaryAction)="goToCreatePerson()">
   </app-generic-table>

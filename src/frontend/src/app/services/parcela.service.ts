@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Parcela } from '../models/parcela.model';
+import { PaginatedResponse } from '../models/paginated-response.model';
 
 @Injectable({
   providedIn: 'root'
@@ -11,12 +12,14 @@ export class ParcelaService {
 
   constructor(private http: HttpClient) {}
 
-  getAllParcele(): Observable<Parcela[]> {
-    return this.http.get<Parcela[]>(this.apiUrl);
+  getAllParcele(page: number = 0, size: number = 20): Observable<PaginatedResponse<Parcela>> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<PaginatedResponse<Parcela>>(this.apiUrl, { params });
   }
 
-  getParcele(terenId: number): Observable<Parcela[]> {
-    return this.http.get<Parcela[]>(`${this.apiUrl}/teren/${terenId}`);
+  getParcele(terenId: number, page: number = 0, size: number = 20): Observable<PaginatedResponse<Parcela>> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<PaginatedResponse<Parcela>>(`${this.apiUrl}/teren/${terenId}`, { params });
   }
 
   createParcela(terenId: number, parcela: Parcela): Observable<Parcela> {

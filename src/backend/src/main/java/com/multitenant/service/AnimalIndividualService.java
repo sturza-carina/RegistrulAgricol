@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @Transactional
@@ -77,10 +79,9 @@ public class AnimalIndividualService {
     }
 
     @Transactional(readOnly = true)
-    public List<AnimalIndividualDTO> getAll() {
-        return animalIndividualRepository.findAll().stream()
-                .map(entity -> modelMapper.map(entity, AnimalIndividualDTO.class))
-                .collect(Collectors.toList());
+    public Page<AnimalIndividualDTO> getAll(Pageable pageable) {
+        return animalIndividualRepository.findAll(pageable)
+                .map(entity -> modelMapper.map(entity, AnimalIndividualDTO.class));
     }
 
     @Transactional(readOnly = true)
@@ -91,10 +92,9 @@ public class AnimalIndividualService {
     }
 
     @Transactional(readOnly = true)
-    public List<AnimalIndividualDTO> getByGospodarieId(Long gospodarieId) {
-        return animalIndividualRepository.findByGospodarieId(gospodarieId).stream()
-                .map(entity -> modelMapper.map(entity, AnimalIndividualDTO.class))
-                .collect(Collectors.toList());
+    public Page<AnimalIndividualDTO> getByGospodarieId(Long gospodarieId, Pageable pageable) {
+        return animalIndividualRepository.findByGospodarieId(gospodarieId, pageable)
+                .map(entity -> modelMapper.map(entity, AnimalIndividualDTO.class));
     }
 
     public AnimalIndividualDTO update(Long id, AnimalIndividual updated) {
@@ -155,9 +155,8 @@ public class AnimalIndividualService {
     }
 
     @Transactional(readOnly = true)
-    public List<AnimalIndividualDTO> getByProprietarId(Long proprietarId) {
-        return animalIndividualRepository.findByProprietarId(proprietarId).stream()
-                .map(entity -> modelMapper.map(entity, AnimalIndividualDTO.class))
-                .collect(Collectors.toList());
+    public Page<AnimalIndividualDTO> getByProprietarId(Long proprietarId, Pageable pageable) {
+        return animalIndividualRepository.findByProprietarId(proprietarId, pageable)
+                .map(entity -> modelMapper.map(entity, AnimalIndividualDTO.class));
     }
 }

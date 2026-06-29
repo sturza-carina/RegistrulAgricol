@@ -82,9 +82,9 @@ export class MachineryManagementComponent implements OnInit, OnChanges {
     }
 
     this.isLoading = true;
-    this.machineryService.getMachineryByGospodarie(this.gospodarieId).subscribe({
-      next: (data) => {
-        this.machineryList = data;
+    this.machineryService.getMachineryByGospodarie(this.gospodarieId, 0, 1000).subscribe({
+      next: (response) => {
+        this.machineryList = response.content;
         this.isLoading = false;
       },
       error: () => {

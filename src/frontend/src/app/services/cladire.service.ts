@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Cladire } from '../models/cladire.model';
+import { PaginatedResponse } from '../models/paginated-response.model';
 
 @Injectable({
   providedIn: 'root'
@@ -11,8 +12,9 @@ export class CladireService {
 
   constructor(private http: HttpClient) {}
 
-  getCladiri(gospodarieId: number): Observable<Cladire[]> {
-    return this.http.get<Cladire[]>(`${this.apiUrl}/${gospodarieId}/cladiri`, { withCredentials: true });
+  getCladiri(gospodarieId: number, page: number = 0, size: number = 20): Observable<PaginatedResponse<Cladire>> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<PaginatedResponse<Cladire>>(`${this.apiUrl}/${gospodarieId}/cladiri`, { params, withCredentials: true });
   }
 
   createCladire(gospodarieId: number, cladire: Cladire): Observable<Cladire> {

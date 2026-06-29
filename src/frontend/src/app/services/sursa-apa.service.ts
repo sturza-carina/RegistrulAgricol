@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { SursaApa } from '../models/sursa-apa.model';
+import { PaginatedResponse } from '../models/paginated-response.model';
 
 @Injectable({
   providedIn: 'root'
@@ -12,8 +13,9 @@ export class SursaApaService {
 
   constructor(private http: HttpClient) {}
 
-  getSurse(parcelaId: number): Observable<SursaApa[]> {
-    return this.http.get<SursaApa[]>(`${this.apiUrl}/${parcelaId}/surse-apa`);
+  getSurse(parcelaId: number, page: number = 0, size: number = 20): Observable<PaginatedResponse<SursaApa>> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<PaginatedResponse<SursaApa>>(`${this.apiUrl}/${parcelaId}/surse-apa`, { params });
   }
 
   createSursa(parcelaId: number, data: SursaApa): Observable<SursaApa> {

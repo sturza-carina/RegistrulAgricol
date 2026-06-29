@@ -6,16 +6,18 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Repository
 public interface AnimalIndividualRepository extends JpaRepository<AnimalIndividual, Long> {
 
     @Query("SELECT a FROM AnimalIndividual a WHERE a.proprietar.id = :proprietarId")
-    List<AnimalIndividual> findByProprietarId(@Param("proprietarId") Long proprietarId);
+    Page<AnimalIndividual> findByProprietarId(@Param("proprietarId") Long proprietarId, Pageable pageable);
 
     /** Returnează toate animalele individuale dintr-o gospodărie — necesar pentru view-ul gospodărie-details. */
     @Query("SELECT a FROM AnimalIndividual a WHERE a.gospodarie.id = :gospodarieId")
-    List<AnimalIndividual> findByGospodarieId(@Param("gospodarieId") Long gospodarieId);
+    Page<AnimalIndividual> findByGospodarieId(@Param("gospodarieId") Long gospodarieId, Pageable pageable);
 
     /**
      * Verifică dacă există un alt animal cu același crotal în această schemă (intra-tenant).

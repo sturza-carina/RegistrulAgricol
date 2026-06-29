@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -70,30 +72,26 @@ public class PersoanaService {
     }
 
     @Transactional(readOnly = true)
-    public List<PersoanaDTO> getAllPersoaneFizice() {
-        return persoanaRepository.findByPersonTypeOrderByIdDesc("PHYSICAL_PERSON").stream()
-                .map(entity -> modelMapper.map(entity, PersoanaDTO.class))
-                .collect(Collectors.toList());
+    public Page<PersoanaDTO> getAllPersoaneFizice(Pageable pageable) {
+        return persoanaRepository.findByPersonTypeOrderByIdDesc("PHYSICAL_PERSON", pageable)
+                .map(entity -> modelMapper.map(entity, PersoanaDTO.class));
     }
 
-    public List<PersoanaDTO> getAllPersoaneJuridice() {
-        return persoanaRepository.findByPersonTypeOrderByIdDesc("LEGAL_ENTITY").stream()
-                .map(entity -> modelMapper.map(entity, PersoanaDTO.class))
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public List<PersoanaDTO> getAllPersons(String search, String type) {
-        return persoanaRepository.searchPersons(search, type).stream()
-                .map(entity -> modelMapper.map(entity, PersoanaDTO.class))
-                .collect(Collectors.toList());
+    public Page<PersoanaDTO> getAllPersoaneJuridice(Pageable pageable) {
+        return persoanaRepository.findByPersonTypeOrderByIdDesc("LEGAL_ENTITY", pageable)
+                .map(entity -> modelMapper.map(entity, PersoanaDTO.class));
     }
 
     @Transactional(readOnly = true)
-    public List<PersoanaDTO> getPersonsByGospodarieId(Long gospodarieId) {
-        return persoanaRepository.findByGospodarieId(gospodarieId).stream()
-                .map(entity -> modelMapper.map(entity, PersoanaDTO.class))
-                .collect(Collectors.toList());
+    public Page<PersoanaDTO> getAllPersons(String search, String type, Pageable pageable) {
+        return persoanaRepository.searchPersons(search, type, pageable)
+                .map(entity -> modelMapper.map(entity, PersoanaDTO.class));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PersoanaDTO> getPersonsByGospodarieId(Long gospodarieId, Pageable pageable) {
+        return persoanaRepository.findByGospodarieId(gospodarieId, pageable)
+                .map(entity -> modelMapper.map(entity, PersoanaDTO.class));
     }
 
     @Transactional(readOnly = true)

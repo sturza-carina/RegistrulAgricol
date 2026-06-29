@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Persoana } from '../models/persoana.model';
 import { Teren } from '../models/teren.model';
+import { PaginatedResponse } from '../models/paginated-response.model';
 
 export type TerenRef = Partial<Teren> & { id: number };
 export type PersoanaRef = Partial<Persoana> & { id: number };
@@ -52,9 +53,12 @@ export class ContractUtilizareService {
 
   constructor(private http: HttpClient) {}
 
-  getAllContracts(uatCode?: string): Observable<ContractUtilizare[]> {
-    const url = uatCode ? `${this.apiUrl}?uatCode=${uatCode}` : this.apiUrl;
-    return this.http.get<ContractUtilizare[]>(url);
+  getAllContracts(uatCode?: string, page: number = 0, size: number = 20): Observable<PaginatedResponse<ContractUtilizare>> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    if (uatCode) {
+      params = params.set('uatCode', uatCode);
+    }
+    return this.http.get<PaginatedResponse<ContractUtilizare>>(this.apiUrl, { params });
   }
 
   getContractById(id: number): Observable<ContractUtilizare> {

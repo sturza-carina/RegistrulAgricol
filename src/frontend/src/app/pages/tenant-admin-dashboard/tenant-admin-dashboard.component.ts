@@ -70,9 +70,9 @@ export class TenantAdminDashboardComponent implements OnInit {
   }
 
   loadUsers(): void {
-    this.http.get<any[]>('/api/users').subscribe({
-      next: (data) => {
-        this.users = data.map(u => {
+    this.http.get<any>('/api/users?page=0&size=1000').subscribe({
+      next: (response) => {
+        this.users = response.content.map((u: any) => {
           const displayName = u.nume || u.username || 'Utilizator';
           const init = displayName.substring(0, 2).toUpperCase();
           const colors = ['#1a6b3c', '#0369a1', '#9333ea', '#ea580c', '#b91c1c'];

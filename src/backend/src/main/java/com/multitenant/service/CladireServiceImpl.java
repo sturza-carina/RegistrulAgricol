@@ -14,6 +14,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 public class CladireServiceImpl implements CladireService {
@@ -32,14 +34,12 @@ public class CladireServiceImpl implements CladireService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CladireDTO> getCladiriByGospodarieId(Long gospodarieId) {
+    public Page<CladireDTO> getCladiriByGospodarieId(Long gospodarieId, Pageable pageable) {
         if (!gospodarieRepository.existsById(gospodarieId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Gospodarie not found");
         }
-        return cladireRepository.findByGospodarieId(gospodarieId)
-                .stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+        return cladireRepository.findByGospodarieId(gospodarieId, pageable)
+                .map(this::mapToDTO);
     }
 
     @Override

@@ -108,9 +108,9 @@ export class AnimalListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   loadData() {
-    this.animalService.getAllIndividuals().subscribe({
-      next: (data) => {
-        let sorted = data.sort((a, b) => (b.id || 0) - (a.id || 0));
+    this.animalService.getAllIndividuals(0, 1000).subscribe({
+      next: (response) => {
+        let sorted = response.content.sort((a, b) => (b.id || 0) - (a.id || 0));
         if (this.gospodarieId) {
           this.individuals = sorted.filter(a => a.gospodarie?.id === this.gospodarieId);
         } else if (this.activeUat) {
@@ -122,9 +122,9 @@ export class AnimalListComponent implements OnInit, OnChanges, OnDestroy {
       error: (err) => console.error('Error fetching individuals', err)
     });
 
-    this.animalService.getAllGroups().subscribe({
-      next: (data) => {
-        let sorted = data.sort((a, b) => (b.id || 0) - (a.id || 0));
+    this.animalService.getAllGroups(0, 1000).subscribe({
+      next: (response) => {
+        let sorted = response.content.sort((a, b) => (b.id || 0) - (a.id || 0));
         if (this.gospodarieId) {
           this.groups = sorted.filter(g => g.gospodarie?.id === this.gospodarieId);
         } else if (this.activeUat) {

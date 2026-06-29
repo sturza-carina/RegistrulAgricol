@@ -4,10 +4,13 @@ import com.multitenant.dto.MachineryDTO;
 
 import java.util.List;
 
-public interface MachineryService {
-    List<MachineryDTO> getAll();
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-    List<MachineryDTO> getAllByGospodarie(Long id);
+public interface MachineryService {
+    Page<MachineryDTO> getAll(Pageable pageable);
+
+    Page<MachineryDTO> getAllByGospodarie(Long id, Pageable pageable);
 
     MachineryDTO getById(Long id);
 

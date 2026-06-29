@@ -11,12 +11,15 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.time.LocalDate;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Repository
 public interface ContractUtilizareRepository extends JpaRepository<ContractUtilizare, Long> {
-    List<ContractUtilizare> findByTerenId(Long terenId);
+    Page<ContractUtilizare> findByTerenId(Long terenId, Pageable pageable);
 
     @Query("SELECT c FROM ContractUtilizare c WHERE c.teren.gospodarie.uat.codSiruta = :uatCode")
-    List<ContractUtilizare> findByUatCode(@Param("uatCode") String uatCode);
+    Page<ContractUtilizare> findByUatCode(@Param("uatCode") String uatCode, Pageable pageable);
 
     @Modifying
     @Query("UPDATE ContractUtilizare c " +
