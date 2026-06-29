@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CulturaParcela } from '../models/cultura-parcela.model';
+import { PaginatedResponse } from '../models/paginated-response.model';
 
 @Injectable({
   providedIn: 'root'
@@ -12,8 +13,9 @@ export class CulturaParcelaService {
 
   constructor(private http: HttpClient) { }
 
-  getCulturi(parcelaId: number): Observable<CulturaParcela[]> {
-    return this.http.get<CulturaParcela[]>(`${this.apiUrl}/${parcelaId}/culturi`);
+  getCulturi(parcelaId: number, page: number = 0, size: number = 20): Observable<PaginatedResponse<CulturaParcela>> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<PaginatedResponse<CulturaParcela>>(`${this.apiUrl}/${parcelaId}/culturi`, { params });
   }
 
   createCultura(parcelaId: number, data: CulturaParcela): Observable<CulturaParcela> {

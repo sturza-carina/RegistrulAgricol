@@ -8,6 +8,10 @@ import javax.sql.DataSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.lang.NonNull;
+import java.util.List;
+import java.sql.Connection;
+import java.sql.Statement;
+import org.flywaydb.core.Flyway;
 
 @Service
 public class TenantService {
@@ -33,11 +37,11 @@ public class TenantService {
 
         // Create schema and run Flyway migrations BEFORE saving to DB
         try {
-            try (java.sql.Connection conn = dataSource.getConnection();
-                 java.sql.Statement stmt = conn.createStatement()) {
+            try (Connection conn = dataSource.getConnection();
+                 Statement stmt = conn.createStatement()) {
                 stmt.execute("CREATE SCHEMA IF NOT EXISTS " + schemaName);
             }
-            org.flywaydb.core.Flyway flyway = org.flywaydb.core.Flyway.configure()
+            Flyway flyway = Flyway.configure()
                     .dataSource(dataSource)
                     .schemas(schemaName)
                     .locations("classpath:db/tenant")
@@ -69,14 +73,14 @@ public class TenantService {
     }
 
     public void migrateAllTenants() {
-        java.util.List<Tenant> tenants = tenantRepository.findAll();
+        List<Tenant> tenants = tenantRepository.findAll();
         for (Tenant tenant : tenants) {
             try {
-                try (java.sql.Connection conn = dataSource.getConnection();
-                     java.sql.Statement stmt = conn.createStatement()) {
+                try (Connection conn = dataSource.getConnection();
+                     Statement stmt = conn.createStatement()) {
                     stmt.execute("CREATE SCHEMA IF NOT EXISTS " + tenant.getSchemaName());
                 }
-                org.flywaydb.core.Flyway flyway = org.flywaydb.core.Flyway.configure()
+                Flyway flyway = Flyway.configure()
                         .dataSource(dataSource)
                         .schemas(tenant.getSchemaName())
                         .locations("classpath:db/tenant")

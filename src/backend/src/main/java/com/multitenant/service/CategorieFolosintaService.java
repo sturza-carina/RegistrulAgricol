@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import org.springframework.lang.NonNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @SuppressWarnings("null")
@@ -22,8 +24,8 @@ public class CategorieFolosintaService {
         this.terenRepository = terenRepository;
     }
 
-    public List<CategorieFolosinta> getCategoriiForTeren(@NonNull Long terenId) {
-        return categorieFolosintaRepository.findByTerenId(terenId);
+    public Page<CategorieFolosinta> getCategoriiForTeren(@NonNull Long terenId, Pageable pageable) {
+        return categorieFolosintaRepository.findByTerenId(terenId, pageable);
     }
 
     public CategorieFolosinta getCategorieById(@NonNull Long id) {

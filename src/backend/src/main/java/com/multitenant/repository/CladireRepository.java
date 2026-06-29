@@ -9,8 +9,11 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Repository
 public interface CladireRepository extends JpaRepository<Cladire, Long> {
     @Query("SELECT c FROM Cladire c WHERE c.gospodarie.id = :gospodarieId")
-    List<Cladire> findByGospodarieId(@Param("gospodarieId") Long gospodarieId);
+    Page<Cladire> findByGospodarieId(@Param("gospodarieId") Long gospodarieId, Pageable pageable);
 }

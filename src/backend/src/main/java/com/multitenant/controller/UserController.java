@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import com.multitenant.dto.UserDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api/users")
@@ -32,25 +34,18 @@ public class UserController {
         return (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
-    private boolean isSuperAdmin(UserDetailsImpl userDetails) {
-        return "ROLE_SUPER_ADMIN".equals(userDetails.getRole());
-    }
+
 
     @PostMapping
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or (hasRole('ROLE_ADMIN') and #user.role != 'ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> createUser(@RequestBody User user) {
         if (user == null) {
             return ResponseEntity.badRequest().body("User data is missing");
         }
         UserDetailsImpl currentUser = getCurrentUser();
 
-        if (!isSuperAdmin(currentUser)) {
-            // Admin must create users in their own tenant
+        if (!"ROLE_SUPER_ADMIN".equals(currentUser.getRole())) {
             user.setTenantId(currentUser.getTenantId());
-
-            // Prevent tenant admins from assigning superior roles
-            if ("ROLE_SUPER_ADMIN".equals(user.getRole())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Cannot assign super admin role.");
-            }
         }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -58,38 +53,34 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<UserDTO>> getAllUsers() {
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<Page<UserDTO>> getAllUsers(Pageable pageable) {
         UserDetailsImpl currentUser = getCurrentUser();
 
-        List<User> users;
-        if (isSuperAdmin(currentUser)) {
-            users = userRepository.findAll();
+        Page<User> users;
+        if ("ROLE_SUPER_ADMIN".equals(currentUser.getRole())) {
+            users = userRepository.findAll(pageable);
         } else {
-            users = userRepository.findByTenantId(currentUser.getTenantId());
+            users = userRepository.findByTenantId(currentUser.getTenantId(), pageable);
         }
-        return ResponseEntity.ok(users.stream().map(UserDTO::fromEntity).collect(Collectors.toList()));
+        return ResponseEntity.ok(users.map(UserDTO::fromEntity));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@userSecurity.canAccessUser(principal, #id)")
     public ResponseEntity<?> getUser(@PathVariable long id) {
-        UserDetailsImpl currentUser = getCurrentUser();
         Optional<User> userOpt = userRepository.findById(id);
 
         if (userOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        User user = userOpt.get();
-        if (!isSuperAdmin(currentUser) && !user.getTenantId().equals(currentUser.getTenantId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You do not have permission to view this user.");
-        }
-
-        return ResponseEntity.ok(UserDTO.fromEntity(user));
+        return ResponseEntity.ok(UserDTO.fromEntity(userOpt.get()));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@userSecurity.canAccessUser(principal, #id) and (hasRole('ROLE_SUPER_ADMIN') or (hasRole('ROLE_ADMIN') and #userDetails.role != 'ROLE_SUPER_ADMIN') or (hasRole('ROLE_USER') and #id == principal.id and #userDetails.role == null))")
     public ResponseEntity<?> updateUser(@PathVariable long id, @RequestBody User userDetails) {
-        UserDetailsImpl currentUser = getCurrentUser();
         Optional<User> userOpt = userRepository.findById(id);
 
         if (userOpt.isEmpty()) {
@@ -97,17 +88,10 @@ public class UserController {
         }
 
         User user = userOpt.get();
-        if (!isSuperAdmin(currentUser) && !user.getTenantId().equals(currentUser.getTenantId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You do not have permission to modify this user.");
-        }
 
         if (userDetails.getUsername() != null)
             user.setUsername(userDetails.getUsername());
         if (userDetails.getRole() != null) {
-            // Prevent tenant admins from assigning superior roles
-            if (!isSuperAdmin(currentUser) && "ROLE_SUPER_ADMIN".equals(userDetails.getRole())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Cannot assign super admin role.");
-            }
             user.setRole(userDetails.getRole());
         }
 
@@ -121,7 +105,6 @@ public class UserController {
             user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
         }
 
-        // Store uatId as a plain Long — no cross-schema FK validation needed
         if (userDetails.getUatId() != null) {
             user.setUatId(userDetails.getUatId());
         }
@@ -130,20 +113,15 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("@userSecurity.canAccessUser(principal, #id) and (hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN'))")
     public ResponseEntity<?> deleteUser(@PathVariable long id) {
-        UserDetailsImpl currentUser = getCurrentUser();
         Optional<User> userOpt = userRepository.findById(id);
 
         if (userOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        User user = userOpt.get();
-        if (!isSuperAdmin(currentUser) && !user.getTenantId().equals(currentUser.getTenantId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You do not have permission to delete this user.");
-        }
-
-        userRepository.delete(user);
+        userRepository.delete(userOpt.get());
         return ResponseEntity.ok().build();
     }
 }

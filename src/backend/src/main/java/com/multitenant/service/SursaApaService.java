@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -19,11 +21,9 @@ public class SursaApaService {
     private final SursaApaRepository sursaApaRepository;
     private final ParcelaRepository parcelaRepository;
 
-    public List<SursaApaDTO> getSurseByParcelaId(Long parcelaId) {
-        return sursaApaRepository.findByParcela_Id(parcelaId)
-                .stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+    public Page<SursaApaDTO> getSurseByParcelaId(Long parcelaId, Pageable pageable) {
+        return sursaApaRepository.findByParcela_Id(parcelaId, pageable)
+                .map(this::toDto);
     }
 
     @Transactional

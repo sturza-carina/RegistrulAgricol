@@ -14,6 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Service
 public class GospodarieService {
 
@@ -27,10 +30,9 @@ public class GospodarieService {
         this.modelMapper = modelMapper;
     }
 
-    public List<GospodarieDTO> getAllGospodarii() {
-        return gospodarieRepository.findAllByOrderByIdDesc().stream()
-                .map(entity -> modelMapper.map(entity, GospodarieDTO.class))
-                .collect(Collectors.toList());
+    public Page<GospodarieDTO> getAllGospodarii(Pageable pageable) {
+        return gospodarieRepository.findAllByOrderByIdDesc(pageable)
+                .map(entity -> modelMapper.map(entity, GospodarieDTO.class));
     }
 
     public GospodarieDTO getGospodarieById(Long id) {
@@ -90,15 +92,13 @@ public class GospodarieService {
         gospodarieRepository.deleteById(id);
     }
 
-    public List<GospodarieDTO> getAllGospodarii(String uatCode) {
-        List<Gospodarie> result;
+    public Page<GospodarieDTO> getAllGospodarii(String uatCode, Pageable pageable) {
+        Page<Gospodarie> result;
         if (uatCode != null && !uatCode.isBlank()) {
-            result = gospodarieRepository.findByUat_CodSirutaOrderByIdDesc(uatCode);
+            result = gospodarieRepository.findByUat_CodSirutaOrderByIdDesc(uatCode, pageable);
         } else {
-            result = gospodarieRepository.findAllByOrderByIdDesc();
+            result = gospodarieRepository.findAllByOrderByIdDesc(pageable);
         }
-        return result.stream()
-                .map(entity -> modelMapper.map(entity, GospodarieDTO.class))
-                .collect(Collectors.toList());
+        return result.map(entity -> modelMapper.map(entity, GospodarieDTO.class));
     }
 }

@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Teren } from '../models/teren.model';
+import { PaginatedResponse } from '../models/paginated-response.model';
 
 @Injectable({
   providedIn: 'root'
@@ -11,12 +12,18 @@ export class TerenService {
 
   constructor(private http: HttpClient) {}
 
-  getAllTerenuri(): Observable<Teren[]> {
-    return this.http.get<Teren[]>(this.apiUrl);
+  getAllTerenuri(page: number = 0, size: number = 20): Observable<PaginatedResponse<Teren>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+    return this.http.get<PaginatedResponse<Teren>>(this.apiUrl, { params });
   }
 
-  getTerenByGospodarieId(gospodarieId: number): Observable<Teren[]> {
-    return this.http.get<Teren[]>(`${this.apiUrl}/gospodarie/${gospodarieId}`);
+  getTerenByGospodarieId(gospodarieId: number, page: number = 0, size: number = 20): Observable<PaginatedResponse<Teren>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+    return this.http.get<PaginatedResponse<Teren>>(`${this.apiUrl}/gospodarie/${gospodarieId}`, { params });
   }
 
   getTerenById(id: number): Observable<Teren> {

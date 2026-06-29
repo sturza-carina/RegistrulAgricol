@@ -67,9 +67,9 @@ export class CladireManagementComponent implements OnInit {
   }
 
   loadCladiri() {
-    this.cladireService.getCladiri(this.gospodarieId).subscribe({
-      next: (data) => {
-        this.cladiri = data.sort((a, b) => (b.id || 0) - (a.id || 0));
+    this.cladireService.getCladiri(this.gospodarieId, 0, 1000).subscribe({
+      next: (response) => {
+        this.cladiri = response.content.sort((a, b) => (b.id || 0) - (a.id || 0));
       },
       error: (err) => console.error('Failed to load cladiri', err)
     });

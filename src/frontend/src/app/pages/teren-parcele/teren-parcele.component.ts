@@ -296,8 +296,8 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
 
   // --- Load & render parcels ---
   loadParcele() {
-    this.parcelaService.getParcele(this.terenId).subscribe(data => {
-      this.parcele = data;
+    this.parcelaService.getParcele(this.terenId, 0, 1000).subscribe(response => {
+      this.parcele = response.content;
       this.renderParcele();
     });
   }
@@ -483,8 +483,10 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   }
 
   loadCategorii() {
-    this.categorieService.getCategoriiForTeren(this.terenId).subscribe({
-      next: categorii => this.categorii = categorii || [],
+    this.categorieService.getCategoriiForTeren(this.terenId, 0, 1000).subscribe({
+      next: (response) => {
+        this.categorii = response.content;
+      },
       error: () => this.categorii = []
     });
   }
@@ -582,8 +584,10 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   }
 
   loadCulturi(parcelaId: number) {
-    this.culturaService.getCulturi(parcelaId).subscribe({
-      next: data => this.culturi = data || [],
+    this.culturaService.getCulturi(parcelaId, 0, 1000).subscribe({
+      next: (response) => {
+        this.culturi = response.content || [];
+      },
       error: () => this.culturi = []
     });
   }
@@ -652,8 +656,10 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   }
 
   loadSurse(parcelaId: number) {
-    this.sursaApaService.getSurse(parcelaId).subscribe({
-      next: data => this.surse = data || [],
+    this.sursaApaService.getSurse(parcelaId, 0, 1000).subscribe({
+      next: (response) => {
+        this.surse = response.content || [];
+      },
       error: () => this.surse = []
     });
   }

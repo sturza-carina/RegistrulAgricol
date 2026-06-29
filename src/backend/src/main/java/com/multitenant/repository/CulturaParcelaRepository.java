@@ -6,9 +6,12 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Repository
 public interface CulturaParcelaRepository extends JpaRepository<CulturaParcela, Long> {
 
-    List<CulturaParcela> findByParcela_Id(Long parcelaId);
+    Page<CulturaParcela> findByParcela_Id(Long parcelaId, Pageable pageable);
 
 }

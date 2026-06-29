@@ -92,12 +92,12 @@ class UatServiceTest {
                 buildPublicUat("1", "A", "X", "Municipiu"),
                 buildPublicUat("2", "B", "Y", "Comună")
         );
-        when(publicUatRepository.findAll()).thenReturn(list);
+        when(publicUatRepository.findByTenantIdIsNull()).thenReturn(list);
 
         List<PublicUat> result = uatService.getAllPublicUats();
 
         assertThat(result).hasSize(2);
-        verify(publicUatRepository).findAll();
+        verify(publicUatRepository).findByTenantIdIsNull();
     }
 
     // ── updatePublicUat ──────────────────────────────────────────────────────
@@ -174,7 +174,6 @@ class UatServiceTest {
     void assignUatToTenant_success_copiesFromPublic() {
         PublicUat globalUat = buildPublicUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
         when(publicUatRepository.findByCodSiruta("12345")).thenReturn(Optional.of(globalUat));
-        when(uatRepository.existsByCodSiruta("12345")).thenReturn(false);
         when(uatRepository.save(any(Uat.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Uat result = uatService.assignUatToTenant("12345");
@@ -196,12 +195,16 @@ class UatServiceTest {
     @Test
     void assignUatToTenant_alreadyAssigned_throwsConflict() {
         PublicUat globalUat = buildPublicUat("12345", "Cluj-Napoca", "Cluj", "Municipiu");
+        globalUat.setTenantId("cluj");
         when(publicUatRepository.findByCodSiruta("12345")).thenReturn(Optional.of(globalUat));
-        when(uatRepository.existsByCodSiruta("12345")).thenReturn(true);
 
-        assertThatThrownBy(() -> uatService.assignUatToTenant("12345"))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("already assigned");
+        try (var mockedTenantContext = mockStatic(com.multitenant.config.tenant.TenantContext.class)) {
+            mockedTenantContext.when(com.multitenant.config.tenant.TenantContext::getCurrentTenant).thenReturn("cluj");
+            
+            assertThatThrownBy(() -> uatService.assignUatToTenant("12345"))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .hasMessageContaining("already assigned");
+        }
     }
 
     // ── removeUatFromTenant ──────────────────────────────────────────────────

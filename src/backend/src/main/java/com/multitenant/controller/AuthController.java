@@ -1,11 +1,14 @@
 package com.multitenant.controller;
 
-import com.multitenant.payload.JwtResponse;
+import com.multitenant.payload.UserInfoResponse;
 import com.multitenant.payload.LoginRequest;
 import com.multitenant.payload.ImpersonateRequest;
 import com.multitenant.security.JwtUtils;
 import com.multitenant.security.UserDetailsImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@Slf4j
 public class AuthController {
 
     @GetMapping("/me")
@@ -45,7 +49,22 @@ public class AuthController {
         
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-        return ResponseEntity.ok(new JwtResponse(jwt));
+        ResponseCookie jwtCookie = ResponseCookie.from("jwt", jwt)
+                .httpOnly(true)
+                .secure(false) // Set to true in production if using HTTPS
+                .path("/")
+                .maxAge(24 * 60 * 60)
+                .sameSite("Lax")
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
+                .body(new UserInfoResponse(
+                        userDetails.getId(),
+                        userDetails.getUsername(),
+                        userDetails.getRole(),
+                        userDetails.getTenantId()
+                ));
     }
 
     @PostMapping("/impersonate")
@@ -57,7 +76,7 @@ public class AuthController {
         }
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         
-        System.out.println("AUDIT: SuperAdmin " + userDetails.getUsername() + " impersonating tenant " + request.getTenantId());
+        log.info("AUDIT: SuperAdmin {} impersonating tenant {}", userDetails.getUsername(), request.getTenantId());
         
         UserDetailsImpl impersonatedDetails = new UserDetailsImpl(
                 userDetails.getId(),
@@ -74,7 +93,35 @@ public class AuthController {
                 
         String jwt = jwtUtils.generateJwtToken(newAuth);
         
-        return ResponseEntity.ok(new JwtResponse(jwt));
+        ResponseCookie jwtCookie = ResponseCookie.from("jwt", jwt)
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(24 * 60 * 60)
+                .sameSite("Lax")
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
+                .body(new UserInfoResponse(
+                        impersonatedDetails.getId(),
+                        impersonatedDetails.getUsername(),
+                        impersonatedDetails.getRole(),
+                        impersonatedDetails.getTenantId()
+                ));
+    }
+
+    @PostMapping("/signout")
+    public ResponseEntity<?> logoutUser() {
+        ResponseCookie cookie = ResponseCookie.from("jwt", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body("Signed out successfully!");
     }
 }
-

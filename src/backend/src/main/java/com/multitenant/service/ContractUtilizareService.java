@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.time.LocalDate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 public class ContractUtilizareService {
@@ -28,11 +30,11 @@ public class ContractUtilizareService {
         this.persoanaRepository = persoanaRepository;
     }
 
-    public List<ContractUtilizare> getAllContracts(String uatCode) {
+    public Page<ContractUtilizare> getAllContracts(String uatCode, Pageable pageable) {
         if (uatCode != null && !uatCode.isBlank()) {
-            return contractUtilizareRepository.findByUatCode(uatCode);
+            return contractUtilizareRepository.findByUatCode(uatCode, pageable);
         }
-        return contractUtilizareRepository.findAll();
+        return contractUtilizareRepository.findAll(pageable);
     }
 
     public ContractUtilizare getContractById(Long id) {

@@ -1,5 +1,6 @@
 package com.multitenant.controller;
 
+import com.multitenant.annotation.TenantRequired;
 import com.multitenant.model.registru.Teren;
 import com.multitenant.service.TerenService;
 import com.multitenant.dto.TerenWithParcelaDTO;
@@ -9,11 +10,15 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/terenuri")
 @SuppressWarnings("null")
+@PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
+@TenantRequired
 public class TerenController {
 
     private final TerenService terenService;
@@ -23,35 +28,23 @@ public class TerenController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllTerenuri() {
-        if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
-            return ResponseEntity.ok(java.util.Collections.emptyList());
-        }
-        return ResponseEntity.ok(terenService.getAllTerenuri());
+    public ResponseEntity<?> getAllTerenuri(Pageable pageable) {
+        return ResponseEntity.ok(terenService.getAllTerenuri(pageable));
     }
 
     @GetMapping("/gospodarie/{gospodarieId}")
-    public ResponseEntity<?> getTerenByGospodarieId(@PathVariable Long gospodarieId) {
-        if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
-            return ResponseEntity.noContent().build();
-        }
-        List<Teren> terenuri = terenService.getTerenByGospodarieId(gospodarieId);
+    public ResponseEntity<?> getTerenByGospodarieId(@PathVariable Long gospodarieId, Pageable pageable) {
+        Page<Teren> terenuri = terenService.getTerenByGospodarieId(gospodarieId, pageable);
         return ResponseEntity.ok(terenuri);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getTerenById(@PathVariable Long id) {
-        if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot fetch a Teren outside of a specific tenant context.");
-        }
         return ResponseEntity.ok(terenService.getTerenById(id));
     }
 
     @PostMapping
     public ResponseEntity<?> createTeren(@Valid @RequestBody TerenCreateDTO dto) {
-        if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot create a Teren outside of a specific tenant context.");
-        }
         try {
             return ResponseEntity.ok(terenService.createTerenFromDTO(dto));
         } catch (Exception e) {
@@ -61,26 +54,18 @@ public class TerenController {
 
     @PostMapping("/with-parcela")
     public ResponseEntity<?> createTerenWithParcela(@Valid @RequestBody TerenWithParcelaDTO dto) {
-        if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot create a Teren outside of a specific tenant context.");
-        }
         return ResponseEntity.ok(terenService.createTerenWithParcela(dto));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateTeren(@PathVariable Long id, @Valid @RequestBody Teren teren) {
-        if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot update a Teren outside of a specific tenant context.");
-        }
         return ResponseEntity.ok(terenService.updateTeren(id, teren));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteTeren(@PathVariable Long id) {
-        if ("public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot delete a Teren outside of a specific tenant context.");
-        }
         terenService.deleteTeren(id);
         return ResponseEntity.ok().build();
     }
 }
+

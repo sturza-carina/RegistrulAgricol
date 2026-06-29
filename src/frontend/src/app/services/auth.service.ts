@@ -2,13 +2,11 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 
-export interface JwtResponse {
-  token: string;
-  // Extracted from token locally
-  id?: number;
-  username?: string;
-  role?: string;
-  tenantId?: string;
+export interface UserInfo {
+  id: number;
+  username: string;
+  role: string;
+  tenantId: string;
 }
 
 @Injectable({
@@ -16,7 +14,7 @@ export interface JwtResponse {
 })
 export class AuthService {
   private apiUrl = '/api/auth';
-  currentUserSubject = new BehaviorSubject<JwtResponse | null>(null);
+  currentUserSubject = new BehaviorSubject<UserInfo | null>(null);
   public currentUser = this.currentUserSubject.asObservable();
   
   impersonatedTenantSubject = new BehaviorSubject<string | null>(null);
@@ -26,65 +24,56 @@ export class AuthService {
     const userStr = localStorage.getItem('currentUser');
     if (userStr) {
       const parsed = JSON.parse(userStr);
-      if (parsed && parsed.token) {
-        this.currentUserSubject.next(this.decodeToken(parsed.token));
+      if (parsed && parsed.id) {
+        this.currentUserSubject.next(parsed);
       }
     }
   }
 
-  private decodeToken(token: string): JwtResponse {
-    try {
-      const payloadBase64 = token.split('.')[1];
-      const payloadJson = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
-      const claims = JSON.parse(payloadJson);
-      return {
-        token,
-        id: claims.userId,
-        username: claims.sub,
-        role: claims.role,
-        tenantId: claims.tenantId
-      };
-    } catch (e) {
-      console.error('Error decoding JWT token', e);
-      return { token };
-    }
-  }
-
-  login(credentials: any): Observable<JwtResponse> {
-    return this.http.post<JwtResponse>(`${this.apiUrl}/signin`, credentials)
+  login(credentials: any): Observable<UserInfo> {
+    return this.http.post<UserInfo>(`${this.apiUrl}/signin`, credentials)
       .pipe(
-        tap(response => {
-          const user = this.decodeToken(response.token);
-          localStorage.setItem('currentUser', JSON.stringify({ token: response.token }));
+        tap(user => {
+          localStorage.setItem('currentUser', JSON.stringify(user));
           this.currentUserSubject.next(user);
         })
       );
   }
 
   logout() {
+    this.http.post(`${this.apiUrl}/signout`, {}, { responseType: 'text' }).subscribe({
+      next: () => {
+        this.clearLocalSession();
+      },
+      error: (err) => {
+        console.error('Logout failed', err);
+        this.clearLocalSession();
+      }
+    });
+  }
+
+  private clearLocalSession() {
     localStorage.removeItem('currentUser');
     this.currentUserSubject.next(null);
     this.impersonatedTenantSubject.next(null);
   }
 
-  setImpersonation(tenantId: string): Observable<JwtResponse> {
-    return this.http.post<JwtResponse>(`${this.apiUrl}/impersonate`, { tenantId })
+  setImpersonation(tenantId: string): Observable<UserInfo> {
+    return this.http.post<UserInfo>(`${this.apiUrl}/impersonate`, { tenantId })
       .pipe(
-        tap(response => {
-          const user = this.decodeToken(response.token);
-          localStorage.setItem('currentUser', JSON.stringify({ token: response.token }));
+        tap(user => {
+          localStorage.setItem('currentUser', JSON.stringify(user));
           this.currentUserSubject.next(user);
           this.impersonatedTenantSubject.next(tenantId);
         })
       );
   }
 
-  stopImpersonation(): Observable<JwtResponse> {
-    return this.http.post<JwtResponse>(`${this.apiUrl}/impersonate`, { tenantId: 'public' })
+  stopImpersonation(): Observable<UserInfo> {
+    return this.http.post<UserInfo>(`${this.apiUrl}/impersonate`, { tenantId: 'public' })
       .pipe(
-        tap(response => {
-          const user = this.decodeToken(response.token);
-          localStorage.setItem('currentUser', JSON.stringify({ token: response.token }));
+        tap(user => {
+          localStorage.setItem('currentUser', JSON.stringify(user));
           this.currentUserSubject.next(user);
           this.impersonatedTenantSubject.next(null);
         })
@@ -95,3 +84,4 @@ export class AuthService {
     return this.impersonatedTenantSubject.value || this.currentUserSubject.value?.tenantId || '';
   }
 }
+

@@ -16,6 +16,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 /**
  * Serviciu pentru gestionarea efectivelor de animale crescute în grup (păsări, albine etc.).
@@ -116,10 +118,9 @@ public class EfectivGrupService {
     }
 
     @Transactional(readOnly = true)
-    public List<EfectivGrupDTO> getAll() {
-        return efectivGrupRepository.findAll().stream()
-                .map(entity -> modelMapper.map(entity, EfectivGrupDTO.class))
-                .collect(Collectors.toList());
+    public Page<EfectivGrupDTO> getAll(Pageable pageable) {
+        return efectivGrupRepository.findAll(pageable)
+                .map(entity -> modelMapper.map(entity, EfectivGrupDTO.class));
     }
 
     @Transactional(readOnly = true)
@@ -131,10 +132,9 @@ public class EfectivGrupService {
 
     /** Returnează toate snapshot-urile pentru o gospodărie (istoricul complet al efectivului). */
     @Transactional(readOnly = true)
-    public List<EfectivGrupDTO> getHistoryByGospodarieId(Long gospodarieId) {
-        return efectivGrupRepository.findByGospodarieIdOrderByDataInregistrareDesc(gospodarieId).stream()
-                .map(entity -> modelMapper.map(entity, EfectivGrupDTO.class))
-                .collect(Collectors.toList());
+    public Page<EfectivGrupDTO> getHistoryByGospodarieId(Long gospodarieId, Pageable pageable) {
+        return efectivGrupRepository.findByGospodarieIdOrderByDataInregistrareDesc(gospodarieId, pageable)
+                .map(entity -> modelMapper.map(entity, EfectivGrupDTO.class));
     }
 
     /** Returnează cel mai recent snapshot per specie pentru o gospodărie (starea curentă). */
@@ -156,9 +156,8 @@ public class EfectivGrupService {
     }
 
     @Transactional(readOnly = true)
-    public List<EfectivGrupDTO> getByProprietarId(Long proprietarId) {
-        return efectivGrupRepository.findByProprietarId(proprietarId).stream()
-                .map(entity -> modelMapper.map(entity, EfectivGrupDTO.class))
-                .collect(Collectors.toList());
+    public Page<EfectivGrupDTO> getByProprietarId(Long proprietarId, Pageable pageable) {
+        return efectivGrupRepository.findByProprietarId(proprietarId, pageable)
+                .map(entity -> modelMapper.map(entity, EfectivGrupDTO.class));
     }
 }

@@ -8,9 +8,12 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Repository
 public interface CategorieFolosintaRepository extends JpaRepository<CategorieFolosinta, Long> {
 
     @Query("SELECT c FROM CategorieFolosinta c WHERE c.teren.id = :terenId")
-    List<CategorieFolosinta> findByTerenId(@Param("terenId") Long terenId);
+    Page<CategorieFolosinta> findByTerenId(@Param("terenId") Long terenId, Pageable pageable);
 }

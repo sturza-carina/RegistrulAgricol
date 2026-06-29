@@ -1,5 +1,6 @@
 package com.multitenant.controller;
 
+import com.multitenant.annotation.TenantRequired;
 import com.multitenant.dto.ContractUtilizareDTO;
 import com.multitenant.model.registru.ContractUtilizare;
 import com.multitenant.service.ContractUtilizareService;
@@ -8,9 +9,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import com.multitenant.security.UserDetailsImpl;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api/contracte")
+@PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
+@TenantRequired
 public class ContractUtilizareController {
 
     private final ContractUtilizareService contractUtilizareService;
@@ -19,34 +23,18 @@ public class ContractUtilizareController {
         this.contractUtilizareService = contractUtilizareService;
     }
 
-    private boolean isPublicContext() {
-        return "public".equals(com.multitenant.config.tenant.TenantContext.getCurrentTenant());
-    }
-
     @GetMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
-    public ResponseEntity<?> getAllContracts(@RequestParam(required = false) String uatCode) {
-        if (isPublicContext()) {
-            return ResponseEntity.badRequest().body("Trebuie să selectați un context de UAT/Tenant.");
-        }
-        return ResponseEntity.ok(contractUtilizareService.getAllContracts(uatCode));
+    public ResponseEntity<?> getAllContracts(@RequestParam(required = false) String uatCode, Pageable pageable) {
+        return ResponseEntity.ok(contractUtilizareService.getAllContracts(uatCode, pageable));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> getContractById(@PathVariable Long id) {
-        if (isPublicContext()) {
-            return ResponseEntity.badRequest().body("Trebuie să selectați un context de UAT/Tenant.");
-        }
         return ResponseEntity.ok(contractUtilizareService.getContractById(id));
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> createContract(@RequestBody ContractUtilizareDTO contract) {
-        if (isPublicContext()) {
-            return ResponseEntity.badRequest().body("Nu se poate crea un contract în afara unui context de UAT/Tenant.");
-        }
         try {
             UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             return ResponseEntity.ok(contractUtilizareService.createContract(contract, userDetails.getId()));
@@ -57,11 +45,7 @@ public class ContractUtilizareController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> updateContract(@PathVariable Long id, @RequestBody ContractUtilizareDTO contract) {
-        if (isPublicContext()) {
-            return ResponseEntity.badRequest().body("Nu se poate edita un contract în afara unui context de UAT/Tenant.");
-        }
         try {
             UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             return ResponseEntity.ok(contractUtilizareService.updateContract(id, contract, userDetails.getId()));
@@ -71,11 +55,7 @@ public class ContractUtilizareController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_USER')")
     public ResponseEntity<?> deleteContract(@PathVariable Long id) {
-        if (isPublicContext()) {
-            return ResponseEntity.badRequest().body("Nu se poate șterge un contract în afara unui context de UAT/Tenant.");
-        }
         try {
             contractUtilizareService.deleteContract(id);
             return ResponseEntity.ok().build();
@@ -84,3 +64,4 @@ public class ContractUtilizareController {
         }
     }
 }
+

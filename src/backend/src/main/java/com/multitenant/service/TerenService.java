@@ -11,6 +11,8 @@ import com.multitenant.dto.TerenCreateDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 import org.springframework.lang.NonNull;
 
@@ -28,12 +30,12 @@ public class TerenService {
         this.gospodarieRepository = gospodarieRepository;
     }
 
-    public List<Teren> getAllTerenuri() {
-        return terenRepository.findAll();
+    public Page<Teren> getAllTerenuri(Pageable pageable) {
+        return terenRepository.findAll(pageable);
     }
 
-    public List<Teren> getTerenByGospodarieId(Long gospodarieId) {
-        return terenRepository.findByGospodarieId(gospodarieId);
+    public Page<Teren> getTerenByGospodarieId(Long gospodarieId, Pageable pageable) {
+        return terenRepository.findByGospodarieId(gospodarieId, pageable);
     }
 
     public Teren getTerenById(@NonNull Long id) {

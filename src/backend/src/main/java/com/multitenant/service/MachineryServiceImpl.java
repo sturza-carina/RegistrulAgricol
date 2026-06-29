@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -19,23 +21,19 @@ public class MachineryServiceImpl implements MachineryService {
     private final GospodarieRepository gospodarieRepository;
 
     @Override
-    public List<MachineryDTO> getAll() {
-        return machineryRepository.findAll()
-                .stream()
-                .map(this::toDto)
-                .toList();
+    public Page<MachineryDTO> getAll(Pageable pageable) {
+        return machineryRepository.findAll(pageable)
+                .map(this::toDto);
     }
 
     @Override
-    public List<MachineryDTO> getAllByGospodarie(Long id) {
+    public Page<MachineryDTO> getAllByGospodarie(Long id, Pageable pageable) {
         if (id == null) {
             throw new IllegalArgumentException("Gospodarie id cannot be null");
         }
 
-        return machineryRepository.findByGospodarieId(id)
-                .stream()
-                .map(this::toDto)
-                .toList();
+        return machineryRepository.findByGospodarieId(id, pageable)
+                .map(this::toDto);
     }
 
     @Override

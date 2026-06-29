@@ -43,8 +43,14 @@ export class GenericTableComponent implements OnInit, OnChanges {
   @Input() emptyMessage: string = 'Nicio înregistrare găsită.';
   @Input() primaryActionText?: string;
   
+  @Input() serverSide: boolean = false;
+  @Input() totalServerPages: number = 1;
+  @Input() currentServerPage: number = 1;
+  
   @Output() rowClick = new EventEmitter<any>();
   @Output() primaryAction = new EventEmitter<void>();
+  @Output() pageChange = new EventEmitter<number>();
+  @Output() filterChange = new EventEmitter<Record<string, any>>();
 
   filteredData: any[] = [];
   currentPage = 1;
@@ -52,12 +58,21 @@ export class GenericTableComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     this.initFilters();
-    this.applyFilters();
+    if (!this.serverSide) {
+      this.applyFilters();
+    }
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['data'] && this.data) {
-      this.applyFilters();
+      if (!this.serverSide) {
+        this.applyFilters();
+      } else {
+        this.filteredData = this.data;
+      }
+    }
+    if (changes['currentServerPage']) {
+      this.currentPage = this.currentServerPage;
     }
   }
 
@@ -70,6 +85,11 @@ export class GenericTableComponent implements OnInit, OnChanges {
   }
 
   applyFilters() {
+    if (this.serverSide) {
+      this.filterChange.emit(this.filterValues);
+      return;
+    }
+
     let result = this.data || [];
 
     if (this.filters && this.filters.length > 0) {
@@ -100,20 +120,38 @@ export class GenericTableComponent implements OnInit, OnChanges {
   }
 
   get paginatedItems() {
+    if (this.serverSide) {
+      return this.data;
+    }
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     return this.filteredData.slice(startIndex, startIndex + this.itemsPerPage);
   }
 
   get totalPages() {
+    if (this.serverSide) {
+      return this.totalServerPages;
+    }
     return Math.ceil(this.filteredData.length / this.itemsPerPage) || 1;
   }
 
   nextPage() {
-    if (this.currentPage < this.totalPages) this.currentPage++;
+    if (this.currentPage < this.totalPages) {
+      if (this.serverSide) {
+        this.pageChange.emit(this.currentPage + 1);
+      } else {
+        this.currentPage++;
+      }
+    }
   }
 
   prevPage() {
-    if (this.currentPage > 1) this.currentPage--;
+    if (this.currentPage > 1) {
+      if (this.serverSide) {
+        this.pageChange.emit(this.currentPage - 1);
+      } else {
+        this.currentPage--;
+      }
+    }
   }
 
   getNestedValue(obj: any, path: string): any {

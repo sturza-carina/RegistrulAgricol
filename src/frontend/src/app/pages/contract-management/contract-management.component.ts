@@ -125,9 +125,9 @@ export class ContractManagementComponent implements OnInit {
     const activeUat = this.uatContextService.getActiveUat();
     const uatCode = activeUat ? activeUat.codSiruta : undefined;
 
-    this.contractService.getAllContracts(uatCode).subscribe({
-      next: (data) => {
-        this.contracts = data;
+    this.contractService.getAllContracts(uatCode, 0, 1000).subscribe({
+      next: (response) => {
+        this.contracts = response.content;
         this.buildFormConfig();
       },
       error: (err) => {
@@ -144,9 +144,9 @@ export class ContractManagementComponent implements OnInit {
       error: (err) => console.error('Eroare terenuri', err)
     });
 
-    this.persoanaService.getAllPersons().subscribe({
-      next: (data) => {
-        this.persoane = data;
+    this.persoanaService.getAllPersons('', '', 0, 1000).subscribe({
+      next: (response) => {
+        this.persoane = response.content;
         this.buildFormConfig();
       },
       error: (err) => console.error('Eroare persoane', err)

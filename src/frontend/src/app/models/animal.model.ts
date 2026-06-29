@@ -1,5 +1,6 @@
 import { Gospodarie } from './gospodarie.model';
 import { Persoana } from './persoana.model';
+import { PaginatedResponse } from './paginated-response.model';
 
 // =========================================================
 // Enums
@@ -68,14 +69,14 @@ export interface EfectivGrup {
 }
 
 export interface ProprietarAnimals {
-  individuals: AnimalIndividual[];
-  groups: EfectivGrup[];
+  individuals: PaginatedResponse<AnimalIndividual>;
+  groups: PaginatedResponse<EfectivGrup>;
 }
 
 export interface GospodarieAnimals {
-  individuals: AnimalIndividual[];
+  individuals: PaginatedResponse<AnimalIndividual>;
   grupuriCurente: EfectivGrup[];   // cel mai recent snapshot per specie
-  grupuriIstorice: EfectivGrup[];  // istoricul complet
+  grupuriIstorice: PaginatedResponse<EfectivGrup>;  // istoricul complet
 }
 
 export interface EvenimentAnimal {

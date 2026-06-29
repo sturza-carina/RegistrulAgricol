@@ -110,16 +110,16 @@ export class EfectivGrupFormComponent implements OnInit {
   }
 
   loadDropdowns() {
-    this.gospodarieService.getAllGospodarii().subscribe({
-      next: (data) => {
-        this.gospodariiList = data;
+    this.gospodarieService.getAllGospodarii(undefined, 0, 1000).subscribe({
+      next: (response) => {
+        this.gospodariiList = response.content;
         this.updateFormConfig();
       },
       error: (err) => console.error('Error fetching households', err)
     });
-    this.persoanaService.getAllPersons().subscribe({
-      next: (data) => {
-        this.personsList = data;
+    this.persoanaService.getAllPersons('', '', 0, 1000).subscribe({
+      next: (response) => {
+        this.personsList = response.content;
         this.updateFormConfig();
       },
       error: (err) => console.error('Error fetching persons', err)

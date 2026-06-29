@@ -115,9 +115,9 @@ export class GospodarieDetailsComponent implements OnInit {
       this.updateBreadcrumbs();
     });
 
-    this.terenService.getTerenByGospodarieId(this.gospodarieId).subscribe({
-      next: (terenuri) => {
-        this.terenuri = (terenuri || []).sort((a, b) => (b.id || 0) - (a.id || 0));
+    this.terenService.getTerenByGospodarieId(this.gospodarieId, 0, 1000).subscribe({
+      next: (response) => {
+        this.terenuri = response.content;
         this.updateTerenuriFilters();
       },
       error: () => {
@@ -125,7 +125,7 @@ export class GospodarieDetailsComponent implements OnInit {
       }
     });
 
-    this.persoanaService.getPersonsByGospodarieId(this.gospodarieId).subscribe(data => this.persoane = data as any[]);
+    this.persoanaService.getPersonsByGospodarieId(this.gospodarieId, 0, 100).subscribe(res => this.persoane = res.content);
   }
 
   updateTerenuriFilters() {
@@ -180,7 +180,8 @@ export class GospodarieDetailsComponent implements OnInit {
   }
 
   loadToatePersoanele() {
-    this.persoanaService.getAllPersons().subscribe(data => {
+    this.persoanaService.getAllPersons('', '', 0, 1000).subscribe(response => {
+      const data = response.content;
       // Filter out persons that are already members
       const existingMemberIds = new Set(this.persoane.map(p => p.id));
       this.toatePersoanele = (data as any[]).filter(p => !existingMemberIds.has(p.id));

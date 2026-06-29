@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AuthService, JwtResponse } from '../services/auth.service';
+import { AuthService, UserInfo } from '../services/auth.service';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 
@@ -15,7 +15,7 @@ import { SidebarComponent } from '../components/sidebar/sidebar.component';
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
-  user: JwtResponse | null = null;
+  user: UserInfo | null = null;
   activeTab: string = 'overview';
   tenants: any[] = [];
 

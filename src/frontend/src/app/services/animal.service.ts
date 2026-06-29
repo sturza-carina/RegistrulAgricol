@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   AnimalIndividual,
@@ -10,6 +10,8 @@ import {
   TransferRequest,
   TransferResponse
 } from '../models/animal.model';
+
+import { PaginatedResponse } from '../models/paginated-response.model';
 
 @Injectable({
   providedIn: 'root'
@@ -23,8 +25,9 @@ export class AnimalService {
   // AnimalIndividual — CRUD
   // -------------------------------------------------------
 
-  getAllIndividuals(): Observable<AnimalIndividual[]> {
-    return this.http.get<AnimalIndividual[]>(`${this.baseApiUrl}/individual`);
+  getAllIndividuals(page: number = 0, size: number = 20): Observable<PaginatedResponse<AnimalIndividual>> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<PaginatedResponse<AnimalIndividual>>(`${this.baseApiUrl}/individual`, { params });
   }
 
   getIndividualById(id: number): Observable<AnimalIndividual> {
@@ -77,8 +80,9 @@ export class AnimalService {
   // EfectivGrup — Snapshot Model
   // -------------------------------------------------------
 
-  getAllGroups(): Observable<EfectivGrup[]> {
-    return this.http.get<EfectivGrup[]>(`${this.baseApiUrl}/grup`);
+  getAllGroups(page: number = 0, size: number = 20): Observable<PaginatedResponse<EfectivGrup>> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<PaginatedResponse<EfectivGrup>>(`${this.baseApiUrl}/grup`, { params });
   }
 
   getGroupById(id: number): Observable<EfectivGrup> {
@@ -96,8 +100,9 @@ export class AnimalService {
     return this.http.post<EfectivGrup>(`${this.baseApiUrl}/grup/${referenceId}/snapshot`, grup);
   }
 
-  getGrupHistory(gospodarieId: number): Observable<EfectivGrup[]> {
-    return this.http.get<EfectivGrup[]>(`${this.baseApiUrl}/grup/${gospodarieId}/history`);
+  getGrupHistory(gospodarieId: number, page: number = 0, size: number = 20): Observable<PaginatedResponse<EfectivGrup>> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<PaginatedResponse<EfectivGrup>>(`${this.baseApiUrl}/grup/${gospodarieId}/history`, { params });
   }
 
   deleteGroup(id: number): Observable<void> {
@@ -108,15 +113,17 @@ export class AnimalService {
   // Combined Queries
   // -------------------------------------------------------
 
-  getAnimalsByProprietar(proprietarId: number): Observable<ProprietarAnimals> {
-    return this.http.get<ProprietarAnimals>(`${this.baseApiUrl}/proprietar/${proprietarId}`);
+  getAnimalsByProprietar(proprietarId: number, page: number = 0, size: number = 20): Observable<ProprietarAnimals> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<ProprietarAnimals>(`${this.baseApiUrl}/proprietar/${proprietarId}`, { params });
   }
 
   /**
    * Returnează animale individuale + efectiv grup (curent + istoric) pentru o gospodărie.
    */
-  getAnimalsByGospodarie(gospodarieId: number): Observable<GospodarieAnimals> {
-    return this.http.get<GospodarieAnimals>(`${this.baseApiUrl}/gospodarie/${gospodarieId}`);
+  getAnimalsByGospodarie(gospodarieId: number, page: number = 0, size: number = 20): Observable<GospodarieAnimals> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<GospodarieAnimals>(`${this.baseApiUrl}/gospodarie/${gospodarieId}`, { params });
   }
 
   /**

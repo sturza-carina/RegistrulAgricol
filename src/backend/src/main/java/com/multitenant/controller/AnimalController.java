@@ -1,6 +1,6 @@
 package com.multitenant.controller;
 
-import com.multitenant.config.tenant.TenantContext;
+import com.multitenant.annotation.TenantRequired;
 import com.multitenant.model.animal.AnimalIndividual;
 import com.multitenant.model.animal.EfectivGrup;
 import com.multitenant.model.animal.EvenimentAnimal;
@@ -11,13 +11,15 @@ import com.multitenant.service.EvenimentAnimalService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
 
 @RestController
 @RequestMapping("/api/animals")
+@PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
+@TenantRequired
 public class AnimalController {
 
     private final AnimalIndividualService animalIndividualService;
@@ -40,47 +42,27 @@ public class AnimalController {
     // =========================================================================
 
     @GetMapping("/individual")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
-    public ResponseEntity<?> getAllIndividuals() {
-        if ("public".equals(TenantContext.getCurrentTenant())) {
-            return ResponseEntity.ok(Collections.emptyList());
-        }
-        return ResponseEntity.ok(animalIndividualService.getAll());
+    public ResponseEntity<?> getAllIndividuals(Pageable pageable) {
+        return ResponseEntity.ok(animalIndividualService.getAll(pageable));
     }
 
     @GetMapping("/individual/{id}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> getIndividualById(@PathVariable Long id) {
-        if ("public".equals(TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot fetch outside tenant context.");
-        }
         return ResponseEntity.ok(animalIndividualService.getById(id));
     }
 
     @PostMapping("/individual")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> createIndividual(@RequestBody AnimalIndividual animal) {
-        if ("public".equals(TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot create outside tenant context.");
-        }
         return ResponseEntity.ok(animalIndividualService.create(animal));
     }
 
     @PutMapping("/individual/{id}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> updateIndividual(@PathVariable Long id, @RequestBody AnimalIndividual animal) {
-        if ("public".equals(TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot update outside tenant context.");
-        }
         return ResponseEntity.ok(animalIndividualService.update(id, animal));
     }
 
     @DeleteMapping("/individual/{id}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> deleteIndividual(@PathVariable Long id) {
-        if ("public".equals(TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot delete outside tenant context.");
-        }
         animalIndividualService.delete(id);
         return ResponseEntity.ok().build();
     }
@@ -89,31 +71,15 @@ public class AnimalController {
     // AnimalIndividual — Timeline (Evenimente)
     // =========================================================================
 
-    /**
-     * POST /api/animals/individual/{id}/evenimente
-     * Adaugă un eveniment nou în istoricul unui animal (NASTERE, TRATAMENT_VETERINAR, VANZARE etc.)
-     */
     @PostMapping("/individual/{id}/evenimente")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> adaugaEveniment(
             @PathVariable Long id,
             @RequestBody EvenimentAnimal eveniment) {
-        if ("public".equals(TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot create outside tenant context.");
-        }
         return ResponseEntity.ok(evenimentAnimalService.adaugaEveniment(id, eveniment));
     }
 
-    /**
-     * GET /api/animals/individual/{id}/evenimente
-     * Returnează timeline-ul complet al unui animal, ordonat descrescător după dată.
-     */
     @GetMapping("/individual/{id}/evenimente")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> getTimeline(@PathVariable Long id) {
-        if ("public".equals(TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot fetch outside tenant context.");
-        }
         return ResponseEntity.ok(evenimentAnimalService.getTimeline(id));
     }
 
@@ -121,25 +87,14 @@ public class AnimalController {
     // AnimalIndividual — Cross-Tenant Transfer
     // =========================================================================
 
-    /**
-     * POST /api/animals/individual/{id}/transfer
-     * Transferă un animal individual dintr-un tenant în altul.
-     * Accesibil tuturor rolurilor (USER, ADMIN, SUPER_ADMIN) conform cerințelor de business.
-     *
-     * Body: { destinatarTenantId, destinatarGospodarieId, destinatarProprietarId, detaliiTransfer? }
-     */
     @PostMapping("/individual/{id}/transfer")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> transferAnimal(
             @PathVariable Long id,
             @RequestBody CrossTenantTransferService.TransferRequest request) {
-        if ("public".equals(TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot transfer outside tenant context.");
-        }
         Long newAnimalId = transferService.transferAnimal(id, request);
         Map<String, Object> result = new HashMap<>();
         result.put("message", "Transfer finalizat cu succes.");
-        result.put("sourceTenant", TenantContext.getCurrentTenant());
+        result.put("sourceTenant", com.multitenant.config.tenant.TenantContext.getCurrentTenant());
         result.put("destinatarTenantId", request.destinatarTenantId());
         result.put("newAnimalId", newAnimalId);
         return ResponseEntity.ok(result);
@@ -150,65 +105,32 @@ public class AnimalController {
     // =========================================================================
 
     @GetMapping("/grup")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
-    public ResponseEntity<?> getAllGroups() {
-        if ("public".equals(TenantContext.getCurrentTenant())) {
-            return ResponseEntity.ok(Collections.emptyList());
-        }
-        return ResponseEntity.ok(efectivGrupService.getAll());
+    public ResponseEntity<?> getAllGroups(Pageable pageable) {
+        return ResponseEntity.ok(efectivGrupService.getAll(pageable));
     }
 
     @GetMapping("/grup/{id}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> getGroupById(@PathVariable Long id) {
-        if ("public".equals(TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot fetch outside tenant context.");
-        }
         return ResponseEntity.ok(efectivGrupService.getById(id));
     }
 
     @PostMapping("/grup")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> createGroup(@RequestBody EfectivGrup grup) {
-        if ("public".equals(TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot create outside tenant context.");
-        }
         return ResponseEntity.ok(efectivGrupService.create(grup));
     }
 
-    /**
-     * PUT /api/animals/grup/{id}/snapshot
-     * Adaugă un snapshot nou (creează un rând nou cu data curentă).
-     * NU modifică rândul existent — modelul este append-only (ANSVSA traceability).
-     */
     @PostMapping("/grup/{id}/snapshot")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> addGrupSnapshot(@PathVariable Long id, @RequestBody EfectivGrup grup) {
-        if ("public".equals(TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot update outside tenant context.");
-        }
         return ResponseEntity.ok(efectivGrupService.addSnapshot(id, grup));
     }
 
-    /**
-     * GET /api/animals/grup/{gospodarieId}/history
-     * Returnează istoricul complet al efectivelor de grup pentru o gospodărie.
-     */
     @GetMapping("/grup/{gospodarieId}/history")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
-    public ResponseEntity<?> getGrupHistory(@PathVariable Long gospodarieId) {
-        if ("public".equals(TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot fetch outside tenant context.");
-        }
-        return ResponseEntity.ok(efectivGrupService.getHistoryByGospodarieId(gospodarieId));
+    public ResponseEntity<?> getGrupHistory(@PathVariable Long gospodarieId, Pageable pageable) {
+        return ResponseEntity.ok(efectivGrupService.getHistoryByGospodarieId(gospodarieId, pageable));
     }
 
     @DeleteMapping("/grup/{id}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<?> deleteGroup(@PathVariable Long id) {
-        if ("public".equals(TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot delete outside tenant context.");
-        }
         efectivGrupService.delete(id);
         return ResponseEntity.ok().build();
     }
@@ -217,37 +139,21 @@ public class AnimalController {
     // Combined Queries
     // =========================================================================
 
-    /**
-     * GET /api/animals/proprietar/{proprietarId}
-     * Returnează toate animalele (individuale + grupuri) ale unui proprietar.
-     */
     @GetMapping("/proprietar/{proprietarId}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
-    public ResponseEntity<?> getAnimalsByProprietar(@PathVariable Long proprietarId) {
-        if ("public".equals(TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot fetch outside tenant context.");
-        }
+    public ResponseEntity<?> getAnimalsByProprietar(@PathVariable Long proprietarId, Pageable pageable) {
         Map<String, Object> result = new HashMap<>();
-        result.put("individuals", animalIndividualService.getByProprietarId(proprietarId));
-        result.put("groups", efectivGrupService.getByProprietarId(proprietarId));
+        result.put("individuals", animalIndividualService.getByProprietarId(proprietarId, pageable));
+        result.put("groups", efectivGrupService.getByProprietarId(proprietarId, pageable));
         return ResponseEntity.ok(result);
     }
 
-    /**
-     * GET /api/animals/gospodarie/{gospodarieId}
-     * Returnează toate animalele (individuale + ultimul snapshot per specie de grup)
-     * dintr-o gospodărie specificată. Necesar pentru view-ul gospodărie-details.
-     */
     @GetMapping("/gospodarie/{gospodarieId}")
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_SUPER_ADMIN')")
-    public ResponseEntity<?> getAnimalsByGospodarie(@PathVariable Long gospodarieId) {
-        if ("public".equals(TenantContext.getCurrentTenant())) {
-            return ResponseEntity.badRequest().body("Cannot fetch outside tenant context.");
-        }
+    public ResponseEntity<?> getAnimalsByGospodarie(@PathVariable Long gospodarieId, Pageable pageable) {
         Map<String, Object> result = new HashMap<>();
-        result.put("individuals", animalIndividualService.getByGospodarieId(gospodarieId));
+        result.put("individuals", animalIndividualService.getByGospodarieId(gospodarieId, pageable));
         result.put("grupuriCurente", efectivGrupService.getLatestByGospodarieId(gospodarieId));
-        result.put("grupuriIstorice", efectivGrupService.getHistoryByGospodarieId(gospodarieId));
+        result.put("grupuriIstorice", efectivGrupService.getHistoryByGospodarieId(gospodarieId, pageable));
         return ResponseEntity.ok(result);
     }
 }
+
