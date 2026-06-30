@@ -16,5 +16,7 @@ public interface GospodarieRepository extends JpaRepository<Gospodarie, Long> {
 
     Page<Gospodarie> findByUat_CodSirutaOrderByIdDesc(String codSiruta, Pageable pageable);
 
+    List<Gospodarie> findByUat_CodSirutaOrderByIdDesc(String codSiruta);
+
     Page<Gospodarie> findAllByOrderByIdDesc(Pageable pageable);
 }
