@@ -7,6 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -16,6 +17,8 @@ public class UserDetailsImpl implements UserDetails {
 
     private Long id;
     private String username;
+
+    @JsonIgnore
     private String password;
     private String role;
     private String tenantId;
