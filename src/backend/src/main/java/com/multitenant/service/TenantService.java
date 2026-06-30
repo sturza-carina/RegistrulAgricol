@@ -33,7 +33,7 @@ public class TenantService {
                     "A tenant with ID '" + tenantId + "' already exists.");
         }
 
-        String schemaName = "tenant_" + tenantId;
+        String schemaName = "uat_" + tenantId;
 
         // Create schema and run Flyway migrations BEFORE saving to DB
         try {

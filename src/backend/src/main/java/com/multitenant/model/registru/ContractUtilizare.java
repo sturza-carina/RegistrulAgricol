@@ -17,8 +17,8 @@ public class ContractUtilizare {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "teren_id", nullable = false)
-    private Teren teren;
+    @JoinColumn(name = "parcela_id", nullable = false)
+    private Parcela parcela;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "locator_proprietar_id")

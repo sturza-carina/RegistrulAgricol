@@ -16,9 +16,9 @@ import org.springframework.data.domain.Pageable;
 
 @Repository
 public interface ContractUtilizareRepository extends JpaRepository<ContractUtilizare, Long> {
-    Page<ContractUtilizare> findByTerenId(Long terenId, Pageable pageable);
+    Page<ContractUtilizare> findByParcelaId(Long parcelaId, Pageable pageable);
 
-    @Query("SELECT c FROM ContractUtilizare c WHERE c.teren.gospodarie.uat.codSiruta = :uatCode")
+    @Query("SELECT c FROM ContractUtilizare c WHERE c.parcela.teren.gospodarie.uat.codSiruta = :uatCode")
     Page<ContractUtilizare> findByUatCode(@Param("uatCode") String uatCode, Pageable pageable);
 
     @Modifying
