@@ -134,26 +134,22 @@ export class AnimalService {
   }
 
   /**
-   * Returnează gospodăriile dintr-un tenant specific (folosind header-ul X-Tenant-ID),
+   * Returnează gospodăriile dintr-un tenant specific,
    * opțional filtrate după codul SIRUTA al UAT-ului (uatCode).
    */
   getGospodariiByTenant(tenantId: string, uatCode?: string): Observable<any[]> {
-    const params: { [param: string]: string } = {};
+    let params = new HttpParams().set('targetTenantId', tenantId);
     if (uatCode) {
-      params['uatCode'] = uatCode;
+      params = params.set('uatCode', uatCode);
     }
-    return this.http.get<any[]>('/api/gospodarii', {
-      headers: { 'X-Tenant-ID': tenantId },
-      params
-    });
+    return this.http.get<any[]>('/api/transfers/destinations/gospodarii', { params });
   }
 
   /**
-   * Returnează persoanele dintr-un tenant specific (folosind header-ul X-Tenant-ID).
+   * Returnează persoanele dintr-un tenant specific.
    */
   getPersonsByTenant(tenantId: string): Observable<any[]> {
-    return this.http.get<any[]>('/api/persons', {
-      headers: { 'X-Tenant-ID': tenantId }
-    });
+    const params = new HttpParams().set('targetTenantId', tenantId);
+    return this.http.get<any[]>('/api/transfers/destinations/persons', { params });
   }
 }
