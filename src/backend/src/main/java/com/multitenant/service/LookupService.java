@@ -1,5 +1,6 @@
 package com.multitenant.service;
 
+import com.multitenant.dto.TipDocumentDTO;
 import com.multitenant.repository.LookupRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,5 +23,9 @@ public class LookupService {
 
     public List<String> getTipuriSursaApa() {
         return lookupRepository.findAllTipuriSursaApa();
+    }
+
+    public List<TipDocumentDTO> getTipuriDocument() {
+        return lookupRepository.findAllTipuriDocument();
     }
 }

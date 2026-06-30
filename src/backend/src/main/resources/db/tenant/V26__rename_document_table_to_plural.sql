@@ -1,0 +1,1 @@
+ALTER TABLE IF EXISTS document RENAME TO documente;

@@ -1,0 +1,71 @@
+
+<section class="document-shell">
+
+  <div class="modal-overlay" *ngIf="showUploadForm"
+       style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; overflow-y: auto; padding: 20px;">
+    <div class="modal-content card" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; background: var(--card-bg, #fff); padding: 30px; border-radius: var(--radius-lg, 12px); box-shadow: var(--shadow-xl); position: relative;">
+
+      <button (click)="cancelUpload()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted, #6b7280);">&times;</button>
+
+      <h2 style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin-top: 0; margin-bottom: 24px; font-family: 'DM Serif Display', serif;">
+        Încarcă document nou
+      </h2>
+
+      <form (ngSubmit)="submitUpload()">
+        <div style="margin-bottom: 16px;">
+          <label style="display:block; font-size: 13px; font-weight: 500; margin-bottom: 6px;">Tip Document *</label>
+          <select [(ngModel)]="uploadData.tipDocumentId" name="tipDocumentId" required
+                  class="input-field" style="width:100%; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border, #cbd5e1);">
+            <option [ngValue]="null" disabled>Selectează tipul</option>
+            <option *ngFor="let tip of tipuriDocument" [ngValue]="tip.id">{{ tip.denumire }}</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <label style="display:block; font-size: 13px; font-weight: 500; margin-bottom: 6px;">Fișier *</label>
+          <input type="file" (change)="onFileSelected($event)" required
+                 accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                 style="width:100%; padding: 8px 0;">
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <label style="display:block; font-size: 13px; font-weight: 500; margin-bottom: 6px;">Data Emitere</label>
+          <input type="date" [(ngModel)]="uploadData.dataEmitere" name="dataEmitere"
+                 class="input-field" style="width:100%; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border, #cbd5e1);">
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <label style="display:block; font-size: 13px; font-weight: 500; margin-bottom: 6px;">Data Expirare</label>
+          <input type="date" [(ngModel)]="uploadData.dataExpirare" name="dataExpirare"
+                 class="input-field" style="width:100%; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border, #cbd5e1);">
+        </div>
+
+        <div style="margin-bottom: 24px;">
+          <label style="display:block; font-size: 13px; font-weight: 500; margin-bottom: 6px;">Observații</label>
+          <textarea [(ngModel)]="uploadData.observatii" name="observatii" rows="3"
+                    class="input-field" style="width:100%; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border, #cbd5e1);"></textarea>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button type="button" class="btn-secondary" (click)="cancelUpload()">Anulează</button>
+          <button type="submit" class="btn-primary" [disabled]="isUploading">
+            {{ isUploading ? 'Se încarcă...' : 'Încarcă' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="empty-state">Se încarcă documentele...</div>
+
+  <app-generic-table *ngIf="!isLoading"
+                     [data]="documente"
+                     [columns]="columns"
+                     [actions]="actions"
+                     [title]="'Documente'"
+                     [itemsPerPage]="6"
+                     [primaryActionText]="'Încarcă Document'"
+                     (primaryAction)="openUploadForm()">
+  </app-generic-table>
+
+</section>
