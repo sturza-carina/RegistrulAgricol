@@ -2,15 +2,15 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Persoana } from '../models/persoana.model';
-import { Teren } from '../models/teren.model';
+import { Parcela } from '../models/parcela.model';
 import { PaginatedResponse } from '../models/paginated-response.model';
 
-export type TerenRef = Partial<Teren> & { id: number };
+export type ParcelaRef = Partial<Parcela> & { id: number };
 export type PersoanaRef = Partial<Persoana> & { id: number };
 
 export interface ContractUtilizare {
   id?: number;
-  teren?: TerenRef | null;
+  parcela?: ParcelaRef | null;
   locatorProprietar?: PersoanaRef | null;
   locatorUtilizator?: PersoanaRef | null;
   tipContract: string; // ARENDA, COMODAT, CONCESIUNE, INCHIRIERE, ALTELE
@@ -28,7 +28,7 @@ export interface ContractUtilizare {
 }
 
 export interface ContractUtilizareRequest {
-  terenId: number;
+  parcelaId: number;
   locatorProprietarId?: number | null;
   locatorUtilizatorId?: number | null;
   tipContract: string;

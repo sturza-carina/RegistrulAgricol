@@ -39,7 +39,7 @@ export class ContractManagementComponent implements OnInit {
   activeUat: any = null;
 
   contracts: ContractUtilizare[] = [];
-  terenuri: any[] = [];
+  parcele: any[] = [];
   persoane: Persoana[] = [];
 
   creatingContract = false;
@@ -56,14 +56,14 @@ export class ContractManagementComponent implements OnInit {
   columns: TableColumn[] = [
     { field: 'numarContract', header: 'Nr. Contract', type: 'text', format: (val, row) => `${val} (Semnat: ${row.dataSemnare || '-'})` },
     { field: 'tipContract', header: 'Tip', type: 'badge' },
-    { field: 'teren.denumire', header: 'Teren Asoc.', type: 'text', format: (val) => val || '-' },
+    { field: 'parcela.denumire', header: 'Parcela Asoc.', type: 'text', format: (val) => val || '-' },
     { field: 'dataInceput', header: 'Valabilitate', type: 'text', format: (val, row) => `${row.dataInceput || 'N/A'} → ${row.dataSfarsit || 'Nedefinit'}` },
     { field: 'pretArendaRonAn', header: 'Preț Arendă An', type: 'text', format: (val, row) => val ? `${val} RON` : (row.pretArendaGrauKgHa ? `${row.pretArendaGrauKgHa} Kg Grâu/Ha` : '-') },
     { field: 'statusContract', header: 'Status', type: 'badge', badgeClasses: { 'ACTIV': 'active', 'EXPIRAT': 'archived', 'REZILIAT': 'archived', 'SUSPENDAT': 'archived' } }
   ];
 
   filters: TableFilter[] = [
-    { field: 'search', label: 'Căutare', type: 'search', searchFields: ['numarContract', 'teren.denumire'] },
+    { field: 'search', label: 'Căutare', type: 'search', searchFields: ['numarContract', 'parcela.denumire'] },
     { field: 'tipContract', label: 'Tip Contract', type: 'select', options: [{label: 'Toate', value: ''}, ...this.tipuriContract.map(t => ({label: t, value: t}))] },
     { field: 'statusContract', label: 'Status', type: 'select', options: [{label: 'Toate', value: ''}, ...this.statusuriContract.map(s => ({label: s, value: s}))] }
   ];
@@ -106,7 +106,7 @@ export class ContractManagementComponent implements OnInit {
             this.activeUat = null;
             this.selectedTenantId = '';
             this.contracts = [];
-            this.terenuri = [];
+            this.parcele = [];
             this.persoane = [];
           }
         });
@@ -136,12 +136,12 @@ export class ContractManagementComponent implements OnInit {
       }
     });
 
-    this.http.get<any[]>('/api/terenuri').subscribe({
+    this.http.get<any[]>('/api/parcele').subscribe({
       next: (data) => {
-        this.terenuri = data;
+        this.parcele = data;
         this.buildFormConfig();
       },
-      error: (err) => console.error('Eroare terenuri', err)
+      error: (err) => console.error('Eroare parcele', err)
     });
 
     this.persoanaService.getAllPersons('', '', 0, 1000).subscribe({
@@ -154,7 +154,7 @@ export class ContractManagementComponent implements OnInit {
   }
 
   buildFormConfig(): void {
-    const terenOptions = this.terenuri.map(t => ({ label: `${t.denumire} (ID: ${t.id})`, value: t.id }));
+    const parcelaOptions = this.parcele.map(p => ({ label: `${p.denumire} (ID: ${p.id})`, value: p.id }));
     const persoanaOptions = [{ label: '-- Niciun selectat --', value: '' }, ...this.persoane.map(p => ({ label: this.getPersonDisplayName(p), value: p.id }))];
 
     this.formConfig = {
@@ -165,7 +165,7 @@ export class ContractManagementComponent implements OnInit {
           fields: [
             { name: 'numarContract', label: 'Număr Contract', type: 'text', required: true, width: 'half' },
             { name: 'tipContract', label: 'Tip Contract', type: 'select', required: true, width: 'half', options: this.tipuriContract.map(t => ({label: t, value: t})) },
-            { name: 'terenId', label: 'Teren Asociat', type: 'select', required: true, width: 'full', options: [{ label: '-- Alegeți Teren --', value: '' }, ...terenOptions] }
+            { name: 'parcelaId', label: 'Parcela Asociată', type: 'select', required: true, width: 'full', options: [{ label: '-- Alegeți Parcela --', value: '' }, ...parcelaOptions] }
           ]
         },
         {
@@ -233,7 +233,7 @@ export class ContractManagementComponent implements OnInit {
       statusContract: 'ACTIV',
       indexarePret: false,
       esteActiv: true,
-      terenId: '',
+      parcelaId: '',
       locatorProprietarId: '',
       locatorUtilizatorId: ''
     };
@@ -269,7 +269,7 @@ export class ContractManagementComponent implements OnInit {
     this.creatingContract = false;
 
     this.formInitialData = {
-      terenId: contract.teren?.id || '',
+      parcelaId: contract.parcela?.id || '',
       locatorProprietarId: contract.locatorProprietar?.id || '',
       locatorUtilizatorId: contract.locatorUtilizator?.id,
       tipContract: contract.tipContract,
@@ -292,7 +292,7 @@ export class ContractManagementComponent implements OnInit {
 
   saveContract(formVal: any): void {
     const contractPayload: ContractUtilizareRequest = {
-      terenId: +formVal.terenId,
+      parcelaId: +formVal.parcelaId,
       locatorProprietarId: formVal.locatorProprietarId ? +formVal.locatorProprietarId : null,
       locatorUtilizatorId: formVal.locatorUtilizatorId ? +formVal.locatorUtilizatorId : null,
       tipContract: formVal.tipContract,

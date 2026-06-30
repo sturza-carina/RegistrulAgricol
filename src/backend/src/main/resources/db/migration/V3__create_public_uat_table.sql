@@ -1,7 +1,7 @@
 -- Seed default tenants with new schema naming convention: tenant_<id>
 INSERT INTO public.tenants (id, name, schema_name) VALUES
-('cluj', 'Cluj', 'tenant_cluj'),
-('bucuresti', 'Bucuresti', 'tenant_bucuresti');
+('cluj', 'Cluj', 'uat_cluj'),
+('bucuresti', 'Bucuresti', 'uat_bucuresti');
 
 -- Global UAT master registry (managed by Super Admin).
 -- All Romanian UATs are registered here by the Super Admin.

@@ -5,7 +5,7 @@ import com.multitenant.model.registru.ContractUtilizare;
 import com.multitenant.model.registru.StatusContractUtilizare;
 import com.multitenant.model.persoana.Persoana;
 import com.multitenant.repository.ContractUtilizareRepository;
-import com.multitenant.repository.TerenRepository;
+import com.multitenant.repository.ParcelaRepository;
 import com.multitenant.repository.PersoanaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,14 +19,14 @@ import org.springframework.data.domain.Pageable;
 public class ContractUtilizareService {
 
     private final ContractUtilizareRepository contractUtilizareRepository;
-    private final TerenRepository terenRepository;
+    private final ParcelaRepository parcelaRepository;
     private final PersoanaRepository persoanaRepository;
 
     public ContractUtilizareService(ContractUtilizareRepository contractUtilizareRepository,
-                                    TerenRepository terenRepository,
+                                    ParcelaRepository parcelaRepository,
                                     PersoanaRepository persoanaRepository) {
         this.contractUtilizareRepository = contractUtilizareRepository;
-        this.terenRepository = terenRepository;
+        this.parcelaRepository = parcelaRepository;
         this.persoanaRepository = persoanaRepository;
     }
 
@@ -62,7 +62,7 @@ public class ContractUtilizareService {
         }
         ContractUtilizare existing = getContractById(id);
         ContractUtilizare mapped = mapFromDto(dto, existing);
-        existing.setTeren(mapped.getTeren());
+        existing.setParcela(mapped.getParcela());
         existing.setLocatorProprietar(mapped.getLocatorProprietar());
         existing.setLocatorUtilizator(mapped.getLocatorUtilizator());
         existing.setUtilizatorOperareId(currentUserId);
@@ -116,11 +116,11 @@ public class ContractUtilizareService {
     private ContractUtilizare mapFromDto(ContractUtilizareDTO dto, ContractUtilizare target) {
         ContractUtilizare contract = target != null ? target : new ContractUtilizare();
 
-        if (dto.getTerenId() == null) {
-            throw new IllegalArgumentException("Terenul asociat este obligatoriu");
+        if (dto.getParcelaId() == null) {
+            throw new IllegalArgumentException("Parcela asociată este obligatorie");
         }
-        contract.setTeren(terenRepository.findById(dto.getTerenId())
-                .orElseThrow(() -> new RuntimeException("Terenul asociat nu a fost găsit")));
+        contract.setParcela(parcelaRepository.findById(dto.getParcelaId())
+                .orElseThrow(() -> new RuntimeException("Parcela asociată nu a fost găsită")));
 
         contract.setLocatorProprietar(resolvePersoanaId(dto.getLocatorProprietarId(), "Proprietarul locator nu a fost găsit"));
         contract.setLocatorUtilizator(resolvePersoanaId(dto.getLocatorUtilizatorId(), "Utilizatorul locator nu a fost găsit"));

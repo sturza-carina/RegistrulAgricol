@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class ContractUtilizareResponseDTO {
     private Long id;
-    private TerenRef teren;
+    private ParcelaRef parcela;
     private PersoanaRef locatorProprietar;
     private PersoanaRef locatorUtilizator;
     private PersoanaRef utilizatorOperare;
@@ -31,10 +31,10 @@ public class ContractUtilizareResponseDTO {
 
     @Data
     @NoArgsConstructor
-    public static class TerenRef {
+    public static class ParcelaRef {
         private Long id;
         private String denumire;
-        public TerenRef(Long id, String denumire) {
+        public ParcelaRef(Long id, String denumire) {
             this.id = id;
             this.denumire = denumire;
         }
