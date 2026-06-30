@@ -18,7 +18,9 @@ public class GospodarieDTO {
     @Data
     @NoArgsConstructor
     public static class UatRef {
+        private Long id;
         private String codSiruta;
         private String denumire;
+        private String judet;
     }
 }

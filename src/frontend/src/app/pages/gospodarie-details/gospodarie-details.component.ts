@@ -18,6 +18,7 @@ import { TerenFormComponent } from '../teren-form/teren-form.component';
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 import { GenericTableComponent, TableColumn, TableFilter, TableAction } from '../../components/generic-table/generic-table.component';
 import { DocumentManagementComponent } from '../document-management/document-management.component';
+import { GospodarieFormComponent } from '../gospodarie-form/gospodarie-form.component';
 
 @Component({
   selector: 'app-gospodarie-details',
@@ -26,7 +27,7 @@ import { DocumentManagementComponent } from '../document-management/document-man
     PageHeaderComponent, RouterModule, MachineryManagementComponent,
     CladireManagementComponent, PersonFormComponent, AnimalListComponent,
     BreadcrumbsComponent, GenericTableComponent, TerenFormComponent,
-    DocumentManagementComponent
+    DocumentManagementComponent, GospodarieFormComponent
   ],
   templateUrl: './gospodarie-details.component.html',
   styleUrls: ['./gospodarie-details.component.css']
@@ -168,10 +169,6 @@ export class GospodarieDetailsComponent implements OnInit {
     if (this.isAddingMember) {
       this.breadcrumbItems.push({ label: 'Adaugă membrii' });
     }
-  }
-
-  editGospodarie() {
-    this.router.navigate(['/gospodarii/edit', this.gospodarieId]);
   }
 
   addPerson() {

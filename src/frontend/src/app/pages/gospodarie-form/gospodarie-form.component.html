@@ -1,4 +1,12 @@
-<div class="app-shell">
+<ng-container *ngIf="isEmbedded">
+  <div style="padding: 0;">
+    <app-generic-form [config]="formConfig" [initialData]="formInitialData" [isSubmitting]="isSaving"
+      (fieldChange)="onFieldValueChange($event)" (formSubmit)="save($event)" (formCancel)="cancel()">
+    </app-generic-form>
+  </div>
+</ng-container>
+
+<div class="app-shell" *ngIf="!isEmbedded">
   <app-sidebar></app-sidebar>
 
   <main class="main-content">

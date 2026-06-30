@@ -16,32 +16,12 @@
           <span class="badge" [class]="gospodarie.activa ? 'activ' : 'inactiv'" style="margin-left: 10px;">{{ gospodarie.activa ? 'Activă' : 'Inactivă' }}</span>
         </div>
         <div>
-           <button class="btn-primary" (click)="editGospodarie()">
-             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px;">
-               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-             </svg>
-             Editare
-           </button>
+           <!-- Edit button removed as requested -->
         </div>
       </div>
 
       <div class="card" style="margin-bottom: 20px; padding: 20px;" *ngIf="activeTab === 'GENERAL'">
-        <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 16px;">Informații Generale</h3>
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
-          <div>
-            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Tip Gospodărie</div>
-            <div style="font-weight: 500;">{{ gospodarie.tipGospodarie }}</div>
-          </div>
-          <div>
-            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Județ / Localitate</div>
-            <div style="font-weight: 500;">{{ gospodarie.adresa.county || '-' }} / {{ gospodarie.adresa.localitate || '-' }}</div>
-          </div>
-          <div style="grid-column: span 2;">
-            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Adresă Completă</div>
-            <div style="font-weight: 500;">Str. {{ gospodarie.adresa.street || '-' }}, Nr. {{ gospodarie.adresa.streetNumber || '-' }}<span *ngIf="gospodarie.adresa.building">, Bl. {{ gospodarie.adresa.building }}</span><span *ngIf="gospodarie.adresa.staircase">, Sc. {{ gospodarie.adresa.staircase }}</span><span *ngIf="gospodarie.adresa.apartmentNumber">, Ap. {{ gospodarie.adresa.apartmentNumber }}</span></div>
-          </div>
-        </div>
+        <app-gospodarie-form [isEmbedded]="true" [inputGospodarieId]="gospodarieId"></app-gospodarie-form>
       </div>
 
     <!-- TAB: MEMBRI -->

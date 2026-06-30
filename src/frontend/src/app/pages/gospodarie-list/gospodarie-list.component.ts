@@ -47,7 +47,6 @@ export class GospodarieListComponent implements OnInit, OnDestroy {
 
   actions: TableAction[] = [
     { icon: 'view', tooltip: 'Detalii', action: (row) => this.viewDetails(row.id) },
-    { icon: 'edit', tooltip: 'Editare', action: (row) => this.editGospodarie(row.id) },
     { icon: 'delete', tooltip: 'Șterge', action: (row, event) => this.deleteRow(row.id, event) }
   ];
 

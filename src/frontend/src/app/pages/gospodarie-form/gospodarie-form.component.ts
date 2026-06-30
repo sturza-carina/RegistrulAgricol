@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { GospodarieService } from '../../services/gospodarie.service';
@@ -16,10 +16,14 @@ import { FormConfig } from '../../components/generic-form/generic-form.models';
   templateUrl: './gospodarie-form.component.html'
 })
 export class GospodarieFormComponent implements OnInit {
+  @Input() isEmbedded = false;
+  @Input() inputGospodarieId: number | null = null;
+  
   isEditMode = false;
   gospodarieId: number | null = null;
   breadcrumbItems: BreadcrumbItem[] = [];
   isSaving = false;
+  private tenantUats: any[] = [];
 
   judete: string[] = [];
   localitati: any[] = [];
@@ -75,6 +79,14 @@ export class GospodarieFormComponent implements OnInit {
 
   ngOnInit() {
     this.loadJudete();
+    
+    if (this.isEmbedded && this.inputGospodarieId) {
+      this.isEditMode = true;
+      this.gospodarieId = this.inputGospodarieId;
+      this.loadGospodarie(this.gospodarieId);
+      return;
+    }
+
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
@@ -87,9 +99,9 @@ export class GospodarieFormComponent implements OnInit {
           this.formInitialData = {
             ...this.formInitialData,
             county: activeUat.judet,
-            uatId: activeUat.id
+            uatId: String(activeUat.id)
           };
-          this.onJudetChange(activeUat.judet, activeUat.id);
+          this.onJudetChange(activeUat.judet, String(activeUat.id));
         }
       }
       this.updateBreadcrumbs();
@@ -104,13 +116,25 @@ export class GospodarieFormComponent implements OnInit {
     this.formConfig.submitText = this.isEditMode ? 'Actualizează' : 'Salvează';
   }
 
+  shouldLockAddress(): boolean {
+    return this.isEditMode || this.uatContextService.getActiveUat() !== null;
+  }
+
   loadJudete() {
-    this.uatService.getJudete().subscribe(data => {
-      this.judete = data;
+    this.uatService.getTenantUats().subscribe(data => {
+      this.tenantUats = data;
+      const uniqueCounties = Array.from(new Set(data.map(u => u.judet)));
+      this.judete = uniqueCounties as string[];
+      
       const countyField = this.formConfig.sections[1].fields.find(f => f.name === 'county');
       if (countyField) {
-        countyField.options = data.map(j => ({ label: j, value: j }));
+        countyField.options = uniqueCounties.map(j => ({ label: j as string, value: j as string }));
+        countyField.disabled = this.shouldLockAddress();
         this.formConfig = { ...this.formConfig };
+      }
+
+      if (this.formInitialData && this.formInitialData.county) {
+        this.onJudetChange(this.formInitialData.county, this.formInitialData.uatId);
       }
     });
   }
@@ -118,7 +142,7 @@ export class GospodarieFormComponent implements OnInit {
   // Interceptăm evenimentul când formularul generic detectează modificări în câmpuri
   // Notă: Dacă componenta vostră GenericFormComponent expune un eveniment (valueChanges) sau similar,
   // va trebui să legi această metodă în HTML.
-  onJudetChange(judetName: string, selectedUatId: number | null = null) {
+  onJudetChange(judetName: string, selectedUatId: number | string | null = null) {
     this.selectedJudet = judetName;
     const uatField = this.formConfig.sections[1].fields.find(f => f.name === 'uatId');
 
@@ -131,16 +155,15 @@ export class GospodarieFormComponent implements OnInit {
       return;
     }
 
-    this.uatService.getLocalitatiByJudet(judetName).subscribe(data => {
-      this.localitati = data;
-      uatField.disabled = false;
-      uatField.options = data.map(l => ({ label: `${l.denumire} (${l.tipUat})`, value: l.id }));
+    const filteredUats = this.tenantUats.filter(u => u.judet === judetName);
+    this.localitati = filteredUats;
+    uatField.disabled = this.shouldLockAddress();
+    uatField.options = filteredUats.map(l => ({ label: `${l.denumire} (${l.tipUat})`, value: String(l.id) }));
 
-      if (selectedUatId) {
-        this.formInitialData = { ...this.formInitialData, uatId: selectedUatId };
-      }
-      this.formConfig = { ...this.formConfig };
-    });
+    if (selectedUatId) {
+      this.formInitialData = { ...this.formInitialData, uatId: String(selectedUatId) };
+    }
+    this.formConfig = { ...this.formConfig };
   }
 
   onFieldValueChange(event: { fieldName: string, value: any }) {
@@ -156,7 +179,7 @@ export class GospodarieFormComponent implements OnInit {
   loadGospodarie(id: number) {
     this.gospodarieService.getGospodarieById(id).subscribe(data => {
       const county = data.uat?.judet ?? data.adresa?.county ?? '';
-      const uatId = data.uat?.id ?? null;
+      const uatId = data.uat?.id ? String(data.uat.id) : null;
 
       const initData: any = {
         codGospodarie: data.codGospodarie,
@@ -178,7 +201,7 @@ export class GospodarieFormComponent implements OnInit {
 
       this.formInitialData = initData;
 
-      if (county) {
+      if (county && this.tenantUats.length > 0) {
         this.onJudetChange(county, uatId);
       }
     });
@@ -214,7 +237,12 @@ export class GospodarieFormComponent implements OnInit {
       this.gospodarieService.updateGospodarie(this.gospodarieId, payload as any).subscribe({
         next: () => {
           this.isSaving = false;
-          this.router.navigate(['/gospodarii']);
+          if (this.isEmbedded) {
+            alert('Modificările au fost salvate cu succes.');
+            this.loadGospodarie(this.gospodarieId!);
+          } else {
+            this.router.navigate(['/gospodarii']);
+          }
         },
         error: (err) => {
           this.isSaving = false;
@@ -238,6 +266,10 @@ export class GospodarieFormComponent implements OnInit {
   }
 
   cancel() {
-    this.router.navigate(['/gospodarii']);
+    if (this.isEmbedded && this.gospodarieId) {
+      this.loadGospodarie(this.gospodarieId);
+    } else {
+      this.router.navigate(['/gospodarii']);
+    }
   }
 }

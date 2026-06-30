@@ -36,7 +36,9 @@ export class GenericFormComponent implements OnInit, OnChanges, OnDestroy {
       const currentValues = this.formGroup ? this.formGroup.getRawValue() : {};
       this.initForm();
       if (this.formGroup && currentValues) {
-        this.formGroup.patchValue(currentValues, { emitEvent: false });
+        setTimeout(() => {
+          this.formGroup.patchValue(currentValues, { emitEvent: false });
+        });
       }
     }
     // Când config-ul se schimbă din exterior (de exemplu când modificăm opțiunile unui select din părinte)
@@ -56,7 +58,9 @@ export class GenericFormComponent implements OnInit, OnChanges, OnDestroy {
       });
     }
     if (changes['initialData'] && !changes['initialData'].firstChange && this.formGroup) {
-      this.formGroup.patchValue(this.initialData || {}, { emitEvent: false });
+      setTimeout(() => {
+        this.formGroup.patchValue(this.initialData || {}, { emitEvent: false });
+      });
     }
   }
 

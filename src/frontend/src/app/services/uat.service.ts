@@ -19,4 +19,8 @@ export class UatService {
       params: { judet }
     });
   }
+
+  getTenantUats(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/tenant`);
+  }
 }

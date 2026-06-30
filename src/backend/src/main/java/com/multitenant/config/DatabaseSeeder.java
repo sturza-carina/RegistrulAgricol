@@ -172,6 +172,12 @@ public class DatabaseSeeder implements CommandLineRunner {
                         Adresa a = new Adresa();
                         a.setStreet("Str. Observatorului");
                         a.setStreetNumber(String.valueOf(i));
+                        a.setCounty("Cluj");
+                        a.setLocalitate("Cluj-Napoca");
+                        a.setBuilding("C" + i);
+                        a.setStaircase("A");
+                        a.setFloor(i % 4);
+                        a.setApartmentNumber(i * 2);
                         g.setAdresa(a);
                         g.setTipGospodarie(i % 2 == 0 ? TipGospodarie.INDIVIDUALA : TipGospodarie.COLECTIVA);
                         g.setActiva(true);
@@ -257,6 +263,12 @@ public class DatabaseSeeder implements CommandLineRunner {
                         Adresa a = new Adresa();
                         a.setStreet("Calea Victoriei");
                         a.setStreetNumber(String.valueOf(i * 10));
+                        a.setCounty("București");
+                        a.setLocalitate("București Sectorul 1");
+                        a.setBuilding("B" + i);
+                        a.setStaircase("1");
+                        a.setFloor(i % 10);
+                        a.setApartmentNumber(i * 5);
                         g.setAdresa(a);
                         g.setTipGospodarie(i % 2 == 0 ? TipGospodarie.COLECTIVA : TipGospodarie.INDIVIDUALA);
                         g.setActiva(true);

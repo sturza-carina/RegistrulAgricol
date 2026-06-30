@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { GenericTableComponent, TableColumn, TableAction } from '../../components/generic-table/generic-table.component';
+import { GenericTableComponent, TableColumn, TableAction, TableFilter } from '../../components/generic-table/generic-table.component';
 import { DocumentService } from '../../services/document.service';
 import { LookupService } from '../../services/lookup.service';
 import { TipDocument } from '../../models/document.model';
@@ -41,6 +41,11 @@ export class DocumentManagementComponent implements OnInit {
     { icon: 'delete', tooltip: 'Șterge', action: (row) => this.deleteDocument(row) }
   ];
 
+  filters: TableFilter[] = [
+    { field: 'search', label: 'Caută document...', type: 'search', searchFields: ['numeFisier', 'tipDocumentDenumire', 'observatii'] },
+    { field: 'tipDocumentDenumire', label: 'Tip Document', type: 'select', options: [] }
+  ];
+
   constructor(
     private documentService: DocumentService,
     private lookupService: LookupService
@@ -54,6 +59,12 @@ export class DocumentManagementComponent implements OnInit {
   loadTipuriDocument() {
     this.lookupService.getTipuriDocument().subscribe(data => {
       this.tipuriDocument = data;
+      
+      const typeFilter = this.filters.find(f => f.field === 'tipDocumentDenumire');
+      if (typeFilter) {
+        typeFilter.options = data.map((t: any) => ({ label: t.denumire, value: t.denumire }));
+      }
+      
       this.loadDocumente();
     });
   }
