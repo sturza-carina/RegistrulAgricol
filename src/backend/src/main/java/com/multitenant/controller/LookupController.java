@@ -1,5 +1,7 @@
 package com.multitenant.controller;
 
+import com.multitenant.dto.TipDocumentDTO;
+import com.multitenant.repository.LookupRepository;
 import com.multitenant.service.LookupService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -31,5 +33,10 @@ public class LookupController {
     @GetMapping("/tip-sursa-apa")
     public ResponseEntity<List<String>> getTipuriSursaApa() {
         return ResponseEntity.ok(lookupService.getTipuriSursaApa());
+    }
+
+    @GetMapping("/tip-document")
+    public ResponseEntity<List<TipDocumentDTO>> getTipuriDocument() {
+        return ResponseEntity.ok(lookupService.getTipuriDocument());
     }
 }

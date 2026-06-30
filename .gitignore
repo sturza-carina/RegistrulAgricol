@@ -27,3 +27,6 @@ npm-debug.log*
 # Generated Angular environment files (contain secrets injected by set-env.js)
 src/frontend/src/environments/environment.ts
 src/frontend/src/environments/environment.prod.ts
+
+# uploaded documents (local dev storage)
+/uploads/

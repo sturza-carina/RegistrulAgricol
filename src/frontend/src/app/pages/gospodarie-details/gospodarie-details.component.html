@@ -52,7 +52,7 @@
             <h3>Persoane / Membri Gospodărie</h3>
             <button class="btn btn-primary btn-sm" (click)="addPerson()">Adaugă Membru</button>
           </div>
-          
+
           <app-generic-table
             [data]="persoane"
             [columns]="membriColumns"
@@ -70,7 +70,7 @@
               <button class="btn btn-primary btn-sm" (click)="createNewPerson()">Adaugă Persoană Nouă</button>
             </div>
           </div>
-          
+
           <app-generic-table
             [data]="toatePersoanele"
             [columns]="membriColumns"
@@ -109,14 +109,20 @@
       <div style="margin-bottom: 20px;" *ngIf="activeTab === 'ANIMALS'">
         <app-animal-list [gospodarieId]="gospodarieId"></app-animal-list>
       </div>
+
+      <!-- Documente Section-->
+      <div style="margin-bottom: 20px;" *ngIf="activeTab === 'DOCUMENTS'">
+        <app-document-management [gospodarieId]="gospodarieId"></app-document-management>
+      </div>
+
     </ng-container>
 </app-layout>
 
 <app-persoana-form *ngIf="showPersonModal" [isModal]="true" [hideGospodarieSelect]="true" [gospodarieId]="gospodarieId" [editId]="editPersonId" (closeForm)="closePersonModal()"></app-persoana-form>
 
-<app-teren-form 
-  *ngIf="showTerenModal" 
-  [isModal]="true" 
-  [inputGospodarieId]="gospodarieId" 
+<app-teren-form
+  *ngIf="showTerenModal"
+  [isModal]="true"
+  [inputGospodarieId]="gospodarieId"
   (closeForm)="closeTerenModal()">
 </app-teren-form>

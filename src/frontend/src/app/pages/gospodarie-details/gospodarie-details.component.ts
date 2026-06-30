@@ -17,11 +17,17 @@ import { AnimalListComponent } from '../animal-list/animal-list.component';
 import { TerenFormComponent } from '../teren-form/teren-form.component';
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 import { GenericTableComponent, TableColumn, TableFilter, TableAction } from '../../components/generic-table/generic-table.component';
+import { DocumentManagementComponent } from '../document-management/document-management.component';
 
 @Component({
   selector: 'app-gospodarie-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, LayoutComponent, PageHeaderComponent, RouterModule, MachineryManagementComponent, CladireManagementComponent, PersonFormComponent, AnimalListComponent, BreadcrumbsComponent, GenericTableComponent, TerenFormComponent],
+  imports: [CommonModule, FormsModule, LayoutComponent,
+    PageHeaderComponent, RouterModule, MachineryManagementComponent,
+    CladireManagementComponent, PersonFormComponent, AnimalListComponent,
+    BreadcrumbsComponent, GenericTableComponent, TerenFormComponent,
+    DocumentManagementComponent
+  ],
   templateUrl: './gospodarie-details.component.html',
   styleUrls: ['./gospodarie-details.component.css']
 })
@@ -36,7 +42,7 @@ export class GospodarieDetailsComponent implements OnInit {
 
   showPersonModal = false;
   editPersonId?: number;
-  
+
   showTerenModal = false;
 
   isAddingMember = false;
@@ -226,7 +232,7 @@ export class GospodarieDetailsComponent implements OnInit {
   addTeren() {
     this.showTerenModal = true;
   }
-  
+
   closeTerenModal() {
     this.showTerenModal = false;
     this.loadDetails(); // Refresh list after adding
