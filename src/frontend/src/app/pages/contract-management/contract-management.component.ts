@@ -47,6 +47,11 @@ export class ContractManagementComponent implements OnInit {
   errorMessage = '';
   loadError = '';
 
+  private showSuccess(msg: string): void {
+    this.successMessage = msg;
+    setTimeout(() => { this.successMessage = ''; }, 4000);
+  }
+
   tipuriContract = ['ARENDA', 'COMODAT', 'CONCESIUNE', 'INCHIRIERE', 'ALTELE'];
   statusuriContract = ['ACTIV', 'EXPIRAT', 'REZILIAT', 'SUSPENDAT'];
 
@@ -120,8 +125,6 @@ export class ContractManagementComponent implements OnInit {
 
   loadTenantData(): void {
     this.loadError = '';
-    this.successMessage = '';
-    this.errorMessage = '';
 
     this.contractService.getAllContracts().subscribe({
       next: (data) => {
@@ -310,9 +313,9 @@ export class ContractManagementComponent implements OnInit {
     if (this.editingContract && this.editingContract.id) {
       this.contractService.updateContract(this.editingContract.id, contractPayload).subscribe({
         next: () => {
-          this.successMessage = 'Contractul a fost actualizat cu succes!';
           this.loadTenantData();
           this.closeForm();
+          this.showSuccess('Contractul a fost actualizat cu succes!');
         },
         error: (err) => {
           this.errorMessage = err.error?.message || err.error || 'A apărut o eroare la actualizarea contractului.';
@@ -321,9 +324,9 @@ export class ContractManagementComponent implements OnInit {
     } else {
       this.contractService.createContract(contractPayload).subscribe({
         next: () => {
-          this.successMessage = 'Contractul a fost înregistrat cu succes!';
           this.loadTenantData();
           this.closeForm();
+          this.showSuccess('Contractul a fost înregistrat cu succes!');
         },
         error: (err) => {
           this.errorMessage = err.error?.message || err.error || 'A apărut o eroare la crearea contractului.';
@@ -336,10 +339,10 @@ export class ContractManagementComponent implements OnInit {
     if (contract.id && confirm(`Sunteți sigur că doriți să ștergeți contractul nr. ${contract.numarContract}?`)) {
       this.contractService.deleteContract(contract.id).subscribe({
         next: () => {
-          this.successMessage = 'Contractul a fost șters cu succes!';
-          this.loadTenantData();
           if (this.viewingContract?.id === contract.id) this.closeViewContract();
           if (this.editingContract?.id === contract.id) this.closeForm();
+          this.loadTenantData();
+          this.showSuccess('Contractul a fost șters cu succes!');
         },
         error: (err) => {
           this.errorMessage = err.error?.message || err.error || 'A apărut o eroare la ștergerea contractului.';

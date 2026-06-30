@@ -50,7 +50,7 @@ public class ContractUtilizareService {
             throw new IllegalArgumentException("Contract cannot be null");
         }
         ContractUtilizare contract = mapFromDto(dto, null);
-        checkNoOverlap(dto.getParcelaId(), null, dto.getDataInceput(), dto.getDataSfarsit());
+        checkNoOverlap(dto.getTerenId(), dto.getParcelaId(), null, dto.getDataInceput(), dto.getDataSfarsit());
         return contractUtilizareRepository.save(contract);
     }
 
@@ -60,7 +60,7 @@ public class ContractUtilizareService {
             throw new IllegalArgumentException("Contract cannot be null");
         }
         ContractUtilizare existing = getContractById(id);
-        checkNoOverlap(dto.getParcelaId(), id, dto.getDataInceput(), dto.getDataSfarsit());
+        checkNoOverlap(dto.getTerenId(), dto.getParcelaId(), id, dto.getDataInceput(), dto.getDataSfarsit());
         ContractUtilizare mapped = mapFromDto(dto, existing);
         existing.setTeren(mapped.getTeren());
         existing.setLocatorProprietar(mapped.getLocatorProprietar());
@@ -103,14 +103,21 @@ public class ContractUtilizareService {
                 currentDate);
     }
 
-    private void checkNoOverlap(Long parcelaId, Long excludeContractId, LocalDate dataInceput, LocalDate dataSfarsit) {
-        if (parcelaId == null || dataInceput == null || dataSfarsit == null) {
+    private void checkNoOverlap(Long terenId, Long parcelaId, Long excludeContractId, LocalDate dataInceput, LocalDate dataSfarsit) {
+        if (dataInceput == null || dataSfarsit == null) {
             return;
         }
         Long exclude = excludeContractId != null ? excludeContractId : -1L;
-        if (contractUtilizareRepository.existsOverlappingContract(parcelaId, exclude, dataInceput, dataSfarsit)) {
-            throw new IllegalStateException(
-                "Există deja un contract activ pentru această parcelă în intervalul de date specificat.");
+        if (parcelaId != null) {
+            if (contractUtilizareRepository.existsOverlappingContract(parcelaId, exclude, dataInceput, dataSfarsit)) {
+                throw new IllegalStateException(
+                    "Există deja un contract activ pentru această parcelă în intervalul de date specificat.");
+            }
+        } else if (terenId != null) {
+            if (contractUtilizareRepository.existsOverlappingContractByTeren(terenId, exclude, dataInceput, dataSfarsit)) {
+                throw new IllegalStateException(
+                    "Există deja un contract activ pentru acest teren în intervalul de date specificat.");
+            }
         }
     }
 
