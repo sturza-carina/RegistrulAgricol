@@ -6,6 +6,7 @@ import { MachineryService } from '../../services/machinery.service';
 import { GenericTableComponent, TableColumn, TableFilter, TableAction } from '../../components/generic-table/generic-table.component';
 import { GenericFormComponent } from '../../components/generic-form/generic-form.component';
 import { FormConfig } from '../../components/generic-form/generic-form.models';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-machinery-management',
@@ -63,7 +64,7 @@ export class MachineryManagementComponent implements OnInit, OnChanges {
     { icon: 'delete', tooltip: 'Ștergere', action: (row) => this.deleteMachinery(row.id) }
   ];
 
-  constructor(private machineryService: MachineryService) {}
+  constructor(private machineryService: MachineryService, private toastService: ToastService) {}
 
   ngOnInit(): void {
     this.loadMachinery();
@@ -118,7 +119,7 @@ export class MachineryManagementComponent implements OnInit, OnChanges {
     }
 
     if (!formData.tipUtilaj || !formData.marca) {
-      alert('Vă rugăm să completați tipul utilajului și marca.');
+      this.toastService.warning('Vă rugăm să completați tipul utilajului și marca.');
       return;
     }
 

@@ -5,6 +5,7 @@ import { GenericTableComponent, TableColumn, TableAction, TableFilter } from '..
 import { DocumentService } from '../../services/document.service';
 import { LookupService } from '../../services/lookup.service';
 import { TipDocument } from '../../models/document.model';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-document-management',
@@ -48,7 +49,8 @@ export class DocumentManagementComponent implements OnInit {
 
   constructor(
     private documentService: DocumentService,
-    private lookupService: LookupService
+    private lookupService: LookupService,
+    private toastService: ToastService
   ) {}
 
   ngOnInit() {
@@ -100,7 +102,7 @@ export class DocumentManagementComponent implements OnInit {
 
   submitUpload() {
     if (!this.selectedFile || !this.uploadData.tipDocumentId) {
-      alert('Selectați tipul documentului și un fișier.');
+      this.toastService.warning('Selectați tipul documentului și un fișier.');
       return;
     }
 
@@ -115,7 +117,7 @@ export class DocumentManagementComponent implements OnInit {
       },
       error: () => {
         this.isUploading = false;
-        alert('Eroare la încărcarea documentului.');
+        this.toastService.error('Eroare la încărcarea documentului.');
       }
     });
   }
@@ -135,7 +137,7 @@ export class DocumentManagementComponent implements OnInit {
     if (!confirm(`Ștergeți documentul "${row.numeFisier}"?`)) return;
     this.documentService.deleteDocument(row.id, this.gospodarieId).subscribe({
       next: () => this.loadDocumente(),
-      error: () => alert('Eroare la ștergerea documentului.')
+      error: () => this.toastService.error('Eroare la ștergerea documentului.')
     });
   }
 }

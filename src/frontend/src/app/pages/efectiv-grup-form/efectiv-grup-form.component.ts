@@ -16,6 +16,7 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 import { GenericFormComponent } from '../../components/generic-form/generic-form.component';
 import { FormConfig, FormField } from '../../components/generic-form/generic-form.models';
+import { ToastService } from '../../services/toast.service';
 
 /**
  * Formular pentru înregistrarea efectivelor de grup (model snapshot ANSVSA).
@@ -68,7 +69,8 @@ export class EfectivGrupFormComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private uatContextService: UatContextService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private toastService: ToastService
   ) {}
 
   ngOnInit() {
@@ -222,7 +224,7 @@ export class EfectivGrupFormComponent implements OnInit, OnDestroy {
 
   save(formData: any) {
     if (!formData.gospodarieId || !formData.proprietarId) {
-      alert('Vă rugăm să selectați Gospodăria și Proprietarul.');
+      this.toastService.warning('Vă rugăm să selectați Gospodăria și Proprietarul.');
       return;
     }
 
@@ -240,7 +242,7 @@ export class EfectivGrupFormComponent implements OnInit, OnDestroy {
       this.animalService.addGrupSnapshot(this.referenceGrupId, payload).subscribe({
         next: () => this.navigateBack(),
         error: (err) => {
-          alert('Eroare la adăugarea snapshot-ului: ' + (err.error?.message || err.message));
+          this.toastService.error('Eroare la adăugarea snapshot-ului: ' + (err.error?.message || err.message));
         }
       });
     } else {
@@ -248,7 +250,7 @@ export class EfectivGrupFormComponent implements OnInit, OnDestroy {
       this.animalService.createGroup(payload).subscribe({
         next: () => this.navigateBack(),
         error: (err) => {
-          alert('Eroare la înregistrarea efectivului: ' + (err.error?.message || err.message));
+          this.toastService.error('Eroare la înregistrarea efectivului: ' + (err.error?.message || err.message));
         }
       });
     }

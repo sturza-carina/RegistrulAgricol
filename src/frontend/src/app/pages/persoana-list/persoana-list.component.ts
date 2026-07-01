@@ -13,6 +13,7 @@ import { GenericTableComponent, TableColumn, TableFilter, TableAction } from '..
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 import { PersonFormComponent } from '../persoana-form/persoana-form.component';
 import { ActiveUatBannerComponent } from '../../components/active-uat-banner/active-uat-banner.component';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-persoana-list',
@@ -55,7 +56,8 @@ export class PersonListComponent implements OnInit {
     private persoanaService: PersoanaService,
     public authService: AuthService,
     private router: Router,
-    public uatContextService: UatContextService
+    public uatContextService: UatContextService,
+    private toastService: ToastService
   ) {}
 
   ngOnInit() {
@@ -138,7 +140,7 @@ export class PersonListComponent implements OnInit {
 
   goToCreatePerson() {
     if (this.authService.currentUserSubject.value?.role === 'ROLE_SUPER_ADMIN' && !this.uatContextService.getActiveUat()?.tenantId) {
-      alert('Vă rugăm să selectați mai întâi un UAT.');
+      this.toastService.warning('Vă rugăm să selectați mai întâi un UAT.');
       return;
     }
     this.editPersonId = undefined;

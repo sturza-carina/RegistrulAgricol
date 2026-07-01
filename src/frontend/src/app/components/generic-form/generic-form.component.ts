@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormControl } 
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { FormConfig, FormField } from './generic-form.models';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-generic-form',
@@ -25,7 +26,7 @@ export class GenericFormComponent implements OnInit, OnChanges, OnDestroy {
   formGroup!: FormGroup;
   private destroy$ = new Subject<void>();
 
-  constructor(private fb: FormBuilder) { }
+  constructor(private fb: FormBuilder, private toastService: ToastService) { }
 
   ngOnInit(): void {
     this.initForm();
@@ -140,7 +141,7 @@ export class GenericFormComponent implements OnInit, OnChanges, OnDestroy {
 
   onSubmit(): void {
     if (this.formGroup.invalid) {
-      alert('Vă rugăm să completați corect toate câmpurile obligatorii (marcate cu *). Verificați dacă există erori de validare.');
+      this.toastService.warning('Vă rugăm să completați corect toate câmpurile obligatorii (marcate cu *). Verificați dacă există erori de validare.');
       this.formGroup.markAllAsTouched();
       return;
     }

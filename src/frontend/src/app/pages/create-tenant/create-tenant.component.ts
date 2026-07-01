@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { HttpClient } from '@angular/common/http';
+import { ToastService } from '../../services/toast.service';
 
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
@@ -72,7 +73,8 @@ export class CreateTenantComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private authService: AuthService,
-    private http: HttpClient
+    private http: HttpClient,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -238,7 +240,7 @@ export class CreateTenantComponent implements OnInit {
 
   deleteTenant(t: any) {
     if (confirm(`Ești sigur că vrei să ștergi tenantul ${t.name}? Această acțiune este ireversibilă.`)) {
-      alert('Ștergerea unui tenant necesită intervenție manuală la nivel de bază de date momentan.');
+      this.toastService.info('Ștergerea unui tenant necesită intervenție manuală la nivel de bază de date momentan.');
     }
   }
 

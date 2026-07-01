@@ -10,6 +10,7 @@ import { GoogleMapsLoaderService } from '../../services/google-maps-loader.servi
 import { Teren } from '../../models/teren.model';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
+import { ToastService } from '../../services/toast.service';
 
 const DASH_ICON: google.maps.IconSequence = {
   icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 3 },
@@ -64,7 +65,8 @@ export class TerenFormComponent implements OnInit, OnDestroy {
     private conv: CoordConversionService,
     private http: HttpClient,
     private zone: NgZone,
-    private googleMapsLoader: GoogleMapsLoaderService
+    private googleMapsLoader: GoogleMapsLoaderService,
+    private toastService: ToastService
   ) { }
 
   ngOnInit() {
@@ -295,8 +297,8 @@ export class TerenFormComponent implements OnInit, OnDestroy {
   }
 
   save() {
-    if (!this.teren.denumire?.trim()) { alert('Introduceți denumirea terenului.'); return; }
-    if (!this.teren.tipTeren) { alert('Selectați tipul terenului.'); return; }
+    if (!this.teren.denumire?.trim()) { this.toastService.warning('Introduceți denumirea terenului.'); return; }
+    if (!this.teren.tipTeren) { this.toastService.warning('Selectați tipul terenului.'); return; }
 
     const coordString = this.points
       .filter(p => p.x.trim() !== '' && p.y.trim() !== '')
@@ -322,7 +324,7 @@ export class TerenFormComponent implements OnInit, OnDestroy {
           this.router.navigate(['/gospodarii', this.gospodarieId]);
         }
       },
-      error: (err) => { this.saving = false; console.error(err); alert('Eroare la salvare teren.'); }
+      error: (err) => { this.saving = false; console.error(err); this.toastService.error('Eroare la salvare teren.'); }
     });
   }
 }

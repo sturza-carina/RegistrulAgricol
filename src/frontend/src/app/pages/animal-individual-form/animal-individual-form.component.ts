@@ -16,6 +16,7 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 import { GenericFormComponent } from '../../components/generic-form/generic-form.component';
 import { FormConfig, FormField } from '../../components/generic-form/generic-form.models';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-animal-individual-form',
@@ -62,7 +63,8 @@ export class AnimalIndividualFormComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private uatContextService: UatContextService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private toastService: ToastService
   ) {}
 
   ngOnInit() {
@@ -222,7 +224,7 @@ export class AnimalIndividualFormComponent implements OnInit, OnDestroy {
 
   save(formData: any) {
     if (!formData.gospodarieId || !formData.proprietarId) {
-      alert('Vă rugăm să selectați Gospodăria și Proprietarul.');
+      this.toastService.warning('Vă rugăm să selectați Gospodăria și Proprietarul.');
       return;
     }
 
@@ -243,14 +245,14 @@ export class AnimalIndividualFormComponent implements OnInit, OnDestroy {
       this.animalService.updateIndividual(this.animalId, payload).subscribe({
         next: () => this.navigateBack(),
         error: (err) => {
-          alert('Eroare la actualizarea animalului: ' + (err.error?.message || err.message));
+          this.toastService.error('Eroare la actualizarea animalului: ' + (err.error?.message || err.message));
         }
       });
     } else {
       this.animalService.createIndividual(payload).subscribe({
         next: () => this.navigateBack(),
         error: (err) => {
-          alert('Eroare la înregistrarea animalului: ' + (err.error?.message || err.message));
+          this.toastService.error('Eroare la înregistrarea animalului: ' + (err.error?.message || err.message));
         }
       });
     }

@@ -16,6 +16,7 @@ import { PageHeaderComponent } from '../../components/page-header/page-header.co
 import { LayoutComponent } from '../../components/layout/layout.component';
 import { BreadcrumbsComponent } from '../../components/breadcrumbs/breadcrumbs.component';
 import { ActiveUatBannerComponent } from '../../components/active-uat-banner/active-uat-banner.component';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-contract-management',
@@ -88,7 +89,8 @@ export class ContractManagementComponent implements OnInit {
     private contractService: ContractUtilizareService,
     private http: HttpClient,
     private persoanaService: PersoanaService,
-    private uatContextService: UatContextService
+    private uatContextService: UatContextService,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -222,7 +224,7 @@ export class ContractManagementComponent implements OnInit {
 
   openAddForm(): void {
     if (!this.selectedTenantId) {
-      alert('Vă rugăm să selectați mai întâi un Tenant/UAT.');
+      this.toastService.warning('Vă rugăm să selectați mai întâi un Tenant/UAT.');
       return;
     }
     this.creatingContract = true;

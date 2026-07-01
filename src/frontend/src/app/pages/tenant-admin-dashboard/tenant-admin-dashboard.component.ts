@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 import { GenericFormComponent } from '../../components/generic-form/generic-form.component';
 import { FormConfig } from '../../components/generic-form/generic-form.models';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-tenant-admin-dashboard',
@@ -55,7 +56,8 @@ export class TenantAdminDashboardComponent implements OnInit {
   constructor(
     private router: Router,
     private authService: AuthService,
-    private http: HttpClient
+    private http: HttpClient,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -151,7 +153,7 @@ export class TenantAdminDashboardComponent implements OnInit {
           this.loadUsers();
         },
         error: (err) => {
-          alert('A apărut o eroare la ștergere: ' + (err.error?.message || err.message));
+          this.toastService.error('A apărut o eroare la ștergere: ' + (err.error?.message || err.message));
         }
       });
     }

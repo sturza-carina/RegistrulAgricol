@@ -54,15 +54,10 @@ export class UatContextService {
         this.availableUatsSubject.next(uats);
 
         const savedCode = localStorage.getItem('activeUatCode');
-        console.log('savedCode din localStorage:', savedCode);
-        console.log('activeUat curent:', this.activeUatSubject.getValue());
-        console.log('uats primite:', uats.map(u => u.codSiruta));
 
         const savedUat = savedCode
           ? uats.find(u => u.codSiruta === savedCode)
           : null;
-
-        console.log('savedUat gasit:', savedUat);
 
         if (!this.activeUatSubject.getValue()) {
           this.setActiveUat(savedUat ?? uats[0] ?? null);
@@ -73,7 +68,6 @@ export class UatContextService {
   }
 
   setActiveUat(uat: Uat | null): void {
-    console.log('setActiveUat apelat cu:', uat?.codSiruta, new Error().stack);
     this.activeUatSubject.next(uat);
     if (uat) {
       localStorage.setItem('activeUatCode', uat.codSiruta);
@@ -87,7 +81,6 @@ export class UatContextService {
   }
 
   private reset(): void {
-    console.log('RESET APELAT!', new Error().stack);
     this.availableUatsSubject.next([]);
     this.activeUatSubject.next(null);
     this.uatsLoaded = false;

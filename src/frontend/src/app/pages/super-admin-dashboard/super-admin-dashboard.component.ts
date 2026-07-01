@@ -97,7 +97,6 @@ export class SuperAdminDashboardComponent implements OnInit {
   }
 
   exportRecords(): void {
-    console.log('Export records clicked');
     // TODO: implement export
   }
 

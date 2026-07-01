@@ -11,6 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { HttpClient } from '@angular/common/http';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-parcela-map',
@@ -55,7 +56,8 @@ export class ParcelaMapComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private http: HttpClient,
     private googleMapsLoader: GoogleMapsLoaderService,
-    private zone: NgZone
+    private zone: NgZone,
+    private toastService: ToastService
   ) {}
 
   ngOnInit() {
@@ -322,14 +324,13 @@ export class ParcelaMapComponent implements OnInit, OnDestroy {
 
     this.parcelaService.createParcela(this.selectedTerenId, this.newParcela).subscribe({
       next: (saved) => {
-        console.log('Saved parcela:', saved);
         this.parcele.push(saved);
         this.renderParcele();
         this.isAddingParcela = false;
       },
       error: (err) => {
         console.error('Save error:', err);
-        alert('Eroare la salvare!');
+        this.toastService.error('Eroare la salvare!');
       }
     });
   }
@@ -348,7 +349,7 @@ export class ParcelaMapComponent implements OnInit, OnDestroy {
           },
           error: (err) => {
             console.error('Delete error:', err);
-            alert('Eroare la ștergere!');
+            this.toastService.error('Eroare la ștergere!');
           }
         });
       }

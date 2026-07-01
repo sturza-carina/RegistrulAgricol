@@ -19,6 +19,7 @@ import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrum
 import { SursaApa } from '../../models/sursa-apa.model';
 import { SursaApaService } from '../../services/sursa-apa.service';
 import { LookupService } from '../../services/lookup.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-teren-parcele',
@@ -92,7 +93,8 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     private gospodarieService: GospodarieService,
     private lookupService: LookupService,
     private http: HttpClient,
-    private zone: NgZone
+    private zone: NgZone,
+    private toastService: ToastService
   ) {}
 
   ngOnInit() {
@@ -106,7 +108,6 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     this.terenService.getTerenById(this.terenId).subscribe(t => {
       this.teren = t;
       this.updateBreadcrumbs();
-      console.log('LOADED TEREN:', t);
       setTimeout(() => {
         this.initMap();
         this.loadParcele();
@@ -458,7 +459,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   }
 
   saveParcela() {
-    if (!this.newParcela.denumire?.trim()) { alert('Introduceți denumirea parcelei.'); return; }
+    if (!this.newParcela.denumire?.trim()) { this.toastService.warning('Introduceți denumirea parcelei.'); return; }
 
     const coordString = this.points
       .filter(p => p.x.trim() !== '' && p.y.trim() !== '')
@@ -478,7 +479,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
         this.removeTerenMask();
         this.calculatedArea = null;
       },
-      error: (err) => { this.saving = false; console.error(err); alert('Eroare la salvare parcelă.'); }
+      error: (err) => { this.saving = false; console.error(err); this.toastService.error('Eroare la salvare parcelă.'); }
     });
   }
 
@@ -511,7 +512,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
 
   saveCategorie() {
     if (!this.newCategorie.denumire?.trim()) {
-      alert('Introduceți denumirea categoriei.');
+      this.toastService.warning('Introduceți denumirea categoriei.');
       return;
     }
 
@@ -524,7 +525,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
           if (idx >= 0) this.categorii[idx] = updated;
           this.cancelAddCategorie();
         },
-        error: (err) => { this.saving = false; console.error(err); alert('Eroare la actualizare categorie.'); }
+        error: (err) => { this.saving = false; console.error(err); this.toastService.error('Eroare la actualizare categorie.'); }
       });
     } else {
       this.categorieService.createCategorie(this.terenId, this.newCategorie).subscribe({
@@ -533,7 +534,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
           this.categorii.push(saved);
           this.cancelAddCategorie();
         },
-        error: (err) => { this.saving = false; console.error(err); alert('Eroare la salvare categorie.'); }
+        error: (err) => { this.saving = false; console.error(err); this.toastService.error('Eroare la salvare categorie.'); }
       });
     }
   }
@@ -545,7 +546,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
       next: () => {
         this.categorii = this.categorii.filter(c => c.id !== categorie.id);
       },
-      error: () => alert('Eroare la ștergere categorie.')
+      error: () => this.toastService.error('Eroare la ștergere categorie.')
     });
   }
 
@@ -579,7 +580,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
         this.renderParcele();
         this.viewingParcela = null;
       },
-      error: () => alert('Eroare la ștergere.')
+      error: () => this.toastService.error('Eroare la ștergere.')
     });
   }
 
@@ -616,7 +617,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
 
   saveCultura() {
     if (!this.newCultura.specieCultura?.trim() || !this.newCultura.anAgricol || !this.newCultura.suprafataCultivataHa) {
-      alert('Completați anul agricol, specia și suprafața.');
+      this.toastService.warning('Completați anul agricol, specia și suprafața.');
       return;
     }
     if (!this.viewingParcela?.id) return;
@@ -630,7 +631,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
           if (idx >= 0) this.culturi[idx] = updated;
           this.cancelAddCultura();
         },
-        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare cultura.'); }
+        error: err => { this.saving = false; console.error(err); this.toastService.error('Eroare la salvare cultura.'); }
       });
     } else {
       this.culturaService.createCultura(this.viewingParcela.id, this.newCultura as CulturaParcela).subscribe({
@@ -639,7 +640,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
           this.culturi.push(saved);
           this.cancelAddCultura();
         },
-        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare cultura.'); }
+        error: err => { this.saving = false; console.error(err); this.toastService.error('Eroare la salvare cultura.'); }
       });
     }
   }
@@ -651,7 +652,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
       next: () => {
         this.culturi = this.culturi.filter(c => c.id !== cultura.id);
       },
-      error: () => alert('Eroare la ștergere cultura.')
+      error: () => this.toastService.error('Eroare la ștergere cultura.')
     });
   }
 
@@ -696,7 +697,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
           if (idx >= 0) this.surse[idx] = updated;
           this.cancelAddSursa();
         },
-        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare sursă apă.'); }
+        error: err => { this.saving = false; console.error(err); this.toastService.error('Eroare la salvare sursă apă.'); }
       });
     } else {
       this.sursaApaService.createSursa(this.viewingParcela.id, payload).subscribe({
@@ -705,7 +706,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
           this.surse.push(saved);
           this.cancelAddSursa();
         },
-        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare sursă apă.'); }
+        error: err => { this.saving = false; console.error(err); this.toastService.error('Eroare la salvare sursă apă.'); }
       });
     }
   }
@@ -717,7 +718,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
       next: () => {
         this.surse = this.surse.filter(s => s.id !== sursa.id);
       },
-      error: () => alert('Eroare la ștergere sursă apă.')
+      error: () => this.toastService.error('Eroare la ștergere sursă apă.')
     });
   }
 

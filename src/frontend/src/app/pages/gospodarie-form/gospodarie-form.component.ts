@@ -8,6 +8,7 @@ import { UatContextService } from '../../services/uat-context.service';
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 import { GenericFormComponent } from '../../components/generic-form/generic-form.component';
 import { FormConfig } from '../../components/generic-form/generic-form.models';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-gospodarie-form',
@@ -74,7 +75,8 @@ export class GospodarieFormComponent implements OnInit {
     private uatService: UatService,
     private uatContextService: UatContextService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private toastService: ToastService
   ) { }
 
   ngOnInit() {
@@ -238,7 +240,7 @@ export class GospodarieFormComponent implements OnInit {
         next: () => {
           this.isSaving = false;
           if (this.isEmbedded) {
-            alert('Modificările au fost salvate cu succes.');
+            this.toastService.success('Modificările au fost salvate cu succes.');
             this.loadGospodarie(this.gospodarieId!);
           } else {
             this.router.navigate(['/gospodarii']);
@@ -247,7 +249,7 @@ export class GospodarieFormComponent implements OnInit {
         error: (err) => {
           this.isSaving = false;
           console.error(err);
-          alert('Eroare la salvarea modificărilor.');
+          this.toastService.error('Eroare la salvarea modificărilor.');
         }
       });
     } else {
@@ -259,7 +261,7 @@ export class GospodarieFormComponent implements OnInit {
         error: (err) => {
           this.isSaving = false;
           console.error(err);
-          alert('Eroare la crearea gospodăriei.');
+          this.toastService.error('Eroare la crearea gospodăriei.');
         }
       });
     }

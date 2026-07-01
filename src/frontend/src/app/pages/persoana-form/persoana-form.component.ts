@@ -9,6 +9,7 @@ import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 import { GenericFormComponent } from '../../components/generic-form/generic-form.component';
 import { FormConfig } from '../../components/generic-form/generic-form.models';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-persoana-form',
@@ -96,7 +97,8 @@ export class PersonFormComponent implements OnInit {
     private persoanaService: PersoanaService,
     private router: Router,
     private route: ActivatedRoute,
-    private gospodarieService: GospodarieService
+    private gospodarieService: GospodarieService,
+    private toastService: ToastService
   ) {}
 
   ngOnInit() {
@@ -244,7 +246,7 @@ export class PersonFormComponent implements OnInit {
         error: (err) => {
           this.isSaving = false;
           const msg = err.error?.message || err.message;
-          alert('Error updating persoana: ' + msg);
+          this.toastService.error('Error updating persoana: ' + msg);
         }
       });
     } else {
@@ -257,7 +259,7 @@ export class PersonFormComponent implements OnInit {
         error: (err) => {
           this.isSaving = false;
           const msg = err.error?.message || err.message;
-          alert('Error creating persoana: ' + msg);
+          this.toastService.error('Error creating persoana: ' + msg);
         }
       });
     }

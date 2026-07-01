@@ -19,6 +19,7 @@ import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrum
 import { GenericTableComponent, TableColumn, TableFilter, TableAction } from '../../components/generic-table/generic-table.component';
 import { DocumentManagementComponent } from '../document-management/document-management.component';
 import { GospodarieFormComponent } from '../gospodarie-form/gospodarie-form.component';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-gospodarie-details',
@@ -93,7 +94,8 @@ export class GospodarieDetailsComponent implements OnInit {
     private gospodarieService: GospodarieService,
     private persoanaService: PersoanaService,
     private terenService: TerenService,
-    private parcelaService: ParcelaService
+    private parcelaService: ParcelaService,
+    private toastService: ToastService
   ) {}
 
   ngOnInit() {
@@ -197,7 +199,7 @@ export class GospodarieDetailsComponent implements OnInit {
         this.isAddingMember = false;
         this.loadDetails(); // Refresh members list and close sub-view
       },
-      error: () => alert('Eroare la adăugarea persoanei în gospodărie.')
+      error: () => this.toastService.error('Eroare la adăugarea persoanei în gospodărie.')
     });
   }
 
@@ -250,7 +252,7 @@ export class GospodarieDetailsComponent implements OnInit {
       next: () => {
         this.terenuri = this.terenuri.filter(t => t.id !== teren.id);
       },
-      error: () => alert('Eroare la ștergere teren.')
+      error: () => this.toastService.error('Eroare la ștergere teren.')
     });
   }
 

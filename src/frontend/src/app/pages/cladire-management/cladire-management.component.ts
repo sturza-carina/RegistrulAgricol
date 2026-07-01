@@ -6,6 +6,7 @@ import { CladireService } from '../../services/cladire.service';
 import { GenericTableComponent, TableColumn, TableAction } from '../../components/generic-table/generic-table.component';
 import { GenericFormComponent } from '../../components/generic-form/generic-form.component';
 import { FormConfig } from '../../components/generic-form/generic-form.models';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-cladire-management',
@@ -58,7 +59,7 @@ export class CladireManagementComponent implements OnInit {
     { icon: 'delete', tooltip: 'Ștergere', action: (row) => this.deleteCladire(row.id) }
   ];
 
-  constructor(private cladireService: CladireService) {}
+  constructor(private cladireService: CladireService, private toastService: ToastService) {}
 
   ngOnInit(): void {
     if (this.gospodarieId) {
@@ -100,7 +101,7 @@ export class CladireManagementComponent implements OnInit {
 
   saveCladire(formData: any) {
     if (!formData.destinatie || !formData.suprafataConstruita) {
-      alert('Vă rugăm să completați destinația și suprafața construită.');
+      this.toastService.warning('Vă rugăm să completați destinația și suprafața construită.');
       return;
     }
 
