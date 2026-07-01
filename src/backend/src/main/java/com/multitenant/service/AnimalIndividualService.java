@@ -75,26 +75,26 @@ public class AnimalIndividualService {
 
         crotalRegistryService.rezervaCrotal(saved.getNumarCrotal(), currentTenant, saved.getId());
 
-        return modelMapper.map(saved, AnimalIndividualDTO.class);
+        return convertToDto(saved);
     }
 
     @Transactional(readOnly = true)
     public Page<AnimalIndividualDTO> getAll(Pageable pageable) {
         return animalIndividualRepository.findAll(pageable)
-                .map(entity -> modelMapper.map(entity, AnimalIndividualDTO.class));
+                .map(this::convertToDto);
     }
 
     @Transactional(readOnly = true)
     public AnimalIndividualDTO getById(Long id) {
         AnimalIndividual entity = animalIndividualRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Animal not found with id: " + id));
-        return modelMapper.map(entity, AnimalIndividualDTO.class);
+        return convertToDto(entity);
     }
 
     @Transactional(readOnly = true)
     public Page<AnimalIndividualDTO> getByGospodarieId(Long gospodarieId, Pageable pageable) {
         return animalIndividualRepository.findByGospodarieId(gospodarieId, pageable)
-                .map(entity -> modelMapper.map(entity, AnimalIndividualDTO.class));
+                .map(this::convertToDto);
     }
 
     public AnimalIndividualDTO update(Long id, AnimalIndividual updated) {
@@ -143,7 +143,7 @@ public class AnimalIndividualService {
             crotalRegistryService.rezervaCrotal(crotalNou, currentTenant, saved.getId());
         }
 
-        return modelMapper.map(saved, AnimalIndividualDTO.class);
+        return convertToDto(saved);
     }
 
     public void delete(Long id) {
@@ -157,6 +157,18 @@ public class AnimalIndividualService {
     @Transactional(readOnly = true)
     public Page<AnimalIndividualDTO> getByProprietarId(Long proprietarId, Pageable pageable) {
         return animalIndividualRepository.findByProprietarId(proprietarId, pageable)
-                .map(entity -> modelMapper.map(entity, AnimalIndividualDTO.class));
+                .map(this::convertToDto);
+    }
+
+    private AnimalIndividualDTO convertToDto(AnimalIndividual entity) {
+        if (entity == null) {
+            return null;
+        }
+        AnimalIndividualDTO dto = modelMapper.map(entity, AnimalIndividualDTO.class);
+        if (entity.getProprietar() != null) {
+            Persoana unproxied = (Persoana) org.hibernate.Hibernate.unproxy(entity.getProprietar());
+            dto.setProprietar(modelMapper.map(unproxied, com.multitenant.dto.PersoanaDTO.class));
+        }
+        return dto;
     }
 }

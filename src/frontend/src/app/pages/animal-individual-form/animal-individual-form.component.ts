@@ -1,7 +1,11 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { AuthService } from '../../services/auth.service';
+import { UatContextService } from '../../services/uat-context.service';
 import { AnimalService } from '../../services/animal.service';
 import { GospodarieService } from '../../services/gospodarie.service';
 import { PersoanaService } from '../../services/persoana.service';
@@ -19,7 +23,7 @@ import { FormConfig, FormField } from '../../components/generic-form/generic-for
   imports: [CommonModule, FormsModule, SidebarComponent, RouterModule, BreadcrumbsComponent, GenericFormComponent],
   templateUrl: './animal-individual-form.component.html'
 })
-export class AnimalIndividualFormComponent implements OnInit {
+export class AnimalIndividualFormComponent implements OnInit, OnDestroy {
   @Input() isModal = false;
   @Input() inputGospodarieId?: number;
   @Input() editId?: number;
@@ -29,6 +33,10 @@ export class AnimalIndividualFormComponent implements OnInit {
   animalId?: number;
   returnToGospodarieId?: number;
   gospodarieId?: number;
+
+  user: any;
+  activeUat: any;
+  private destroy$ = new Subject<void>();
 
   // Form config
   formInitialData: any = {};
@@ -51,12 +59,25 @@ export class AnimalIndividualFormComponent implements OnInit {
     private animalService: AnimalService,
     private gospodarieService: GospodarieService,
     private persoanaService: PersoanaService,
+    private authService: AuthService,
+    private uatContextService: UatContextService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
 
   ngOnInit() {
-    this.loadDropdowns();
+    this.user = this.authService.currentUserSubject.value;
+
+    if (this.user?.role === 'ROLE_SUPER_ADMIN') {
+      this.loadDropdowns();
+    } else {
+      this.uatContextService.activeUat$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(uat => {
+          this.activeUat = uat;
+          this.loadDropdowns();
+        });
+    }
 
     if (this.isModal) {
       if (this.inputGospodarieId) {
@@ -106,7 +127,8 @@ export class AnimalIndividualFormComponent implements OnInit {
   }
 
   loadDropdowns() {
-    this.gospodarieService.getAllGospodarii(undefined, 0, 1000).subscribe({
+    const uatCode = this.user?.role === 'ROLE_SUPER_ADMIN' ? undefined : this.activeUat?.codSiruta;
+    this.gospodarieService.getAllGospodarii(uatCode, 0, 1000).subscribe({
       next: (response) => {
         this.gospodariiList = response.content;
         this.updateFormConfig();
@@ -246,5 +268,10 @@ export class AnimalIndividualFormComponent implements OnInit {
     } else {
       this.router.navigate(['/animale']);
     }
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
