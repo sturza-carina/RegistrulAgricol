@@ -5,7 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.multitenant.model.persoana.Persoana;
 import com.multitenant.model.registru.Gospodarie;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -13,7 +14,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "animale_individuale")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class AnimalIndividual {
 
@@ -79,5 +81,16 @@ public class AnimalIndividual {
     @JsonIgnore
     private List<EvenimentAnimal> evenimente = new ArrayList<>();
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AnimalIndividual other = (AnimalIndividual) o;
+        return id != null && id.equals(other.getId());
+    }
 
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

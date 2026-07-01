@@ -2,13 +2,15 @@ package com.multitenant.model.persoana;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "identity_documents")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class ActIdentitate {
 
@@ -49,5 +51,18 @@ public class ActIdentitate {
     @JoinColumn(name = "person_id")
     @JsonIgnore
     private PersoanaFizica persoana;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ActIdentitate other = (ActIdentitate) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
 

@@ -1,13 +1,15 @@
 package com.multitenant.model.core;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "users", schema = "public")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class User {
     @Id
@@ -39,4 +41,18 @@ public class User {
     // Plain Long — references uat.id in the tenant schema (no JPA cross-schema FK)
     @Column(name = "uat_id")
     private Long uatId;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User other = (User) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
+

@@ -1,8 +1,8 @@
 package com.multitenant.model.persoana;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -10,8 +10,8 @@ import java.util.List;
 
 @Entity
 @DiscriminatorValue("PHYSICAL_PERSON")
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
 @NoArgsConstructor
 public class PersoanaFizica extends Persoana {
 
