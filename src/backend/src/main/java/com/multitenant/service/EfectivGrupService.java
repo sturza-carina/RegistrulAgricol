@@ -82,7 +82,7 @@ public class EfectivGrupService {
         }
 
         EfectivGrup saved = efectivGrupRepository.save(grup);
-        return modelMapper.map(saved, EfectivGrupDTO.class);
+        return convertToDto(saved);
     }
 
     /**
@@ -114,34 +114,34 @@ public class EfectivGrupService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proprietar not found")));
 
         EfectivGrup saved = efectivGrupRepository.save(snapshot);
-        return modelMapper.map(saved, EfectivGrupDTO.class);
+        return convertToDto(saved);
     }
 
     @Transactional(readOnly = true)
     public Page<EfectivGrupDTO> getAll(Pageable pageable) {
         return efectivGrupRepository.findAll(pageable)
-                .map(entity -> modelMapper.map(entity, EfectivGrupDTO.class));
+                .map(this::convertToDto);
     }
 
     @Transactional(readOnly = true)
     public EfectivGrupDTO getById(Long id) {
         EfectivGrup entity = efectivGrupRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Group stock not found with id: " + id));
-        return modelMapper.map(entity, EfectivGrupDTO.class);
+        return convertToDto(entity);
     }
 
     /** Returnează toate snapshot-urile pentru o gospodărie (istoricul complet al efectivului). */
     @Transactional(readOnly = true)
     public Page<EfectivGrupDTO> getHistoryByGospodarieId(Long gospodarieId, Pageable pageable) {
         return efectivGrupRepository.findByGospodarieIdOrderByDataInregistrareDesc(gospodarieId, pageable)
-                .map(entity -> modelMapper.map(entity, EfectivGrupDTO.class));
+                .map(this::convertToDto);
     }
 
     /** Returnează cel mai recent snapshot per specie pentru o gospodărie (starea curentă). */
     @Transactional(readOnly = true)
     public List<EfectivGrupDTO> getLatestByGospodarieId(Long gospodarieId) {
         return efectivGrupRepository.findLatestSnapshotByGospodarieId(gospodarieId).stream()
-                .map(entity -> modelMapper.map(entity, EfectivGrupDTO.class))
+                .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
@@ -158,6 +158,18 @@ public class EfectivGrupService {
     @Transactional(readOnly = true)
     public Page<EfectivGrupDTO> getByProprietarId(Long proprietarId, Pageable pageable) {
         return efectivGrupRepository.findByProprietarId(proprietarId, pageable)
-                .map(entity -> modelMapper.map(entity, EfectivGrupDTO.class));
+                .map(this::convertToDto);
+    }
+
+    private EfectivGrupDTO convertToDto(EfectivGrup entity) {
+        if (entity == null) {
+            return null;
+        }
+        EfectivGrupDTO dto = modelMapper.map(entity, EfectivGrupDTO.class);
+        if (entity.getProprietar() != null) {
+            Persoana unproxied = (Persoana) org.hibernate.Hibernate.unproxy(entity.getProprietar());
+            dto.setProprietar(modelMapper.map(unproxied, com.multitenant.dto.PersoanaDTO.class));
+        }
+        return dto;
     }
 }
