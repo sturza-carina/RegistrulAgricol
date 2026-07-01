@@ -113,7 +113,7 @@ erDiagram
 
 | Fișier | Schema | Conținut |
 |---|---|---|
-| `db/migration/V5__global_crotal_registry.sql` | `public` | Tabela `crotal_registry` (global) |
+| `db/migration/V10__global_crotal_registry.sql` | `public` | Tabela `crotal_registry` (global) |
 | `db/tenant/V11__create_animal_tables.sql` | per-tenant | Tabele `animal_individual`, `efectiv_grup` |
 | `db/tenant/V12__create_eveniment_animal_table.sql` | per-tenant | Tabela `eveniment_animal` + index |
 | `db/tenant/V13__animal_module_improvements.sql` | per-tenant | Unique crotal, `destinatar_tenant_id`, `data_inregistrare`, indexuri |
