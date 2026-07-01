@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import com.multitenant.model.common.Adresa;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -19,4 +20,5 @@ public class PersoanaDTO {
     private Adresa adresa;
     private String phoneNumber;
     private String email;
+    private List<Long> gospodarieIds;
 }
