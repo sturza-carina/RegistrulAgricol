@@ -1,5 +1,6 @@
 package com.multitenant.service;
 
+import com.multitenant.event.TerenCreatedEvent;
 import com.multitenant.model.registru.Teren;
 import com.multitenant.model.registru.Parcela;
 import com.multitenant.model.registru.Gospodarie;
@@ -8,6 +9,7 @@ import com.multitenant.repository.ParcelaRepository;
 import com.multitenant.repository.GospodarieRepository;
 import com.multitenant.dto.TerenWithParcelaDTO;
 import com.multitenant.dto.TerenCreateDTO;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,11 +25,16 @@ public class TerenService {
     private final TerenRepository terenRepository;
     private final ParcelaRepository parcelaRepository;
     private final GospodarieRepository gospodarieRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public TerenService(TerenRepository terenRepository, ParcelaRepository parcelaRepository, GospodarieRepository gospodarieRepository) {
+    public TerenService(TerenRepository terenRepository,
+                        ParcelaRepository parcelaRepository,
+                        GospodarieRepository gospodarieRepository,
+                        ApplicationEventPublisher eventPublisher) {
         this.terenRepository = terenRepository;
         this.parcelaRepository = parcelaRepository;
         this.gospodarieRepository = gospodarieRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     public Page<Teren> getAllTerenuri(Pageable pageable) {
@@ -62,7 +69,13 @@ public class TerenService {
         teren.setStereo70Coordinates(dto.getStereo70Coordinates());
         teren.setPolygon(dto.getPolygon());
         teren.setGospodarie(gospodarie);
-        return terenRepository.save(teren);
+        Teren savedTeren = terenRepository.save(teren);
+
+        // Publica evenimentul DUPA salvare, in aceeasi tranzactie.
+        // CarteFunciaraEventListener va reactiona AFTER_COMMIT, in tranzactie noua.
+        eventPublisher.publishEvent(new TerenCreatedEvent(savedTeren));
+
+        return savedTeren;
     }
 
     @Transactional

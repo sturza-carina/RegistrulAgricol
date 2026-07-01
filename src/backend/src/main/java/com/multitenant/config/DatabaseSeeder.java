@@ -2,10 +2,13 @@ package com.multitenant.config;
 
 import com.multitenant.config.tenant.TenantContext;
 import com.multitenant.model.registru.Gospodarie;
+import com.multitenant.model.registru.CarteFunciara;
+import com.multitenant.model.registru.TipZona;
 import com.multitenant.model.common.Adresa;
 import com.multitenant.model.registru.TipGospodarie;
 import com.multitenant.model.core.User;
 import com.multitenant.repository.GospodarieRepository;
+import com.multitenant.repository.CarteFunciaraRepository;
 import com.multitenant.repository.UserRepository;
 import com.multitenant.service.TenantService;
 import org.springframework.boot.CommandLineRunner;
@@ -25,6 +28,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final com.multitenant.repository.MachineryRepository machineryRepository;
     private final com.multitenant.repository.UatRepository uatRepository;
     private final com.multitenant.repository.PublicUatRepository publicUatRepository;
+    private final CarteFunciaraRepository carteFunciaraRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DatabaseSeeder(TenantService tenantService,
@@ -37,6 +41,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                           com.multitenant.repository.MachineryRepository machineryRepository,
                           com.multitenant.repository.UatRepository uatRepository,
                           com.multitenant.repository.PublicUatRepository publicUatRepository,
+                          CarteFunciaraRepository carteFunciaraRepository,
                           PasswordEncoder passwordEncoder) {
         this.tenantService = tenantService;
         this.userRepository = userRepository;
@@ -48,6 +53,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         this.machineryRepository = machineryRepository;
         this.uatRepository = uatRepository;
         this.publicUatRepository = publicUatRepository;
+        this.carteFunciaraRepository = carteFunciaraRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -193,11 +199,29 @@ public class DatabaseSeeder implements CommandLineRunner {
                         t.setPolygon(mapper.readTree(tJson));
                         t = terenRepository.save(t);
 
+                        // Seeder-ul ocoleste TerenService (nu publica eveniment Spring),
+                        // deci CarteFunciara trebuie creata explicit aici.
+                        // In productie, TerenService.createTerenFromDTO() o creeaza automat.
+                        if (carteFunciaraRepository.findByTerenId(t.getId()).isEmpty()) {
+                            CarteFunciara cf = new CarteFunciara();
+                            cf.setTeren(t);
+                            // Numere CF realiste pentru Cluj-Napoca (format ANCPI)
+                            cf.setNumarCf(String.format("CF-%05d-CJ", 100000 + i));
+                            cf.setNumarTopografic(String.format("Top/%d/%d/a", 1200 + i, i));
+                            // Suprafata initiala = suprafata parcelei care va fi adaugata mai jos
+                            cf.setSuprafataTotalaIntabulata(1.0 + (i * 0.1));
+                            carteFunciaraRepository.save(cf);
+                        }
+
                         com.multitenant.model.registru.Parcela p = new com.multitenant.model.registru.Parcela();
                         p.setDenumire("Parcela CJ " + i);
                         p.setSuprafata(1.0 + (i * 0.1));
                         p.setCategorieFolosinta(i % 2 == 0 ? "Arabil" : "Livada");
                         p.setTeren(t);
+                        // Campuri noi Cap. II (HG 1627/2024)
+                        p.setNumarCadastral(String.format("54975-%05d", i));
+                        p.setTipZona(i % 3 == 0 ? TipZona.INTRAVILAN : TipZona.EXTRAVILAN);
+                        p.setTitularDreptFolosinta("Ion" + i + " Popescu CJ");
                         String pJson = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[23.569717, 46.810456], [23.569705, 46.810905], [23.571013, 46.810921], [23.571025, 46.810472], [23.569717, 46.810456]]]}, \"properties\": {}}";
                         p.setPolygon(mapper.readTree(pJson));
                         parcelaRepository.save(p);
@@ -283,11 +307,28 @@ public class DatabaseSeeder implements CommandLineRunner {
                         t.setPolygon(mapper.readTree(tJson));
                         t = terenRepository.save(t);
 
+                        // Seeder-ul ocoleste TerenService (nu publica eveniment Spring),
+                        // deci CarteFunciara trebuie creata explicit aici.
+                        if (carteFunciaraRepository.findByTerenId(t.getId()).isEmpty()) {
+                            CarteFunciara cf = new CarteFunciara();
+                            cf.setTeren(t);
+                            // Numere CF realiste pentru Bucuresti (format ANCPI)
+                            cf.setNumarCf(String.format("CF-%05d-B", 200000 + i));
+                            cf.setNumarTopografic(String.format("Top/%d/%d/b", 3400 + i, i));
+                            // Suprafata initiala = suprafata parcelei care va fi adaugata mai jos
+                            cf.setSuprafataTotalaIntabulata(0.5 + (i * 0.05));
+                            carteFunciaraRepository.save(cf);
+                        }
+
                         com.multitenant.model.registru.Parcela p = new com.multitenant.model.registru.Parcela();
                         p.setDenumire("Parcela BUC " + i);
                         p.setSuprafata(0.5 + (i * 0.05));
                         p.setCategorieFolosinta(i % 2 == 0 ? "Pasune" : "Arabil");
                         p.setTeren(t);
+                        // Campuri noi Cap. II (HG 1627/2024)
+                        p.setNumarCadastral(String.format("1017-%05d", i));
+                        p.setTipZona(TipZona.INTRAVILAN);
+                        p.setTitularDreptFolosinta("Vasile" + i + " Ionescu BUC");
                         String pJson = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[26.1000, 44.4250], [26.1000, 44.4270], [26.1025, 44.4270], [26.1025, 44.4250], [26.1000, 44.4250]]]}, \"properties\": {}}";
                         p.setPolygon(mapper.readTree(pJson));
                         parcelaRepository.save(p);

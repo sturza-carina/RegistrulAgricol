@@ -1,9 +1,11 @@
 package com.multitenant.service;
 
+import com.multitenant.event.ParcelaAdaugataEvent;
 import com.multitenant.model.registru.Teren;
 import com.multitenant.model.registru.Parcela;
 import com.multitenant.repository.TerenRepository;
 import com.multitenant.repository.ParcelaRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,10 +17,14 @@ public class ParcelaService {
 
     private final ParcelaRepository parcelaRepository;
     private final TerenRepository terenRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public ParcelaService(ParcelaRepository parcelaRepository, TerenRepository terenRepository) {
+    public ParcelaService(ParcelaRepository parcelaRepository,
+                          TerenRepository terenRepository,
+                          ApplicationEventPublisher eventPublisher) {
         this.parcelaRepository = parcelaRepository;
         this.terenRepository = terenRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     public Page<Parcela> getAllParceleForTenant(Pageable pageable) {
@@ -40,7 +46,13 @@ public class ParcelaService {
         if (parcela.getStereo70Coordinates() != null && !parcela.getStereo70Coordinates().trim().isEmpty()) {
             // Already set by frontend or explicitly passed
         }
-        return parcelaRepository.save(parcela);
+        Parcela saved = parcelaRepository.save(parcela);
+
+        // Publica evenimentul dupa salvare — CarteFunciaraEventListener va recalcula
+        // suprafata_totala_intabulata din CF-ul aferent terenului, AFTER_COMMIT.
+        eventPublisher.publishEvent(new ParcelaAdaugataEvent(saved.getId(), terenId));
+
+        return saved;
     }
 
     public Parcela updateParcela(long id, Parcela updatedParcela) {
@@ -58,7 +70,15 @@ public class ParcelaService {
             existing.setSuprafata(updatedParcela.getSuprafata());
         if (updatedParcela.getCategorieFolosinta() != null)
             existing.setCategorieFolosinta(updatedParcela.getCategorieFolosinta());
-        
+
+        // Campuri noi Cap. II (HG 1627/2024)
+        if (updatedParcela.getNumarCadastral() != null)
+            existing.setNumarCadastral(updatedParcela.getNumarCadastral());
+        if (updatedParcela.getTipZona() != null)
+            existing.setTipZona(updatedParcela.getTipZona());
+        if (updatedParcela.getTitularDreptFolosinta() != null)
+            existing.setTitularDreptFolosinta(updatedParcela.getTitularDreptFolosinta());
+
         if (updatedParcela.getStereo70Coordinates() != null && !updatedParcela.getStereo70Coordinates().trim().isEmpty()) {
             existing.setStereo70Coordinates(updatedParcela.getStereo70Coordinates());
         }
