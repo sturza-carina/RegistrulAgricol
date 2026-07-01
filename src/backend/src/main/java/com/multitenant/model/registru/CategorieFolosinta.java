@@ -2,12 +2,14 @@ package com.multitenant.model.registru;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "categorii_folosinta")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class CategorieFolosinta {
 
@@ -29,5 +31,18 @@ public class CategorieFolosinta {
     @Transient
     public Long getTerenId() {
         return teren != null ? teren.getId() : null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CategorieFolosinta other = (CategorieFolosinta) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

@@ -1,14 +1,16 @@
 package com.multitenant.model.registru;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import com.multitenant.model.common.Adresa;
 import com.multitenant.model.core.Uat;
 
 @Entity
 @Table(name = "gospodarii")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class Gospodarie {
     @Id
@@ -31,4 +33,17 @@ public class Gospodarie {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "uat_id")
     private Uat uat;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Gospodarie other = (Gospodarie) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

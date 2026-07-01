@@ -4,13 +4,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.multitenant.model.persoana.Persoana;
 import com.multitenant.model.registru.Gospodarie;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "efective_grup")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class EfectivGrup {
 
@@ -57,4 +59,17 @@ public class EfectivGrup {
 
     @Column(name = "tenant_id")
     private String tenantId;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        EfectivGrup other = (EfectivGrup) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

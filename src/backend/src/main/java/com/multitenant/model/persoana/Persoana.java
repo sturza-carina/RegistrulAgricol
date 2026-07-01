@@ -3,7 +3,8 @@ package com.multitenant.model.persoana;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import com.multitenant.model.common.Adresa;
 import com.multitenant.model.registru.Gospodarie;
@@ -23,7 +24,8 @@ import java.util.List;
     @JsonSubTypes.Type(value = PersoanaFizica.class, name = "PHYSICAL_PERSON"),
     @JsonSubTypes.Type(value = PersoanaJuridica.class, name = "LEGAL_ENTITY")
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public abstract class Persoana {
 
@@ -89,6 +91,19 @@ public abstract class Persoana {
         } else {
             this.gospodarii = new ArrayList<>();
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Persoana other = (Persoana) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }
 

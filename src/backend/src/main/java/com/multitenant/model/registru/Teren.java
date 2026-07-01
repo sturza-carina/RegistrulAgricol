@@ -1,13 +1,15 @@
 package com.multitenant.model.registru;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "terenuri")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class Teren {
 
@@ -36,5 +38,18 @@ public class Teren {
     @Transient
     public Long getGospodarieId() {
         return gospodarie != null ? gospodarie.getId() : null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Teren other = (Teren) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

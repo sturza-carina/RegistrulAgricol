@@ -1,12 +1,14 @@
 package com.multitenant.model.registru;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "cladiri")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class Cladire {
 
@@ -45,5 +47,18 @@ public class Cladire {
     @Transient
     public Long getTerenId() {
         return teren != null ? teren.getId() : null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Cladire other = (Cladire) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

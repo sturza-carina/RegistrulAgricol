@@ -1,7 +1,8 @@
 package com.multitenant.model.registru;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.constraints.NotBlank;
@@ -10,7 +11,8 @@ import jakarta.validation.constraints.Positive;
 
 @Entity
 @Table(name = "parcele")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class Parcela {
 
@@ -53,5 +55,18 @@ public class Parcela {
             return "Gospodăria " + teren.getGospodarie().getCodGospodarie();
         }
         return "Gospodărie Necunoscută";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Parcela other = (Parcela) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

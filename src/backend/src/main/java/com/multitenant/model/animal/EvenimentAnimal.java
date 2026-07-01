@@ -2,7 +2,8 @@ package com.multitenant.model.animal;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
@@ -12,7 +13,8 @@ import java.time.LocalDate;
  */
 @Entity
 @Table(name = "evenimente_animale")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class EvenimentAnimal {
 
@@ -56,4 +58,17 @@ public class EvenimentAnimal {
      */
     @Column(name = "tenant_id")
     private String tenantId;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        EvenimentAnimal other = (EvenimentAnimal) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
