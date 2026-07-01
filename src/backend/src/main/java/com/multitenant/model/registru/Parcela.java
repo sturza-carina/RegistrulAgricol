@@ -32,6 +32,30 @@ public class Parcela {
     @Column(name = "categorie_folosinta", length = 100)
     private String categorieFolosinta;
 
+    /**
+     * Numarul cadastral al parcelei — alocat de ANCPI/Cadastru.
+     * Cheie pentru sincronizarea cu RAN si pentru declaratiile APIA.
+     */
+    @Column(name = "numar_cadastral", length = 100)
+    private String numarCadastral;
+
+    /**
+     * Tipul de zona: INTRAVILAN sau EXTRAVILAN.
+     * Critic pentru calculul impozitului pe teren (Codul Fiscal, art. 463-467)
+     * si pentru clasificarea bunului in CarteFunciara.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tip_zona", length = 20)
+    private TipZona tipZona;
+
+    /**
+     * Titularul dreptului de folosinta al parcelei.
+     * Poate fi numele unui proprietar, al unui arendas sau al unui concesionar.
+     * Camp text liber pentru flexibilitate; relatia formala se face prin ContractUtilizare.
+     */
+    @Column(name = "titular_drept_folosinta", length = 255)
+    private String titularDreptFolosinta;
+
     @Column(columnDefinition = "jsonb")
     @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     private JsonNode polygon;
