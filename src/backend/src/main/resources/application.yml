@@ -33,5 +33,7 @@ spring:
     out-of-order: true
 
 jwt:
-  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  # Dev-only fallback so local `mvn spring-boot:run` works without extra setup.
+  # Production (see application-prod.yml) requires JWT_SECRET with no fallback.
+  secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
   expiration: 86400000 # 24 hours

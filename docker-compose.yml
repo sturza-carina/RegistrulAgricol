@@ -3,9 +3,9 @@ services:
     image: postgis/postgis:15-3.3
     container_name: multi-tenant-db
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin_password
-      POSTGRES_DB: multi_tenant_db
+      POSTGRES_USER: ${DB_USERNAME:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin_password}
+      POSTGRES_DB: ${DB_NAME:-multi_tenant_db}
     ports:
       - "5433:5432"
     volumes:
@@ -22,11 +22,12 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/multi_tenant_db
-      - SPRING_DATASOURCE_USERNAME=admin
-      - SPRING_DATASOURCE_PASSWORD=admin_password
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${DB_NAME:-multi_tenant_db}
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:-admin}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-admin_password}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=none
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=docker,prod
+      - JWT_SECRET=${JWT_SECRET}
     volumes:
       - ./uploads:/data/documents
     depends_on:
