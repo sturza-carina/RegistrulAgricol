@@ -8,12 +8,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.RelationTargetAuditMode;
 
 @Entity
 @Table(name = "parcele")
 @Getter
 @Setter
 @NoArgsConstructor
+@Audited
 public class Parcela {
 
     @Id
@@ -42,6 +45,7 @@ public class Parcela {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teren_id", nullable = false)
     @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private Teren teren;
 
     @Transient
