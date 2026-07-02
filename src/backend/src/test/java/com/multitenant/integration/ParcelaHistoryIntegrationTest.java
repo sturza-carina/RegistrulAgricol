@@ -52,8 +52,7 @@ public class ParcelaHistoryIntegrationTest {
                 "cluj_user",
                 "password123",
                 "ROLE_USER",
-                "cluj",
-                true,
+                "cluj", 1L, true,
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
         );
     }

@@ -1,0 +1,165 @@
+<div class="container">
+  <div class="card">
+    <div *ngIf="successCode" style="background: #ecfdf5; border: 1px solid #10b981; color: #065f46; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+      <h3 style="margin-bottom: 10px;">Cerere trimisă cu succes!</h3>
+      <p>Codul cererii dumneavoastră este: <strong style="font-size: 1.2rem; color: #0ea5e9;">{{ successCode }}</strong></p>
+      <p style="font-size: 0.9rem; margin-top: 10px;">Vă rugăm să păstrați acest cod pentru a putea verifica stadiul cererii.</p>
+    </div>
+
+    <form *ngIf="!successCode" (ngSubmit)="submitCerere()">
+      <p class="warning-text"><span class="warning-text-bold">ATENTIE!</span> Va rugam ca pe intreg parcursul inregistrarii cererii sa evitati folosirea diacriticelor si a caracterelor speciale</p>
+      <p class="warning-text" style="margin-bottom: 25px;">Pentru cererile depuse de <span class="warning-text-bold">cetatenii straini care nu detin CNP</span> se va folosi CNP 1111111111111</p>
+
+      <div class="form-row">
+        <div class="form-col" style="flex: 2;">
+          <label class="form-label">NUME ȘI PRENUME / DENUMIRE FIRMA</label>
+          <div class="input-wrapper">
+            <input type="text" [(ngModel)]="cerere.nume" name="nume" required>
+            <div class="input-icon">
+              <!-- User icon -->
+              <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="form-col">
+          <label class="form-label">CNP / CUI (*)</label>
+          <div class="input-wrapper">
+            <input type="text" [(ngModel)]="cerere.cnpCui" name="cnpCui" required>
+            <div class="input-icon">
+              <!-- Fingerprint icon roughly -->
+              <svg viewBox="0 0 24 24"><path d="M17.81 4.47c-.08 0-.16-.02-.23-.06C15.66 3.42 14 3 12.01 3c-1.98 0-3.86.47-5.57 1.41-.24.13-.54.04-.68-.2-.13-.24-.04-.55.2-.68C7.82 2.52 9.86 2 12.01 2c2.13 0 3.99.47 6.03 1.52.25.13.34.43.21.67-.11.18-.3.28-.44.28zM3.5 9.72c-.1 0-.2-.03-.29-.09-.23-.16-.28-.47-.12-.7.99-1.4 2.25-2.5 3.75-3.27C9.98 4.04 14 4.03 17.15 5.65c1.5.77 2.76 1.86 3.75 3.25.16.22.11.54-.12.7-.23.16-.54.11-.7-.12-.89-1.22-2-2.18-3.34-2.87-2.85-1.47-6.54-1.47-9.41 0-1.32.68-2.43 1.64-3.32 2.86-.14.18-.34.25-.51.25zm.25 4.3c-.11 0-.21-.03-.31-.08-.24-.13-.33-.44-.2-.68C4.54 10.87 6.7 9.5 9.17 9.5c.34 0 .69.03 1.03.09.27.05.45.31.4.58-.05.27-.31.45-.58.4-.3-.05-.62-.07-.95-.07-2.18 0-4.1.1.2.66-.46.12-.22.21-.52.23-.68.12-.24-.2-.68z"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-col">
+          <label class="form-label">JUDET DOMICILIU/SEDIU</label>
+          <div class="input-wrapper">
+            <select [(ngModel)]="selectedJudet" name="judet" (change)="onJudetChange()" required>
+              <option value="">Selectați județul</option>
+              <option *ngFor="let judet of judete" [value]="judet">{{ judet }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-col">
+          <label class="form-label">LOCALITATE DOMICILIU/SEDIU</label>
+          <div class="input-wrapper">
+            <select [(ngModel)]="cerere.uatId" name="uatId" required [disabled]="!selectedJudet">
+              <option value="">Selectați localitatea</option>
+              <option *ngFor="let uat of localitati" [value]="uat.id">{{ uat.denumire }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-col">
+          <label class="form-label">STRADA DOMICILIU/SEDIU</label>
+          <div class="input-wrapper">
+            <select [(ngModel)]="domiciliuObj.strada" name="strada">
+              <option value="">...alege strada (tip)</option>
+              <option value="Strada">Strada</option>
+              <option value="Aleea">Aleea</option>
+              <option value="Bulevardul">Bulevardul</option>
+              <option value="Calea">Calea</option>
+              <option value="Soseaua">Soseaua</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-col" style="flex: 1.5">
+          <label class="form-label">NUME STRADA</label>
+          <div class="input-wrapper">
+            <input type="text" [(ngModel)]="domiciliuObj.numeStrada" name="numeStrada" placeholder="Nume stradă">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-col">
+          <label class="form-label">NUMAR</label>
+          <div class="input-wrapper">
+            <input type="text" [(ngModel)]="domiciliuObj.numar" name="numar">
+            <div class="input-icon"><svg viewBox="0 0 24 24"><path d="M18.13 12H5.87L2 22h20l-3.87-10zm-6.83 8H9.7v-2h1.6v2zm0-4H9.7v-2h1.6v2zm3.4 4h-1.6v-2h1.6v2zm0-4h-1.6v-2h1.6v2zM12 2L9.17 9h5.66L12 2z"/></svg></div>
+          </div>
+        </div>
+        <div class="form-col">
+          <label class="form-label">BLOC</label>
+          <div class="input-wrapper">
+            <input type="text" [(ngModel)]="domiciliuObj.bloc" name="bloc">
+            <div class="input-icon"><svg viewBox="0 0 24 24"><path d="M18.13 12H5.87L2 22h20l-3.87-10zm-6.83 8H9.7v-2h1.6v2zm0-4H9.7v-2h1.6v2zm3.4 4h-1.6v-2h1.6v2zm0-4h-1.6v-2h1.6v2zM12 2L9.17 9h5.66L12 2z"/></svg></div>
+          </div>
+        </div>
+        <div class="form-col">
+          <label class="form-label">SCARA</label>
+          <div class="input-wrapper">
+            <input type="text" [(ngModel)]="domiciliuObj.scara" name="scara">
+            <div class="input-icon"><svg viewBox="0 0 24 24"><path d="M18.13 12H5.87L2 22h20l-3.87-10zm-6.83 8H9.7v-2h1.6v2zm0-4H9.7v-2h1.6v2zm3.4 4h-1.6v-2h1.6v2zm0-4h-1.6v-2h1.6v2zM12 2L9.17 9h5.66L12 2z"/></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-col">
+          <label class="form-label">ETAJ</label>
+          <div class="input-wrapper">
+            <input type="text" [(ngModel)]="domiciliuObj.etaj" name="etaj">
+            <div class="input-icon"><svg viewBox="0 0 24 24"><path d="M18.13 12H5.87L2 22h20l-3.87-10zm-6.83 8H9.7v-2h1.6v2zm0-4H9.7v-2h1.6v2zm3.4 4h-1.6v-2h1.6v2zm0-4h-1.6v-2h1.6v2zM12 2L9.17 9h5.66L12 2z"/></svg></div>
+          </div>
+        </div>
+        <div class="form-col">
+          <label class="form-label">APARTAMENT</label>
+          <div class="input-wrapper">
+            <input type="text" [(ngModel)]="domiciliuObj.apartament" name="apartament">
+            <div class="input-icon"><svg viewBox="0 0 24 24"><path d="M18.13 12H5.87L2 22h20l-3.87-10zm-6.83 8H9.7v-2h1.6v2zm0-4H9.7v-2h1.6v2zm3.4 4h-1.6v-2h1.6v2zm0-4h-1.6v-2h1.6v2zM12 2L9.17 9h5.66L12 2z"/></svg></div>
+          </div>
+        </div>
+        <div class="form-col">
+          <label class="form-label">TELEFON</label>
+          <div class="input-wrapper">
+            <input type="text" [(ngModel)]="cerere.telefon" name="telefon">
+            <div class="input-icon">
+              <!-- Phone icon -->
+              <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-col" style="flex: 2;">
+          <label class="form-label">ADRESĂ DE EMAIL</label>
+          <div class="input-wrapper">
+            <input type="email" [(ngModel)]="cerere.email" name="email">
+            <div class="input-icon">
+              <!-- Envelope icon -->
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="form-col">
+           <!-- Empty space like in image -->
+        </div>
+      </div>
+
+      <p class="warning-text warning-text-bold" style="margin-top: 15px;">Se va folosi adresa de DOMICILIU / SEDIU</p>
+
+      <div class="section-title">Date de identificare ale terenului:</div>
+
+      <div class="inline-row">
+        <div class="inline-group">
+          <label>Număr carte funciară<span style="color:#ff0000">*</span></label>
+          <input type="text" [(ngModel)]="cerere.numarCarteFunciara" name="numarCarteFunciara" required>
+        </div>
+        <div class="inline-group">
+          <label>Număr cadastral sau topografic<span style="color:#ff0000">*</span></label>
+          <input type="text" [(ngModel)]="cerere.numarCadastral" name="numarCadastral" required>
+        </div>
+      </div>
+
+      <div style="overflow: hidden;">
+        <button type="submit" class="submit-btn" [disabled]="isSubmitting || !cerere.nume || !cerere.uatId || !cerere.cnpCui">
+          {{ isSubmitting ? 'Se trimite...' : 'Trimite Cererea' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

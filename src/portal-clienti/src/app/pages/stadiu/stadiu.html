@@ -1,0 +1,59 @@
+<div class="container" style="padding-top: 40px; max-width: 600px;">
+  <div class="card" style="text-align: center;">
+    <h2 style="margin-bottom: 20px; color: var(--primary-color);">Verificare Stadiu Cerere</h2>
+    <p style="margin-bottom: 30px; color: var(--text-muted);">Introduceți codul cererii primit la depunere, împreună cu localitatea în care ați depus-o, pentru a verifica stadiul acesteia.</p>
+
+    <form (ngSubmit)="checkStatus()" style="text-align: left;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="form-group">
+          <label class="form-label">Județ *</label>
+          <select class="form-control" [(ngModel)]="selectedJudet" name="judet" (change)="onJudetChange()" required>
+            <option value="">Selectați județul</option>
+            <option *ngFor="let judet of judete" [value]="judet">{{ judet }}</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Localitate (UAT) *</label>
+          <select class="form-control" [(ngModel)]="uatId" name="uatId" required [disabled]="!selectedJudet">
+            <option value="">Selectați localitatea</option>
+            <option *ngFor="let uat of localitati" [value]="uat.id">{{ uat.denumire }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Cod Cerere *</label>
+        <input type="text" class="form-control" [(ngModel)]="codCerere" name="codCerere" placeholder="ex: cerere-1a2b3c4d" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%;" [disabled]="isChecking || !codCerere || !uatId">
+        {{ isChecking ? 'Se verifică...' : 'Verifică' }}
+      </button>
+    </form>
+
+    <div *ngIf="cerereStatus" style="margin-top: 30px; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); text-align: left;">
+      <h3 style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">Detalii Cerere</h3>
+      <p><strong>Nume:</strong> {{ cerereStatus.nume }}</p>
+      <p><strong>Data depunerii:</strong> {{ cerereStatus.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>
+      <div style="margin-top: 15px;">
+        <strong>Status curent:</strong>
+        <span [ngStyle]="{
+          'padding': '4px 10px',
+          'border-radius': '20px',
+          'margin-left': '10px',
+          'font-weight': 'bold',
+          'font-size': '0.9rem',
+          'color': 'white',
+          'background-color': cerereStatus.status === 'PENDING' ? '#f59e0b' : (cerereStatus.status === 'ACCEPTED' ? '#10b981' : '#ef4444')
+        }">
+          {{ cerereStatus.status === 'PENDING' ? 'În Așteptare' : (cerereStatus.status === 'ACCEPTED' ? 'Aprobată' : 'Respinsă') }}
+        </span>
+      </div>
+    </div>
+    
+    <div *ngIf="error" style="margin-top: 20px; color: #ef4444; background: #fef2f2; padding: 10px; border-radius: 6px;">
+      {{ error }}
+    </div>
+  </div>
+</div>

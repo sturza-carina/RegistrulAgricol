@@ -1,0 +1,95 @@
+<app-layout>
+  <div class="page-header">
+    <h1>Gestionare Cereri Adeverințe</h1>
+  </div>
+
+  <div class="tabs" style="display: flex; gap: 20px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px;">
+    <button class="tab-btn" [class.active]="activeTab === 'PENDING'" (click)="setTab('PENDING')" 
+            style="background: none; border: none; padding: 10px 15px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted);">
+      În Așteptare
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'RESOLVED'" (click)="setTab('RESOLVED')"
+            style="background: none; border: none; padding: 10px 15px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted);">
+      Rezolvate
+    </button>
+  </div>
+
+  <div class="cards-grid">
+    <div class="cerere-card" *ngFor="let cerere of filteredCereri" (click)="selectCerere(cerere)" [ngClass]="{'is-pending': cerere.status === 'PENDING'}">
+      <div class="card-header">
+        <span class="cerere-cod">{{ cerere.codCerere }}</span>
+        <span class="status-badge" [ngClass]="'status-' + cerere.status.toLowerCase()">
+          {{ cerere.status === 'PENDING' ? 'În Așteptare' : (cerere.status === 'ACCEPTED' ? 'Aprobată' : 'Respinsă') }}
+        </span>
+      </div>
+      <div class="card-body">
+        <h3>{{ cerere.nume }}</h3>
+        <p class="date">{{ cerere.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="filteredCereri.length === 0" style="text-align: center; padding: 40px; color: var(--text-muted);">
+    Nu există cereri în această categorie.
+  </div>
+</app-layout>
+
+<!-- Modal Detalii Cerere -->
+<div class="modal-overlay" *ngIf="selectedCerere" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Detalii Cerere</h2>
+      <button class="btn-close" (click)="closeModal()">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="detail-row">
+        <span class="label">Cod Cerere:</span>
+        <span class="value font-mono">{{ selectedCerere.codCerere }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Status:</span>
+        <span class="value status-badge" [ngClass]="'status-' + selectedCerere.status.toLowerCase()">
+          {{ selectedCerere.status === 'PENDING' ? 'În Așteptare' : (selectedCerere.status === 'ACCEPTED' ? 'Aprobată' : 'Respinsă') }}
+        </span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Data depunerii:</span>
+        <span class="value">{{ selectedCerere.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Solicitant:</span>
+        <span class="value font-bold">{{ selectedCerere.nume }}</span>
+      </div>
+      <div class="detail-row" *ngIf="selectedCerere.cnpCui">
+        <span class="label">CNP / CUI:</span>
+        <span class="value font-mono">{{ selectedCerere.cnpCui }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Domiciliu / Sediu:</span>
+        <span class="value">{{ selectedCerere.domiciliu }}</span>
+      </div>
+      <div class="detail-row" *ngIf="selectedCerere.telefon">
+        <span class="label">Telefon:</span>
+        <span class="value">{{ selectedCerere.telefon }}</span>
+      </div>
+      <div class="detail-row" *ngIf="selectedCerere.email">
+        <span class="label">Email:</span>
+        <span class="value">{{ selectedCerere.email }}</span>
+      </div>
+      <div class="detail-row" *ngIf="selectedCerere.numarCarteFunciara">
+        <span class="label">Nr. Carte Funciară:</span>
+        <span class="value">{{ selectedCerere.numarCarteFunciara }}</span>
+      </div>
+      <div class="detail-row" *ngIf="selectedCerere.numarCadastral">
+        <span class="label">Nr. Cadastral:</span>
+        <span class="value">{{ selectedCerere.numarCadastral }}</span>
+      </div>
+    </div>
+    
+    <div class="modal-footer" *ngIf="selectedCerere.status === 'PENDING'">
+      <button class="btn btn-danger" (click)="declineCerere()">Respinge</button>
+      <button class="btn btn-success" (click)="acceptCerere()">Aprobă</button>
+    </div>
+  </div>
+</div>

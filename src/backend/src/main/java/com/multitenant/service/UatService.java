@@ -8,6 +8,7 @@ import com.multitenant.repository.UatRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.util.List;
 
@@ -60,12 +61,19 @@ public class UatService {
         publicUatRepository.delete(existing);
     }
 
+    @Cacheable("judete")
     public List<String> getDistinctJudete() {
         return publicUatRepository.findDistinctJudeteOrderByJudetAsc();
     }
 
+    @Cacheable(value = "localitati", key = "#judet")
     public List<PublicUat> getLocalitatiByJudet(String judet) {
         return publicUatRepository.findByJudetOrderByDenumireAsc(judet);
+    }
+
+    @Cacheable("toate_localitatile")
+    public List<PublicUat> getAllLocalitati() {
+        return publicUatRepository.findAll();
     }
 
     // ─────────────────────────────────────────────────────────────────────────

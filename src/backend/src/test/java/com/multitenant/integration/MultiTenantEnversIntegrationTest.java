@@ -43,8 +43,7 @@ public class MultiTenantEnversIntegrationTest {
                 "cluj_user",
                 "password123",
                 "ROLE_USER",
-                "cluj",
-                true,
+                "cluj", 1L, true,
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
         );
     }
@@ -55,8 +54,7 @@ public class MultiTenantEnversIntegrationTest {
                 "buc_admin",
                 "password123",
                 "ROLE_USER",
-                "bucuresti",
-                true,
+                "bucuresti", 1L, true,
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
         );
     }

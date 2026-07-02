@@ -26,6 +26,7 @@ public class JwtUtils {
                 .subject((userPrincipal.getUsername()))
                 .claim("userId", userPrincipal.getId())
                 .claim("tenantId", userPrincipal.getTenantId())
+                .claim("uatId", userPrincipal.getUatId())
                 .claim("role", userPrincipal.getRole())
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
@@ -52,6 +53,14 @@ public class JwtUtils {
 
     public String getTenantIdFromJwtToken(String token) {
         return getClaimsFromJwtToken(token).get("tenantId", String.class);
+    }
+
+    public Long getUatIdFromJwtToken(String token) {
+        Object uatId = getClaimsFromJwtToken(token).get("uatId");
+        if (uatId instanceof Integer) {
+            return ((Integer) uatId).longValue();
+        }
+        return getClaimsFromJwtToken(token).get("uatId", Long.class);
     }
 
     public String getRoleFromJwtToken(String token) {

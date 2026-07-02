@@ -63,7 +63,8 @@ public class AuthController {
                         userDetails.getId(),
                         userDetails.getUsername(),
                         userDetails.getRole(),
-                        userDetails.getTenantId()
+                        userDetails.getTenantId(),
+                        userDetails.getUatId()
                 ));
     }
 
@@ -84,6 +85,7 @@ public class AuthController {
                 "",
                 userDetails.getRole(),
                 request.getTenantId(),
+                userDetails.getUatId(),
                 true,
                 userDetails.getAuthorities()
         );
@@ -107,7 +109,8 @@ public class AuthController {
                         impersonatedDetails.getId(),
                         impersonatedDetails.getUsername(),
                         impersonatedDetails.getRole(),
-                        impersonatedDetails.getTenantId()
+                        impersonatedDetails.getTenantId(),
+                        impersonatedDetails.getUatId()
                 ));
     }
 

@@ -49,6 +49,9 @@ CREATE TABLE parcele_aud (
     categorie_folosinta VARCHAR(100),
     polygon JSONB,
     teren_id INTEGER,
+    numar_cadastral VARCHAR(100),
+    tip_zona VARCHAR(20),
+    titular_drept_folosinta VARCHAR(255),
     PRIMARY KEY (id, rev),
     FOREIGN KEY (rev) REFERENCES revinfo(rev)
 );
