@@ -6,12 +6,15 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 import com.multitenant.model.common.Adresa;
 import com.multitenant.model.core.Uat;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.RelationTargetAuditMode;
 
 @Entity
 @Table(name = "gospodarii")
 @Getter
 @Setter
 @NoArgsConstructor
+@Audited
 public class Gospodarie {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,6 +35,7 @@ public class Gospodarie {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "uat_id")
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private Uat uat;
 
     @Override
