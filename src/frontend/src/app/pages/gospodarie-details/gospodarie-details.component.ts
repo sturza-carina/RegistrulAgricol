@@ -8,6 +8,8 @@ import { PersoanaService } from '../../services/persoana.service';
 import { TerenService } from '../../services/teren.service';
 import { Teren } from '../../models/teren.model';
 import { ParcelaService } from '../../services/parcela.service';
+import { CarteFunciaraService } from '../../services/carte-funciara.service';
+import { CarteFunciara } from '../../models/carte-funciara.model';
 import { LayoutComponent } from '../../components/layout/layout.component';
 import { PageHeaderComponent } from '../../components/page-header/page-header.component';
 import { MachineryManagementComponent } from '../machinery-management/machinery-management.component';
@@ -19,6 +21,8 @@ import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrum
 import { GenericTableComponent, TableColumn, TableFilter, TableAction } from '../../components/generic-table/generic-table.component';
 import { DocumentManagementComponent } from '../document-management/document-management.component';
 import { GospodarieFormComponent } from '../gospodarie-form/gospodarie-form.component';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-gospodarie-details',
@@ -38,6 +42,12 @@ export class GospodarieDetailsComponent implements OnInit {
   persoane: any[] = [];
   terenuri: Teren[] = [];
   activeTab: string = 'GENERAL';
+
+  // Carte Funciara
+  carteFunciaraRows: CarteFunciara[] = [];
+  carteFunciaraLoading = false;
+  editingCfId: number | null = null;
+  editCfForm: { numarCf: string; numarTopografic: string } = { numarCf: '', numarTopografic: '' };
 
   breadcrumbItems: BreadcrumbItem[] = [];
 
@@ -93,7 +103,8 @@ export class GospodarieDetailsComponent implements OnInit {
     private gospodarieService: GospodarieService,
     private persoanaService: PersoanaService,
     private terenService: TerenService,
-    private parcelaService: ParcelaService
+    private parcelaService: ParcelaService,
+    private carteFunciaraService: CarteFunciaraService
   ) {}
 
   ngOnInit() {
@@ -113,6 +124,9 @@ export class GospodarieDetailsComponent implements OnInit {
       }
       this.isAddingMember = false; // Reset sub-view on tab change
       this.updateBreadcrumbs();
+      if (this.activeTab === 'CARTE_FUNCIARA') {
+        this.loadCarteFunciara();
+      }
     });
   }
 
@@ -154,6 +168,7 @@ export class GospodarieDetailsComponent implements OnInit {
       case 'ANIMALS': tabName = 'Animale'; break;
       case 'MACHINERY': tabName = 'Utilaje'; break;
       case 'DOCUMENTS': tabName = 'Documente'; break;
+      case 'CARTE_FUNCIARA': tabName = 'Carte Funciară'; break;
       default: tabName = this.activeTab;
     }
 
@@ -254,5 +269,101 @@ export class GospodarieDetailsComponent implements OnInit {
     });
   }
 
+  // --- Carte Funciara ---
 
+  loadCarteFunciara() {
+    if (this.terenuri.length === 0) {
+      // Terenuri might not be loaded yet if we navigate directly to CF tab
+      this.carteFunciaraLoading = true;
+      this.terenService.getTerenByGospodarieId(this.gospodarieId, 0, 1000).subscribe({
+        next: (response) => {
+          this.terenuri = response.content;
+          this.fetchCfForTerenuri();
+        },
+        error: () => {
+          this.terenuri = [];
+          this.carteFunciaraLoading = false;
+        }
+      });
+    } else {
+      this.fetchCfForTerenuri();
+    }
+  }
+
+  private fetchCfForTerenuri() {
+    if (this.terenuri.length === 0) {
+      this.carteFunciaraRows = [];
+      this.carteFunciaraLoading = false;
+      return;
+    }
+    this.carteFunciaraLoading = true;
+    const requests = this.terenuri
+      .filter(t => t.id != null)
+      .map(t =>
+        this.carteFunciaraService.getByTerenId(t.id!).pipe(
+          catchError(() => of(null))
+        )
+      );
+
+    forkJoin(requests).subscribe(results => {
+      this.carteFunciaraRows = results
+        .map((cf, idx) => {
+          if (!cf) return null;
+          const teren = this.terenuri[idx];
+          return { ...cf, terenDenumire: teren?.denumire, terenId: teren?.id } as CarteFunciara;
+        })
+        .filter((cf): cf is CarteFunciara => cf !== null);
+      this.carteFunciaraLoading = false;
+    });
+  }
+
+  startEditCf(cf: CarteFunciara) {
+    this.editingCfId = cf.id ?? null;
+    this.editCfForm = {
+      numarCf: cf.numarCf ?? '',
+      numarTopografic: cf.numarTopografic ?? ''
+    };
+  }
+
+  cancelEditCf() {
+    this.editingCfId = null;
+  }
+
+  saveCf(cf: CarteFunciara) {
+    if (!cf.id) return;
+    this.carteFunciaraService.update(cf.id, {
+      numarCf: this.editCfForm.numarCf || undefined,
+      numarTopografic: this.editCfForm.numarTopografic || undefined
+    }).subscribe({
+      next: (updated) => {
+        const idx = this.carteFunciaraRows.findIndex(r => r.id === cf.id);
+        if (idx !== -1) {
+          this.carteFunciaraRows[idx] = {
+            ...this.carteFunciaraRows[idx],
+            numarCf: updated.numarCf,
+            numarTopografic: updated.numarTopografic
+          };
+        }
+        this.editingCfId = null;
+      },
+      error: () => alert('Eroare la salvarea datelor Cărții Funciare.')
+    });
+  }
+
+  downloadCarteFunciaraPdf(cf: CarteFunciara) {
+    if (!cf.terenId) return;
+    this.carteFunciaraService.downloadPdf(cf.terenId).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `carte_funciara_${cf.terenId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+      },
+      error: () => alert('Eroare la descărcarea PDF-ului.')
+    });
+  }
 }

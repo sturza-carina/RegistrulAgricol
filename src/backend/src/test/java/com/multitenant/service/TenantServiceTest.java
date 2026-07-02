@@ -104,6 +104,34 @@ class TenantServiceTest {
                 .hasMessageContaining("Could not provision schema");
     }
 
+    @Test
+    void createTenant_flywayFails_dropsOrphanedSchema() throws Exception {
+        when(tenantRepository.existsById("54975")).thenReturn(false);
+
+        java.sql.Connection mockConnection = mock(java.sql.Connection.class);
+        java.sql.Statement mockStatement = mock(java.sql.Statement.class);
+
+        when(dataSource.getConnection()).thenReturn(mockConnection);
+        when(mockConnection.createStatement()).thenReturn(mockStatement);
+
+        doAnswer(invocation -> {
+            String sql = invocation.getArgument(0);
+            if (sql.contains("CREATE SCHEMA IF NOT EXISTS")) {
+                return false;
+            } else if (sql.contains("DROP SCHEMA IF EXISTS")) {
+                return false;
+            } else {
+                throw new java.sql.SQLException("Simulated Flyway migration failure");
+            }
+        }).when(mockStatement).execute(any(String.class));
+
+        assertThatThrownBy(() -> tenantService.createTenant("54975", "Cluj-Napoca"))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Could not provision schema");
+
+        verify(mockStatement).execute("DROP SCHEMA IF EXISTS uat_54975 CASCADE");
+    }
+
     // migrateAllTenants
     @Test
     void migrateAllTenants_noTenants_doesNothing() {
