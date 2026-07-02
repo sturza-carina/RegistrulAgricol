@@ -44,7 +44,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> 
                 auth.dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR).permitAll()
-                    .requestMatchers("/api/auth/**", "/error").permitAll()
+                    .requestMatchers("/api/auth/**", "/api/public/**", "/api/ws/**", "/error").permitAll()
                     .anyRequest().authenticated()
             );
 

@@ -32,6 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Long userId = jwtUtils.getUserIdFromJwtToken(jwt);
                 String tenantId = jwtUtils.getTenantIdFromJwtToken(jwt);
                 String role = jwtUtils.getRoleFromJwtToken(jwt);
+                Long uatId = jwtUtils.getUatIdFromJwtToken(jwt);
 
                 org.springframework.security.core.GrantedAuthority authority = new org.springframework.security.core.authority.SimpleGrantedAuthority(role);
                 UserDetailsImpl userDetails = new UserDetailsImpl(
@@ -40,6 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         "",
                         role,
                         tenantId,
+                        uatId,
                         true,
                         java.util.Collections.singletonList(authority)
                 );

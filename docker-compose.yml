@@ -50,6 +50,19 @@ services:
       - app-network
     restart: unless-stopped
 
+  portal-clienti:
+    build:
+      context: ./src/portal-clienti
+      dockerfile: Dockerfile
+    container_name: multi-tenant-portal-clienti
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    restart: unless-stopped
+
 volumes:
   postgres_data:
 
