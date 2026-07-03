@@ -56,7 +56,7 @@ services:
       dockerfile: Dockerfile
     container_name: multi-tenant-portal-cetateni
     ports:
-      - "4200:80"
+      - "4202:80"
     depends_on:
       - backend
     networks:
