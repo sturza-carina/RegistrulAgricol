@@ -5,6 +5,7 @@ import com.multitenant.payload.CetateanLoginRequest;
 import com.multitenant.payload.CetateanSignupRequest;
 import com.multitenant.payload.UserInfoResponse;
 import com.multitenant.repository.core.CetateanRepository;
+import com.multitenant.payload.CetateanUpdateRequest;
 import com.multitenant.security.JwtUtils;
 import com.multitenant.security.UserDetailsImpl;
 import jakarta.validation.Valid;
@@ -110,6 +111,36 @@ public class CetateanAuthController {
         }
         Cetatean cetatean = cetateanOpt.get();
         cetatean.setParola(null); // Do not expose password
+        return ResponseEntity.ok(cetatean);
+    }
+    
+    @PutMapping("/me")
+    public ResponseEntity<?> updateCurrentCetatean(@Valid @RequestBody CetateanUpdateRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Cetatean)) {
+            return ResponseEntity.status(401).build();
+        }
+        Cetatean principal = (Cetatean) authentication.getPrincipal();
+        Optional<Cetatean> cetateanOpt = cetateanRepository.findById(principal.getId());
+        if (cetateanOpt.isEmpty()) {
+            return ResponseEntity.status(404).body("Cetatean not found");
+        }
+        Cetatean cetatean = cetateanOpt.get();
+
+        cetatean.setNume(request.getNume());
+        cetatean.setPrenume(request.getPrenume());
+        cetatean.setTelefon(request.getTelefon());
+        cetatean.setJudet(request.getJudet());
+        cetatean.setLocalitate(request.getLocalitate());
+        cetatean.setStrada(request.getStrada());
+        cetatean.setNumar(request.getNumar());
+        cetatean.setBloc(request.getBloc());
+        cetatean.setScara(request.getScara());
+        cetatean.setEtaj(request.getEtaj());
+        cetatean.setApartament(request.getApartament());
+
+        cetateanRepository.save(cetatean);
+        cetatean.setParola(null);
         return ResponseEntity.ok(cetatean);
     }
 }

@@ -38,7 +38,13 @@ export class Login {
         this.router.navigateByUrl(returnUrl);
       },
       error: (err) => {
-        this.error = 'Date de autentificare incorecte.';
+        if (err.status === 401) {
+          this.error = 'Date de autentificare incorecte.';
+        } else if (err.status === 0 || err.status >= 500) {
+          this.error = 'Eroare de conexiune cu serverul. Te rugăm să încerci din nou.';
+        } else {
+          this.error = 'A apărut o eroare neașteptată.';
+        }
         this.loading = false;
       }
     });
