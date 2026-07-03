@@ -24,12 +24,8 @@ import jakarta.validation.Valid;
 public class CarteFunciaraController {
 
     private final CarteFunciaraRepository carteFunciaraRepository;
-    private final com.multitenant.service.PdfExportService pdfExportService;
-
-    public CarteFunciaraController(CarteFunciaraRepository carteFunciaraRepository,
-                                   com.multitenant.service.PdfExportService pdfExportService) {
+    public CarteFunciaraController(CarteFunciaraRepository carteFunciaraRepository) {
         this.carteFunciaraRepository = carteFunciaraRepository;
-        this.pdfExportService = pdfExportService;
     }
 
     /**
@@ -67,19 +63,4 @@ public class CarteFunciaraController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * Genereaza si returneaza Cartea Funciara in format PDF.
-     */
-    @GetMapping("/teren/{terenId}/pdf")
-    public ResponseEntity<byte[]> downloadPdf(@PathVariable Long terenId) {
-        try {
-            byte[] pdfBytes = pdfExportService.generateCarteFunciaraPdf(terenId);
-            return ResponseEntity.ok()
-                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"carte_funciara_" + terenId + ".pdf\"")
-                    .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
-                    .body(pdfBytes);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
 }
