@@ -5,12 +5,14 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.NotBlank;
+import org.hibernate.envers.Audited;
 
 @Entity
 @Table(name = "terenuri")
 @Getter
 @Setter
 @NoArgsConstructor
+@Audited
 public class Teren {
 
     @Id

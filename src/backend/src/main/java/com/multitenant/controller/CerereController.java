@@ -108,4 +108,16 @@ public class CerereController {
         }
         return org.springframework.http.ResponseEntity.ok(allCereri);
     }
+
+    @GetMapping("/by-cnp/{cnp}")
+    public org.springframework.http.ResponseEntity<java.util.List<CerereDTO>> getByCnp(@PathVariable String cnp, @RequestParam Long uatId) {
+        PublicUat pUat = publicUatRepository.findById(uatId).orElseThrow(() -> new RuntimeException("UAT not found"));
+        TenantContext.setCurrentTenant(pUat.getTenantId());
+        try {
+            java.util.List<CerereDTO> cereri = cerereService.getByCnp(cnp);
+            return org.springframework.http.ResponseEntity.ok(cereri);
+        } finally {
+            TenantContext.clear();
+        }
+    }
 }

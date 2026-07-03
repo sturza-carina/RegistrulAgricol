@@ -109,6 +109,7 @@ public class ParcelaService {
         parcelaRepository.deleteById(id);
     }
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public List<ParcelaRevisionDto> getParcelaHistory(Long id) {
         AuditReader auditReader = AuditReaderFactory.get(entityManager);
 

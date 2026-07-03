@@ -31,5 +31,8 @@ public interface PersoanaRepository extends JpaRepository<Persoana, Long> {
     Page<Persoana> findByGospodarieId(@Param("gospodarieId") Long gospodarieId, Pageable pageable);
 
     Page<Persoana> findByPersonTypeOrderByIdDesc(String personType, Pageable pageable);
+
+    @Query("SELECT p FROM Persoana p WHERE TYPE(p) = PersoanaFizica AND TREAT(p AS PersoanaFizica).cnp = :cnp")
+    java.util.Optional<Persoana> findByCnp(@Param("cnp") String cnp);
 }
 

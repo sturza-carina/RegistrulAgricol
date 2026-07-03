@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +15,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@Audited
 public class PersoanaFizica extends Persoana {
 
     @Column(name = "first_name")
@@ -28,6 +31,7 @@ public class PersoanaFizica extends Persoana {
     private LocalDate dateOfBirth;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "persoana", cascade = CascadeType.ALL, orphanRemoval = true)
+    @NotAudited
     private List<ActIdentitate> identityDocuments = new ArrayList<>();
 
     @Column(name = "is_head_of_household")

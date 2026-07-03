@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 @Service
+@Transactional
 public class GospodarieService {
 
     private final GospodarieRepository gospodarieRepository;

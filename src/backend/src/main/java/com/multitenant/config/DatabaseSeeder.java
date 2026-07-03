@@ -34,6 +34,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final CetateanRepository cetateanRepository;
     private final PasswordEncoder passwordEncoder;
     private final com.multitenant.repository.CerereRepository cerereRepository;
+    private final com.multitenant.repository.ContractUtilizareRepository contractUtilizareRepository;
 
     public DatabaseSeeder(TenantService tenantService,
                           UserRepository userRepository,
@@ -48,7 +49,8 @@ public class DatabaseSeeder implements CommandLineRunner {
                           CarteFunciaraRepository carteFunciaraRepository,
                           CetateanRepository cetateanRepository,
                           PasswordEncoder passwordEncoder,
-                          com.multitenant.repository.CerereRepository cerereRepository) {
+                          com.multitenant.repository.CerereRepository cerereRepository,
+                          com.multitenant.repository.ContractUtilizareRepository contractUtilizareRepository) {
         this.tenantService = tenantService;
         this.userRepository = userRepository;
         this.gospodarieRepository = gospodarieRepository;
@@ -63,6 +65,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         this.cetateanRepository = cetateanRepository;
         this.passwordEncoder = passwordEncoder;
         this.cerereRepository = cerereRepository;
+        this.contractUtilizareRepository = contractUtilizareRepository;
     }
 
     @Override
@@ -248,7 +251,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                         p.setTitularDreptFolosinta("Ion" + i + " Popescu CJ");
                         String pJson = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[23.569717, 46.810456], [23.569705, 46.810905], [23.571013, 46.810921], [23.571025, 46.810472], [23.569717, 46.810456]]]}, \"properties\": {}}";
                         p.setPolygon(mapper.readTree(pJson));
-                        parcelaRepository.save(p);
+                        p = parcelaRepository.save(p);
 
                         com.multitenant.model.persoana.PersoanaFizica persoana = new com.multitenant.model.persoana.PersoanaFizica();
                         persoana.setFirstName("Ion" + i);
@@ -258,7 +261,24 @@ public class DatabaseSeeder implements CommandLineRunner {
                         persoana.setAdresa(a);
                         persoana.getGospodarii().add(savedG);
                         persoana.setIsHeadOfHousehold(true);
-                        persoanaRepository.save(persoana);
+                        persoana = persoanaRepository.save(persoana);
+
+                        if (i == 1) {
+                            com.multitenant.model.registru.ContractUtilizare contract = new com.multitenant.model.registru.ContractUtilizare();
+                            contract.setParcela(p);
+                            contract.setLocatorProprietar(persoana);
+                            contract.setLocatorUtilizator(persoana);
+                            contract.setTipContract(com.multitenant.model.registru.TipContractUtilizare.ARENDA);
+                            contract.setNumarContract("CT-TEST-001");
+                            contract.setDataSemnare(java.time.LocalDate.now());
+                            contract.setDataInceput(java.time.LocalDate.now());
+                            contract.setDataSfarsit(java.time.LocalDate.now().plusDays(30));
+                            contract.setStatusContract(com.multitenant.model.registru.StatusContractUtilizare.ACTIV);
+                            contract.setEsteActiv(true);
+                            contract.setUtilizatorOperareId(1L);
+                            contractUtilizareRepository.save(contract);
+                            System.out.println("[DatabaseSeeder] Seeded mock expiring contract CT-TEST-001 for CNP " + persoana.getCnp());
+                        }
 
                         com.multitenant.model.registru.Cladire cladire = new com.multitenant.model.registru.Cladire();
                         cladire.setDestinatie("Locuinta");
