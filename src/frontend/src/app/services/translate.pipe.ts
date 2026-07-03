@@ -232,7 +232,8 @@ export class AppTranslatePipe implements PipeTransform {
     'Ați selectat gospodăria:': $localize`:@@dict_selected_gosp_prefix:Ați selectat gospodăria:`,
     'Adaugă Parcelă': $localize`:@@dict_add_parcel:Adaugă Parcelă`,
     'Ești sigur că vrei să ștergi această gospodărie?': $localize`:@@dict_delete_confirm_row:Ești sigur că vrei să ștergi această gospodărie?`,
-    'Sunteți sigur că doriți să ștergeți gospodăria selectată?': $localize`:@@dict_delete_confirm_selected:Sunteți sigur că doriți să ștergeți gospodăria selectată?`
+    'Sunteți sigur că doriți să ștergeți gospodăria selectată?': $localize`:@@dict_delete_confirm_selected:Sunteți sigur că doriți să ștergeți gospodăria selectată?`,
+    'Cereri Adeverințe': $localize`:@@dict_cert_requests:Cereri Adeverințe`
   };
 
   transform(value: any): any {

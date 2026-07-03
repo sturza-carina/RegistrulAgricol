@@ -3,6 +3,15 @@
   <main class="main-content">
     <header class="topbar">
       <div class="topbar-spacer"></div>
+      
+      <!-- Notifications -->
+      <div class="notifications-wrapper" style="position: relative; margin-right: 20px; cursor: pointer;" (click)="openCereriAdmin()">
+        <div style="background: var(--surface-card, #ffffff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 20px; padding: 6px 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: var(--text-color, #333); box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">
+          Notificări cereri
+          <span class="notification-badge" *ngIf="unreadCereri > 0" style="background: #ef4444; color: white; border-radius: 12px; padding: 2px 8px; font-size: 11px; font-weight: bold;">{{ unreadCereri }}</span>
+        </div>
+      </div>
+
       <div class="user-chip" *ngIf="user">
         <div class="user-info">
           <div class="user-name">{{ user.username || 'Admin User' }}</div>

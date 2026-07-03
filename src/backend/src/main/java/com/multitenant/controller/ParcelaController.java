@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Page;
 
 @RestController
 @RequestMapping("/api/parcele")
@@ -48,5 +47,9 @@ public class ParcelaController {
         parcelaService.deleteParcela(id);
         return ResponseEntity.ok().build();
     }
-}
 
+    @GetMapping("/{id}/istoric")
+    public ResponseEntity<?> getParcelaHistory(@PathVariable Long id) {
+        return ResponseEntity.ok(parcelaService.getParcelaHistory(id));
+    }
+}

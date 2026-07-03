@@ -92,17 +92,17 @@ class UserControllerTest {
 
     // helpers
     private UserDetailsImpl superAdmin() {
-        return new UserDetailsImpl(1L, "superadmin", "pass", "ROLE_SUPER_ADMIN", null, true,
+        return new UserDetailsImpl(1L, "superadmin", "pass", "ROLE_SUPER_ADMIN", null, 1L, true,
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN")));
     }
 
     private UserDetailsImpl adminCluj() {
-        return new UserDetailsImpl(2L, "cluj_admin", "pass", "ROLE_ADMIN", "cluj", true,
+        return new UserDetailsImpl(2L, "cluj_admin", "pass", "ROLE_ADMIN", "cluj", 1L, true,
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")));
     }
 
     private UserDetailsImpl regularUser() {
-        return new UserDetailsImpl(3L, "cluj_user", "pass", "ROLE_USER", "cluj", true,
+        return new UserDetailsImpl(3L, "cluj_user", "pass", "ROLE_USER", "cluj", 1L, true,
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
     }
 

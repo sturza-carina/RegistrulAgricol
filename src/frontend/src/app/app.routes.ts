@@ -21,6 +21,7 @@ import { AnimalListComponent } from './pages/animal-list/animal-list.component';
 import { AnimalIndividualFormComponent } from './pages/animal-individual-form/animal-individual-form.component';
 import { EfectivGrupFormComponent } from './pages/efectiv-grup-form/efectiv-grup-form.component';
 import { AnimalTimelineComponent } from './pages/animal-timeline/animal-timeline.component';
+import { CereriAdminComponent } from './pages/cereri-admin/cereri-admin.component';
 
 export const routes: Routes = [
   { path: 'login',          component: LoginComponent },
@@ -51,6 +52,7 @@ export const routes: Routes = [
   { path: 'harta',          component: ParcelaMapComponent },
   { path: 'google-harta',   component: GoogleMapComponent },
   { path: 'contracte',      component: ContractManagementComponent },
+  { path: 'cereri-admin',   component: CereriAdminComponent },
   { path: '',               redirectTo: '/login', pathMatch: 'full' }
 ];
 

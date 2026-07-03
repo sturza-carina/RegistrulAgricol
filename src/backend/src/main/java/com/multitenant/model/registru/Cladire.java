@@ -4,12 +4,15 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.RelationTargetAuditMode;
 
 @Entity
 @Table(name = "cladiri")
 @Getter
 @Setter
 @NoArgsConstructor
+@Audited
 public class Cladire {
 
     @Id
@@ -37,6 +40,7 @@ public class Cladire {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teren_id")
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private Teren teren;
 
     @Transient

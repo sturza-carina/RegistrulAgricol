@@ -97,7 +97,7 @@
         <source>Deconectare</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/components/layout/layout.component.html</context>
-          <context context-type="linenumber">12,14</context>
+          <context context-type="linenumber">21,23</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sidebar_logo_title" datatype="html">
@@ -132,35 +132,35 @@
         <source> Limbă / Language </source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/components/sidebar/sidebar.component.html</context>
-          <context context-type="linenumber">392,394</context>
+          <context context-type="linenumber">412,414</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sidebar_role_super_admin" datatype="html">
         <source>Administrator Sistem</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/components/sidebar/sidebar.component.html</context>
-          <context context-type="linenumber">419,420</context>
+          <context context-type="linenumber">439,440</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sidebar_role_admin" datatype="html">
         <source>Administrator Tenant</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/components/sidebar/sidebar.component.html</context>
-          <context context-type="linenumber">420,421</context>
+          <context context-type="linenumber">440,441</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sidebar_role_user" datatype="html">
         <source>Utilizator Registru</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/components/sidebar/sidebar.component.html</context>
-          <context context-type="linenumber">421,423</context>
+          <context context-type="linenumber">441,443</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sidebar_logout" datatype="html">
         <source>Deconectare</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/components/sidebar/sidebar.component.html</context>
-          <context context-type="linenumber">431,433</context>
+          <context context-type="linenumber">451,453</context>
         </context-group>
       </trans-unit>
       <trans-unit id="login_brand_name" datatype="html">
@@ -2366,11 +2366,18 @@
           <context context-type="linenumber">235</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="dict_cert_requests" datatype="html">
+        <source>Cereri Adeverințe</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/services/translate.pipe.ts</context>
+          <context context-type="linenumber">236</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="dict_details_uat_prefix" datatype="html">
         <source>UAT Details </source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/services/translate.pipe.ts</context>
-          <context context-type="linenumber">242</context>
+          <context context-type="linenumber">243</context>
         </context-group>
       </trans-unit>
     </body>
