@@ -1,1 +1,0 @@
-ALTER TABLE cereri ADD COLUMN cnp_cui VARCHAR(50);
