@@ -18,7 +18,7 @@
         </div>
         <div class="avatar">{{ (user.username?.charAt(0) || 'A') | uppercase }}</div>
       </div>
-      <button class="logout-btn" (click)="logout()">Deconectare</button>
+      <button class="logout-btn" (click)="logout()" i18n="@@topbar_logout">Deconectare</button>
     </header>
     <div class="page-content">
       <ng-content></ng-content>
