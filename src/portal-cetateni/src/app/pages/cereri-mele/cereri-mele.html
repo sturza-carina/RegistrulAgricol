@@ -1,0 +1,78 @@
+<div class="page-container">
+  <div class="header">
+    <h1>Cererile Mele</h1>
+    <p>Aici poți vedea istoricul și stadiul tuturor cererilor tale depuse către primării.</p>
+  </div>
+
+  <div class="filter-tabs" *ngIf="cereri.length > 0">
+    <button class="filter-btn" [class.active]="selectedFilter === 'ALL'" (click)="setFilter('ALL')">Toate</button>
+    <button class="filter-btn" [class.active]="selectedFilter === 'PENDING'" (click)="setFilter('PENDING')">În așteptare</button>
+    <button class="filter-btn" [class.active]="selectedFilter === 'ACCEPTED'" (click)="setFilter('ACCEPTED')">Acceptate</button>
+    <button class="filter-btn" [class.active]="selectedFilter === 'DECLINED'" (click)="setFilter('DECLINED')">Refuzate</button>
+  </div>
+
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Se încarcă cererile...</p>
+  </div>
+
+  <div class="error-state" *ngIf="error">
+    <p>{{ error }}</p>
+  </div>
+
+  <div *ngIf="!loading && !error && cereri.length === 0" class="empty-state">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+      <polyline points="14 2 14 8 20 8"></polyline>
+      <line x1="16" y1="13" x2="8" y2="13"></line>
+      <line x1="16" y1="17" x2="8" y2="17"></line>
+      <polyline points="10 9 9 9 8 9"></polyline>
+    </svg>
+    <h3>Nu ai nicio cerere depusă</h3>
+    <p>Depune o cerere nouă pentru a apărea aici.</p>
+    <a routerLink="/cereri" class="btn btn-primary" style="margin-top: 15px;">Depune Cerere</a>
+  </div>
+
+  <div *ngIf="!loading && !error && cereri.length > 0 && filteredCereri.length === 0" class="empty-state">
+    <p>Nu există nicio cerere cu stadiul selectat.</p>
+  </div>
+
+  <div class="cereri-grid" *ngIf="!loading && filteredCereri.length > 0">
+    <div class="cerere-card" *ngFor="let c of filteredCereri" (click)="toggleDetails(c.id)" [class.expanded]="selectedCerereId === c.id">
+      <div class="cerere-header">
+        <span class="cerere-id">#{{ c.codCerere }}</span>
+        <span class="cerere-status" [ngClass]="getStatusClass(c.status)">
+          {{ getStatusLabel(c.status) }}
+        </span>
+      </div>
+      <div class="cerere-body">
+        <div class="info-row">
+          <span class="info-label">Data depunerii:</span>
+          <span class="info-value">{{ c.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
+        </div>
+        
+        <!-- Expanded details -->
+        <div class="cerere-details" *ngIf="selectedCerereId === c.id">
+          <hr>
+          <div class="info-row">
+            <span class="info-label">Nume:</span>
+            <span class="info-value">{{ c.nume }}</span>
+          </div>
+          <div class="info-row" *ngIf="c.numarCadastral">
+            <span class="info-label">Nr. Cadastral:</span>
+            <span class="info-value">{{ c.numarCadastral }}</span>
+          </div>
+          <div class="info-row" *ngIf="c.numarCarteFunciara">
+            <span class="info-label">Nr. Carte Funciară:</span>
+            <span class="info-value">{{ c.numarCarteFunciara }}</span>
+          </div>
+        </div>
+        
+        <div class="expand-icon">
+          <svg *ngIf="selectedCerereId !== c.id" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          <svg *ngIf="selectedCerereId === c.id" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

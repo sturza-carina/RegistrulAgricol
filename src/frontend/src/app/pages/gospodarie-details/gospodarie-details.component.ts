@@ -350,20 +350,4 @@ export class GospodarieDetailsComponent implements OnInit {
     });
   }
 
-  downloadCarteFunciaraPdf(cf: CarteFunciara) {
-    if (!cf.terenId) return;
-    this.carteFunciaraService.downloadPdf(cf.terenId).subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `carte_funciara_${cf.terenId}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
-      },
-      error: () => alert('Eroare la descărcarea PDF-ului.')
-    });
-  }
 }
