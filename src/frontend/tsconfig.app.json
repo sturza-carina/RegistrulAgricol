@@ -4,6 +4,12 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/app",
+    "baseUrl": ".",
+    "paths": {
+      "@utils/leaflet-esm": [
+        "src/app/shared/utils/leaflet-esm.ts"
+      ]
+    },
     "types": []
   },
   "files": [

@@ -47,4 +47,16 @@ public class CerereController {
             TenantContext.clear();
         }
     }
+
+    @GetMapping("/by-cnp/{cnp}")
+    public ResponseEntity<java.util.List<CerereDTO>> getByCnp(@PathVariable String cnp, @RequestParam Long uatId) {
+        PublicUat pUat = publicUatRepository.findById(uatId).orElseThrow(() -> new RuntimeException("UAT not found"));
+        TenantContext.setCurrentTenant(pUat.getTenantId());
+        try {
+            java.util.List<CerereDTO> cereri = cerereService.getByCnp(cnp);
+            return ResponseEntity.ok(cereri);
+        } finally {
+            TenantContext.clear();
+        }
+    }
 }

@@ -77,4 +77,10 @@ public class CerereService {
         }
         return savedDto;
     }
+
+    public List<CerereDTO> getByCnp(String cnp) {
+        return cerereRepository.findByCnpCui(cnp).stream()
+                .map(c -> modelMapper.map(c, CerereDTO.class))
+                .collect(Collectors.toList());
+    }
 }

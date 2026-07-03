@@ -30,4 +30,6 @@ public interface ContractUtilizareRepository extends JpaRepository<ContractUtili
     int markExpiredContracts(@Param("activeStatus") StatusContractUtilizare activeStatus,
                              @Param("expiredStatus") StatusContractUtilizare expiredStatus,
                              @Param("currentDate") LocalDate currentDate);
+
+    List<ContractUtilizare> findByStatusContractAndDataSfarsit(StatusContractUtilizare statusContract, LocalDate dataSfarsit);
 }

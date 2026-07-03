@@ -12,4 +12,5 @@ public interface CerereRepository extends JpaRepository<Cerere, Long> {
     Optional<Cerere> findByCodCerere(String codCerere);
     List<Cerere> findByUatId(Long uatId);
     List<Cerere> findByUserId(Long userId);
+    List<Cerere> findByCnpCui(String cnpCui);
 }

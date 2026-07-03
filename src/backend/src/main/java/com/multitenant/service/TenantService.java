@@ -47,9 +47,9 @@ public class TenantService {
                     .dataSource(dataSource)
                     .schemas(schemaName)
                     .locations("classpath:db/tenant")
-                    .outOfOrder(true)
+                    .outOfOrder(false)
+                    .validateOnMigrate(true)
                     .load();
-            flyway.repair();
             flyway.migrate();
         } catch (Exception e) {
             log.error("Flyway migration or schema creation failed for tenant: {}. Attempting schema cleanup...", schemaName, e);
@@ -94,9 +94,9 @@ public class TenantService {
                         .dataSource(dataSource)
                         .schemas(tenant.getSchemaName())
                         .locations("classpath:db/tenant")
-                        .outOfOrder(true)
+                        .outOfOrder(false)
+                        .validateOnMigrate(true)
                         .load();
-                flyway.repair();
                 flyway.migrate();
                 System.out.println("Successfully migrated schema: " + tenant.getSchemaName());
             } catch (Exception e) {
