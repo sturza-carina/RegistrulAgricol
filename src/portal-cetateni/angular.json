@@ -6,7 +6,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "portal-clienti": {
+    "portal-cetateni": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -59,10 +59,10 @@
           },
           "configurations": {
             "production": {
-              "buildTarget": "portal-clienti:build:production"
+              "buildTarget": "portal-cetateni:build:production"
             },
             "development": {
-              "buildTarget": "portal-clienti:build:development"
+              "buildTarget": "portal-cetateni:build:development"
             }
           },
           "defaultConfiguration": "development"
