@@ -79,8 +79,11 @@ public class Parcela {
 
     @Transient
     public String getGospodarieName() {
-        if (teren != null && teren.getGospodarie() != null) {
-            return "Gospodăria " + teren.getGospodarie().getCodGospodarie();
+        if (teren != null && org.hibernate.Hibernate.isInitialized(teren)) {
+            Teren t = teren;
+            if (t.getGospodarie() != null && org.hibernate.Hibernate.isInitialized(t.getGospodarie())) {
+                return "Gospodăria " + t.getGospodarie().getCodGospodarie();
+            }
         }
         return "Gospodărie Necunoscută";
     }

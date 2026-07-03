@@ -52,13 +52,13 @@ services:
       - app-network
     restart: unless-stopped
 
-  portal-clienti:
+  portal-cetateni:
     build:
-      context: ./src/portal-clienti
+      context: ./src/portal-cetateni
       dockerfile: Dockerfile
-    container_name: multi-tenant-portal-clienti
+    container_name: multi-tenant-portal-cetateni
     ports:
-      - "4200:80"
+      - "4202:80"
     depends_on:
       - backend
     networks:
