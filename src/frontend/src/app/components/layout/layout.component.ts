@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, OnDestroy } from '@angular/core';
+import { Component, OnInit, Input, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -22,6 +22,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
   cereri: any[] = [];
   unreadCereri: number = 0;
   showNotifications: boolean = false;
+  showLangDropdown: boolean = false;
+  currentLocale: string = 'ro';
   private stompClient: Client;
 
   constructor(
@@ -53,6 +55,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.currentLocale = window.location.pathname.startsWith('/en/') ? 'en' : 'ro';
     this.authService.currentUser.subscribe(u => {
       this.user = u;
       if (this.user && this.user.tenantId) {
@@ -99,5 +102,30 @@ export class LayoutComponent implements OnInit, OnDestroy {
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.lang-switcher-container')) {
+      this.showLangDropdown = false;
+    }
+  }
+
+  toggleLangDropdown() {
+    this.showLangDropdown = !this.showLangDropdown;
+  }
+
+  changeLanguage(locale: string): void {
+    if (locale === this.currentLocale) return;
+    document.cookie = `lang=${locale};path=/;max-age=31536000`;
+    const path = window.location.pathname;
+    if (path.startsWith('/ro/') || path.startsWith('/en/')) {
+      const newPath = path.replace(/^\/(ro|en)/, `/${locale}`);
+      window.location.href = window.location.origin + newPath + window.location.search + window.location.hash;
+    } else {
+      alert(`Language switched to ${locale.toUpperCase()}. In production, this will redirect to /${locale}/. In development, run the corresponding build config (e.g. npm run start -- --configuration=${locale}) to view.`);
+      window.location.reload();
+    }
   }
 }

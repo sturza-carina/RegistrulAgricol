@@ -406,27 +406,6 @@
   </nav>
 
   <div class="sidebar-bottom">
-    <!-- Language Switcher -->
-    <div class="language-switcher" style="margin-bottom: 12px; padding: 0 4px;">
-      <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--sidebar-muted); margin-bottom: 6px;" i18n="@@sidebar_language_label">
-        Limbă / Language
-      </div>
-      <div style="display: flex; gap: 8px;">
-        <button (click)="changeLanguage('ro')" 
-                [style.background]="currentLocale === 'ro' ? 'var(--primary)' : 'var(--sidebar-hover)'"
-                [style.color]="currentLocale === 'ro' ? 'white' : 'var(--sidebar-text)'"
-                style="flex: 1; border: none; padding: 6px 12px; font-size: 11.5px; font-weight: 600; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;">
-          RO
-        </button>
-        <button (click)="changeLanguage('en')" 
-                [style.background]="currentLocale === 'en' ? 'var(--primary)' : 'var(--sidebar-hover)'"
-                [style.color]="currentLocale === 'en' ? 'white' : 'var(--sidebar-text)'"
-                style="flex: 1; border: none; padding: 6px 12px; font-size: 11.5px; font-weight: 600; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;">
-          EN
-        </button>
-      </div>
-    </div>
-
     <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-md);background:var(--sidebar-hover)">
       <div class="avatar" style="width:30px;height:30px;font-size:11px">
         {{ (user?.username?.charAt(0) || 'A') | uppercase }}
