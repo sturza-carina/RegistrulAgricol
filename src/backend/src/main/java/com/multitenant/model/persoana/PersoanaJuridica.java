@@ -6,12 +6,14 @@ import jakarta.persistence.Entity;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
+import org.hibernate.envers.Audited;
 
 @Entity
 @DiscriminatorValue("LEGAL_ENTITY")
 @Getter
 @Setter
 @NoArgsConstructor
+@Audited
 public class PersoanaJuridica extends Persoana {
 
     @Column(name = "company_name")
