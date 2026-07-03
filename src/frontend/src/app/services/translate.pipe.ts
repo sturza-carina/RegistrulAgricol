@@ -1,0 +1,254 @@
+import { Pipe, PipeTransform } from '@angular/core';
+
+@Pipe({
+  name: 'appTranslate',
+  standalone: true
+})
+export class AppTranslatePipe implements PipeTransform {
+  // Dictionary mapping Romanian terms to English terms via native $localize strings
+  private dictionary: { [key: string]: string } = {
+    // Common layout & sidebar navigation
+    'Prezentare Generală': $localize`:@@dict_overview:Prezentare Generală`,
+    'Panou de Control': $localize`:@@dict_dashboard:Panou de Control`,
+    'Informații Generale': $localize`:@@dict_general_info:Informații Generale`,
+    'Membri': $localize`:@@dict_members:Membri`,
+    'Terenuri Agricole': $localize`:@@dict_land:Terenuri Agricole`,
+    'Utilaje Agricole': $localize`:@@dict_machinery:Utilaje Agricole`,
+    'Clădiri și Construcții': $localize`:@@dict_buildings:Clădiri și Construcții`,
+    'Animale': $localize`:@@dict_animals:Animale`,
+    'Documente': $localize`:@@dict_documents:Documente`,
+    'Carte Funciară': $localize`:@@dict_land_registry:Carte Funciară`,
+    'Persoane': $localize`:@@dict_persons:Persoane`,
+    'Contracte': $localize`:@@dict_contracts:Contracte`,
+    'UAT-uri': $localize`:@@dict_uats:UAT-uri`,
+    'Utilizatori': $localize`:@@dict_users:Utilizatori`,
+    'Gospodării': $localize`:@@dict_households:Gospodării`,
+    'Tenants': $localize`:@@dict_tenants:Tenants`,
+    'Date Registru': $localize`:@@dict_registry_data:Date Registru`,
+    'Administrare': $localize`:@@dict_administration:Administrare`,
+
+    // Persons Management Page
+    'Gestionare Persoane & Entități': $localize`:@@dict_manage_persons:Gestionare Persoane & Entități`,
+    'Înregistrați și gestionați persoanele fizice și juridice în registrul agricol.': $localize`:@@dict_manage_persons_desc:Înregistrați și gestionați persoanele fizice și juridice în registrul agricol.`,
+    'Persoane din:': $localize`:@@dict_persons_from:Persoane din:`,
+    'Persoane Înregistrate': $localize`:@@dict_registered_persons:Persoane Înregistrate`,
+    'Adaugă Persoană': $localize`:@@dict_add_person:Adaugă Persoană`,
+    'Nume / Denumire': $localize`:@@dict_name_company:Nume / Denumire`,
+    'Tip Persoană': $localize`:@@dict_person_type:Tip Persoană`,
+    'Persoană Fizică': $localize`:@@dict_physical_person:Persoană Fizică`,
+    'Persoană Juridică': $localize`:@@dict_legal_entity:Persoană Juridică`,
+    'CNP / CUI': $localize`:@@dict_cnp_cui:CNP / CUI`,
+    'Județ': $localize`:@@dict_county:Județ`,
+    'Localitate': $localize`:@@dict_locality:Localitate`,
+    'Caută după nume, CNP/CUI...': $localize`:@@dict_search_person_placeholder:Caută după nume, CNP/CUI...`,
+    'Editare': $localize`:@@dict_edit:Editare`,
+    'Căutare și Selectare Persoană': $localize`:@@dict_search_select_person:Căutare și Selectare Persoană`,
+    'Caută după CNP, nume, nume firma, CUI...': $localize`:@@dict_search_person_modal_placeholder:Caută după CNP, nume, nume firma, CUI...`,
+    'Niciun rezultat găsit': $localize`:@@dict_no_results_found:Niciun rezultat găsit`,
+    'Încearcă cu alți termeni de căutare': $localize`:@@dict_try_other_search_terms:Încearcă cu alți termeni de căutare`,
+    'Se afișează': $localize`:@@dict_showing:Se afișează`,
+    'persoane': $localize`:@@dict_persons_plural:persoane`,
+    'Ștergere': $localize`:@@dict_delete:Ștergere`,
+
+    // Households Management Page
+    'Gospodării Înregistrate': $localize`:@@dict_registered_households:Gospodării Înregistrate`,
+    'Adaugă Gospodărie': $localize`:@@dict_add_household:Adaugă Gospodărie`,
+    'Cod Gospodărie': $localize`:@@dict_household_code:Cod Gospodărie`,
+    'Nume Cap Familie': $localize`:@@dict_head_of_family:Nume Cap Familie`,
+    'Adresă': $localize`:@@dict_address:Adresă`,
+    'Nr. Cadastral': $localize`:@@dict_cadastral_no:Nr. Cadastral`,
+    'Suprafață Totală (ha)': $localize`:@@dict_total_area:Suprafață Totală (ha)`,
+    'Caută după cod, nume cap familie...': $localize`:@@dict_search_household_placeholder:Caută după cod, nume cap familie...`,
+
+    // Lease Contracts Management
+    'Gestionare Contracte': $localize`:@@dict_manage_contracts:Gestionare Contracte`,
+    'Înregistrați și urmăriți contractele de arendă, concesiune sau alte asocieri.': $localize`:@@dict_manage_contracts_desc:Înregistrați și urmăriți contractele de arendă, concesiune sau alte asocieri.`,
+    'Contracte Înregistrate': $localize`:@@dict_registered_contracts:Contracte Înregistrate`,
+    'Adaugă Contract': $localize`:@@dict_add_contract:Adaugă Contract`,
+    'Număr Contract': $localize`:@@dict_contract_number:Număr Contract`,
+    'Data Contract': $localize`:@@dict_contract_date:Data Contract`,
+    'Tip Contract': $localize`:@@dict_contract_type:Tip Contract`,
+    'Arendator': $localize`:@@dict_lessor:Arendator`,
+    'Arendaș': $localize`:@@dict_lessee:Arendaș`,
+    'Valabilitate': $localize`:@@dict_validity:Valabilitate`,
+    'Caută după număr, arendator, arendaș...': $localize`:@@dict_search_contract_placeholder:Caută după număr, arendator, arendaș...`,
+
+    // Animals Management Page
+    'Gestionare Animale': $localize`:@@dict_manage_animals:Gestionare Animale`,
+    'Urmăriți efectivele de animale individuale și de grup pentru gospodăriile din UAT.': $localize`:@@dict_manage_animals_desc:Urmăriți efectivele de animale individuale și de grup pentru gospodăriile din UAT.`,
+    'Animale Înregistrate': $localize`:@@dict_registered_animals:Animale Înregistrate`,
+    'Adaugă Animal Individual': $localize`:@@dict_add_individual_animal:Adaugă Animal Individual`,
+    'Adaugă Efectiv de Grup': $localize`:@@dict_add_group_animal:Adaugă Efectiv de Grup`,
+    'Număr Crotal': $localize`:@@dict_crotal_no:Număr Crotal`,
+    'Specie': $localize`:@@dict_species:Specie`,
+    'Rasă': $localize`:@@dict_breed:Rasă`,
+    'Sex': $localize`:@@dict_sex_label:Sex`,
+    'Vârstă': $localize`:@@dict_age:Vârstă`,
+    'Stare': $localize`:@@dict_state:Stare`,
+    'Activ': $localize`:@@dict_active:Activ`,
+    'Inactiv': $localize`:@@dict_inactive:Inactiv`,
+    'Istoric': $localize`:@@dict_history:Istoric`,
+    'Caută după crotal, specie, rasă...': $localize`:@@dict_search_animal_placeholder:Caută după crotal, specie, rasă...`,
+
+    // Lands Management Page
+    'Gestionare Terenuri': $localize`:@@dict_manage_lands:Gestionare Terenuri`,
+    'Terenuri Înregistrate': $localize`:@@dict_registered_lands:Terenuri Înregistrate`,
+    'Adaugă Teren': $localize`:@@dict_add_land:Adaugă Teren`,
+    'Număr Parcelă': $localize`:@@dict_parcel_number:Număr Parcelă`,
+    'Mod Folosință': $localize`:@@dict_usage_mode:Mod Folosință`,
+    'Suprafață (mp)': $localize`:@@dict_area_sqm:Suprafață (mp)`,
+    'Intravilan': $localize`:@@dict_intravilan:Intravilan`,
+    'Extravilan': $localize`:@@dict_extravilan:Extravilan`,
+
+    // Buildings Management Page
+    'Gestionare Clădiri': $localize`:@@dict_manage_buildings:Gestionare Clădiri`,
+    'Clădiri Înregistrate': $localize`:@@dict_registered_buildings:Clădiri Înregistrate`,
+    'Adaugă Clădire': $localize`:@@dict_add_building:Adaugă Clădire`,
+    'Tip Clădire': $localize`:@@dict_building_type:Tip Clădire`,
+
+    // Machinery Management Page
+    'Gestionare Utilaje': $localize`:@@dict_manage_machinery:Gestionare Utilaje`,
+    'Utilaje Înregistrate': $localize`:@@dict_registered_machinery:Utilaje Înregistrate`,
+    'Adaugă Utilaj': $localize`:@@dict_add_machinery:Adaugă Utilaj`,
+    'Denumire Utilaj': $localize`:@@dict_machinery_name:Denumire Utilaj`,
+    'Număr Înmatriculare': $localize`:@@dict_plate_number:Număr Înmatriculare`,
+
+    // User Management Page
+    'Gestionare Utilizatori': $localize`:@@dict_manage_users:Gestionare Utilizatori`,
+    'Gestionați conturile de utilizatori și drepturile de acces din sistem.': $localize`:@@dict_manage_users_desc:Gestionați conturile de utilizatori și drepturile de acces din sistem.`,
+    'Utilizatori Înregistrați': $localize`:@@dict_registered_users_table:Utilizatori Înregistrați`,
+    'Adaugă Utilizator': $localize`:@@dict_add_user:Adaugă Utilizator`,
+    'Nume Utilizator': $localize`:@@dict_username:Nume Utilizator`,
+    'Rol': $localize`:@@dict_role:Rol`,
+    'Dată Creare': $localize`:@@dict_created_date:Dată Creare`,
+    'Caută după nume sau email...': $localize`:@@dict_search_user_placeholder:Caută după nume sau email...`,
+
+    // UAT Management Page
+    'Gestionare UAT-uri': $localize`:@@dict_manage_uats:Gestionare UAT-uri`,
+    'Administrați Unitățile Administrativ-Teritoriale active în platformă.': $localize`:@@dict_manage_uats_desc:Administrați Unitățile Administrativ-Teritoriale active în platformă.`,
+    'UAT-uri Înregistrate': $localize`:@@dict_registered_uats:UAT-uri Înregistrate`,
+    'Adaugă UAT': $localize`:@@dict_add_uat:Adaugă UAT`,
+    'Nume UAT': $localize`:@@dict_uat_name:Nume UAT`,
+    'Cod SIRUTA': $localize`:@@dict_siruta_code:Cod SIRUTA`,
+    'Caută după nume sau cod...': $localize`:@@dict_search_uat_placeholder:Caută după nume sau cod...`,
+
+    // Tenant Management Page
+    'Gestionare Tenants': $localize`:@@dict_manage_tenants:Gestionare Tenants`,
+    'Administrați instanțele de chiriași (tenants) din sistem.': $localize`:@@dict_manage_tenants_desc:Administrați instanțele de chiriași (tenants) din sistem.`,
+    'Tenants Înregistrați': $localize`:@@dict_registered_tenants:Tenants Înregistrați`,
+    'Adaugă Tenant': $localize`:@@dict_add_tenant:Adaugă Tenant`,
+
+    // Form button & message actions
+    'Salvare': $localize`:@@dict_save:Salvare`,
+    'Salvează': $localize`:@@dict_save_action:Salvează`,
+    'Anulare': $localize`:@@dict_cancel:Anulare`,
+    'Închide': $localize`:@@dict_close:Închide`,
+    'Înapoi': $localize`:@@dict_back:Înapoi`,
+    'Trimite': $localize`:@@dict_submit:Trimite`,
+    'Se salvează...': $localize`:@@dict_saving:Se salvează...`,
+    'Acțiuni': $localize`:@@dict_actions:Acțiuni`,
+    'Următoarea': $localize`:@@dict_next:Următoarea`,
+    'Acest câmp este obligatoriu.': $localize`:@@dict_required_field:Acest câmp este obligatoriu.`,
+    'Adresa de email nu este validă.': $localize`:@@dict_invalid_email:Adresa de email nu este validă.`,
+    'Context UAT': $localize`:@@dict_context_uat:Context UAT`,
+    'Context Gospodărie': $localize`:@@dict_context_household:Context Gospodărie`,
+    'Panou de control': $localize`:@@dict_dashboard_lowercase:Panou de control`,
+    'Gospodării înregistrate': $localize`:@@dict_registered_households_lowercase:Gospodării înregistrate`,
+    'Utilizatori înregistrați': $localize`:@@dict_registered_users_lowercase:Utilizatori înregistrați`,
+    'Tenants înregistrați': $localize`:@@dict_registered_tenants_lowercase:Tenants înregistrați`,
+    'Niciun Tenant selectat': $localize`:@@dict_no_tenant_selected:Niciun Tenant selectat`,
+    'Vă rugăm să selectați un Tenant / UAT din selectorul din stânga pentru a vizualiza sau înregistra persoanele acestuia.': $localize`:@@dict_select_tenant_prompt:Vă rugăm să selectați un Tenant / UAT din selectorul din stânga pentru a vizualiza sau înregistra persoanele acestuia.`,
+    'Gospodăria': $localize`:@@dict_household_sing:Gospodăria`,
+    'Activă': $localize`:@@dict_active_fem:Activă`,
+    'Inactivă': $localize`:@@dict_inactive_fem:Inactivă`,
+    'Persoane / Membri Gospodărie': $localize`:@@dict_persons_members:Persoane / Membri Gospodărie`,
+    'Nu există membri adăugați.': $localize`:@@dict_no_members_added:Nu există membri adăugați.`,
+    'Selectează o Persoană existentă sau Adaugă una nouă': $localize`:@@dict_select_or_add_person:Selectează o Persoană existentă sau Adaugă una nouă`,
+    'Înapoi la Membri': $localize`:@@dict_back_to_members:Înapoi la Membri`,
+    'Adaugă Persoană Nouă': $localize`:@@dict_add_new_person:Adaugă Persoană Nouă`,
+    'Nu există alte persoane în UAT.': $localize`:@@dict_no_other_persons:Nu există alte persoane în UAT.`,
+    'Carte Funciară – Terenuri Asociate': $localize`:@@dict_cf_associated_lands:Carte Funciară – Terenuri Asociate`,
+    'Completați datele cadastrale pentru fiecare teren după sincronizarea cu ANCPI.': $localize`:@@dict_fill_cadastral:Completați datele cadastrale pentru fiecare teren după sincronizarea cu ANCPI.`,
+    'Se încarcă datele Cărții Funciare...': $localize`:@@dict_cf_loading:Se încarcă datele Cărții Funciare...`,
+    'Nu există terenuri asociate acestei gospodării.': $localize`:@@dict_cf_no_lands:Nu există terenuri asociate acestei gospodării.`,
+    'Adăugați un teren din tabul': $localize`:@@dict_cf_add_land_prefix:Adăugați un teren din tabul`,
+    'pentru a genera automat o Carte Funciară.': $localize`:@@dict_cf_generate_suffix:pentru a genera automat o Carte Funciară.`,
+    'În așteptare': $localize`:@@dict_pending:În așteptare`,
+    'Număr Carte Funciară': $localize`:@@dict_cf_num:Număr Carte Funciară`,
+    'ex: 12345 sau CF-12345-UAT': $localize`:@@dict_cf_placeholder:ex: 12345 sau CF-12345-UAT`,
+    'Necompletat': $localize`:@@dict_uncompleted:Necompletat`,
+    'Număr Topografic': $localize`:@@dict_topographic_num:Număr Topografic`,
+    'ex: Top/123/2 sau 1234/2/a': $localize`:@@dict_topographic_placeholder:ex: Top/123/2 sau 1234/2/a`,
+    'Suprafață Totală Intabulată': $localize`:@@dict_total_reg_area:Suprafață Totală Intabulată`,
+    'Necalculată – adăugați parcele': $localize`:@@dict_uncalculated_parcels:Necalculată – adăugați parcele`,
+    'Automat': $localize`:@@dict_automatic:Automat`,
+    'Ultima Actualizare': $localize`:@@dict_last_update:Ultima Actualizare`,
+    'Editare date CF': $localize`:@@dict_edit_cf:Editare date CF`,
+    'Descarcă PDF': $localize`:@@dict_download_pdf:Descarcă PDF`,
+    'Cartea Funciară este generată': $localize`:@@dict_cf_generated_prefix:Cartea Funciară este generată`,
+    'la crearea unui teren.': $localize`:@@dict_cf_created_suffix:la crearea unui teren.`,
+    'Câmpurile marcate cu': $localize`:@@dict_fields_marked_prefix:Câmpurile marcate cu`,
+    'sunt calculate de sistem și nu pot fi modificate manual.': $localize`:@@dict_calculated_suffix:sunt calculate de sistem și nu pot fi modificate manual.`,
+    'automat': $localize`:@@dict_automatically:automat`,
+    'General': $localize`:@@dict_general_tab:General`,
+    'Clădiri': $localize`:@@dict_buildings_tab:Clădiri`,
+    'Utilaje': $localize`:@@dict_machinery_tab:Utilaje`,
+    'Detalii': $localize`:@@dict_details_breadcrumb:Detalii`,
+    'Adaugă membrii': $localize`:@@dict_add_members_breadcrumb:Adaugă membrii`,
+    'Cap Gospodărie': $localize`:@@dict_head_of_household:Cap Gospodărie`,
+    'Member': $localize`:@@dict_member:Membru`,
+    'Caută membru...': $localize`:@@dict_search_member_placeholder:Caută membru...`,
+    'Detalii / Editare': $localize`:@@dict_details_edit_tooltip:Detalii / Editare`,
+    'Denumire': $localize`:@@dict_col_description:Denumire`,
+    'Tip Teren': $localize`:@@dict_col_land_type:Tip Teren`,
+    'Nespecificat': $localize`:@@dict_unspecified_value:Nespecificat`,
+    'Geometrie': $localize`:@@dict_col_geometry:Geometrie`,
+    'Mapat': $localize`:@@dict_mapped_value:Mapat`,
+    'Nemapat': $localize`:@@dict_unmapped_value:Nemapat`,
+    'Caută teren...': $localize`:@@dict_search_land_placeholder:Caută teren...`,
+    'Editare Parcele': $localize`:@@dict_edit_parcels_tooltip:Editare Parcele`,
+    'Ștergere Teren': $localize`:@@dict_delete_land_tooltip:Ștergere Teren`,
+    'Gestionați gospodăriile din Registrul Agricol. Faceți click pe o gospodărie pentru a vedea acțiunile.': $localize`:@@dict_gosp_list_desc:Gestionați gospodăriile din Registrul Agricol. Faceți click pe o gospodărie pentru a vedea acțiunile.`,
+    'Gestionare Utilizatori Platformă': $localize`:@@dict_user_mgmt_title:Gestionare Utilizatori Platformă`,
+    'Supravegheați accesul administrativ, rolurile și permisiunile de sistem pentru personal.': $localize`:@@dict_user_mgmt_desc:Supravegheați accesul administrativ, rolurile și permisiunile de sistem pentru personal.`,
+    'Înregistrați un nou utilizator în platformă.': $localize`:@@dict_user_create_desc:Înregistrați un nou utilizator în platformă.`,
+    'Modificați detaliile, rolurile sau parola utilizatorului selectat.': $localize`:@@dict_user_edit_desc:Modificați detaliile, rolurile sau parola utilizatorului selectat.`,
+    'Registrul Global de UAT-uri': $localize`:@@dict_uat_global_title:Registrul Global de UAT-uri`,
+    'UAT-uri asignate': $localize`:@@dict_uat_assigned_title:UAT-uri asignate`,
+    'Gestionarea centralizată a tuturor unităților administrativ-teritoriale din România.': $localize`:@@dict_uat_global_desc:Gestionarea centralizată a tuturor unităților administrativ-teritoriale din România.`,
+    'UAT-urile în care acest tenant este autorizat să opereze.': $localize`:@@dict_uat_assigned_desc:UAT-urile în care acest tenant este autorizat să opereze.`,
+    'Selectați UAT-uri din registrul național pentru a le adăuga în acest tenant.': $localize`:@@dict_uat_assign_picker_desc:Selectați UAT-uri din registrul național pentru a le adăuga în acest tenant.`,
+    'Înregistrați o nouă unitate administrativ-teritorială (UAT) în registrul global.': $localize`:@@dict_uat_create_desc:Înregistrați o nouă unitate administrativ-teritorială (UAT) în registrul global.`,
+    'Modificați detaliile UAT-ului selectat.': $localize`:@@dict_uat_edit_desc:Modificați detaliile UAT-ului selectat.`,
+    'Detalii UAT': $localize`:@@dict_uat_details_title:Detalii UAT`,
+    'Vizualizați informațiile complete ale unității administrativ-teritoriale.': $localize`:@@dict_uat_details_desc:Vizualizați informațiile complete ale unității administrativ-teritoriale.`,
+    'Management Contracte Utilizare': $localize`:@@dict_contract_mgmt_title:Management Contracte Utilizare`,
+    'Gestionare contracte de arendă, comodat și alte tipuri de folosință terenuri.': $localize`:@@dict_contract_mgmt_desc:Gestionare contracte de arendă, comodat și alte tipuri de folosință terenuri.`,
+    'Înregistrați un contract de utilizare nou pentru UAT-ul activ.': $localize`:@@dict_contract_create_desc:Înregistrați un contract de utilizare nou pentru UAT-ul activ.`,
+    'Actualizați detaliile contractului selectat.': $localize`:@@dict_contract_edit_desc:Actualizați detaliile contractului selectat.`,
+    'Detalii contract de utilizare.': $localize`:@@dict_contract_details_desc:Detalii contract de utilizare.`,
+    'Gestionare Animale & Efective de Animale': $localize`:@@dict_animals_mgmt_title:Gestionare Animale & Efective de Animale`,
+    'Înregistrați și gestionați animalele individuale și efectivele de grup (flock stock) din registrul agricol.': $localize`:@@dict_animals_mgmt_desc:Înregistrați și gestionați animalele individuale și efectivele de grup (flock stock) din registrul agricol.`,
+    'Ați selectat gospodăria:': $localize`:@@dict_selected_gosp_prefix:Ați selectat gospodăria:`,
+    'Adaugă Parcelă': $localize`:@@dict_add_parcel:Adaugă Parcelă`,
+    'Ești sigur că vrei să ștergi această gospodărie?': $localize`:@@dict_delete_confirm_row:Ești sigur că vrei să ștergi această gospodărie?`,
+    'Sunteți sigur că doriți să ștergeți gospodăria selectată?': $localize`:@@dict_delete_confirm_selected:Sunteți sigur că doriți să ștergeți gospodăria selectată?`,
+    'Cereri Adeverințe': $localize`:@@dict_cert_requests:Cereri Adeverințe`
+  };
+
+  transform(value: any): any {
+    if (typeof value !== 'string') return value;
+    const trimmed = value.trim();
+    if (trimmed.startsWith('Detalii UAT ')) {
+      return value.replace('Detalii UAT ', $localize`:@@dict_details_uat_prefix:UAT Details `);
+    }
+    if (this.dictionary[trimmed]) {
+      return this.dictionary[trimmed];
+    }
+    const match = this.dictionary[trimmed];
+    if (match) {
+      return value.replace(trimmed, match);
+    }
+    return value;
+  }
+}

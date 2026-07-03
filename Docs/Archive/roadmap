@@ -1,164 +1,139 @@
-# Agricultural Registry — Comprehensive Analysis & Legislative Roadmap
-> Analysis of the application scope, compliance with Romanian regulations (HG 1627/2024, RAN/ANCPI), data privacy (GDPR), and technical roadmap.
+# Agricultural Registry — Redefined Comprehensive Analysis & Legislative Roadmap
+> Redefined based on active code reanalysis (Google Maps GIS stack, active migrations, discovered frontend-backend gaps, and Romanian administrative compliance).
 
 ---
 
-## Executive Summary
+## 1. Technical Reanalysis of the Codebase
+A thorough reanalysis of the active database migrations, Java backend, and Angular frontend reveals the exact implementation state and highlights structural gaps.
 
-The **Registru Agricol** application is a multi-tenant platform designed to digitalize agricultural household records for Romanian mayoralties (**UATs**). While the system features a modern architecture (schema-per-tenant isolation, dynamic tenant context switching, a GIS Leaflet viewer, and automated contract expiration), it is currently in a "semi-complete" state relative to the strict legal demands of Romanian administrative law.
+### A. GIS & Mapping Stack (Correction)
+* **Status:** The application utilizes **Google Maps** (`@angular/google-maps` on the frontend, with satellite/hybrid view controls), **not Leaflet** as previously documented in the archives.
+* **Coordinate Conversion:** The application integrates a `CoordConversionService` which converts geographical coordinates from the Romanian national **Stereo 70** projection grid (Dealul Piscului, standard for cadastral measurements) to **WGS84** coordinates for mapping.
+* **Geometries:** Coordinates are sent to the backend as GeoJSON, deserialized into JTS `Polygon` geometries, and saved in PostgreSQL using Hibernate Spatial.
 
-The next steps for this application must address:
-1. **Compliance with the 2025–2029 Legislative Framework** (Government Decision no. 1627/2024).
-2. **Interoperability** with national registries (RAN managed by ANCPI, APIA for subsidies, and local DITL tax systems).
-3. **Data Security & Privacy** (GDPR/CNP encryption, unalterable access logs/auditing).
-4. **Resolution of Existing Code Debt** (based on security audits and code reviews).
+### B. Discovered Frontend-Backend Gaps (Critical Gaps)
+While the database schema and Spring Boot backend have been updated to support standard Romanian land registry requirements, the Angular frontend is missing the corresponding user interfaces:
+
+1. **Carte Funciară (Land Registry - Chapter II.a):**
+   * **Backend:** Table `carti_funciare` (V30), entity `CarteFunciara`, DTO `CarteFunciaraDTO`, `CarteFunciaraController`, and `PdfExportService` are fully implemented.
+   * **Events:** A `CarteFunciaraEventListener` automatically creates a registry card whenever a new `Teren` is saved, and recalculates the total intabulated surface area when a `Parcela` is added.
+   * **Frontend:** A TypeScript model (`carte-funciara.model.ts`) and API service (`carte-funciara.service.ts`) exist, but **there is no UI component, form, or visual panel** on the interface to display or update the Land Registry Card (număr CF, număr topografic, and intabulated surface).
+2. **Extended Parcel Fields (Chapter II.b):**
+   * **Backend:** Table `parcele` has been altered (V31) to include `numar_cadastral`, `tip_zona` (INTRAVILAN/EXTRAVILAN), and `titular_drept_folosinta`. The Java entity `Parcela` maps these fields correctly.
+   * **Frontend:** The TS interface `Parcela` (`parcela.model.ts`) **completely lacks these fields**, and the parcel details panel and form inside `TerenParceleComponent` do not display or collect them.
+
+### C. Technical Cleanups & Security Concerns
+* **JPA Lombok refactoring:** Entites like `Teren`, `Parcela`, and `CarteFunciara` have been cleaned up to use `@Getter` and `@Setter` instead of `@Data`, preventing circular dependency and memory leaks. This refactoring must be cascaded to other models (e.g., `Persoana`, `AnimalIndividual`).
+* **Route Protection:** Angular routes (`app.routes.ts`) do not have `CanActivate` Route Guards. While the REST API is protected by Spring Security JWT, an unauthenticated user can still view the shell components by typing direct URLs.
 
 ---
 
-## 1. Romanian Legislation & Compliance Mapping
-Under **OG no. 28/2008** and the latest **HG no. 1627/2024** governing the **2025–2029 Agricultural Register**, the register is divided into **16 standardized chapters**. 
+## 2. Legislative Mapping & Gap Assessment (HG 1627/2024)
+Under the current legislative norms for the **2025–2029 Agricultural Register**, the following maps our codebase entities to the required chapters:
 
-Below is an assessment of the current codebase against these chapters, highlighting critical data gaps.
-
-### Legislative Gap Analysis
-
-| Legal Chapter | Scope / Legal Purpose | Current App Status | Legislative Gaps / Missing Fields |
+| Legal Chapter | Legislative Title & Scope | Codebase Entity | Gaps & Actions Needed |
 |---|---|---|---|
-| **Cap. I** | **Household Composition & Members**<br>*(Componența gospodăriei fără personalitate juridică)* | **Partially Implemented**<br>(`PersoanaFizica`, `PersoanaJuridica`, `RelatieRudenie`) | - **Head of Household designation** (*Cap de gospodărie*). In Romanian law, members must be registered relative to the head.<br>- **Date of entry/exit** from the household (for birth, death, marriage, or change of address). |
-| **Cap. II** | **Land Ownership & Plot Registry**<br>*(Terenuri în proprietate & Identificarea pe parcele)* | **Partially Implemented**<br>(`Teren`, `Parcela`, dynamic land use categories) | - **Cadastral Number** (*Număr cadastral*) and **Land Registry Number** (*Carte Funciară - CF*). Critical for CAD/GIS sync.<br>- **Intravilan / Extravilan flag** for each parcel (crucial for local land taxes).<br>- **Titular drept folosință** (Holder of use right/ownership title) per parcel (mandatory in the 2025–2029 norms).<br>- **Physical Block Code** (*Cod bloc fizic / Parcelă fizică*) for APIA declarations. |
-| **Cap. III** | **Agricultural Land Use Summary**<br>*(Modul de utilizare a suprafețelor agricole)* | **Partially Implemented**<br>(Accumulated lands) | - Automating calculations to group total land area by use category (arable, pasture, orchard, vineyard, forest) across the local jurisdiction. |
-| **Cap. IV** | **Sown Arable Land**<br>*(Suprafața arabilă cultivată)* | **Partially Implemented**<br>(`CulturaParcela`) | - **Standard Crop Codes** (*Nomenclator coduri cultură*) aligned with MADR/APIA standard lists (currently free-text). |
-| **Cap. V** | **Fruit Trees & Pomiculture**<br>*(Pomicultură - pomi răzleți & plantații)* | **Missing** | - Counting individual isolated trees (by species: apple, pear, plum, walnut) and structured orchards. |
-| **Cap. VI** | **Irrigated Land**<br>*(Suprafețe efectiv irigate)* | **Partially Implemented**<br>(`SursaApa` linked to `Parcela`) | - The law requires logging the **actual surface area irrigated** (ha) per crop type per agricultural year, not just listing water sources. |
-| **Cap. VII** | **Livestock Registry**<br>*(Animale domestice / sălbatice în captivitate)* | **Implemented**<br>(`AnimalIndividual`, `EvenimentAnimal`, `EfectivGrup`, unique `crotal_registry`) | - Aligns well with SNIIA (ANSVSA) rules. Only needs minor refactoring (e.g., standardizing species lists). |
-| **Cap. VIII** | **Crops / Census Sampling**<br>*(Date eșantion statistic)* | **Missing** | - Special statistical metadata required for the National Institute of Statistics (INS). |
-| **Cap. IX** | **Machinery & Equipment**<br>*(Utilaje, instalații agricole & silvice)* | **Partially Implemented**<br>(`Machinery` linked to `Gospodarie`) | - **Ownership Status** (owned vs. leased/rented).<br>- Grouping tractors by power classes (HP) as required by INS guidelines. |
-| **Cap. X** | **Fertilizers & Pesticides**<br>*(Aplicarea îngrășămintelor & pesticidelor)* | **Missing** | - Evidența tratamentelor chimice: logging quantity of chemical vs. organic fertilizers and pesticide types applied per parcel (required for environmental compliance). |
-| **Cap. XI** | **Buildings & Outbuildings**<br>*(Clădiri și construcții-anexe)* | **Partially Implemented**<br>(`Cladire`) | - **Exterior Wall Materials** (cărămidă, lemn, beton, chirpici) & **Roof Materials** (țiglă, tablă) for tax bracket determination.<br>- **Utility Connections** (electricity, water, gas, sewerage, heating) - mandatory in Chapter XI. |
-| **Cap. XII** | **Crop Production Volumes**<br>*(Producția vegetală obținută)* | **Partially Implemented**<br>(`CulturaParcela` production columns) | - Separate tracking of production from greenhouses/solariums (*sere și solarii*) versus open field. |
-| **Cap. XIII** | **Succession Inquiries**<br>*(Mențiuni privind succesiunile)* | **Missing** | - Tracking notifications sent to Public Notaries (SPN/BIN) regarding deceased residents and their registered assets. |
-| **Cap. XIV** | **Preemption Rights**<br>*(Dreptul de preempțiune)* | **Missing** | - Registry of land sales offers, public notices, preemptor registration, and MADR/DAJ approvals (Law 17/2014). |
-| **Cap. XV** | **Leases & Concessions**<br>*(Arendă și Concesiune)* | **Implemented**<br>(`ContractUtilizare` with scheduler) | - Fully implemented. Only needs migration of relationships to `Parcela` instead of `Teren` (as a contract applies to specific plots). |
-| **Cap. XVI** | **Special Mentions & Leases**<br>*(Mențiuni speciale, comodat, închiriere)* | **Implemented**<br>(Via `ContractUtilizare` type `COMODAT`/`INCHIRIERE`/`ALTELE`) | - Fully implemented. |
+| **Cap. I** | Composition of the Household | `PersoanaFizica` / `PersoanaJuridica` | Link relations relative to a **Head of Household**; track history of members entering/leaving the household. |
+| **Cap. II.a** | Land Ownership | `Teren` / `CarteFunciara` | **Expose the existing `CarteFunciara` backend in the UI** (show CF Number, Topographic Number, and PDF export button). |
+| **Cap. II.b** | Plot Identification | `Parcela` | **Expose new fields in UI forms:** Cadastral Number, Zone (Intravilan/Extravilan), and Use Right Holder (*Titular drept folosință*). |
+| **Cap. III** | Agricultural Land Use Summary | Summary statistics | Automate calculations to group total land area by use category (arable, pasture, orchard) for tax/APIA reporting. |
+| **Cap. IV** | Sown Arable Land | `CulturaParcela` | Map crop species to **standardized APIA/MADR crop codes** instead of free-text. |
+| **Cap. V** | Fruit Trees & Pomiculture | *Missing* | Implement orchards and isolated fruit tree inventories. |
+| **Cap. VI** | Irrigated Land | `SursaApa` | Implement annual logs of **actually irrigated surfaces** per parcel. |
+| **Cap. VII** | Livestock Registry | `AnimalIndividual` / `EfectivGrup` | Standardize species lists (cattle, sheep, goats, pigs, bees, poultry). |
+| **Cap. IX** | Machinery & Equipment | `Machinery` | Add ownership status (owned vs leased) and machinery power classes. |
+| **Cap. XI** | Buildings & Outbuildings | `Cladire` | Add outer wall construction materials, roof materials (for tax brackets), and utility connections. |
+| **Cap. XII** | Crop Production Volumes | `CulturaParcela` | Track crop production from greenhouses (*sere și solarii*) vs fields. |
+| **Cap. XIII** | Succession Inquiries | *Missing* | Track notary notifications regarding deceased residents' estates. |
+| **Cap. XIV** | Preemption Rights | *Missing* | Register public offers of land sales and preemptor status (Law 17/2014). |
+| **Cap. XV** | Leases & Concessions | `ContractUtilizare` | Add overlap checking to prevent registering two active contracts on the same plot for the same date. |
+| **Cap. XVI** | Special Mentions & Comodat | `ContractUtilizare` | Fully implemented (via Comodat/Închiriere types). |
 
 ---
 
-## 2. Interoperability with National Systems
-
-In Romania, local registry applications cannot act as data silos; they must integrate with national public administration systems.
+## 3. Advanced Interoperability (Legea 242/2022)
+In accordance with **Legea nr. 242/2022** on interoperability and the **"once-only" principle** (the state cannot request documents it already holds), the application must evolve from manual input to automated registry synchronization:
 
 ```mermaid
 flowchart TD
     App[Registru Agricol App]
     
-    %% RAN Integration
-    App -- "SOAP/REST Web Services (digital certs)" --> RAN[RAN - Registrul Agricol Național]
-    RAN -- "Cadastral Sync" --> ANCPI[ANCPI - Land Cadastre]
+    %% National Integrations
+    App -- "REST/SOAP" --> PNI[Platforma Națională de Interoperabilitate]
+    PNI -- "Identity Validation" --> DEPABD[DEPABD Registry]
+    PNI -- "Company Status" --> ANAF[ANAF / ONRC Registry]
     
-    %% APIA Integration
-    App -- "Export XML (Crops, Animals, Land)" --> APIA[APIA - Agency for Payments & Subsidies]
+    %% Agricultural Registries
+    App -- "Secure WSDL" --> RAN[RAN - Registrul Agricol Național]
+    RAN --> ANCPI[ANCPI - Land Cadastre]
     
-    %% DITL Integration
-    App -- "Taxes & Impositions Sync" --> DITL[DITL - Local Taxes Department]
+    %% Citizen Auth
+    Citizen[Citizen User] -- "SSO" --> ROeID[ROeID Identity Portal] --> App
 ```
 
-### A. RAN (Registrul Agricol Național) / ANCPI
-* **Legal Obligation:** Local administrative registries are legally required to push all registry updates to the central RAN repository managed by ANCPI.
-* **Requirements:**
-  * Implement an integration client supporting RAN’s official WSDL/SOAP (or REST, depending on county) API.
-  * Integration of **Authorized Digital Certificates** (signature keys) per user/operator to authorize pushes.
-  * Validation rules to block invalid CNP, CUI, or Siruta codes before synchronization.
-
-### B. APIA (Subsidies)
-* **Legal Obligation:** Farmers request subsidies based on agricultural register records. Discrepancies lead to subsidy rejection or fraud investigations.
-* **Requirements:**
-  * Implement a standard **APIA XML/JSON Export** containing parcel coordinates, crop types (`CulturaParcela` linked to physical blocks), and livestock numbers.
-  * Ensure categorical alignment: land use categories must strictly match APIA's master table.
-
-### C. DITL (Directia Impozite si Taxe Locale)
-* **Legal Obligation:** The agricultural register forms the baseline for local tax calculation on land and buildings (under the Romanian Fiscal Code).
-* **Requirements:**
-  * Expose read-only endpoints or CSV exports containing updated taxable surfaces (differentiated by Intravilan/Extravilan, zoning category A/B/C/D, and building construction materials).
+* **DEPABD Integration:** Query the national population database using the citizen's CNP to automatically populate full names, addresses, and check deceased status.
+* **ANAF/ONRC Integration:** Query the company registry using the company's CUI to fetch fiscal addresses, company status, and legal representatives.
+* **RAN / ANCPI Synchronization:** Synchronize local cadastral entries with the National Agricultural Registry (*Registrul Agricol Național*) via SOAP services with user-level digital signature certificates.
 
 ---
 
-## 3. Data Protection, GDPR & Auditing
-Because the application records sensitive data (CNPs, ownership data, family relations, property values), it is subject to heavy regulatory scrutiny.
+## 4. Redefined Prioritized Roadmap
 
-### GDPR Action Items
-1. **CNP & CUI Encryption:**
-   * National Identification Numbers (CNP for physical persons, CUI/CIF for legal entities) must be encrypted at rest in the database using AES-256 (e.g., via JPA converters: `@Convert(converter = AttributeEncryptor.class)`).
-2. **Access Logging & Auditing:**
-   * Standard JPA auditing (`@CreatedBy`, `@LastModifiedBy`) is insufficient. Under Law 195/2018, every access to a citizen's data (even a simple read/view query) must be logged.
-   * **Solution:** Implement an unalterable `AuditLog` table capturing: `operator_id`, `action_type` (READ, WRITE, DELETE), `target_entity`, `target_entity_id`, `timestamp`, and `client_ip`.
-3. **Soft Deletes:**
-   * Instead of hard-deleting records (which breaks administrative history and audit logs), utilize soft-deleting (`@SQLDelete(sql = "UPDATE ... SET deleted = true")` and `@Where(clause = "deleted = false")`).
-
----
-
-## 4. Technical Improvements (Code Review Action Items)
-Based on outstanding notes from `Docs/CodeReview-Carina.md` and current system configuration, the following items must be addressed to ensure production stability:
-
-> [!WARNING]
-> **Performance & Memory Risks**
-> Zeci de query-uri pot fi declanșate de relații `EAGER` implicite pe entități precum `AnimalIndividual` și `ContractUtilizare`. Se recomandă convertirea tuturor relațiilor în `LAZY` și utilizarea DTO-urilor de response dedicate.
-
-1. **JPA Entity Refactoring:**
-   * Replace Lombok `@Data` on JPA entities with `@Getter`/`@Setter` to prevent memory leaks and `LazyInitializationException` caused by `equals()`/`hashCode()` evaluation of uninitialized proxies.
-   * Add index annotations (`@Index`) on frequently queried columns: `gospodarie_id`, `teren_id`, `parcela_id`, `cnp`, and `cui`.
-2. **Exclusivity Checks for Leases:**
-   * Currently, overlapping active lease contracts are allowed. Implement a database constraint or service validator to check if a specific plot (`Parcela`) has overlapping active contracts for the same dates.
-3. **Data Integrity for Reference Data:**
-   * Move free-text fields like `tipSol` (Soil type) and `categorieFolosinta` (Land category) into backend `enum` types or lookup tables rather than relying on frontend `<select>` inputs to maintain data integrity.
-
----
-
-## 5. Prioritized Implementation Roadmap
-
-We propose a 4-phase rollout to bring the application to full compliance and production readiness.
+We propose a revised 5-phase execution plan to bridge active development gaps, enforce security, and scale the application.
 
 ```mermaid
 gantt
-    title Agricultural Registry Roadmap
+    title Redefined Agricultural Registry Roadmap
     dateFormat  YYYY-MM-DD
     section Phase 1
-    Security & GDPR Foundation    :active, p1, 2026-07-01, 30d
+    Security, GDPR & Route Guards       :active, p1, 2026-07-02, 20d
     section Phase 2
-    Missing Legislative Data Fields : p2, 2026-08-01, 45d
+    Bridge UI-Backend Gaps (CF & Plots) : p2, 2026-07-22, 25d
     section Phase 3
-    External Integrations (RAN, DITL) : p3, 2026-09-15, 60d
+    Missing Chapters & Overlap Checks   : p3, 2026-08-16, 30d
     section Phase 4
-    UI/UX & GIS Enhancements      : p4, 2026-11-15, 30d
+    National Integrations (RAN, PNI)    : p4, 2026-09-15, 45d
+    section Phase 5
+    Boot Scaling & Field Operations     : p5, 2026-10-30, 30d
 ```
 
-### Phase 1: Security, GDPR & Auditing (High Priority)
-* **Goal:** Secure sensitive citizen data and clean up existing backend debt.
+### Phase 1: Security, GDPR & Route Guards
+* **Goal:** Secure personal information and establish strict authentication boundaries.
 * **Tasks:**
-  * Implement AES-256 JPA encryption converter for CNPs and CUIs.
-  * Implement an append-only `AuditLog` service for read/write tracking of registries.
-  * Resolve Lombok `@Data` warnings, switch EAGER to LAZY relations, and implement dedicated Response DTOs.
-  * Fix the contract-operating user audit logic (removing client-side audit control).
-  * Configure Angular Route Guards to protect pages based on user roles (`ROLE_USER`, `ROLE_ADMIN`, `ROLE_SUPER_ADMIN`).
+  * Implement AES-256 JPA converters for encrypting CNPs and CUIs at rest.
+  * Create an append-only `AuditLog` database table and Spring Aspect to log all operator read/write requests.
+  * Implement Angular `AuthGuard` and role guards on routes in `app.routes.ts`.
+  * Complete Lombok `@Data` refactoring on remaining JPA entities (`Persoana`, `AnimalIndividual`, `User`) to prevent memory issues.
 
-### Phase 2: Missing Legislative Data Fields & Chapters (Medium Priority)
-* **Goal:** Extend the schema and UI to encompass all 16 legal chapters of the 2025-2029 register.
+### Phase 2: Bridge UI-Backend Gaps (Carte Funciară & Plot Fields)
+* **Goal:** Bring the database schema updates (V30 & V31) to the visual user interface.
 * **Tasks:**
-  * **Cap I:** Add "Head of Household" selection and track history of household composition changes.
-  * **Cap II:** Add Cadastral/CF Numbers, Intravilan/Extravilan markers, and "Titular drept folosință" to `Parcela`.
-  * **Cap XI & Cap IX:** Add wall/roof materials and utility fields for `Cladire`, and lease status / power classes for `Machinery`.
-  * **Cap XIII & Cap XIV:** Create models, controllers, and Angular pages for Succession tracking and Preemption Rights.
-  * **Cap XV:** Migrate lease relationship from `Teren` to `Parcela` and implement date-overlap validation.
+  * **Carte Funciară UI:**
+    * Create a new front-end panel in the Teren/Parcele details page to display the land registry card.
+    * Bind inputs to update `numarCf` and `numarTopografic` using `CarteFunciaraService.update()`.
+    * Expose a button to call `CarteFunciaraService.downloadPdf()`, allowing clerks to print the official Land Registry Card PDF.
+  * **Extended Plot Fields UI:**
+    * Update TypeScript's `Parcela` interface to include `numarCadastral`, `tipZona` (enum INTRAVILAN/EXTRAVILAN), and `titularDreptFolosinta`.
+    * Integrate these inputs into the "Adaugă Parcelă Nouă" form and parcel details sidebar in `TerenParceleComponent`.
+    * Update the map's InfoWindow tooltips to display these fields.
 
-### Phase 3: External Integrations (High Legal Importance)
-* **Goal:** Connect the app to national public administration systems.
+### Phase 3: Missing Chapters & Overlap Checks
+* **Goal:** Implement missing legal categories and enforce data consistency.
 * **Tasks:**
-  * Build the XML exporter for APIA declarations.
-  * Build a REST exporter for local tax systems (differentiating properties by zone and tax brackets).
-  * Draft the integration client for the National Agricultural Registry (RAN / ANCPI) using digital signature authentication.
+  * **Overlap Validations:** Build validation rules in `ContractUtilizareService` to reject lease/concession contracts that overlap dates for the same parcel.
+  * **Cap XI & IX (Buildings & Machinery):** Add dropdown options for construction/roof materials and utility checkboxes in `Cladire`, and leasing checkboxes in `Machinery`.
+  * **Cap XIII & XIV (Successions & Preemptions):** Create database tables, REST controllers, and UI forms to register probate proceedings (Notary requests) and public land sales offers.
 
-### Phase 4: UI/UX & GIS Enhancements
-* **Goal:** Improve operator experience and geographical features.
+### Phase 4: National Integrations & Citizen Services
+* **Goal:** Connect to state registries and open online access for citizens.
 * **Tasks:**
-  * Upgrade the Leaflet Map tool to display satellite overlays, parcel search by Cadastral/CF numbers, and overlapping boundary warnings.
-  * Implement a **Certificate Template Builder** to generate PDF registry extracts (*adeverințe*) directly from the household file (compliant with local stamp and signature requirements).
-  * Resolve Angular bundle size warnings by lazy-loading modules/components.
+  * Expose an **APIA XML Exporter** containing GIS geometries, cadastral numbers, and standardized crop codes.
+  * Draft WSDL SOAP client for synchronizing data with the **Registrul Agricol Național (RAN)** using digital signatures.
+  * Integrate PNI web services for automated DEPABD (citizen identity) and ANAF/ONRC (company data) retrievals.
+  * Implement a citizen-facing portal secured by **ROeID SSO** for online filings.
+
+### Phase 5: Architectural Scaling & Field Operations
+* **Goal:** Ensure performance under high UAT volumes and enable offline inspections.
+* **Tasks:**
+  * **Lazy Migrations:** Refactor the Flyway migration runner so that tenant schema updates execute asynchronously or dynamically on first access, instead of locking Spring Boot startup when managing thousands of UAT schemas.
+  * **Mobile App:** Design a conceptual offline-first mobile app for field inspectors using GPS positioning to count livestock and verify parcel boundaries in areas without mobile reception.

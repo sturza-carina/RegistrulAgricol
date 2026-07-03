@@ -41,8 +41,8 @@ export class AnimalIndividualFormComponent implements OnInit, OnDestroy {
   // Form config
   formInitialData: any = {};
   formConfig: FormConfig = {
-    submitText: 'Salvare Animal',
-    cancelText: 'Anulare',
+    submitText: $localize `:@@form_submit_save_animal:Salvare Animal`,
+    cancelText: $localize `:@@form_cancel:Anulare`,
     sections: []
   };
 
@@ -115,15 +115,19 @@ export class AnimalIndividualFormComponent implements OnInit, OnDestroy {
 
   updateBreadcrumbs() {
     this.breadcrumbItems = [
-      { label: 'Animale', link: '/animale' }
+      { label: $localize `:@@breadcrumb_animals:Animale`, link: '/animale' }
     ];
     if (this.returnToGospodarieId) {
       this.breadcrumbItems = [
-        { label: 'Gospodării', link: '/gospodarii' },
-        { label: 'Detalii Gospodărie', link: `/gospodarii/${this.returnToGospodarieId}`, queryParams: { tab: 'ANIMALS' } }
+        { label: $localize `:@@breadcrumb_households:Gospodării`, link: '/gospodarii' },
+        { label: $localize `:@@breadcrumb_household_details:Detalii Gospodărie`, link: `/gospodarii/${this.returnToGospodarieId}`, queryParams: { tab: 'ANIMALS' } }
       ];
     }
-    this.breadcrumbItems.push({ label: this.isEditMode ? 'Editare Animal' : 'Adăugare Animal' });
+    this.breadcrumbItems.push({ 
+      label: this.isEditMode 
+        ? $localize `:@@breadcrumb_edit_animal:Editare Animal` 
+        : $localize `:@@breadcrumb_add_animal:Adăugare Animal` 
+    });
   }
 
   loadDropdowns() {
@@ -146,36 +150,54 @@ export class AnimalIndividualFormComponent implements OnInit, OnDestroy {
   }
 
   updateFormConfig() {
-    this.formConfig.submitText = this.isEditMode ? 'Salvează Modificările' : 'Adăugare Animal';
+    this.formConfig.submitText = this.isEditMode 
+      ? $localize `:@@form_submit_save_changes:Salvează Modificările` 
+      : $localize `:@@form_submit_add_animal:Adăugare Animal`;
     const assocFields: FormField[] = [
       { 
-        name: 'gospodarieId', label: 'Gospodărie Asociată', type: 'select', required: true, width: 'half', placeholder: '-- Selectează Gospodăria --',
+        name: 'gospodarieId', 
+        label: $localize `:@@field_associated_household:Gospodărie Asociată`, 
+        type: 'select', 
+        required: true, 
+        width: 'half', 
+        placeholder: $localize `:@@placeholder_select_household:-- Selectează Gospodăria --`,
         options: this.gospodariiList.map(g => ({ label: `${g.codGospodarie} - ${g.adresa?.street || ''} ${g.adresa?.streetNumber || ''} (${g.adresa?.localitate || ''})`, value: g.id }))
       },
       { 
-        name: 'proprietarId', label: 'Proprietar (Persoană)', type: 'select', required: true, width: 'half', placeholder: '-- Selectează Proprietar --',
+        name: 'proprietarId', 
+        label: $localize `:@@field_owner_person:Proprietar (Persoană)`, 
+        type: 'select', 
+        required: true, 
+        width: 'half', 
+        placeholder: $localize `:@@placeholder_select_owner:-- Selectează Proprietar --`,
         options: this.personsList.map(p => ({ label: this.getPersonDisplayName(p), value: p.id }))
       }
     ];
 
     if (!this.isEditMode) {
-      assocFields.push({ name: 'stareActiva', label: 'Stare Activă (Prezent în exploatație)', type: 'checkbox', required: false, width: 'full' });
+      assocFields.push({ 
+        name: 'stareActiva', 
+        label: $localize `:@@field_active_state:Stare Activă (Prezent în exploatație)`, 
+        type: 'checkbox', 
+        required: false, 
+        width: 'full' 
+      });
     }
 
     this.formConfig.sections = [
       {
-        title: 'Detalii Identificare',
+        title: $localize `:@@section_identification_details:Detalii Identificare`,
         fields: [
-          { name: 'numarCrotal', label: 'Număr Crotal (Identificare)', type: 'text', required: true, placeholder: 'Ex: RO123456789', width: 'half' },
-          { name: 'specie', label: 'Specie', type: 'select', required: true, width: 'half', options: this.speciesOptions.map(s => ({ label: s, value: s })) },
-          { name: 'rasa', label: 'Rasă', type: 'text', required: false, width: 'half', placeholder: 'Ex: Bălțată Românească' },
-          { name: 'sex', label: 'Sex', type: 'select', required: true, width: 'half', options: this.sexOptions.map(s => ({ label: s, value: s })) },
-          { name: 'dataNastere', label: 'Data Nașterii', type: 'date', required: false, width: 'half' },
-          { name: 'greutateKg', label: 'Greutate estimată (Kg)', type: 'number', required: false, width: 'half', min: 0 }
+          { name: 'numarCrotal', label: $localize `:@@field_crotal_number:Număr Crotal (Identificare)`, type: 'text', required: true, placeholder: $localize `:@@placeholder_crotal_example:Ex: RO123456789`, width: 'half' },
+          { name: 'specie', label: $localize `:@@field_specie:Specie`, type: 'select', required: true, width: 'half', options: this.speciesOptions.map(s => ({ label: s, value: s })) },
+          { name: 'rasa', label: $localize `:@@field_rasa:Rasă`, type: 'text', required: false, width: 'half', placeholder: $localize `:@@placeholder_rasa_example:Ex: Bălțată Românească` },
+          { name: 'sex', label: $localize `:@@field_sex:Sex`, type: 'select', required: true, width: 'half', options: this.sexOptions.map(s => ({ label: s, value: s })) },
+          { name: 'dataNastere', label: $localize `:@@field_birth_date:Data Nașterii`, type: 'date', required: false, width: 'half' },
+          { name: 'greutateKg', label: $localize `:@@field_weight:Greutate estimată (Kg)`, type: 'number', required: false, width: 'half', min: 0 }
         ]
       },
       {
-        title: 'Asociere',
+        title: $localize `:@@section_association:Asociere`,
         fields: assocFields
       }
     ];
@@ -222,7 +244,7 @@ export class AnimalIndividualFormComponent implements OnInit, OnDestroy {
 
   save(formData: any) {
     if (!formData.gospodarieId || !formData.proprietarId) {
-      alert('Vă rugăm să selectați Gospodăria și Proprietarul.');
+      alert($localize `:@@alert_select_household_owner:Vă rugăm să selectați Gospodăria și Proprietarul.`);
       return;
     }
 
@@ -243,14 +265,16 @@ export class AnimalIndividualFormComponent implements OnInit, OnDestroy {
       this.animalService.updateIndividual(this.animalId, payload).subscribe({
         next: () => this.navigateBack(),
         error: (err) => {
-          alert('Eroare la actualizarea animalului: ' + (err.error?.message || err.message));
+          const errMsg = $localize `:@@alert_update_animal_error:Eroare la actualizarea animalului: `;
+          alert(errMsg + (err.error?.message || err.message));
         }
       });
     } else {
       this.animalService.createIndividual(payload).subscribe({
         next: () => this.navigateBack(),
         error: (err) => {
-          alert('Eroare la înregistrarea animalului: ' + (err.error?.message || err.message));
+          const errMsg = $localize `:@@alert_register_animal_error:Eroare la înregistrarea animalului: `;
+          alert(errMsg + (err.error?.message || err.message));
         }
       });
     }

@@ -10,7 +10,9 @@
         "src/app/shared/utils/leaflet-esm.ts"
       ]
     },
-    "types": []
+    "types": [
+      "@angular/localize"
+    ]
   },
   "files": [
     "src/main.ts"
