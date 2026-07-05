@@ -338,6 +338,123 @@
           </div>
         </ng-container>
 
+        <hr style="border-color: rgba(255,255,255,0.1); margin: 16px 0;" *ngIf="showVita(viewingParcela)">
+
+        <!-- VITA DE VIE SECTION -->
+        <ng-container *ngIf="showVita(viewingParcela)">
+          <div *ngIf="!isAddingVita" class="cultura-block">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <div class="list-label" style="font-size: 14px; color: #86efac;">Evidență viță de vie</div>
+              <button class="btn-secondary" style="font-size:12px; padding:4px 8px; border-color: #22c55e; color: #4ade80;" (click)="openAddVitaForm()">
+                + Viță / Plantație
+              </button>
+            </div>
+
+            <div *ngIf="vitaDeVie.length > 0" class="categorie-list">
+              <div *ngFor="let vita of vitaDeVie" class="categorie-item" style="border-left: 3px solid #22c55e;">
+                <div>
+                  <div class="categorie-name">
+                    {{ vita.soi || vita.specie }}
+                    <span style="font-size:11px;opacity:0.7;">({{ vita.tipInregistrare === 'IZOLAT' ? 'Izolat' : 'Plantație' }})</span>
+                  </div>
+                  <div class="categorie-meta">
+                    <span *ngIf="vita.tipInregistrare === 'IZOLAT'">{{ vita.numarVite || 0 }} vițe</span>
+                    <span *ngIf="vita.tipInregistrare === 'PLANTATIE'">{{ vita.suprafataHa || 0 }} ha</span>
+                  </div>
+                </div>
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <button class="btn-icon" (click)="openEditVita(vita)" title="Editează">✎</button>
+                  <button class="btn-icon-delete" (click)="deleteVita(vita)" title="Șterge">✕</button>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="vitaDeVie.length === 0" class="empty-state">
+              Nicio evidență de viță de vie pe această parcelă.
+            </div>
+          </div>
+
+          <div *ngIf="isAddingVita" class="add-categorie-form" style="border-top: 2px solid #22c55e; margin-top: 10px;">
+            <h3 style="margin:0 0 12px;font-size:14px;color:#86efac;">{{ editingVita ? 'Editează Înregistrare' : 'Adaugă Viță de Vie' }}</h3>
+
+            <div class="form-group">
+              <label>Tip Înregistrare *</label>
+              <select class="form-control" [(ngModel)]="newVita.tipInregistrare">
+                <option *ngFor="let t of tipuriInregistrareVita" [value]="t">{{ t === 'IZOLAT' ? 'Vițe izolate' : 'Plantație' }}</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="display:flex; gap:10px;">
+              <div style="flex:1;">
+                <label>Specie * </label>
+                <select class="form-control" [(ngModel)]="newVita.specie">
+                  <option value="">Selectează...</option>
+                  <option *ngFor="let sp of speciiPomiFiltrate" [value]="sp">{{ sp }}</option>
+                </select>
+              </div>
+              <div style="flex:1;">
+                <label>Soi </label>
+                <input type="text" class="form-control" [(ngModel)]="newVita.soi" placeholder="ex: Fetească Regală">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>An Plantare</label>
+              <input type="number" class="form-control" [(ngModel)]="newVita.anPlantare">
+            </div>
+
+            <div class="form-group" *ngIf="newVita.tipInregistrare === 'IZOLAT'">
+              <label>Număr Vițe *</label>
+              <input type="number" class="form-control" [(ngModel)]="newVita.numarVite">
+            </div>
+
+            <ng-container *ngIf="newVita.tipInregistrare === 'PLANTATIE'">
+              <div class="form-group" style="display:flex; gap:10px;">
+                <div style="flex:1;">
+                  <label>Suprafață (ha) *</label>
+                  <input type="number" class="form-control" [(ngModel)]="newVita.suprafataHa">
+                </div>
+                <div style="flex:1;">
+                  <label>Densitate (vițe/ha)</label>
+                  <input type="number" class="form-control" [(ngModel)]="newVita.densitateViteHa">
+                </div>
+              </div>
+            </ng-container>
+
+            <ng-container *ngIf="editingVita">
+              <hr style="border-color: rgba(255,255,255,0.08); margin: 14px 0 10px;">
+              <div class="list-label" style="font-size: 12px; margin-bottom: 8px; opacity: 0.7;">Detalii avansate</div>
+
+              <div class="form-group">
+                <label>Stare Viță</label>
+                <input type="text" class="form-control" [(ngModel)]="newVita.stareVita" placeholder="ex: pe rod">
+              </div>
+              <div class="form-group">
+                <label>Sistem Întreținere</label>
+                <input type="text" class="form-control" [(ngModel)]="newVita.sistemIntretinere" placeholder="ex: ecologic">
+              </div>
+              <div class="form-group">
+                <label>Sistem Irigare</label>
+                <input type="text" class="form-control" [(ngModel)]="newVita.sistemIrigare">
+              </div>
+              <div class="form-group">
+                <label>Producție Estimată (kg)</label>
+                <input type="number" class="form-control" [(ngModel)]="newVita.productieEstimataKg">
+              </div>
+              <div class="form-group">
+                <label>Observații</label>
+                <textarea class="form-control" rows="2" [(ngModel)]="newVita.observatii"></textarea>
+              </div>
+            </ng-container>
+
+            <div class="form-actions" style="margin-top: 15px;">
+              <button class="btn-secondary rounded-btn" (click)="cancelAddVita()" [disabled]="saving">Anulează</button>
+              <button class="btn-primary" style="background-color: #16a34a; border: none;" (click)="saveVita()" [disabled]="saving">
+                {{ saving ? 'Salvare...' : 'Salvează' }}
+              </button>
+            </div>
+          </div>
+        </ng-container>
+
         <hr style="border-color: rgba(255,255,255,0.1); margin: 16px 0;">
 
         <!-- SURSE APA SECTION -->

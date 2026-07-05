@@ -21,6 +21,8 @@ import { SursaApaService } from '../../services/sursa-apa.service';
 import { LookupService } from '../../services/lookup.service';
 import { Pom, TipInregistrarePom } from '../../models/pom.model';
 import { PomService } from '../../services/pom.service';
+import { VitaDeVie, TipInregistrareVita } from '../../models/vita-de-vie.model';
+import { VitaDeVieService } from '../../services/vita-de-vie.service';
 import {SpecieRef} from '../../models/specie-ref.model';
 
 @Component({
@@ -85,6 +87,12 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   tipuriInregistrarePom = [TipInregistrarePom.IZOLAT, TipInregistrarePom.PLANTATIE];
   speciiPomiToate: SpecieRef[] = [];
 
+  vitaDeVie: VitaDeVie[] = [];
+  isAddingVita = false;
+  editingVita: VitaDeVie | null = null;
+  newVita: Partial<VitaDeVie> = { tipInregistrare: TipInregistrareVita.IZOLAT };
+  tipuriInregistrareVita = [TipInregistrareVita.IZOLAT, TipInregistrareVita.PLANTATIE];
+
   categoriiFolosinta: string[] = [];
   tipuriSol: string[] = [];
   tipuriSursa: string[] = [];
@@ -102,6 +110,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     private gospodarieService: GospodarieService,
     private lookupService: LookupService,
     private pomiService: PomService,
+    private vitaDeVieService: VitaDeVieService,
     private http: HttpClient,
     private zone: NgZone
   ) {}
@@ -568,10 +577,12 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     this.editingCultura = null;
     this.culturi = [];
     this.pomi = [];
+    this.vitaDeVie = [];
     if (p.id) {
       if (this.showCulturi(p)) this.loadCulturi(p.id);
       this.loadSurse(p.id);
       if (this.showPomi(p)) this.loadPomi(p.id);
+      if (this.showVita(p)) this.loadVita(p.id);
     }
   }
 
@@ -585,6 +596,9 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     this.pomi = [];
     this.isAddingPom = false;
     this.editingPom = null;
+    this.vitaDeVie = [];
+    this.isAddingVita = false;
+    this.editingVita = null;
   }
 
   deleteParcela(p: Parcela) {
@@ -754,6 +768,12 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     return val === 'livada';
   }
 
+  showVita(p: Parcela | null): boolean {
+    if (!p || !p.categorieFolosinta) return false;
+    const val = this.normalizeString(p.categorieFolosinta);
+    return val === 'vii';
+  }
+
   loadPomi(parcelaId: number) {
     this.pomiService.getPomi(parcelaId, 0, 1000).subscribe({
       next: (response) => { this.pomi = response.content || []; },
@@ -815,6 +835,70 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     this.pomiService.deletePom(this.viewingParcela.id, pom.id).subscribe({
       next: () => { this.pomi = this.pomi.filter(x => x.id !== pom.id); },
       error: () => alert('Eroare la ștergere pom.')
+    });
+  }
+
+  loadVita(parcelaId: number) {
+    this.vitaDeVieService.getVitaDeVie(parcelaId, 0, 1000).subscribe({
+      next: (response) => { this.vitaDeVie = response.content || []; },
+      error: () => this.vitaDeVie = []
+    });
+  }
+
+  openAddVitaForm() {
+    this.isAddingVita = true;
+    this.editingVita = null;
+    this.newVita = { tipInregistrare: TipInregistrareVita.IZOLAT, specie: 'Viță de vie' };
+  }
+
+  openEditVita(vita: VitaDeVie) {
+    this.isAddingVita = true;
+    this.editingVita = vita;
+    this.newVita = { ...vita };
+  }
+
+  cancelAddVita() {
+    this.isAddingVita = false;
+    this.editingVita = null;
+    this.newVita = { tipInregistrare: TipInregistrareVita.IZOLAT };
+  }
+
+  saveVita() {
+    if (!this.newVita.specie?.trim() || !this.newVita.tipInregistrare) {
+      alert('Completați specia și tipul de înregistrare.');
+      return;
+    }
+    if (!this.viewingParcela?.id) return;
+
+    this.saving = true;
+    if (this.editingVita && this.editingVita.id) {
+      this.vitaDeVieService.updateVita(this.viewingParcela.id, this.editingVita.id, this.newVita as VitaDeVie).subscribe({
+        next: updated => {
+          this.saving = false;
+          const idx = this.vitaDeVie.findIndex(x => x.id === updated.id);
+          if (idx >= 0) this.vitaDeVie[idx] = updated;
+          this.cancelAddVita();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare viță de vie.'); }
+      });
+    } else {
+      this.vitaDeVieService.createVita(this.viewingParcela.id, this.newVita as VitaDeVie).subscribe({
+        next: saved => {
+          this.saving = false;
+          this.vitaDeVie.push(saved);
+          this.cancelAddVita();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare viță de vie.'); }
+      });
+    }
+  }
+
+  deleteVita(vita: VitaDeVie) {
+    if (!vita.id || !this.viewingParcela?.id) return;
+    if (!confirm(`Ștergeți înregistrarea "${vita.soi || vita.specie}"?`)) return;
+    this.vitaDeVieService.deleteVita(this.viewingParcela.id, vita.id).subscribe({
+      next: () => { this.vitaDeVie = this.vitaDeVie.filter(x => x.id !== vita.id); },
+      error: () => alert('Eroare la ștergere viță de vie.')
     });
   }
 
