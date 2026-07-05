@@ -35,6 +35,8 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final com.multitenant.repository.CerereRepository cerereRepository;
     private final com.multitenant.repository.ContractUtilizareRepository contractUtilizareRepository;
+    private final com.multitenant.repository.CulturaParcelaRepository culturaParcelaRepository;
+    private final com.multitenant.repository.PomRepository pomRepository;
 
     public DatabaseSeeder(TenantService tenantService,
                           UserRepository userRepository,
@@ -50,7 +52,9 @@ public class DatabaseSeeder implements CommandLineRunner {
                           CetateanRepository cetateanRepository,
                           PasswordEncoder passwordEncoder,
                           com.multitenant.repository.CerereRepository cerereRepository,
-                          com.multitenant.repository.ContractUtilizareRepository contractUtilizareRepository) {
+                          com.multitenant.repository.ContractUtilizareRepository contractUtilizareRepository,
+                          com.multitenant.repository.CulturaParcelaRepository culturaParcelaRepository,
+                          com.multitenant.repository.PomRepository pomRepository) {
         this.tenantService = tenantService;
         this.userRepository = userRepository;
         this.gospodarieRepository = gospodarieRepository;
@@ -66,6 +70,8 @@ public class DatabaseSeeder implements CommandLineRunner {
         this.passwordEncoder = passwordEncoder;
         this.cerereRepository = cerereRepository;
         this.contractUtilizareRepository = contractUtilizareRepository;
+        this.culturaParcelaRepository = culturaParcelaRepository;
+        this.pomRepository = pomRepository;
     }
 
     @Override
@@ -91,16 +97,16 @@ public class DatabaseSeeder implements CommandLineRunner {
         }
 
         // Tenant schemas are created and migrated natively by TenantService.migrateAllTenants()
-            // Tenant schemas are created and migrated natively by TenantService.migrateAllTenants() 
-            // the UATs and Tenants have been inserted by the V3 migration.
-            
-            try {
-                // Seed tenant users in public schema (required for authentication/login)
-                System.out.println("[DatabaseSeeder] Seeding tenant users in public schema...");
-                // UATs are now in tenant schemas, not in public — reference by a known ID value
-                // These IDs correspond to the UATs seeded in each tenant's V1 migration (if applicable)
-                Long clujNapocaUatId = 1L;
-                Long bucurestiUatId = 1L;
+        // Tenant schemas are created and migrated natively by TenantService.migrateAllTenants()
+        // the UATs and Tenants have been inserted by the V3 migration.
+
+        try {
+            // Seed tenant users in public schema (required for authentication/login)
+            System.out.println("[DatabaseSeeder] Seeding tenant users in public schema...");
+            // UATs are now in tenant schemas, not in public — reference by a known ID value
+            // These IDs correspond to the UATs seeded in each tenant's V1 migration (if applicable)
+            Long clujNapocaUatId = 1L;
+            Long bucurestiUatId = 1L;
 
             if (userRepository.findByUsername("cluj_admin").isEmpty()) {
                 User publicAdmin = new User();
@@ -157,279 +163,368 @@ public class DatabaseSeeder implements CommandLineRunner {
                 cetateanRepository.save(cetatean);
             }
 
-                // Switch current thread to "cluj" tenant context for entity seeding
-                TenantContext.setCurrentTenant("cluj");
-                System.out.println("[DatabaseSeeder] Seeding UATs and Households for Cluj...");
-                
-                com.multitenant.model.core.Uat clujNapoca = null;
-                if (!uatRepository.existsByCodSiruta("54975")) {
-                    com.multitenant.model.core.PublicUat pUat = publicUatRepository.findByCodSiruta("54975").orElse(null);
-                    if (pUat != null) {
-                        clujNapoca = new com.multitenant.model.core.Uat();
-                        clujNapoca.setCodSiruta(pUat.getCodSiruta());
-                        clujNapoca.setDenumire(pUat.getDenumire());
-                        clujNapoca.setJudet(pUat.getJudet());
-                        clujNapoca.setTipUat(pUat.getTipUat());
-                        clujNapoca.setIsActive(true);
-                        clujNapoca = uatRepository.save(clujNapoca);
-                        
-                        pUat.setTenantId("cluj");
-                        publicUatRepository.save(pUat);
-                    }
-                } else {
-                    clujNapoca = uatRepository.findByCodSiruta("54975").orElse(null);
+            // Switch current thread to "cluj" tenant context for entity seeding
+            TenantContext.setCurrentTenant("cluj");
+            System.out.println("[DatabaseSeeder] Seeding UATs and Households for Cluj...");
+
+            com.multitenant.model.core.Uat clujNapoca = null;
+            if (!uatRepository.existsByCodSiruta("54975")) {
+                com.multitenant.model.core.PublicUat pUat = publicUatRepository.findByCodSiruta("54975").orElse(null);
+                if (pUat != null) {
+                    clujNapoca = new com.multitenant.model.core.Uat();
+                    clujNapoca.setCodSiruta(pUat.getCodSiruta());
+                    clujNapoca.setDenumire(pUat.getDenumire());
+                    clujNapoca.setJudet(pUat.getJudet());
+                    clujNapoca.setTipUat(pUat.getTipUat());
+                    clujNapoca.setIsActive(true);
+                    clujNapoca = uatRepository.save(clujNapoca);
+
+                    pUat.setTenantId("cluj");
+                    publicUatRepository.save(pUat);
                 }
-
-                if (!uatRepository.existsByCodSiruta("57706")) {
-                    com.multitenant.model.core.PublicUat pUat = publicUatRepository.findByCodSiruta("57706").orElse(null);
-                    if (pUat != null) {
-                        com.multitenant.model.core.Uat floresti = new com.multitenant.model.core.Uat();
-                        floresti.setCodSiruta(pUat.getCodSiruta());
-                        floresti.setDenumire(pUat.getDenumire());
-                        floresti.setJudet(pUat.getJudet());
-                        floresti.setTipUat(pUat.getTipUat());
-                        floresti.setIsActive(true);
-                        uatRepository.save(floresti);
-                        
-                        pUat.setTenantId("cluj");
-                        publicUatRepository.save(pUat);
-                    }
-                }
-
-                if (gospodarieRepository.count() == 0 && clujNapoca != null) {
-                    com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-
-                    for (int i = 1; i <= 10; i++) {
-                        Gospodarie g = new Gospodarie();
-                        g.setCodGospodarie("CJ-GOSP-" + String.format("%03d", i));
-                        Adresa a = new Adresa();
-                        a.setStreet("Str. Observatorului");
-                        a.setStreetNumber(String.valueOf(i));
-                        a.setCounty("Cluj");
-                        a.setLocalitate("Cluj-Napoca");
-                        a.setBuilding("C" + i);
-                        a.setStaircase("A");
-                        a.setFloor(i % 4);
-                        a.setApartmentNumber(i * 2);
-                        g.setAdresa(a);
-                        g.setTipGospodarie(i % 2 == 0 ? TipGospodarie.INDIVIDUALA : TipGospodarie.COLECTIVA);
-                        g.setActiva(true);
-                        g.setUat(clujNapoca);
-                        Gospodarie savedG = gospodarieRepository.save(g);
-
-                        com.multitenant.model.registru.Teren t = new com.multitenant.model.registru.Teren();
-                        t.setDenumire("Teren Agricol CJ " + i);
-                        t.setGospodarie(savedG);
-                        t.setTipTeren("Extravilan");
-                        t.setStereo70Coordinates("591250 390800\n591350 390800\n591350 390900\n591250 390900");
-                        String tJson = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[23.569717, 46.810456], [23.569694, 46.811354], [23.571001, 46.811370], [23.571025, 46.810472], [23.569717, 46.810456]]]}, \"properties\": {}}";
-                        t.setPolygon(mapper.readTree(tJson));
-                        t = terenRepository.save(t);
-
-                        // Seeder-ul ocoleste TerenService (nu publica eveniment Spring),
-                        // deci CarteFunciara trebuie creata explicit aici.
-                        // In productie, TerenService.createTerenFromDTO() o creeaza automat.
-                        if (carteFunciaraRepository.findByTerenId(t.getId()).isEmpty()) {
-                            CarteFunciara cf = new CarteFunciara();
-                            cf.setTeren(t);
-                            // Numere CF realiste pentru Cluj-Napoca (format ANCPI)
-                            cf.setNumarCf(String.format("CF-%05d-CJ", 100000 + i));
-                            cf.setNumarTopografic(String.format("Top/%d/%d/a", 1200 + i, i));
-                            // Suprafata initiala = suprafata parcelei care va fi adaugata mai jos
-                            cf.setSuprafataTotalaIntabulata(1.0 + (i * 0.1));
-                            carteFunciaraRepository.save(cf);
-                        }
-
-                        com.multitenant.model.registru.Parcela p = new com.multitenant.model.registru.Parcela();
-                        p.setDenumire("Parcela CJ " + i);
-                        p.setSuprafata(1.0 + (i * 0.1));
-                        p.setCategorieFolosinta(i % 2 == 0 ? "Arabil" : "Livada");
-                        p.setTeren(t);
-                        // Campuri noi Cap. II (HG 1627/2024)
-                        p.setNumarCadastral(String.format("54975-%05d", i));
-                        p.setTipZona(i % 3 == 0 ? TipZona.INTRAVILAN : TipZona.EXTRAVILAN);
-                        p.setTitularDreptFolosinta("Ion" + i + " Popescu CJ");
-                        String pJson = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[23.569717, 46.810456], [23.569705, 46.810905], [23.571013, 46.810921], [23.571025, 46.810472], [23.569717, 46.810456]]]}, \"properties\": {}}";
-                        p.setPolygon(mapper.readTree(pJson));
-                        p = parcelaRepository.save(p);
-
-                        com.multitenant.model.persoana.PersoanaFizica persoana = new com.multitenant.model.persoana.PersoanaFizica();
-                        persoana.setFirstName("Ion" + i);
-                        persoana.setLastName("Popescu CJ");
-                        persoana.setCnp(String.format("190010112%04d", i));
-                        persoana.setDateOfBirth(java.time.LocalDate.of(1990, 1, 1).plusDays(i));
-                        persoana.setAdresa(a);
-                        persoana.getGospodarii().add(savedG);
-                        persoana.setIsHeadOfHousehold(true);
-                        persoana = persoanaRepository.save(persoana);
-
-                        if (i == 1) {
-                            com.multitenant.model.registru.ContractUtilizare contract = new com.multitenant.model.registru.ContractUtilizare();
-                            contract.setParcela(p);
-                            contract.setLocatorProprietar(persoana);
-                            contract.setLocatorUtilizator(persoana);
-                            contract.setTipContract(com.multitenant.model.registru.TipContractUtilizare.ARENDA);
-                            contract.setNumarContract("CT-TEST-001");
-                            contract.setDataSemnare(java.time.LocalDate.now());
-                            contract.setDataInceput(java.time.LocalDate.now());
-                            contract.setDataSfarsit(java.time.LocalDate.now().plusDays(20));
-                            contract.setStatusContract(com.multitenant.model.registru.StatusContractUtilizare.ACTIV);
-                            contract.setEsteActiv(true);
-                            contract.setUtilizatorOperareId(1L);
-                            contractUtilizareRepository.save(contract);
-                            System.out.println("[DatabaseSeeder] Seeded mock expiring contract CT-TEST-001 for CNP " + persoana.getCnp());
-                        }
-
-                        com.multitenant.model.registru.Cladire cladire = new com.multitenant.model.registru.Cladire();
-                        cladire.setDestinatie("Locuinta");
-                        cladire.setSuprafataConstruita(100.0 + i * 5);
-                        cladire.setAnTerminare(2000 + i);
-                        cladire.setMateriale("Caramida");
-                        cladire.setGospodarie(savedG);
-                        cladireRepository.save(cladire);
-
-                        com.multitenant.model.registru.Machinery machinery = new com.multitenant.model.registru.Machinery();
-                        machinery.setTipUtilaj("Tractor");
-                        machinery.setMarca("John Deere");
-                        machinery.setModel("X" + i);
-                        machinery.setAnFabricatie(2010 + i);
-                        machinery.setNumarInmatriculare(String.format("CJ-%02d-TRC", i));
-                        machinery.setGospodarie(savedG);
-                        machineryRepository.save(machinery);
-                    }
-
-                    // Adaugam o cerere dummy pentru cetatean
-                    com.multitenant.model.core.Cetatean c = cetateanRepository.findByEmail("cetatean@registru.ro").orElse(null);
-                    if (c != null && cerereRepository.count() == 0) {
-                        com.multitenant.model.registru.Cerere cerere = new com.multitenant.model.registru.Cerere();
-                        cerere.setNume(c.getNume() + " " + c.getPrenume());
-                        cerere.setDomiciliu(c.getLocalitate() + ", " + c.getStrada() + " " + c.getNumar());
-                        cerere.setTelefon(c.getTelefon());
-                        cerere.setEmail(c.getEmail());
-                        cerere.setCnpCui(c.getCnp());
-                        cerere.setCodCerere("REQ-" + System.currentTimeMillis());
-                        cerere.setUatId(clujNapoca.getId());
-                        cerere.setUserId(c.getId());
-                        cerere.setStatus(com.multitenant.model.registru.StatusCerere.PENDING);
-                        cerereRepository.save(cerere);
-                    }
-                }
-                
-                // Switch current thread to "bucuresti" tenant context for entity seeding
-                TenantContext.setCurrentTenant("bucuresti");
-                System.out.println("[DatabaseSeeder] Seeding UATs and Households for Bucuresti...");
-                
-                com.multitenant.model.core.Uat bucuresti = null;
-                if (!uatRepository.existsByCodSiruta("1017")) {
-                    com.multitenant.model.core.PublicUat pUat = publicUatRepository.findByCodSiruta("1017").orElse(null);
-                    if (pUat != null) {
-                        bucuresti = new com.multitenant.model.core.Uat();
-                        bucuresti.setCodSiruta(pUat.getCodSiruta());
-                        bucuresti.setDenumire(pUat.getDenumire());
-                        bucuresti.setJudet(pUat.getJudet());
-                        bucuresti.setTipUat(pUat.getTipUat());
-                        bucuresti.setIsActive(true);
-                        bucuresti = uatRepository.save(bucuresti);
-                        
-                        pUat.setTenantId("bucuresti");
-                        publicUatRepository.save(pUat);
-                    }
-                } else {
-                    bucuresti = uatRepository.findByCodSiruta("1017").orElse(null);
-                }
-
-                if (gospodarieRepository.count() == 0 && bucuresti != null) {
-                    com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-
-                    for (int i = 1; i <= 10; i++) {
-                        Gospodarie g = new Gospodarie();
-                        g.setCodGospodarie("BUC-GOSP-" + String.format("%03d", i));
-                        Adresa a = new Adresa();
-                        a.setStreet("Calea Victoriei");
-                        a.setStreetNumber(String.valueOf(i * 10));
-                        a.setCounty("București");
-                        a.setLocalitate("București Sectorul 1");
-                        a.setBuilding("B" + i);
-                        a.setStaircase("1");
-                        a.setFloor(i % 10);
-                        a.setApartmentNumber(i * 5);
-                        g.setAdresa(a);
-                        g.setTipGospodarie(i % 2 == 0 ? TipGospodarie.COLECTIVA : TipGospodarie.INDIVIDUALA);
-                        g.setActiva(true);
-                        g.setUat(bucuresti);
-                        Gospodarie savedG = gospodarieRepository.save(g);
-
-                        com.multitenant.model.registru.Teren t = new com.multitenant.model.registru.Teren();
-                        t.setDenumire("Teren Agricol BUC " + i);
-                        t.setGospodarie(savedG);
-                        t.setTipTeren("Intravilan");
-                        String tJson = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[26.1000, 44.4250], [26.1000, 44.4270], [26.1050, 44.4270], [26.1050, 44.4250], [26.1000, 44.4250]]]}, \"properties\": {}}";
-                        t.setPolygon(mapper.readTree(tJson));
-                        t = terenRepository.save(t);
-
-                        // Seeder-ul ocoleste TerenService (nu publica eveniment Spring),
-                        // deci CarteFunciara trebuie creata explicit aici.
-                        if (carteFunciaraRepository.findByTerenId(t.getId()).isEmpty()) {
-                            CarteFunciara cf = new CarteFunciara();
-                            cf.setTeren(t);
-                            // Numere CF realiste pentru Bucuresti (format ANCPI)
-                            cf.setNumarCf(String.format("CF-%05d-B", 200000 + i));
-                            cf.setNumarTopografic(String.format("Top/%d/%d/b", 3400 + i, i));
-                            // Suprafata initiala = suprafata parcelei care va fi adaugata mai jos
-                            cf.setSuprafataTotalaIntabulata(0.5 + (i * 0.05));
-                            carteFunciaraRepository.save(cf);
-                        }
-
-                        com.multitenant.model.registru.Parcela p = new com.multitenant.model.registru.Parcela();
-                        p.setDenumire("Parcela BUC " + i);
-                        p.setSuprafata(0.5 + (i * 0.05));
-                        p.setCategorieFolosinta(i % 2 == 0 ? "Pasune" : "Arabil");
-                        p.setTeren(t);
-                        // Campuri noi Cap. II (HG 1627/2024)
-                        p.setNumarCadastral(String.format("1017-%05d", i));
-                        p.setTipZona(TipZona.INTRAVILAN);
-                        p.setTitularDreptFolosinta("Vasile" + i + " Ionescu BUC");
-                        String pJson = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[26.1000, 44.4250], [26.1000, 44.4270], [26.1025, 44.4270], [26.1025, 44.4250], [26.1000, 44.4250]]]}, \"properties\": {}}";
-                        p.setPolygon(mapper.readTree(pJson));
-                        parcelaRepository.save(p);
-
-                        com.multitenant.model.persoana.PersoanaFizica persoana = new com.multitenant.model.persoana.PersoanaFizica();
-                        persoana.setFirstName("Vasile" + i);
-                        persoana.setLastName("Ionescu BUC");
-                        persoana.setCnp(String.format("180020223%04d", i));
-                        persoana.setDateOfBirth(java.time.LocalDate.of(1980, 2, 2).plusDays(i));
-                        persoana.setAdresa(a);
-                        persoana.getGospodarii().add(savedG);
-                        persoana.setIsHeadOfHousehold(true);
-                        persoanaRepository.save(persoana);
-
-                        com.multitenant.model.registru.Cladire cladire = new com.multitenant.model.registru.Cladire();
-                        cladire.setDestinatie("Anexa");
-                        cladire.setSuprafataConstruita(50.0 + i * 2);
-                        cladire.setAnTerminare(1990 + i);
-                        cladire.setMateriale("Lemn");
-                        cladire.setGospodarie(savedG);
-                        cladireRepository.save(cladire);
-
-                        com.multitenant.model.registru.Machinery machinery = new com.multitenant.model.registru.Machinery();
-                        machinery.setTipUtilaj("Combina");
-                        machinery.setMarca("Claas");
-                        machinery.setModel("Lexion " + i);
-                        machinery.setAnFabricatie(2015 + i);
-                        machinery.setNumarInmatriculare(String.format("B-%02d-CMB", i));
-                        machinery.setGospodarie(savedG);
-                        machineryRepository.save(machinery);
-                    }
-                }
-
-
-                System.out.println("[DatabaseSeeder] Development data successfully seeded.");
-            } catch (Exception e) {
-                System.err.println("[DatabaseSeeder] Error seeding development data: " + e.getMessage());
-                e.printStackTrace();
-            } finally {
-                // Clean up context to avoid side effects
-                TenantContext.clear();
+            } else {
+                clujNapoca = uatRepository.findByCodSiruta("54975").orElse(null);
             }
+
+            if (!uatRepository.existsByCodSiruta("57706")) {
+                com.multitenant.model.core.PublicUat pUat = publicUatRepository.findByCodSiruta("57706").orElse(null);
+                if (pUat != null) {
+                    com.multitenant.model.core.Uat floresti = new com.multitenant.model.core.Uat();
+                    floresti.setCodSiruta(pUat.getCodSiruta());
+                    floresti.setDenumire(pUat.getDenumire());
+                    floresti.setJudet(pUat.getJudet());
+                    floresti.setTipUat(pUat.getTipUat());
+                    floresti.setIsActive(true);
+                    uatRepository.save(floresti);
+
+                    pUat.setTenantId("cluj");
+                    publicUatRepository.save(pUat);
+                }
+            }
+
+            if (gospodarieRepository.count() == 0 && clujNapoca != null) {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+
+                // Categorii de folosință variate, câte una pentru fiecare din cele 10 parcele CJ
+                String[] categoriiFolosintaCluj = {
+                        "Arabil", "Pășune", "Fânețe", "Livadă", "Vii",
+                        "Pădure", "Ape", "Alte", "Arabil", "Livadă"
+                };
+
+                for (int i = 1; i <= 10; i++) {
+                    Gospodarie g = new Gospodarie();
+                    g.setCodGospodarie("CJ-GOSP-" + String.format("%03d", i));
+                    Adresa a = new Adresa();
+                    a.setStreet("Str. Observatorului");
+                    a.setStreetNumber(String.valueOf(i));
+                    a.setCounty("Cluj");
+                    a.setLocalitate("Cluj-Napoca");
+                    a.setBuilding("C" + i);
+                    a.setStaircase("A");
+                    a.setFloor(i % 4);
+                    a.setApartmentNumber(i * 2);
+                    g.setAdresa(a);
+                    g.setTipGospodarie(i % 2 == 0 ? TipGospodarie.INDIVIDUALA : TipGospodarie.COLECTIVA);
+                    g.setActiva(true);
+                    g.setUat(clujNapoca);
+                    Gospodarie savedG = gospodarieRepository.save(g);
+
+                    com.multitenant.model.registru.Teren t = new com.multitenant.model.registru.Teren();
+                    t.setDenumire("Teren Agricol CJ " + i);
+                    t.setGospodarie(savedG);
+                    t.setTipTeren("Extravilan");
+                    t.setStereo70Coordinates("591250 390800\n591350 390800\n591350 390900\n591250 390900");
+                    String tJson = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[23.569717, 46.810456], [23.569694, 46.811354], [23.571001, 46.811370], [23.571025, 46.810472], [23.569717, 46.810456]]]}, \"properties\": {}}";
+                    t.setPolygon(mapper.readTree(tJson));
+                    t = terenRepository.save(t);
+
+                    // Seeder-ul ocoleste TerenService (nu publica eveniment Spring),
+                    // deci CarteFunciara trebuie creata explicit aici.
+                    // In productie, TerenService.createTerenFromDTO() o creeaza automat.
+                    if (carteFunciaraRepository.findByTerenId(t.getId()).isEmpty()) {
+                        CarteFunciara cf = new CarteFunciara();
+                        cf.setTeren(t);
+                        // Numere CF realiste pentru Cluj-Napoca (format ANCPI)
+                        cf.setNumarCf(String.format("CF-%05d-CJ", 100000 + i));
+                        cf.setNumarTopografic(String.format("Top/%d/%d/a", 1200 + i, i));
+                        // Suprafata initiala = suprafata parcelei care va fi adaugata mai jos
+                        cf.setSuprafataTotalaIntabulata(1.0 + (i * 0.1));
+                        carteFunciaraRepository.save(cf);
+                    }
+
+                    com.multitenant.model.registru.Parcela p = new com.multitenant.model.registru.Parcela();
+                    p.setDenumire("Parcela CJ " + i);
+                    p.setSuprafata(1.0 + (i * 0.1));
+                    p.setCategorieFolosinta(categoriiFolosintaCluj[i - 1]);
+                    p.setTeren(t);
+                    // Campuri noi Cap. II (HG 1627/2024)
+                    p.setNumarCadastral(String.format("54975-%05d", i));
+                    p.setTipZona(i % 3 == 0 ? TipZona.INTRAVILAN : TipZona.EXTRAVILAN);
+                    p.setTitularDreptFolosinta("Ion" + i + " Popescu CJ");
+                    String pJson = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[23.569717, 46.810456], [23.569705, 46.810905], [23.571013, 46.810921], [23.571025, 46.810472], [23.569717, 46.810456]]]}, \"properties\": {}}";
+                    p.setPolygon(mapper.readTree(pJson));
+                    p = parcelaRepository.save(p);
+
+                    // Seed CulturaParcela pentru parcelele Arabil
+                    if ("Arabil".equals(p.getCategorieFolosinta())) {
+                        com.multitenant.model.registru.CulturaParcela cultura = new com.multitenant.model.registru.CulturaParcela();
+                        cultura.setAnAgricol(2025);
+                        cultura.setSpecieCultura(i % 2 == 0 ? "Grâu" : "Porumb");
+                        cultura.setSuprafataCultivataHa(p.getSuprafata());
+                        cultura.setDataInsamantare(java.time.LocalDate.of(2025, 3, 15));
+                        cultura.setDataRecoltare(java.time.LocalDate.of(2025, 8, 20));
+                        cultura.setProductieHectarKg(4500.0 + i * 100);
+                        cultura.setProductieTotalaTone((4500.0 + i * 100) * p.getSuprafata() / 1000);
+                        cultura.setSistemIrigare("Aspersiune");
+                        cultura.setTipSol("Cernoziom");
+                        cultura.setCulturaPrecedenta("Rapiță");
+                        cultura.setParcela(p);
+                        culturaParcelaRepository.save(cultura);
+                    }
+
+                    // Seed Pom pentru parcelele Livadă
+                    if ("Livadă".equals(p.getCategorieFolosinta())) {
+                        com.multitenant.model.registru.Pom pom = new com.multitenant.model.registru.Pom();
+                        pom.setTipInregistrare(i % 2 == 0
+                                ? com.multitenant.model.registru.TipInregistrarePom.IZOLAT
+                                : com.multitenant.model.registru.TipInregistrarePom.PLANTATIE);
+                        pom.setSpecie(i % 2 == 0 ? "Măr" : "Prun");
+                        pom.setSoi(i % 2 == 0 ? "Golden Delicious" : "Stanley");
+                        pom.setAnPlantare(2018 + (i % 5));
+                        if (pom.getTipInregistrare() == com.multitenant.model.registru.TipInregistrarePom.IZOLAT) {
+                            pom.setNumarPomi(8 + i);
+                        } else {
+                            pom.setSuprafataHa(p.getSuprafata());
+                            pom.setDensitatePomiHa(400);
+                        }
+                        pom.setStarePomi("Pe rod");
+                        pom.setSistemIntretinere("Ecologic");
+                        pom.setSistemIrigare("Picurare");
+                        pom.setProductieEstimataKg(1200.0 + i * 50);
+                        pom.setObservatii("Sămânță de test generată prin seeder");
+                        pom.setParcela(p);
+                        pomRepository.save(pom);
+                    }
+
+                    com.multitenant.model.persoana.PersoanaFizica persoana = new com.multitenant.model.persoana.PersoanaFizica();
+                    persoana.setFirstName("Ion" + i);
+                    persoana.setLastName("Popescu CJ");
+                    persoana.setCnp(String.format("190010112%04d", i));
+                    persoana.setDateOfBirth(java.time.LocalDate.of(1990, 1, 1).plusDays(i));
+                    persoana.setAdresa(a);
+                    persoana.getGospodarii().add(savedG);
+                    persoana.setIsHeadOfHousehold(true);
+                    persoana = persoanaRepository.save(persoana);
+
+                    if (i == 1) {
+                        com.multitenant.model.registru.ContractUtilizare contract = new com.multitenant.model.registru.ContractUtilizare();
+                        contract.setParcela(p);
+                        contract.setLocatorProprietar(persoana);
+                        contract.setLocatorUtilizator(persoana);
+                        contract.setTipContract(com.multitenant.model.registru.TipContractUtilizare.ARENDA);
+                        contract.setNumarContract("CT-TEST-001");
+                        contract.setDataSemnare(java.time.LocalDate.now());
+                        contract.setDataInceput(java.time.LocalDate.now());
+                        contract.setDataSfarsit(java.time.LocalDate.now().plusDays(20));
+                        contract.setStatusContract(com.multitenant.model.registru.StatusContractUtilizare.ACTIV);
+                        contract.setEsteActiv(true);
+                        contract.setUtilizatorOperareId(1L);
+                        contractUtilizareRepository.save(contract);
+                        System.out.println("[DatabaseSeeder] Seeded mock expiring contract CT-TEST-001 for CNP " + persoana.getCnp());
+                    }
+
+                    com.multitenant.model.registru.Cladire cladire = new com.multitenant.model.registru.Cladire();
+                    cladire.setDestinatie("Locuinta");
+                    cladire.setSuprafataConstruita(100.0 + i * 5);
+                    cladire.setAnTerminare(2000 + i);
+                    cladire.setMateriale("Caramida");
+                    cladire.setGospodarie(savedG);
+                    cladireRepository.save(cladire);
+
+                    com.multitenant.model.registru.Machinery machinery = new com.multitenant.model.registru.Machinery();
+                    machinery.setTipUtilaj("Tractor");
+                    machinery.setMarca("John Deere");
+                    machinery.setModel("X" + i);
+                    machinery.setAnFabricatie(2010 + i);
+                    machinery.setNumarInmatriculare(String.format("CJ-%02d-TRC", i));
+                    machinery.setGospodarie(savedG);
+                    machineryRepository.save(machinery);
+                }
+
+                // Adaugam o cerere dummy pentru cetatean
+                com.multitenant.model.core.Cetatean c = cetateanRepository.findByEmail("cetatean@registru.ro").orElse(null);
+                if (c != null && cerereRepository.count() == 0) {
+                    com.multitenant.model.registru.Cerere cerere = new com.multitenant.model.registru.Cerere();
+                    cerere.setNume(c.getNume() + " " + c.getPrenume());
+                    cerere.setDomiciliu(c.getLocalitate() + ", " + c.getStrada() + " " + c.getNumar());
+                    cerere.setTelefon(c.getTelefon());
+                    cerere.setEmail(c.getEmail());
+                    cerere.setCnpCui(c.getCnp());
+                    cerere.setCodCerere("REQ-" + System.currentTimeMillis());
+                    cerere.setUatId(clujNapoca.getId());
+                    cerere.setUserId(c.getId());
+                    cerere.setStatus(com.multitenant.model.registru.StatusCerere.PENDING);
+                    cerereRepository.save(cerere);
+                }
+            }
+
+            // Switch current thread to "bucuresti" tenant context for entity seeding
+            TenantContext.setCurrentTenant("bucuresti");
+            System.out.println("[DatabaseSeeder] Seeding UATs and Households for Bucuresti...");
+
+            com.multitenant.model.core.Uat bucuresti = null;
+            if (!uatRepository.existsByCodSiruta("1017")) {
+                com.multitenant.model.core.PublicUat pUat = publicUatRepository.findByCodSiruta("1017").orElse(null);
+                if (pUat != null) {
+                    bucuresti = new com.multitenant.model.core.Uat();
+                    bucuresti.setCodSiruta(pUat.getCodSiruta());
+                    bucuresti.setDenumire(pUat.getDenumire());
+                    bucuresti.setJudet(pUat.getJudet());
+                    bucuresti.setTipUat(pUat.getTipUat());
+                    bucuresti.setIsActive(true);
+                    bucuresti = uatRepository.save(bucuresti);
+
+                    pUat.setTenantId("bucuresti");
+                    publicUatRepository.save(pUat);
+                }
+            } else {
+                bucuresti = uatRepository.findByCodSiruta("1017").orElse(null);
+            }
+
+            if (gospodarieRepository.count() == 0 && bucuresti != null) {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+
+                // Categorii de folosință variate, câte una pentru fiecare din cele 10 parcele BUC
+                // (ordine diferită față de Cluj, ca seturile de test să nu fie identice)
+                String[] categoriiFolosintaBuc = {
+                        "Pășune", "Arabil", "Fânețe", "Vii", "Livadă",
+                        "Ape", "Pădure", "Alte", "Livadă", "Arabil"
+                };
+
+                for (int i = 1; i <= 10; i++) {
+                    Gospodarie g = new Gospodarie();
+                    g.setCodGospodarie("BUC-GOSP-" + String.format("%03d", i));
+                    Adresa a = new Adresa();
+                    a.setStreet("Calea Victoriei");
+                    a.setStreetNumber(String.valueOf(i * 10));
+                    a.setCounty("București");
+                    a.setLocalitate("București Sectorul 1");
+                    a.setBuilding("B" + i);
+                    a.setStaircase("1");
+                    a.setFloor(i % 10);
+                    a.setApartmentNumber(i * 5);
+                    g.setAdresa(a);
+                    g.setTipGospodarie(i % 2 == 0 ? TipGospodarie.COLECTIVA : TipGospodarie.INDIVIDUALA);
+                    g.setActiva(true);
+                    g.setUat(bucuresti);
+                    Gospodarie savedG = gospodarieRepository.save(g);
+
+                    com.multitenant.model.registru.Teren t = new com.multitenant.model.registru.Teren();
+                    t.setDenumire("Teren Agricol BUC " + i);
+                    t.setGospodarie(savedG);
+                    t.setTipTeren("Intravilan");
+                    String tJson = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[26.1000, 44.4250], [26.1000, 44.4270], [26.1050, 44.4270], [26.1050, 44.4250], [26.1000, 44.4250]]]}, \"properties\": {}}";
+                    t.setPolygon(mapper.readTree(tJson));
+                    t = terenRepository.save(t);
+
+                    // Seeder-ul ocoleste TerenService (nu publica eveniment Spring),
+                    // deci CarteFunciara trebuie creata explicit aici.
+                    if (carteFunciaraRepository.findByTerenId(t.getId()).isEmpty()) {
+                        CarteFunciara cf = new CarteFunciara();
+                        cf.setTeren(t);
+                        // Numere CF realiste pentru Bucuresti (format ANCPI)
+                        cf.setNumarCf(String.format("CF-%05d-B", 200000 + i));
+                        cf.setNumarTopografic(String.format("Top/%d/%d/b", 3400 + i, i));
+                        // Suprafata initiala = suprafata parcelei care va fi adaugata mai jos
+                        cf.setSuprafataTotalaIntabulata(0.5 + (i * 0.05));
+                        carteFunciaraRepository.save(cf);
+                    }
+
+                    com.multitenant.model.registru.Parcela p = new com.multitenant.model.registru.Parcela();
+                    p.setDenumire("Parcela BUC " + i);
+                    p.setSuprafata(0.5 + (i * 0.05));
+                    p.setCategorieFolosinta(categoriiFolosintaBuc[i - 1]);
+                    p.setTeren(t);
+                    // Campuri noi Cap. II (HG 1627/2024)
+                    p.setNumarCadastral(String.format("1017-%05d", i));
+                    p.setTipZona(TipZona.INTRAVILAN);
+                    p.setTitularDreptFolosinta("Vasile" + i + " Ionescu BUC");
+                    String pJson = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[26.1000, 44.4250], [26.1000, 44.4270], [26.1025, 44.4270], [26.1025, 44.4250], [26.1000, 44.4250]]]}, \"properties\": {}}";
+                    p.setPolygon(mapper.readTree(pJson));
+                    p = parcelaRepository.save(p);
+
+                    // Seed CulturaParcela pentru parcelele Arabil
+                    if ("Arabil".equals(p.getCategorieFolosinta())) {
+                        com.multitenant.model.registru.CulturaParcela cultura = new com.multitenant.model.registru.CulturaParcela();
+                        cultura.setAnAgricol(2025);
+                        cultura.setSpecieCultura("Floarea-soarelui");
+                        cultura.setSuprafataCultivataHa(p.getSuprafata());
+                        cultura.setDataInsamantare(java.time.LocalDate.of(2025, 4, 10));
+                        cultura.setDataRecoltare(java.time.LocalDate.of(2025, 9, 5));
+                        cultura.setProductieHectarKg(2800.0 + i * 30);
+                        cultura.setProductieTotalaTone((2800.0 + i * 30) * p.getSuprafata() / 1000);
+                        cultura.setSistemIrigare("Fără irigare");
+                        cultura.setTipSol("Brun-roșcat");
+                        cultura.setCulturaPrecedenta("Grâu");
+                        cultura.setParcela(p);
+                        culturaParcelaRepository.save(cultura);
+                    }
+
+                    // Seed Pom pentru parcelele Livadă
+                    if ("Livadă".equals(p.getCategorieFolosinta())) {
+                        com.multitenant.model.registru.Pom pom = new com.multitenant.model.registru.Pom();
+                        pom.setTipInregistrare(com.multitenant.model.registru.TipInregistrarePom.PLANTATIE);
+                        pom.setSpecie("Cireș");
+                        pom.setSoi("Van");
+                        pom.setAnPlantare(2020);
+                        pom.setSuprafataHa(p.getSuprafata());
+                        pom.setDensitatePomiHa(350);
+                        pom.setStarePomi("Tânăr");
+                        pom.setSistemIntretinere("Convențional");
+                        pom.setSistemIrigare("Aspersiune");
+                        pom.setProductieEstimataKg(600.0);
+                        pom.setObservatii("Sămânță de test generată prin seeder");
+                        pom.setParcela(p);
+                        pomRepository.save(pom);
+                    }
+
+                    com.multitenant.model.persoana.PersoanaFizica persoana = new com.multitenant.model.persoana.PersoanaFizica();
+                    persoana.setFirstName("Vasile" + i);
+                    persoana.setLastName("Ionescu BUC");
+                    persoana.setCnp(String.format("180020223%04d", i));
+                    persoana.setDateOfBirth(java.time.LocalDate.of(1980, 2, 2).plusDays(i));
+                    persoana.setAdresa(a);
+                    persoana.getGospodarii().add(savedG);
+                    persoana.setIsHeadOfHousehold(true);
+                    persoanaRepository.save(persoana);
+
+                    com.multitenant.model.registru.Cladire cladire = new com.multitenant.model.registru.Cladire();
+                    cladire.setDestinatie("Anexa");
+                    cladire.setSuprafataConstruita(50.0 + i * 2);
+                    cladire.setAnTerminare(1990 + i);
+                    cladire.setMateriale("Lemn");
+                    cladire.setGospodarie(savedG);
+                    cladireRepository.save(cladire);
+
+                    com.multitenant.model.registru.Machinery machinery = new com.multitenant.model.registru.Machinery();
+                    machinery.setTipUtilaj("Combina");
+                    machinery.setMarca("Claas");
+                    machinery.setModel("Lexion " + i);
+                    machinery.setAnFabricatie(2015 + i);
+                    machinery.setNumarInmatriculare(String.format("B-%02d-CMB", i));
+                    machinery.setGospodarie(savedG);
+                    machineryRepository.save(machinery);
+                }
+            }
+
+
+            System.out.println("[DatabaseSeeder] Development data successfully seeded.");
+        } catch (Exception e) {
+            System.err.println("[DatabaseSeeder] Error seeding development data: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            // Clean up context to avoid side effects
+            TenantContext.clear();
+        }
     }
 }
