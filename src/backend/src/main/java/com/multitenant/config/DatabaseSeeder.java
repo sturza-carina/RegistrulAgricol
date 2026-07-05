@@ -248,7 +248,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                             contract.setNumarContract("CT-TEST-001");
                             contract.setDataSemnare(java.time.LocalDate.now());
                             contract.setDataInceput(java.time.LocalDate.now());
-                            contract.setDataSfarsit(java.time.LocalDate.now().plusDays(30));
+                            contract.setDataSfarsit(java.time.LocalDate.now().plusDays(20));
                             contract.setStatusContract(com.multitenant.model.registru.StatusContractUtilizare.ACTIV);
                             contract.setEsteActiv(true);
                             contract.setUtilizatorOperareId(1L);
