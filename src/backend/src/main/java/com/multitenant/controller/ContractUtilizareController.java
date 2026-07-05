@@ -2,8 +2,7 @@ package com.multitenant.controller;
 
 import com.multitenant.annotation.TenantRequired;
 import com.multitenant.dto.ContractUtilizareDTO;
-import com.multitenant.dto.SemnareContractRequest;
-import com.multitenant.model.registru.ContractUtilizare;
+import com.multitenant.dto.TrimiteSpreSemnareRequest;
 import com.multitenant.service.ContractSemnaturaService;
 import com.multitenant.service.ContractUtilizareService;
 import org.springframework.core.io.Resource;
@@ -72,16 +71,25 @@ public class ContractUtilizareController {
         }
     }
 
-    @PostMapping("/{id}/semnare")
-    public ResponseEntity<?> semneazaContract(@PathVariable Long id, @RequestBody(required = false) SemnareContractRequest request) {
+    @PostMapping("/{id}/trimite-semnare")
+    public ResponseEntity<?> trimiteSpreSemnare(@PathVariable Long id, @RequestBody TrimiteSpreSemnareRequest request) {
         try {
-            UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            String semnaturaImagine = request != null ? request.getSemnaturaImagineBase64() : null;
-            return ResponseEntity.ok(contractSemnaturaService.semneaza(id, userDetails.getId(), semnaturaImagine));
+            return ResponseEntity.ok(contractSemnaturaService.trimiteSpreSemnare(id, request.getEmailSemnatar()));
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Eroare la trimiterea contractului spre semnare: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/status-semnare")
+    public ResponseEntity<?> verificaStatusSemnare(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(contractSemnaturaService.verificaStatusSemnare(id));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Eroare la semnarea electronică a contractului: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Eroare la verificarea statusului de semnare: " + e.getMessage());
         }
     }
 

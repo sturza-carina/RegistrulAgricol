@@ -86,6 +86,18 @@ public class ContractUtilizare {
     @Column(name = "semnat_de_utilizator_id")
     private Long semnatDeUtilizatorId;
 
+    @Column(name = "signnow_document_id", length = 100)
+    private String signNowDocumentId;
+
+    @Column(name = "signnow_status", length = 30)
+    private String signNowStatus;
+
+    @Column(name = "signnow_trimis_la")
+    private java.time.LocalDateTime signNowTrimisLa;
+
+    @Column(name = "signnow_email_semnatar", length = 255)
+    private String signNowEmailSemnatar;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

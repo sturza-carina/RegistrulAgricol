@@ -118,42 +118,47 @@
           <button class="btn btn-secondary" (click)="downloadDocumentSemnat(viewingContract)">Descarcă document semnat</button>
         </div>
         <ng-template #nesemnat>
-          <p style="margin: 0 0 10px 0; color: var(--text-muted);">Contractul nu este semnat electronic.</p>
-          <button class="btn btn-primary" (click)="startSemnare(viewingContract)">Semnează electronic</button>
+          <div *ngIf="viewingContract.signNowDocumentId; else netrimis">
+            <p style="margin: 0 0 10px 0; color: var(--text-muted);">
+              Trimis spre semnare la <strong>{{ viewingContract.signNowEmailSemnatar }}</strong>
+              ({{ viewingContract.signNowTrimisLa || '-' }}). Status curent: <strong>{{ viewingContract.signNowStatus || 'în așteptare' }}</strong>.
+            </p>
+            <button class="btn btn-primary" [disabled]="verificandStatus" (click)="verificaStatusSemnare(viewingContract)">
+              {{ verificandStatus ? 'Se verifică...' : 'Verifică status semnare' }}
+            </button>
+          </div>
+          <ng-template #netrimis>
+            <p style="margin: 0 0 10px 0; color: var(--text-muted);">Contractul nu este semnat electronic.</p>
+            <button class="btn btn-primary" (click)="startSemnare(viewingContract)">Trimite spre semnare electronică</button>
+          </ng-template>
         </ng-template>
       </div>
     </div>
   </div>
 
-  <!-- Semnatura Electronica - Desenare Modal -->
+  <!-- Semnatura Electronica - Trimitere spre semnare via SignNow -->
   <div class="modal-overlay" *ngIf="signingContract" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1100; padding: 20px;">
-    <div class="modal-content card" style="width: 90%; max-width: 500px; background: var(--card-bg); padding: 30px; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); position: relative;">
+    <div class="modal-content card" style="width: 90%; max-width: 480px; background: var(--card-bg); padding: 30px; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); position: relative;">
       <button (click)="cancelSemnare()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted);" title="Închide">&times;</button>
 
       <h2 style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin-top: 0; margin-bottom: 8px; font-family: 'DM Serif Display', serif;">
-        Semnătură Electronică
+        Trimite spre semnare electronică
       </h2>
       <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
-        Desenați semnătura în chenarul de mai jos pentru contractul nr. {{ signingContract.numarContract }}.
+        Contractul nr. {{ signingContract.numarContract }} va fi trimis prin SignNow către adresa de email de mai jos,
+        unde semnatarul va primi un link de semnare.
       </p>
 
-      <canvas
-        id="signatureCanvas"
-        width="440"
-        height="180"
-        style="width: 100%; height: 180px; border: 2px dashed #cbd5e1; border-radius: 8px; background: #fff; touch-action: none; cursor: crosshair;"
-        (pointerdown)="onSignaturePointerDown($event)"
-        (pointermove)="onSignaturePointerMove($event)"
-        (pointerup)="onSignaturePointerUp()"
-        (pointerleave)="onSignaturePointerUp()">
-      </canvas>
+      <label style="display:block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Email semnatar</label>
+      <input
+        type="email"
+        [(ngModel)]="emailSemnatar"
+        placeholder="ex: proprietar@exemplu.ro"
+        style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 16px;" />
 
-      <div style="display: flex; justify-content: space-between; margin-top: 16px;">
-        <button class="btn btn-secondary" (click)="clearSignatureCanvas()">Șterge</button>
-        <div style="display: flex; gap: 8px;">
-          <button class="btn btn-secondary" (click)="cancelSemnare()">Anulează</button>
-          <button class="btn btn-primary" (click)="confirmSemnare()">Confirmă Semnătura</button>
-        </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button class="btn btn-secondary" (click)="cancelSemnare()">Anulează</button>
+        <button class="btn btn-primary" [disabled]="!emailSemnatar" (click)="confirmTrimiteSpreSemnare()">Trimite spre semnare</button>
       </div>
     </div>
   </div>

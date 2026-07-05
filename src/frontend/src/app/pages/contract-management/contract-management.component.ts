@@ -350,85 +350,63 @@ export class ContractManagementComponent implements OnInit {
   }
 
   signingContract: ContractUtilizare | null = null;
-  private isDrawingSemnatura = false;
-  private lastSemnaturaX = 0;
-  private lastSemnaturaY = 0;
+  emailSemnatar = '';
+  verificandStatus = false;
 
   startSemnare(contract: ContractUtilizare): void {
     if (!contract.id) return;
     this.errorMessage = '';
     this.successMessage = '';
     this.signingContract = contract;
-    setTimeout(() => this.clearSignatureCanvas(), 0);
+    this.emailSemnatar = contract.locatorProprietar?.email || contract.locatorUtilizator?.email || '';
   }
 
   cancelSemnare(): void {
     this.signingContract = null;
+    this.emailSemnatar = '';
   }
 
-  private getSignatureCanvas(): HTMLCanvasElement | null {
-    return document.getElementById('signatureCanvas') as HTMLCanvasElement | null;
-  }
-
-  clearSignatureCanvas(): void {
-    const canvas = this.getSignatureCanvas();
-    const ctx = canvas?.getContext('2d');
-    if (canvas && ctx) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-  }
-
-  onSignaturePointerDown(event: PointerEvent): void {
-    const canvas = event.target as HTMLCanvasElement;
-    const rect = canvas.getBoundingClientRect();
-    this.isDrawingSemnatura = true;
-    this.lastSemnaturaX = event.clientX - rect.left;
-    this.lastSemnaturaY = event.clientY - rect.top;
-  }
-
-  onSignaturePointerMove(event: PointerEvent): void {
-    if (!this.isDrawingSemnatura) return;
-    const canvas = event.target as HTMLCanvasElement;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(this.lastSemnaturaX, this.lastSemnaturaY);
-    ctx.lineTo(x, y);
-    ctx.stroke();
-    this.lastSemnaturaX = x;
-    this.lastSemnaturaY = y;
-  }
-
-  onSignaturePointerUp(): void {
-    this.isDrawingSemnatura = false;
-  }
-
-  confirmSemnare(): void {
-    const canvas = this.getSignatureCanvas();
+  confirmTrimiteSpreSemnare(): void {
     const contractId = this.signingContract?.id;
-    if (!canvas || !contractId) return;
+    if (!contractId || !this.emailSemnatar) return;
 
-    const semnaturaImagineBase64 = canvas.toDataURL('image/png');
     this.errorMessage = '';
     this.successMessage = '';
-    this.contractService.semneazaContract(contractId, semnaturaImagineBase64).subscribe({
+    this.contractService.trimiteSpreSemnare(contractId, this.emailSemnatar).subscribe({
       next: (updated) => {
-        this.successMessage = 'Contractul a fost semnat electronic cu succes!';
+        this.successMessage = `Contractul a fost trimis spre semnare electronică la ${this.emailSemnatar} (prin SignNow).`;
         this.signingContract = null;
+        this.emailSemnatar = '';
         this.loadTenantData();
         if (this.viewingContract?.id === contractId) {
           this.viewingContract = updated;
         }
       },
       error: (err) => {
-        this.errorMessage = err.error?.message || err.error || 'A apărut o eroare la semnarea electronică a contractului.';
-        this.signingContract = null;
+        this.errorMessage = err.error?.message || err.error || 'A apărut o eroare la trimiterea contractului spre semnare.';
+      }
+    });
+  }
+
+  verificaStatusSemnare(contract: ContractUtilizare): void {
+    if (!contract.id) return;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.verificandStatus = true;
+    this.contractService.verificaStatusSemnare(contract.id).subscribe({
+      next: (updated) => {
+        this.verificandStatus = false;
+        this.successMessage = updated.semnatElectronic
+          ? 'Contractul a fost semnat! Documentul final poate fi descărcat.'
+          : 'Contractul nu a fost încă semnat de destinatar. Mai încearcă puțin mai târziu.';
+        this.loadTenantData();
+        if (this.viewingContract?.id === contract.id) {
+          this.viewingContract = updated;
+        }
+      },
+      error: (err) => {
+        this.verificandStatus = false;
+        this.errorMessage = err.error?.message || err.error || 'A apărut o eroare la verificarea statusului de semnare.';
       }
     });
   }

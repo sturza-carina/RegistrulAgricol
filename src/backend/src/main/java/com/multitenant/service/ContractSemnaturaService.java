@@ -4,15 +4,10 @@ import com.lowagie.text.Document;
 import com.lowagie.text.Element;
 import com.lowagie.text.Font;
 import com.lowagie.text.FontFactory;
-import com.lowagie.text.Image;
 import com.lowagie.text.PageSize;
 import com.lowagie.text.Paragraph;
-import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
-import com.lowagie.text.pdf.PdfReader;
-import com.lowagie.text.pdf.PdfSignatureAppearance;
-import com.lowagie.text.pdf.PdfStamper;
 import com.lowagie.text.pdf.PdfWriter;
 import com.multitenant.model.persoana.Persoana;
 import com.multitenant.model.persoana.PersoanaFizica;
@@ -20,7 +15,7 @@ import com.multitenant.model.persoana.PersoanaJuridica;
 import com.multitenant.model.registru.ContractUtilizare;
 import com.multitenant.model.registru.Parcela;
 import com.multitenant.repository.ContractUtilizareRepository;
-import com.multitenant.service.signature.SemnaturaKeystoreProvider;
+import com.multitenant.service.signnow.SignNowClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -37,31 +32,29 @@ import java.text.Normalizer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
+import java.util.Map;
 
 @Service
 public class ContractSemnaturaService {
 
     private final ContractUtilizareRepository contractUtilizareRepository;
-    private final SemnaturaKeystoreProvider keystoreProvider;
+    private final SignNowClient signNowClient;
 
     @Value("${app.signature.storage-path}")
     private String storageBasePath;
 
-    @Value("${app.signature.signer-name}")
-    private String signerName;
-
-    @Value("${app.signature.reason}")
-    private String signReason;
-
     public ContractSemnaturaService(ContractUtilizareRepository contractUtilizareRepository,
-                                     SemnaturaKeystoreProvider keystoreProvider) {
+                                     SignNowClient signNowClient) {
         this.contractUtilizareRepository = contractUtilizareRepository;
-        this.keystoreProvider = keystoreProvider;
+        this.signNowClient = signNowClient;
     }
 
+    /** Generează PDF-ul contractului, îl încarcă în SignNow și trimite invitația de semnare către semnatar. */
     @Transactional
-    public ContractUtilizare semneaza(Long contractId, Long currentUserId, String semnaturaImagineBase64) throws Exception {
+    public ContractUtilizare trimiteSpreSemnare(Long contractId, String emailSemnatar) throws Exception {
+        if (emailSemnatar == null || emailSemnatar.isBlank()) {
+            throw new IllegalArgumentException("Adresa de email a semnatarului este obligatorie");
+        }
         ContractUtilizare contract = contractUtilizareRepository.findById(contractId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Contractul nu a fost găsit"));
 
@@ -70,25 +63,59 @@ public class ContractSemnaturaService {
         }
 
         byte[] unsignedPdf = genereazaPdfContract(contract);
-        byte[] signedPdf = semneazaPdf(unsignedPdf, semnaturaImagineBase64);
-        String hash = sha256Hex(signedPdf);
+        String fileName = "contract-" + contractId + ".pdf";
+        String documentId = signNowClient.uploadDocument(unsignedPdf, fileName);
+        signNowClient.sendFreeFormInvite(documentId, emailSemnatar);
 
-        Path targetDir = Path.of(storageBasePath);
-        Files.createDirectories(targetDir);
-        String fileName = "contract-" + contractId + "-semnat.pdf";
-        Path targetPath = targetDir.resolve(fileName).normalize();
-        if (!targetPath.startsWith(targetDir)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cale de fișier invalidă");
+        contract.setSignNowDocumentId(documentId);
+        contract.setSignNowStatus("trimis");
+        contract.setSignNowTrimisLa(LocalDateTime.now());
+        contract.setSignNowEmailSemnatar(emailSemnatar);
+
+        return contractUtilizareRepository.save(contract);
+    }
+
+    /**
+     * Verifică pe SignNow dacă documentul a fost semnat. Dacă da, descarcă versiunea finală semnată,
+     * o salvează local și marchează contractul ca semnat electronic.
+     */
+    @Transactional
+    public ContractUtilizare verificaStatusSemnare(Long contractId) throws Exception {
+        ContractUtilizare contract = contractUtilizareRepository.findById(contractId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Contractul nu a fost găsit"));
+
+        if (contract.getSignNowDocumentId() == null) {
+            throw new IllegalStateException("Contractul nu a fost trimis spre semnare");
         }
-        Files.write(targetPath, signedPdf);
 
-        contract.setSemnatElectronic(true);
-        contract.setDataSemnaturiiElectronice(LocalDateTime.now());
-        contract.setCaleDocumentSemnat(targetPath.toString());
-        contract.setHashDocumentSemnat(hash);
-        contract.setSemnatDeUtilizatorId(currentUserId);
-        if (contract.getDataSemnare() == null) {
-            contract.setDataSemnare(LocalDate.now());
+        if (contract.isSemnatElectronic()) {
+            return contract;
+        }
+
+        Map<String, Object> details = signNowClient.getDocumentDetails(contract.getSignNowDocumentId());
+        boolean semnat = signNowClient.isSigned(details);
+        contract.setSignNowStatus(semnat ? "semnat" : "in_asteptare");
+
+        if (semnat) {
+            byte[] signedPdf = signNowClient.downloadSignedDocument(contract.getSignNowDocumentId());
+            String hash = sha256Hex(signedPdf);
+
+            Path targetDir = Path.of(storageBasePath);
+            Files.createDirectories(targetDir);
+            String fileName = "contract-" + contractId + "-semnat.pdf";
+            Path targetPath = targetDir.resolve(fileName).normalize();
+            if (!targetPath.startsWith(targetDir)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cale de fișier invalidă");
+            }
+            Files.write(targetPath, signedPdf);
+
+            contract.setSemnatElectronic(true);
+            contract.setDataSemnaturiiElectronice(LocalDateTime.now());
+            contract.setCaleDocumentSemnat(targetPath.toString());
+            contract.setHashDocumentSemnat(hash);
+            if (contract.getDataSemnare() == null) {
+                contract.setDataSemnare(LocalDate.now());
+            }
         }
 
         return contractUtilizareRepository.save(contract);
@@ -148,39 +175,6 @@ public class ContractSemnaturaService {
 
             document.close();
             return baos.toByteArray();
-        }
-    }
-
-    private byte[] semneazaPdf(byte[] unsignedPdf, String semnaturaImagineBase64) throws Exception {
-        PdfReader reader = new PdfReader(unsignedPdf);
-        try (ByteArrayOutputStream signedOutput = new ByteArrayOutputStream()) {
-            PdfStamper stamper = PdfStamper.createSignature(reader, signedOutput, '\0');
-            PdfSignatureAppearance appearance = stamper.getSignatureAppearance();
-            appearance.setReason(signReason);
-            appearance.setLocation(signerName);
-
-            boolean hasDrawnSignature = semnaturaImagineBase64 != null && !semnaturaImagineBase64.isBlank();
-            if (hasDrawnSignature) {
-                appearance.setVisibleSignature(new Rectangle(330, 40, 560, 130), 1, "semnatura-electronica");
-                String base64Data = semnaturaImagineBase64;
-                int commaIdx = base64Data.indexOf(',');
-                if (base64Data.startsWith("data:") && commaIdx >= 0) {
-                    base64Data = base64Data.substring(commaIdx + 1);
-                }
-                byte[] imageBytes = Base64.getDecoder().decode(base64Data);
-                Image semnaturaImg = Image.getInstance(imageBytes);
-                appearance.setSignatureGraphic(semnaturaImg);
-                // Doar desenul, fara text suprapus peste el (GraphicAndDescription se suprapunea ilizibil pe o caseta mica).
-                appearance.setRender(PdfSignatureAppearance.SignatureRenderGraphic);
-            } else {
-                appearance.setVisibleSignature(new Rectangle(380, 50, 560, 120), 1, "semnatura-electronica");
-            }
-
-            appearance.setCrypto(keystoreProvider.getPrivateKey(), keystoreProvider.getCertificateChain(),
-                    null, PdfSignatureAppearance.WINCER_SIGNED);
-
-            stamper.close();
-            return signedOutput.toByteArray();
         }
     }
 
