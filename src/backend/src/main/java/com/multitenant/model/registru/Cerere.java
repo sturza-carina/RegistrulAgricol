@@ -9,8 +9,13 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
+import com.multitenant.converter.AesCryptoConverter;
+import com.multitenant.util.CryptoUtils;
+
 @Entity
-@Table(name = "cereri")
+@Table(name = "cereri", indexes = {
+    @Index(name = "idx_cereri_cnp_cui_hash", columnList = "cnp_cui_hash")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -43,8 +48,12 @@ public class Cerere {
     @Column(name = "cod_cerere", unique = true, nullable = false, length = 50)
     private String codCerere;
 
-    @Column(name = "cnp_cui", length = 50)
+    @Column(name = "cnp_cui", length = 255)
+    @Convert(converter = AesCryptoConverter.class)
     private String cnpCui;
+
+    @Column(name = "cnp_cui_hash", length = 64)
+    private String cnpCuiHash;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -71,5 +80,20 @@ public class Cerere {
     @Override
     public int hashCode() {
         return getClass().hashCode();
+    }
+
+    public void setCnpCui(String cnpCui) {
+        this.cnpCui = cnpCui;
+        this.cnpCuiHash = CryptoUtils.hashSha256(cnpCui);
+    }
+
+    @PrePersist
+    @PreUpdate
+    public void prePersistUpdate() {
+        if (this.cnpCui != null) {
+            this.cnpCuiHash = CryptoUtils.hashSha256(this.cnpCui);
+        } else {
+            this.cnpCuiHash = null;
+        }
     }
 }

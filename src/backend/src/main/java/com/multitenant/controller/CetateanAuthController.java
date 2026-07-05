@@ -42,7 +42,7 @@ public class CetateanAuthController {
             return ResponseEntity.badRequest().body("Error: Email is already in use!");
         }
 
-        if (cetateanRepository.findByCnp(request.getCnp()).isPresent()) {
+        if (cetateanRepository.findByCnpClar(request.getCnp()).isPresent()) {
             return ResponseEntity.badRequest().body("Error: CNP is already in use!");
         }
 

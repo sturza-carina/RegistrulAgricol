@@ -8,8 +8,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 
+import com.multitenant.converter.AesCryptoConverter;
+import com.multitenant.util.CryptoUtils;
+
 @Entity
-@Table(name = "cetateni", schema = "public")
+@Table(name = "cetateni", schema = "public", indexes = {
+    @Index(name = "idx_cetateni_cnp_hash", columnList = "cnp_hash")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -24,8 +29,12 @@ public class Cetatean {
     @Column(nullable = false, length = 255)
     private String prenume;
 
-    @Column(nullable = false, length = 13, unique = true)
+    @Column(nullable = false, length = 255)
+    @Convert(converter = AesCryptoConverter.class)
     private String cnp;
+
+    @Column(name = "cnp_hash", length = 64)
+    private String cnpHash;
 
     @Column(nullable = false, length = 255, unique = true)
     private String email;
@@ -64,4 +73,19 @@ public class Cetatean {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    public void setCnp(String cnp) {
+        this.cnp = cnp;
+        this.cnpHash = CryptoUtils.hashSha256(cnp);
+    }
+
+    @PrePersist
+    @PreUpdate
+    public void prePersistUpdate() {
+        if (this.cnp != null) {
+            this.cnpHash = CryptoUtils.hashSha256(this.cnp);
+        } else {
+            this.cnpHash = null;
+        }
+    }
 }

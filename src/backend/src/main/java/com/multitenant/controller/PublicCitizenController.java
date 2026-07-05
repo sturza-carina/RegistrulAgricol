@@ -34,7 +34,7 @@ public class PublicCitizenController {
 
         TenantContext.setCurrentTenant(pUat.getTenantId());
         try {
-            Optional<Persoana> optPerson = persoanaRepository.findByCnp(cnp);
+            Optional<Persoana> optPerson = persoanaRepository.findByCnpClar(cnp);
             if (optPerson.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Datele de identificare sunt incorecte. Nu exista nicio persoana cu acest CNP."));
             }
