@@ -744,14 +744,14 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
 
   showCulturi(p: Parcela | null): boolean {
     if (!p || !p.categorieFolosinta) return false;
-    const val = p.categorieFolosinta.trim().toLowerCase();
-    return val === 'arabil' || val === 'pășune' || val === 'pasune' || val === 'fânețe' || val === 'fanețe' || val === 'fanete';
+    const val = this.normalizeString(p.categorieFolosinta);
+    return val === 'arabil';
   }
 
   showPomi(p: Parcela | null): boolean {
     if (!p || !p.categorieFolosinta) return false;
-    const val = p.categorieFolosinta.trim().toLowerCase();
-    return val === 'livadă' || val === 'livada' || val === 'vii' || val === 'vie' || val === 'pădure' || val === 'padure';
+    const val = this.normalizeString(p.categorieFolosinta);
+    return val === 'livada';
   }
 
   loadPomi(parcelaId: number) {
