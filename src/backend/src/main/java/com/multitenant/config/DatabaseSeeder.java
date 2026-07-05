@@ -37,6 +37,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final com.multitenant.repository.ContractUtilizareRepository contractUtilizareRepository;
     private final com.multitenant.repository.CulturaParcelaRepository culturaParcelaRepository;
     private final com.multitenant.repository.PomRepository pomRepository;
+    private final com.multitenant.repository.VitaDeVieRepository vitaDeVieRepository;
 
     public DatabaseSeeder(TenantService tenantService,
                           UserRepository userRepository,
@@ -54,7 +55,8 @@ public class DatabaseSeeder implements CommandLineRunner {
                           com.multitenant.repository.CerereRepository cerereRepository,
                           com.multitenant.repository.ContractUtilizareRepository contractUtilizareRepository,
                           com.multitenant.repository.CulturaParcelaRepository culturaParcelaRepository,
-                          com.multitenant.repository.PomRepository pomRepository) {
+                          com.multitenant.repository.PomRepository pomRepository,
+                          com.multitenant.repository.VitaDeVieRepository vitaDeVieRepository) {
         this.tenantService = tenantService;
         this.userRepository = userRepository;
         this.gospodarieRepository = gospodarieRepository;
@@ -72,6 +74,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         this.contractUtilizareRepository = contractUtilizareRepository;
         this.culturaParcelaRepository = culturaParcelaRepository;
         this.pomRepository = pomRepository;
+        this.vitaDeVieRepository = vitaDeVieRepository;
     }
 
     @Override
@@ -306,6 +309,24 @@ public class DatabaseSeeder implements CommandLineRunner {
                         pomRepository.save(pom);
                     }
 
+                    // Seed VitaDeVie pentru parcelele Vii
+                    if ("Vii".equals(p.getCategorieFolosinta())) {
+                        com.multitenant.model.registru.VitaDeVie vita = new com.multitenant.model.registru.VitaDeVie();
+                        vita.setTipInregistrare(com.multitenant.model.registru.TipInregistrareVita.PLANTATIE);
+                        vita.setSpecie("Viță de vie");
+                        vita.setSoi("Fetească Regală");
+                        vita.setAnPlantare(2016);
+                        vita.setSuprafataHa(p.getSuprafata());
+                        vita.setDensitateViteHa(4000);
+                        vita.setStareVita("Pe rod");
+                        vita.setSistemIntretinere("Convențional");
+                        vita.setSistemIrigare("Fără irigare");
+                        vita.setProductieEstimataKg(8000.0);
+                        vita.setObservatii("Sămânță de test generată prin seeder");
+                        vita.setParcela(p);
+                        vitaDeVieRepository.save(vita);
+                    }
+
                     com.multitenant.model.persoana.PersoanaFizica persoana = new com.multitenant.model.persoana.PersoanaFizica();
                     persoana.setFirstName("Ion" + i);
                     persoana.setLastName("Popescu CJ");
@@ -486,6 +507,23 @@ public class DatabaseSeeder implements CommandLineRunner {
                         pom.setObservatii("Sămânță de test generată prin seeder");
                         pom.setParcela(p);
                         pomRepository.save(pom);
+                    }
+
+                    // Seed VitaDeVie pentru parcelele Vii
+                    if ("Vii".equals(p.getCategorieFolosinta())) {
+                        com.multitenant.model.registru.VitaDeVie vita = new com.multitenant.model.registru.VitaDeVie();
+                        vita.setTipInregistrare(com.multitenant.model.registru.TipInregistrareVita.IZOLAT);
+                        vita.setSpecie("Viță de vie");
+                        vita.setSoi("Merlot");
+                        vita.setAnPlantare(2019);
+                        vita.setNumarVite(120);
+                        vita.setStareVita("Tânără");
+                        vita.setSistemIntretinere("Ecologic");
+                        vita.setSistemIrigare("Picurare");
+                        vita.setProductieEstimataKg(350.0);
+                        vita.setObservatii("Sămânță de test generată prin seeder");
+                        vita.setParcela(p);
+                        vitaDeVieRepository.save(vita);
                     }
 
                     com.multitenant.model.persoana.PersoanaFizica persoana = new com.multitenant.model.persoana.PersoanaFizica();
