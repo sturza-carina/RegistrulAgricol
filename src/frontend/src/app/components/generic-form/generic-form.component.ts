@@ -5,10 +5,12 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { FormConfig, FormField } from './generic-form.models';
 
+import { AppTranslatePipe } from '../../services/translate.pipe';
+
 @Component({
   selector: 'app-generic-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AppTranslatePipe],
   templateUrl: './generic-form.component.html',
   styleUrls: ['./generic-form.component.css']
 })

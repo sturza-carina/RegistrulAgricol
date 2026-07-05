@@ -14,10 +14,12 @@ import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrum
 import { PersonFormComponent } from '../persoana-form/persoana-form.component';
 import { ActiveUatBannerComponent } from '../../components/active-uat-banner/active-uat-banner.component';
 
+import { AppTranslatePipe } from '../../services/translate.pipe';
+
 @Component({
   selector: 'app-persoana-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, LayoutComponent, PageHeaderComponent, GenericTableComponent, BreadcrumbsComponent, PersonFormComponent, ActiveUatBannerComponent],
+  imports: [CommonModule, RouterModule, FormsModule, LayoutComponent, PageHeaderComponent, GenericTableComponent, BreadcrumbsComponent, PersonFormComponent, ActiveUatBannerComponent, AppTranslatePipe],
   templateUrl: './persoana-list.component.html'
 })
 export class PersonListComponent implements OnInit {

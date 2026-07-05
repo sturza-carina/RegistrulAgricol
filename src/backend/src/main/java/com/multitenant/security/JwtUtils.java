@@ -28,6 +28,18 @@ public class JwtUtils {
                 .claim("tenantId", userPrincipal.getTenantId())
                 .claim("uatId", userPrincipal.getUatId())
                 .claim("role", userPrincipal.getRole())
+                .claim("type", "USER")
+                .issuedAt(new Date())
+                .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(key(), Jwts.SIG.HS256)
+                .compact();
+    }
+
+    public String generateCetateanJwtToken(com.multitenant.model.core.Cetatean cetatean) {
+        return Jwts.builder()
+                .subject((cetatean.getEmail()))
+                .claim("userId", cetatean.getId())
+                .claim("type", "CETATEAN")
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(key(), Jwts.SIG.HS256)
@@ -65,6 +77,10 @@ public class JwtUtils {
 
     public String getRoleFromJwtToken(String token) {
         return getClaimsFromJwtToken(token).get("role", String.class);
+    }
+
+    public String getTypeFromJwtToken(String token) {
+        return getClaimsFromJwtToken(token).get("type", String.class);
     }
 
     public boolean validateJwtToken(String authToken) {

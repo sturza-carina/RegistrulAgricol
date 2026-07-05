@@ -36,7 +36,7 @@ export class LoginComponent {
           }
         },
         error: err => {
-          this.error = 'Invalid credentials';
+          this.error = $localize `:@@login_invalid_credentials:Date de autentificare invalide`;
         }
       });
     }

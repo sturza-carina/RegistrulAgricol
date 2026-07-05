@@ -7,9 +7,11 @@ import com.multitenant.model.registru.TipZona;
 import com.multitenant.model.common.Adresa;
 import com.multitenant.model.registru.TipGospodarie;
 import com.multitenant.model.core.User;
+import com.multitenant.model.core.Cetatean;
 import com.multitenant.repository.GospodarieRepository;
 import com.multitenant.repository.CarteFunciaraRepository;
 import com.multitenant.repository.UserRepository;
+import com.multitenant.repository.core.CetateanRepository;
 import com.multitenant.service.TenantService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,7 +31,9 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final com.multitenant.repository.UatRepository uatRepository;
     private final com.multitenant.repository.PublicUatRepository publicUatRepository;
     private final CarteFunciaraRepository carteFunciaraRepository;
+    private final CetateanRepository cetateanRepository;
     private final PasswordEncoder passwordEncoder;
+    private final com.multitenant.repository.CerereRepository cerereRepository;
     private final com.multitenant.repository.ContractUtilizareRepository contractUtilizareRepository;
 
     public DatabaseSeeder(TenantService tenantService,
@@ -43,7 +47,9 @@ public class DatabaseSeeder implements CommandLineRunner {
                           com.multitenant.repository.UatRepository uatRepository,
                           com.multitenant.repository.PublicUatRepository publicUatRepository,
                           CarteFunciaraRepository carteFunciaraRepository,
+                          CetateanRepository cetateanRepository,
                           PasswordEncoder passwordEncoder,
+                          com.multitenant.repository.CerereRepository cerereRepository,
                           com.multitenant.repository.ContractUtilizareRepository contractUtilizareRepository) {
         this.tenantService = tenantService;
         this.userRepository = userRepository;
@@ -56,7 +62,9 @@ public class DatabaseSeeder implements CommandLineRunner {
         this.uatRepository = uatRepository;
         this.publicUatRepository = publicUatRepository;
         this.carteFunciaraRepository = carteFunciaraRepository;
+        this.cetateanRepository = cetateanRepository;
         this.passwordEncoder = passwordEncoder;
+        this.cerereRepository = cerereRepository;
         this.contractUtilizareRepository = contractUtilizareRepository;
     }
 
@@ -131,6 +139,22 @@ public class DatabaseSeeder implements CommandLineRunner {
                 adminBuc.setUatId(bucurestiUatId);
                 adminBuc.setTenantId("bucuresti");
                 userRepository.save(adminBuc);
+            }
+
+            if (cetateanRepository.findByEmail("cetatean@registru.ro").isEmpty()) {
+                System.out.println("[DatabaseSeeder] Seeding dummy cetatean in public schema...");
+                Cetatean cetatean = new Cetatean();
+                cetatean.setNume("Popescu");
+                cetatean.setPrenume("Cetatean");
+                cetatean.setCnp("1800101123456");
+                cetatean.setEmail("cetatean@registru.ro");
+                cetatean.setParola(passwordEncoder.encode("password123"));
+                cetatean.setTelefon("0712345678");
+                cetatean.setJudet("Cluj");
+                cetatean.setLocalitate("Cluj-Napoca");
+                cetatean.setStrada("Str. Libertatii");
+                cetatean.setNumar("1");
+                cetateanRepository.save(cetatean);
             }
 
                 // Switch current thread to "cluj" tenant context for entity seeding
@@ -272,6 +296,22 @@ public class DatabaseSeeder implements CommandLineRunner {
                         machinery.setNumarInmatriculare(String.format("CJ-%02d-TRC", i));
                         machinery.setGospodarie(savedG);
                         machineryRepository.save(machinery);
+                    }
+
+                    // Adaugam o cerere dummy pentru cetatean
+                    com.multitenant.model.core.Cetatean c = cetateanRepository.findByEmail("cetatean@registru.ro").orElse(null);
+                    if (c != null && cerereRepository.count() == 0) {
+                        com.multitenant.model.registru.Cerere cerere = new com.multitenant.model.registru.Cerere();
+                        cerere.setNume(c.getNume() + " " + c.getPrenume());
+                        cerere.setDomiciliu(c.getLocalitate() + ", " + c.getStrada() + " " + c.getNumar());
+                        cerere.setTelefon(c.getTelefon());
+                        cerere.setEmail(c.getEmail());
+                        cerere.setCnpCui(c.getCnp());
+                        cerere.setCodCerere("REQ-" + System.currentTimeMillis());
+                        cerere.setUatId(clujNapoca.getId());
+                        cerere.setUserId(c.getId());
+                        cerere.setStatus(com.multitenant.model.registru.StatusCerere.PENDING);
+                        cerereRepository.save(cerere);
                     }
                 }
                 

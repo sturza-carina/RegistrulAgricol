@@ -18,8 +18,4 @@ export class CarteFunciaraService {
   update(id: number, dto: { numarCf?: string; numarTopografic?: string }): Observable<CarteFunciara> {
     return this.http.put<CarteFunciara>(`${this.apiUrl}/${id}`, dto);
   }
-
-  downloadPdf(terenId: number): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/teren/${terenId}/pdf`, { responseType: 'blob' });
-  }
 }

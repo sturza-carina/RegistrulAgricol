@@ -25,11 +25,23 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetailsImpl)) {
+        if (authentication == null) {
             return ResponseEntity.status(401).build();
         }
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        return ResponseEntity.ok(userDetails);
+        if (authentication.getPrincipal() instanceof UserDetailsImpl) {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            return ResponseEntity.ok(userDetails);
+        } else if (authentication.getPrincipal() instanceof com.multitenant.model.core.Cetatean) {
+            com.multitenant.model.core.Cetatean cetatean = (com.multitenant.model.core.Cetatean) authentication.getPrincipal();
+            return ResponseEntity.ok(new UserInfoResponse(
+                    cetatean.getId(),
+                    cetatean.getEmail(),
+                    "CETATEAN",
+                    null,
+                    null
+            ));
+        }
+        return ResponseEntity.status(401).build();
     }
 
     @Autowired

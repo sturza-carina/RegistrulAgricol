@@ -2,7 +2,7 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm install --legacy-peer-deps
 COPY . .
 # GOOGLE_MAPS_API_KEY is a client-side key embedded in the public JS bundle by design
 # (Google Maps requires it in-browser); its only real protection is the HTTP referrer

@@ -9,6 +9,7 @@ spring:
   jackson:
     serialization:
       fail-on-empty-beans: false
+      write-dates-as-timestamps: false
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/multi_tenant_db}
     username: ${SPRING_DATASOURCE_USERNAME:admin}

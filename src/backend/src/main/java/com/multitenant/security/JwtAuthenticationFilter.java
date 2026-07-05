@@ -34,23 +34,35 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String role = jwtUtils.getRoleFromJwtToken(jwt);
                 Long uatId = jwtUtils.getUatIdFromJwtToken(jwt);
 
-                org.springframework.security.core.GrantedAuthority authority = new org.springframework.security.core.authority.SimpleGrantedAuthority(role);
-                UserDetailsImpl userDetails = new UserDetailsImpl(
-                        userId,
-                        username,
-                        "",
-                        role,
-                        tenantId,
-                        uatId,
-                        true,
-                        java.util.Collections.singletonList(authority)
-                );
+                String type = jwtUtils.getTypeFromJwtToken(jwt);
+                
+                if ("CETATEAN".equals(type)) {
+                    com.multitenant.model.core.Cetatean cetatean = new com.multitenant.model.core.Cetatean();
+                    cetatean.setId(userId);
+                    cetatean.setEmail(username);
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            cetatean, null, java.util.Collections.emptyList());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    org.springframework.security.core.GrantedAuthority authority = new org.springframework.security.core.authority.SimpleGrantedAuthority(role);
+                    UserDetailsImpl userDetails = new UserDetailsImpl(
+                            userId,
+                            username,
+                            "",
+                            role,
+                            tenantId,
+                            uatId,
+                            true,
+                            java.util.Collections.singletonList(authority)
+                    );
 
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             }
         } catch (Exception e) {
             // log exception

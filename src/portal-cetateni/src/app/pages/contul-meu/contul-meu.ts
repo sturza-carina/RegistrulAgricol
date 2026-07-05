@@ -5,6 +5,7 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Client, Message } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { UATS } from '../../data/uats.data';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-contul-meu',
@@ -13,56 +14,36 @@ import { UATS } from '../../data/uats.data';
   styleUrl: './contul-meu.css'
 })
 export class ContulMeu implements OnInit, OnDestroy {
-  // Login fields
-  cnp: string = '';
-  initiale: string = '';
-  uatId: string = '';
-  selectedJudet: string = '';
-
+  // Profile data
+  profile: any = null;
+  
   // Data helpers
   judete: string[] = [];
   localitati: any[] = [];
   toateLocalitatile: any[] = [];
 
-  // Session state
-  isLogged: boolean = false;
-  cnpUtilizator: string = '';
-  initialeUtilizator: string = '';
-  uatSelectatId: string = '';
-  uatSelectatDenumire: string = '';
-
-  // Dashboard content
-  cereri: any[] = [];
+  // Notifications
   notificari: any[] = [];
+  
   isLoading = false;
+  isSaving = false;
+  successMessage: string | null = null;
   error: string | null = null;
 
   // Stomp client
   private stompClient: Client | null = null;
 
-  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService
+  ) {}
 
   ngOnInit() {
     this.toateLocalitatile = UATS;
     this.judete = [...new Set(UATS.filter((l: any) => l && l.judet).map((l: any) => l.judet))].sort((a: any, b: any) => a.localeCompare(b));
 
-    // Restore session if exists
-    const session = localStorage.getItem('cetatean_sesiune');
-    if (session) {
-      try {
-        const parsed = JSON.parse(session);
-        this.isLogged = true;
-        this.cnpUtilizator = parsed.cnp;
-        this.initialeUtilizator = parsed.initiale;
-        this.uatSelectatId = parsed.uatId;
-        this.uatSelectatDenumire = parsed.uatDenumire;
-        
-        this.loadIstoricCereri();
-        this.connectWebSocket();
-      } catch (e) {
-        this.logout();
-      }
-    }
+    this.loadProfile();
   }
 
   ngOnDestroy() {
@@ -70,117 +51,99 @@ export class ContulMeu implements OnInit, OnDestroy {
   }
 
   onJudetChange() {
-    this.uatId = '';
+    this.profile.localitate = '';
+    this.updateLocalitati();
+  }
+  
+  updateLocalitati() {
     this.localitati = [];
-    if (this.selectedJudet) {
+    if (this.profile && this.profile.judet) {
       this.localitati = this.toateLocalitatile
-        .filter((l: any) => l && l.judet === this.selectedJudet)
+        .filter((l: any) => l && l.judet === this.profile.judet)
         .sort((a: any, b: any) => (a.denumire || '').localeCompare(b.denumire || ''));
     }
   }
 
-  login() {
-    if (!this.cnp || !this.initiale || !this.uatId) {
-      this.error = 'Toate câmpurile sunt obligatorii!';
+  loadProfile() {
+    this.isLoading = true;
+    this.error = null;
+    
+    this.http.get<any>('/api/public/cetatean/me').subscribe({
+      next: (res) => {
+        this.profile = res;
+        this.updateLocalitati();
+        this.isLoading = false;
+        
+        if (this.profile.cnp) {
+           this.connectWebSocket(this.profile.cnp);
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.error = 'A apărut o eroare la încărcarea profilului.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  salveazaDate() {
+    if (!this.profile) return;
+    
+    // Basic validation
+    if (!this.profile.nume || !this.profile.prenume || !this.profile.telefon || !this.profile.judet || !this.profile.localitate || !this.profile.strada || !this.profile.numar) {
+      this.error = 'Te rugăm să completezi toate câmpurile obligatorii.';
       return;
     }
-
-    this.isLoading = true;
+    
+    this.isSaving = true;
     this.error = null;
-
-    this.http.get<any>(`/api/public/cetateni/verify`, {
-      params: {
-        cnp: this.cnp,
-        initials: this.initiale,
-        uatId: this.uatId
-      }
-    }).subscribe({
+    this.successMessage = null;
+    
+    const payload = {
+      nume: this.profile.nume,
+      prenume: this.profile.prenume,
+      telefon: this.profile.telefon,
+      judet: this.profile.judet,
+      localitate: this.profile.localitate,
+      strada: this.profile.strada,
+      numar: this.profile.numar,
+      bloc: this.profile.bloc,
+      scara: this.profile.scara,
+      etaj: this.profile.etaj,
+      apartament: this.profile.apartament
+    };
+    
+    this.http.put<any>('/api/public/cetatean/me', payload).subscribe({
       next: (res) => {
-        const uatObj = this.toateLocalitatile.find(u => String(u.id) === String(this.uatId));
-        const uatDenumire = uatObj ? uatObj.denumire : 'Localitate selectată';
-
-        const sessionData = {
-          cnp: this.cnp,
-          initiale: this.initiale.toUpperCase(),
-          uatId: this.uatId,
-          uatDenumire: uatDenumire
-        };
-
-        localStorage.setItem('cetatean_sesiune', JSON.stringify(sessionData));
-
-        this.isLogged = true;
-        this.cnpUtilizator = sessionData.cnp;
-        this.initialeUtilizator = sessionData.initiale;
-        this.uatSelectatId = sessionData.uatId;
-        this.uatSelectatDenumire = sessionData.uatDenumire;
-        this.isLoading = false;
-        this.error = null;
-
-        this.loadIstoricCereri();
-        this.connectWebSocket();
+        this.profile = res;
+        this.isSaving = false;
+        this.successMessage = 'Datele au fost salvate cu succes!';
+        setTimeout(() => this.successMessage = null, 5000);
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        this.isLoading = false;
-        this.error = err.error?.message || 'Datele de identificare sunt incorecte sau serverul nu răspunde.';
+        this.isSaving = false;
+        this.error = 'A apărut o eroare la salvarea datelor.';
         this.cdr.detectChanges();
       }
     });
   }
 
-  logout() {
-    this.disconnectWebSocket();
-    localStorage.removeItem('cetatean_sesiune');
-    this.isLogged = false;
-    this.cnpUtilizator = '';
-    this.initialeUtilizator = '';
-    this.uatSelectatId = '';
-    this.uatSelectatDenumire = '';
-    this.cereri = [];
-    this.notificari = [];
-    this.cnp = '';
-    this.initiale = '';
-    this.uatId = '';
-    this.selectedJudet = '';
-    this.error = null;
-    this.cdr.detectChanges();
-  }
-
-  loadIstoricCereri() {
-    this.isLoading = true;
-    this.http.get<any[]>(`/api/public/cereri/by-cnp/${this.cnpUtilizator}?uatId=${this.uatSelectatId}`).subscribe({
-      next: (res) => {
-        // Filter requests by checking if the name starts with the initials provided
-        this.cereri = res.filter(c => {
-          if (!c.nume) return false;
-          const parts = c.nume.split(' ').map((p: string) => p.trim().substring(0, 1).toUpperCase());
-          const calculatedInitials = parts.join('');
-          return calculatedInitials.includes(this.initialeUtilizator) || this.initialeUtilizator.includes(calculatedInitials) || true; // flexible check
-        });
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  connectWebSocket() {
+  connectWebSocket(cnp: string) {
     this.disconnectWebSocket();
     
     this.stompClient = new Client({
       webSocketFactory: () => new SockJS('/api/ws'),
       onConnect: () => {
-        console.log('[STOMP] Connected to portal-cetateni WS for CNP: ' + this.cnpUtilizator);
+        console.log('[STOMP] Connected to portal-cetateni WS for CNP: ' + cnp);
         
-        // Subscribe to real-time notification alerts specific to the logged citizen's CNP
-        this.stompClient!.subscribe('/topic/notificari/' + this.cnpUtilizator, (message: Message) => {
+        // Subscribe to real-time notification alerts
+        this.stompClient!.subscribe('/topic/notificari/' + cnp, (message: Message) => {
           try {
             const payload = JSON.parse(message.body);
-            // Append alert at the beginning of the list
             this.notificari.unshift({
-              text: payload.mesaj || 'Alertă expirare contract!',
+              text: payload.mesaj || 'Notificare nouă!',
               data: new Date()
             });
             this.cdr.detectChanges();
