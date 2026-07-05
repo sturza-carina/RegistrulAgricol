@@ -9,5 +9,16 @@ import java.util.Optional;
 @Repository
 public interface CetateanRepository extends JpaRepository<Cetatean, Long> {
     Optional<Cetatean> findByEmail(String email);
-    Optional<Cetatean> findByCnp(String cnp);
+    Optional<Cetatean> findByCnpHash(String cnpHash);
+
+    default Optional<Cetatean> findByCnpClar(String cnp) {
+        if (cnp == null || cnp.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        return findByCnpHash(com.multitenant.util.CryptoUtils.hashSha256(cnp.trim()));
+    }
+
+    default Optional<Cetatean> findByCnp(String cnp) {
+        return findByCnpClar(cnp);
+    }
 }

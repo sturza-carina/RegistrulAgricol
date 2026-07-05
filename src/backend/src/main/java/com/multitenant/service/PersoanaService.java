@@ -84,7 +84,8 @@ public class PersoanaService {
 
     @Transactional(readOnly = true)
     public Page<PersoanaDTO> getAllPersons(String search, String type, Pageable pageable) {
-        return persoanaRepository.searchPersons(search, type, pageable)
+        String searchHash = (search != null && !search.trim().isEmpty()) ? com.multitenant.util.CryptoUtils.hashSha256(search.trim()) : null;
+        return persoanaRepository.searchPersons(search, searchHash, type, pageable)
                 .map(entity -> modelMapper.map(entity, PersoanaDTO.class));
     }
 
