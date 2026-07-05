@@ -36,3 +36,14 @@ spring:
 jwt:
   secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
   expiration: 86400000 # 24 hours
+
+app:
+  documents:
+    storage-path: ${APP_DOCUMENTS_STORAGE_PATH:/data/documents}
+  signature:
+    keystore-path: ${APP_SIGNATURE_KEYSTORE_PATH:/data/keystore/contracte-semnatura.p12}
+    keystore-password: ${APP_SIGNATURE_KEYSTORE_PASSWORD:changeit}
+    key-alias: ${APP_SIGNATURE_KEY_ALIAS:contracte-semnatura}
+    storage-path: ${APP_SIGNATURE_STORAGE_PATH:/data/signed-contracts}
+    signer-name: ${APP_SIGNATURE_SIGNER_NAME:Registru Agricol}
+    reason: ${APP_SIGNATURE_REASON:Aprobare contract de utilizare}

@@ -2,8 +2,13 @@ package com.multitenant.controller;
 
 import com.multitenant.annotation.TenantRequired;
 import com.multitenant.dto.ContractUtilizareDTO;
+import com.multitenant.dto.SemnareContractRequest;
 import com.multitenant.model.registru.ContractUtilizare;
+import com.multitenant.service.ContractSemnaturaService;
 import com.multitenant.service.ContractUtilizareService;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,9 +23,12 @@ import org.springframework.data.domain.Pageable;
 public class ContractUtilizareController {
 
     private final ContractUtilizareService contractUtilizareService;
+    private final ContractSemnaturaService contractSemnaturaService;
 
-    public ContractUtilizareController(ContractUtilizareService contractUtilizareService) {
+    public ContractUtilizareController(ContractUtilizareService contractUtilizareService,
+                                        ContractSemnaturaService contractSemnaturaService) {
         this.contractUtilizareService = contractUtilizareService;
+        this.contractSemnaturaService = contractSemnaturaService;
     }
 
     @GetMapping
@@ -62,6 +70,28 @@ public class ContractUtilizareController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Eroare la ștergerea contractului: " + e.getMessage());
         }
+    }
+
+    @PostMapping("/{id}/semnare")
+    public ResponseEntity<?> semneazaContract(@PathVariable Long id, @RequestBody(required = false) SemnareContractRequest request) {
+        try {
+            UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            String semnaturaImagine = request != null ? request.getSemnaturaImagineBase64() : null;
+            return ResponseEntity.ok(contractSemnaturaService.semneaza(id, userDetails.getId(), semnaturaImagine));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Eroare la semnarea electronică a contractului: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/document-semnat")
+    public ResponseEntity<Resource> descarcaDocumentSemnat(@PathVariable Long id) {
+        Resource resource = contractSemnaturaService.descarcaDocumentSemnat(id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"contract-" + id + "-semnat.pdf\"")
+                .body(resource);
     }
 }
 

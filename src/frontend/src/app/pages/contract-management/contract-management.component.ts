@@ -54,7 +54,7 @@ export class ContractManagementComponent implements OnInit {
   statusuriContract = ['ACTIV', 'EXPIRAT', 'REZILIAT', 'SUSPENDAT'];
 
   columns: TableColumn[] = [
-    { field: 'numarContract', header: 'Nr. Contract', type: 'text', format: (val, row) => `${val} (Semnat: ${row.dataSemnare || '-'})` },
+    { field: 'numarContract', header: 'Nr. Contract', type: 'text', format: (val, row) => `${val} (Semnat: ${row.dataSemnare || '-'})${row.semnatElectronic ? ' ✓ Semnat electronic' : ''}` },
     { field: 'tipContract', header: 'Tip', type: 'badge' },
     { field: 'parcela.denumire', header: 'Parcela Asoc.', type: 'text', format: (val) => val || '-' },
     { field: 'dataInceput', header: 'Valabilitate', type: 'text', format: (val, row) => `${row.dataInceput || 'N/A'} → ${row.dataSfarsit || 'Nedefinit'}` },
@@ -136,9 +136,9 @@ export class ContractManagementComponent implements OnInit {
       }
     });
 
-    this.http.get<any[]>('/api/parcele').subscribe({
+    this.http.get<any>('/api/parcele', { params: { size: '1000' } }).subscribe({
       next: (data) => {
-        this.parcele = data;
+        this.parcele = data.content || data;
         this.buildFormConfig();
       },
       error: (err) => console.error('Eroare parcele', err)
@@ -347,6 +347,107 @@ export class ContractManagementComponent implements OnInit {
         }
       });
     }
+  }
+
+  signingContract: ContractUtilizare | null = null;
+  private isDrawingSemnatura = false;
+  private lastSemnaturaX = 0;
+  private lastSemnaturaY = 0;
+
+  startSemnare(contract: ContractUtilizare): void {
+    if (!contract.id) return;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.signingContract = contract;
+    setTimeout(() => this.clearSignatureCanvas(), 0);
+  }
+
+  cancelSemnare(): void {
+    this.signingContract = null;
+  }
+
+  private getSignatureCanvas(): HTMLCanvasElement | null {
+    return document.getElementById('signatureCanvas') as HTMLCanvasElement | null;
+  }
+
+  clearSignatureCanvas(): void {
+    const canvas = this.getSignatureCanvas();
+    const ctx = canvas?.getContext('2d');
+    if (canvas && ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  onSignaturePointerDown(event: PointerEvent): void {
+    const canvas = event.target as HTMLCanvasElement;
+    const rect = canvas.getBoundingClientRect();
+    this.isDrawingSemnatura = true;
+    this.lastSemnaturaX = event.clientX - rect.left;
+    this.lastSemnaturaY = event.clientY - rect.top;
+  }
+
+  onSignaturePointerMove(event: PointerEvent): void {
+    if (!this.isDrawingSemnatura) return;
+    const canvas = event.target as HTMLCanvasElement;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(this.lastSemnaturaX, this.lastSemnaturaY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    this.lastSemnaturaX = x;
+    this.lastSemnaturaY = y;
+  }
+
+  onSignaturePointerUp(): void {
+    this.isDrawingSemnatura = false;
+  }
+
+  confirmSemnare(): void {
+    const canvas = this.getSignatureCanvas();
+    const contractId = this.signingContract?.id;
+    if (!canvas || !contractId) return;
+
+    const semnaturaImagineBase64 = canvas.toDataURL('image/png');
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.contractService.semneazaContract(contractId, semnaturaImagineBase64).subscribe({
+      next: (updated) => {
+        this.successMessage = 'Contractul a fost semnat electronic cu succes!';
+        this.signingContract = null;
+        this.loadTenantData();
+        if (this.viewingContract?.id === contractId) {
+          this.viewingContract = updated;
+        }
+      },
+      error: (err) => {
+        this.errorMessage = err.error?.message || err.error || 'A apărut o eroare la semnarea electronică a contractului.';
+        this.signingContract = null;
+      }
+    });
+  }
+
+  downloadDocumentSemnat(contract: ContractUtilizare): void {
+    if (!contract.id) return;
+    this.contractService.downloadDocumentSemnat(contract.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `contract-${contract.numarContract}-semnat.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.errorMessage = 'Nu s-a putut descărca documentul semnat.';
+      }
+    });
   }
 
   updateBreadcrumbs(): void {

@@ -25,6 +25,9 @@ export interface ContractUtilizare {
   motivIncetare?: string | null;
   dataOperare?: string | null;
   esteActiv?: boolean;
+  semnatElectronic?: boolean;
+  dataSemnaturiiElectronice?: string | null;
+  hashDocumentSemnat?: string | null;
 }
 
 export interface ContractUtilizareRequest {
@@ -75,5 +78,13 @@ export class ContractUtilizareService {
 
   deleteContract(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  semneazaContract(id: number, semnaturaImagineBase64?: string): Observable<ContractUtilizare> {
+    return this.http.post<ContractUtilizare>(`${this.apiUrl}/${id}/semnare`, { semnaturaImagineBase64 });
+  }
+
+  downloadDocumentSemnat(id: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${id}/document-semnat`, { responseType: 'blob' });
   }
 }
