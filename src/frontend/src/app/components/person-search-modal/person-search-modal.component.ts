@@ -3,10 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Persoana } from '../../models/persoana.model';
 
+import { AppTranslatePipe } from '../../services/translate.pipe';
+
 @Component({
   selector: 'app-person-search-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AppTranslatePipe],
   templateUrl: './person-search-modal.component.html',
   styleUrls: ['./person-search-modal.component.css']
 })

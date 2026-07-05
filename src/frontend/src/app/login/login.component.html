@@ -10,35 +10,35 @@
           </svg>
         </div>
         <div>
-          <div class="brand-name">Registrul Agricol</div>
-          <div class="brand-sub">Platformă de Management</div>
+          <div class="brand-name" i18n="@@login_brand_name">Registrul Agricol</div>
+          <div class="brand-sub" i18n="@@login_brand_sub">Platformă de Management</div>
         </div>
       </div>
       <div class="left-body">
-        <h1>Platforma digitală pentru managementul registrului agricol</h1>
-        <p>Gestionați datele agricole, UAT-urile și utilizatorii dintr-un singur loc, în mod sigur și transparent.</p>
+        <h1 i18n="@@login_left_title">Platforma digitală pentru managementul registrului agricol</h1>
+        <p i18n="@@login_left_subtitle">Gestionați datele agricole, UAT-urile și utilizatorii dintr-un singur loc, în mod sigur și transparent.</p>
         <div class="feature-list">
           <div class="feature-item">
             <div class="feature-icon">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
-            Acces rapid la datele cetățenilor
+            <span i18n="@@login_feature_1">Acces rapid la datele cetățenilor</span>
           </div>
           <div class="feature-item">
             <div class="feature-icon">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
-            Evidență clară a gospodăriilor și terenurilor
+            <span i18n="@@login_feature_2">Evidență clară a gospodăriilor și terenurilor</span>
           </div>
           <div class="feature-item">
             <div class="feature-icon">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
-            Securitate și confidențialitate garantată
+            <span i18n="@@login_feature_3">Securitate și confidențialitate garantată</span>
           </div>
         </div>
       </div>
-      <div class="left-footer">
+      <div class="left-footer" i18n="@@login_left_footer">
         &copy; 2026 Platforma Registrul Agricol. Doar pentru uz guvernamental intern.
       </div>
     </div>
@@ -47,8 +47,8 @@
   <div class="login-right">
     <div class="login-card">
       <div class="card-header">
-        <h2>Bine ați venit!</h2>
-        <p>Conectați-vă la contul dumneavoastră</p>
+        <h2 i18n="@@login_welcome_title">Bine ați venit!</h2>
+        <p i18n="@@login_welcome_subtitle">Conectați-vă la contul dumneavoastră</p>
       </div>
 
       <div class="error-message" *ngIf="error">
@@ -64,13 +64,13 @@
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
             </svg>
-            Nume utilizator
+            <span i18n="@@login_username_label">Nume utilizator</span>
           </label>
           <input
             type="text"
             id="username"
             formControlName="username"
-            placeholder="Introduceți numele de utilizator"
+            i18n-placeholder="@@login_username_placeholder" placeholder="Introduceți numele de utilizator"
             autocomplete="username">
         </div>
 
@@ -80,18 +80,18 @@
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
             </svg>
-            Parolă
+            <span i18n="@@login_password_label">Parolă</span>
           </label>
           <input
             type="password"
             id="password"
             formControlName="password"
-            placeholder="Introduceți parola"
+            i18n-placeholder="@@login_password_placeholder" placeholder="Introduceți parola"
             autocomplete="current-password">
         </div>
 
         <button type="submit" [disabled]="!loginForm.valid" class="submit-btn">
-          Autentificare
+          <span i18n="@@login_submit_btn">Autentificare</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
           </svg>
@@ -103,9 +103,8 @@
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
           <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
         </svg>
-        Acces restricționat &mdash; doar pentru utilizatori autorizați
+        <span i18n="@@login_restricted_access">Acces restricționat &mdash; doar pentru utilizatori autorizați</span>
       </div>
     </div>
   </div>
 </div>
-

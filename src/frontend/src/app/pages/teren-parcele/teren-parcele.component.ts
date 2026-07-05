@@ -19,6 +19,9 @@ import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrum
 import { SursaApa } from '../../models/sursa-apa.model';
 import { SursaApaService } from '../../services/sursa-apa.service';
 import { LookupService } from '../../services/lookup.service';
+import { Pom, TipInregistrarePom } from '../../models/pom.model';
+import { PomService } from '../../services/pom.service';
+import {SpecieRef} from '../../models/specie-ref.model';
 
 @Component({
   selector: 'app-teren-parcele',
@@ -75,6 +78,13 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   editingSursa: SursaApa | null = null;
   newSursa: Partial<SursaApa> = { stareFunctionare: true };
 
+  pomi: Pom[] = [];
+  isAddingPom = false;
+  editingPom: Pom | null = null;
+  newPom: Partial<Pom> = { tipInregistrare: TipInregistrarePom.IZOLAT };
+  tipuriInregistrarePom = [TipInregistrarePom.IZOLAT, TipInregistrarePom.PLANTATIE];
+  speciiPomiToate: SpecieRef[] = [];
+
   categoriiFolosinta: string[] = [];
   tipuriSol: string[] = [];
   tipuriSursa: string[] = [];
@@ -91,6 +101,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     private googleMapsLoader: GoogleMapsLoaderService,
     private gospodarieService: GospodarieService,
     private lookupService: LookupService,
+    private pomiService: PomService,
     private http: HttpClient,
     private zone: NgZone
   ) {}
@@ -123,6 +134,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     this.lookupService.getCategoriiFolosinta().subscribe(v => this.categoriiFolosinta = v);
     this.lookupService.getTipuriSol().subscribe(v => this.tipuriSol = v);
     this.lookupService.getTipuriSursaApa().subscribe(v => this.tipuriSursa = v);
+    this.lookupService.getSpeciiPomi().subscribe(v => this.speciiPomiToate = v);
   }
 
   private pendingJudetPaths: google.maps.LatLngLiteral[][] | null = null;
@@ -555,9 +567,11 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     this.isAddingCultura = false;
     this.editingCultura = null;
     this.culturi = [];
+    this.pomi = [];
     if (p.id) {
-      this.loadCulturi(p.id);
+      if (this.showCulturi(p)) this.loadCulturi(p.id);
       this.loadSurse(p.id);
+      if (this.showPomi(p)) this.loadPomi(p.id);
     }
   }
 
@@ -568,6 +582,9 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     this.surse = [];
     this.isAddingSursa = false;
     this.editingSursa = null;
+    this.pomi = [];
+    this.isAddingPom = false;
+    this.editingPom = null;
   }
 
   deleteParcela(p: Parcela) {
@@ -723,5 +740,100 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
 
   goBack() {
     this.router.navigate(['/gospodarii', this.gospodarieId]);
+  }
+
+  showCulturi(p: Parcela | null): boolean {
+    if (!p || !p.categorieFolosinta) return false;
+    const val = this.normalizeString(p.categorieFolosinta);
+    return val === 'arabil';
+  }
+
+  showPomi(p: Parcela | null): boolean {
+    if (!p || !p.categorieFolosinta) return false;
+    const val = this.normalizeString(p.categorieFolosinta);
+    return val === 'livada';
+  }
+
+  loadPomi(parcelaId: number) {
+    this.pomiService.getPomi(parcelaId, 0, 1000).subscribe({
+      next: (response) => { this.pomi = response.content || []; },
+      error: () => this.pomi = []
+    });
+  }
+
+  openAddPomForm() {
+    this.isAddingPom = true;
+    this.editingPom = null;
+    this.newPom = { tipInregistrare: TipInregistrarePom.IZOLAT, specie: '' };
+  }
+
+  openEditPom(pom: Pom) {
+    this.isAddingPom = true;
+    this.editingPom = pom;
+    this.newPom = { ...pom };
+  }
+
+  cancelAddPom() {
+    this.isAddingPom = false;
+    this.editingPom = null;
+    this.newPom = { tipInregistrare: TipInregistrarePom.IZOLAT };
+  }
+
+  savePom() {
+    if (!this.newPom.specie?.trim() || !this.newPom.tipInregistrare) {
+      alert('Completați specia și tipul de înregistrare.');
+      return;
+    }
+    if (!this.viewingParcela?.id) return;
+
+    this.saving = true;
+    if (this.editingPom && this.editingPom.id) {
+      this.pomiService.updatePom(this.viewingParcela.id, this.editingPom.id, this.newPom as Pom).subscribe({
+        next: updated => {
+          this.saving = false;
+          const idx = this.pomi.findIndex(x => x.id === updated.id);
+          if (idx >= 0) this.pomi[idx] = updated;
+          this.cancelAddPom();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare pom.'); }
+      });
+    } else {
+      this.pomiService.createPom(this.viewingParcela.id, this.newPom as Pom).subscribe({
+        next: saved => {
+          this.saving = false;
+          this.pomi.push(saved);
+          this.cancelAddPom();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare pom.'); }
+      });
+    }
+  }
+
+  deletePom(pom: Pom) {
+    if (!pom.id || !this.viewingParcela?.id) return;
+    if (!confirm(`Ștergeți înregistrarea "${pom.specie}"?`)) return;
+    this.pomiService.deletePom(this.viewingParcela.id, pom.id).subscribe({
+      next: () => { this.pomi = this.pomi.filter(x => x.id !== pom.id); },
+      error: () => alert('Eroare la ștergere pom.')
+    });
+  }
+
+  normalizeString(str: string): string {
+    if (!str) return '';
+    let res = str
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+    if (res === 'vie') res = 'vii';
+    return res;
+  }
+
+  get speciiPomiFiltrate(): string[] {
+    const cat = this.normalizeString(this.viewingParcela?.categorieFolosinta || '');
+    if (!cat) return [];
+    return this.speciiPomiToate
+      .filter(s => this.normalizeString(s.categorieFolosinta || '') === cat)
+      .map(s => s.nume);
   }
 }

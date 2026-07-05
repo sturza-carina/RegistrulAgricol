@@ -24,6 +24,8 @@ import { GospodarieFormComponent } from '../gospodarie-form/gospodarie-form.comp
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
+import { AppTranslatePipe } from '../../services/translate.pipe';
+
 @Component({
   selector: 'app-gospodarie-details',
   standalone: true,
@@ -31,7 +33,7 @@ import { catchError } from 'rxjs/operators';
     PageHeaderComponent, RouterModule, MachineryManagementComponent,
     CladireManagementComponent, PersonFormComponent, AnimalListComponent,
     BreadcrumbsComponent, GenericTableComponent, TerenFormComponent,
-    DocumentManagementComponent, GospodarieFormComponent
+    DocumentManagementComponent, GospodarieFormComponent, AppTranslatePipe
   ],
   templateUrl: './gospodarie-details.component.html',
   styleUrls: ['./gospodarie-details.component.css']
@@ -350,20 +352,4 @@ export class GospodarieDetailsComponent implements OnInit {
     });
   }
 
-  downloadCarteFunciaraPdf(cf: CarteFunciara) {
-    if (!cf.terenId) return;
-    this.carteFunciaraService.downloadPdf(cf.terenId).subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `carte_funciara_${cf.terenId}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
-      },
-      error: () => alert('Eroare la descărcarea PDF-ului.')
-    });
-  }
 }

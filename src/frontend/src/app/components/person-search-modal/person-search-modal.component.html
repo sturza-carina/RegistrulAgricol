@@ -1,7 +1,7 @@
 <div class="modal-overlay" (click)="closeModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Căutare și Selectare Persoană</h2>
+      <h2>{{ 'Căutare și Selectare Persoană' | appTranslate }}</h2>
       <button class="modal-close-btn" (click)="closeModal()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -18,7 +18,7 @@
           </svg>
           <input
             type="text"
-            placeholder="Caută după CNP, nume, nume firma, CUI..."
+            [placeholder]="'Caută după CNP, nume, nume firma, CUI...' | appTranslate"
             class="search-input"
             (input)="onSearch($event)"
             [(ngModel)]="searchTerm"
@@ -32,8 +32,8 @@
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: #64748b;">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
-          <p>Niciun rezultat găsit</p>
-          <small *ngIf="searchTerm">Încearcă cu alți termeni de căutare</small>
+          <p>{{ 'Niciun rezultat găsit' | appTranslate }}</p>
+          <small *ngIf="searchTerm">{{ 'Încearcă cu alți termeni de căutare' | appTranslate }}</small>
         </div>
 
         <ul class="persons-list" *ngIf="filteredPersons.length > 0">
@@ -41,7 +41,7 @@
             <div class="person-info">
               <div class="person-name">{{ getPersonDisplayName(person) }}</div>
               <div class="person-type">
-                {{ person.personType === 'PHYSICAL_PERSON' ? 'Persoană Fizică' : 'Persoană Juridică' }}
+                {{ person.personType === 'PHYSICAL_PERSON' ? ('Persoană Fizică' | appTranslate) : ('Persoană Juridică' | appTranslate) }}
               </div>
             </div>
             <svg class="select-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -52,13 +52,12 @@
       </div>
 
       <div class="results-info">
-        <small>Se afișează <strong>{{ filteredPersons.length }}</strong> din <strong>{{ persoane.length }}</strong> persoane</small>
+        <small>{{ 'Se afișează' | appTranslate }} <strong>{{ filteredPersons.length }}</strong> {{ 'din' | appTranslate }} <strong>{{ persoane.length }}</strong> {{ 'persoane' | appTranslate }}</small>
       </div>
     </div>
 
     <div class="modal-footer">
-      <button class="btn-secondary" (click)="closeModal()">Anulare</button>
+      <button class="btn-secondary" (click)="closeModal()">{{ 'Anulare' | appTranslate }}</button>
     </div>
   </div>
 </div>
-

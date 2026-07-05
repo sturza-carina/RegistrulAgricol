@@ -1,6 +1,7 @@
 package com.multitenant.controller;
 
 import com.multitenant.annotation.TenantRequired;
+import com.multitenant.annotation.GdprAudited;
 import com.multitenant.dto.DocumentDTO;
 import com.multitenant.model.registru.Document;
 import com.multitenant.security.UserDetailsImpl;
@@ -28,16 +29,19 @@ public class DocumentController {
     }
 
     @GetMapping
+    @GdprAudited(entity = "Document")
     public ResponseEntity<?> getAllDocuments(@RequestParam(required = false) String uatCode, Pageable pageable) {
         return ResponseEntity.ok(documentService.getAllDocuments(uatCode, pageable));
     }
 
     @GetMapping("/gospodarie/{gospodarieId}")
+    @GdprAudited(entity = "Document")
     public ResponseEntity<?> getDocumentsByGospodarie(@PathVariable Long gospodarieId, Pageable pageable) {
         return ResponseEntity.ok(documentService.getDocumentsByGospodarie(gospodarieId, pageable));
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @GdprAudited(entity = "Document")
     public ResponseEntity<?> uploadDocument(@RequestPart("document") DocumentDTO dto,
                                             @RequestPart("file") MultipartFile file) {
         try {
@@ -50,6 +54,7 @@ public class DocumentController {
     }
 
     @GetMapping("/{id}/download")
+    @GdprAudited(entity = "Document")
     public ResponseEntity<Resource> downloadDocument(@PathVariable Long id,
                                                      @RequestParam Long gospodarieId) {
         Document document = documentService.getDocumentById(id);
@@ -62,6 +67,7 @@ public class DocumentController {
     }
 
     @DeleteMapping("/{id}")
+    @GdprAudited(entity = "Document")
     public ResponseEntity<?> deleteDocument(@PathVariable Long id, @RequestParam Long gospodarieId) {
         try {
             documentService.deleteDocument(id, gospodarieId);

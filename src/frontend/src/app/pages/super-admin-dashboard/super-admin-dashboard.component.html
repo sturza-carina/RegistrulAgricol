@@ -3,8 +3,8 @@
   <!-- Header Row -->
       <div class="page-header-row">
         <div class="page-header" style="margin-bottom:0">
-          <h1>Bun venit, Super Admin</h1>
-          <p>Iată ce se întâmplă pe platformă astăzi.</p>
+          <h1 i18n="@@superadmin_welcome_title">Bun venit, Super Admin</h1>
+          <p i18n="@@superadmin_welcome_subtitle">Iată ce se întâmplă pe platformă astăzi.</p>
         </div>
 
       </div>
@@ -13,7 +13,7 @@
       <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
         <div class="stat-card">
           <div class="stat-header">
-            <span class="stat-label">TOTAL Tenants</span>
+            <span class="stat-label" i18n="@@superadmin_stat_tenants">TOTAL Tenants</span>
             <div class="stat-icon">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="2" y="7" width="20" height="14" rx="2"/>
@@ -26,7 +26,7 @@
 
         <div class="stat-card">
           <div class="stat-header">
-            <span class="stat-label">Total Utilizatori</span>
+            <span class="stat-label" i18n="@@superadmin_stat_users">Total Utilizatori</span>
             <div class="stat-icon">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -41,7 +41,7 @@
 
         <div class="stat-card">
           <div class="stat-header">
-            <span class="stat-label">Scheme Active</span>
+            <span class="stat-label" i18n="@@superadmin_stat_schemas">Scheme Active</span>
             <div class="stat-icon">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <ellipse cx="12" cy="5" rx="9" ry="3"/>
@@ -65,7 +65,7 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--primary)">
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                 </svg>
-                Acțiuni Rapide
+                <ng-container i18n="@@superadmin_quick_actions">Acțiuni Rapide</ng-container>
               </span>
             </h3>
           </div>
@@ -82,8 +82,8 @@
                 </svg>
               </div>
               <div class="qa-text">
-                <div class="qa-title">Creare Tenant Nou</div>
-                <div class="qa-desc">Adaugă o nouă primărie sau organizație</div>
+                <div class="qa-title" i18n="@@superadmin_qa_create_tenant_title">Creare Tenant Nou</div>
+                <div class="qa-desc" i18n="@@superadmin_qa_create_tenant_desc">Adaugă o nouă primărie sau organizație</div>
               </div>
               <svg class="qa-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="9 18 15 12 9 6"/>
@@ -100,8 +100,8 @@
                 </svg>
               </div>
               <div class="qa-text">
-                <div class="qa-title">Creare UAT</div>
-                <div class="qa-desc">Înregistrează o nouă unitate teritorială</div>
+                <div class="qa-title" i18n="@@superadmin_qa_create_uat_title">Creare UAT</div>
+                <div class="qa-desc" i18n="@@superadmin_qa_create_uat_desc">Înregistrează o nouă unitate teritorială</div>
               </div>
               <svg class="qa-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="9 18 15 12 9 6"/>
@@ -119,8 +119,8 @@
                 </svg>
               </div>
               <div class="qa-text">
-                <div class="qa-title">Creare Utilizator</div>
-                <div class="qa-desc">Adaugă un nou administrator sau agent</div>
+                <div class="qa-title" i18n="@@superadmin_qa_create_user_title">Creare Utilizator</div>
+                <div class="qa-desc" i18n="@@superadmin_qa_create_user_desc">Adaugă un nou administrator sau agent</div>
               </div>
               <svg class="qa-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="9 18 15 12 9 6"/>
@@ -132,16 +132,16 @@
         <!-- Recent Tenants -->
         <div class="card">
           <div class="card-header">
-            <h3>Tenanți Recenți</h3>
-            <span class="view-all" (click)="goToUats()">Vezi Toate</span>
+            <h3 i18n="@@superadmin_recent_tenants_title">Tenanți Recenți</h3>
+            <span class="view-all" (click)="goToUats()" i18n="@@superadmin_view_all">Vezi Toate</span>
           </div>
           <table class="data-table">
             <thead>
             <tr>
-              <th>Nume</th>
-              <th>Nume Schemă</th>
-              <th>Data Creării</th>
-              <th>Număr UAT-uri</th>
+              <th i18n="@@superadmin_table_col_name">Nume</th>
+              <th i18n="@@superadmin_table_col_schema">Nume Schemă</th>
+              <th i18n="@@superadmin_table_col_date">Data Creării</th>
+              <th i18n="@@superadmin_table_col_uats">Număr UAT-uri</th>
             </tr>
             </thead>
             <tbody>
@@ -154,18 +154,22 @@
               </td>
               <td style="color:var(--text-secondary);font-family:monospace;font-size:12px">{{ tenant.schema }}</td>
               <td style="color:var(--text-secondary)">{{ tenant.date }}</td>
-              <td><span class="badge" style="background:var(--primary-light); color:var(--primary)">{{ tenant.numUats }} UAT-uri</span></td>
+              <td>
+                <span class="badge" style="background:var(--primary-light); color:var(--primary)">
+                  {{ tenant.numUats }} <ng-container i18n="@@superadmin_table_uats_label">UAT-uri</ng-container>
+                </span>
+              </td>
             </tr>
             </tbody>
           </table>
           <div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--card-border)">
             <span style="font-size:12.5px;color:var(--text-muted)">
-              Pagina {{ currentPage }} din {{ totalPages }}
+              <ng-container i18n="@@superadmin_pagination_page">Pagina</ng-container> {{ currentPage }} <ng-container i18n="@@superadmin_pagination_of">din</ng-container> {{ totalPages }}
             </span>
             <div class="pagination" style="display: flex; gap: 4px;">
-              <button (click)="prevPage()" [disabled]="currentPage === 1">Înapoi</button>
+              <button (click)="prevPage()" [disabled]="currentPage === 1" i18n="@@superadmin_pagination_prev">Înapoi</button>
               <span class="pagination-info">{{ currentPage }} / {{ totalPages }}</span>
-              <button (click)="nextPage()" [disabled]="currentPage === totalPages">Următoarea</button>
+              <button (click)="nextPage()" [disabled]="currentPage === totalPages" i18n="@@superadmin_pagination_next">Următoarea</button>
             </div>
           </div>
         </div>
@@ -173,8 +177,8 @@
 
       <!-- Green Banner -->
       <div class="green-banner" style="margin-top:20px">
-        <h3>Management Sustenabil al Datelor</h3>
-        <p>Împuternicirea sectorului agricol prin digitalizare sistematică și evidență transparentă.</p>
+        <h3 i18n="@@superadmin_banner_title">Management Sustenabil al Datelor</h3>
+        <p i18n="@@superadmin_banner_desc">Împuternicirea sectorului agricol prin digitalizare sistematică și evidență transparentă.</p>
       </div>
 
 </app-layout>

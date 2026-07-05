@@ -15,6 +15,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class CerereService {
 
     private final CerereRepository cerereRepository;
@@ -76,5 +77,11 @@ public class CerereService {
             messagingTemplate.convertAndSend("/topic/user/" + saved.getUserId() + "/cereri", savedDto);
         }
         return savedDto;
+    }
+
+    public List<CerereDTO> getByCnp(String cnp) {
+        return cerereRepository.findByCnpCui(cnp).stream()
+                .map(c -> modelMapper.map(c, CerereDTO.class))
+                .collect(Collectors.toList());
     }
 }

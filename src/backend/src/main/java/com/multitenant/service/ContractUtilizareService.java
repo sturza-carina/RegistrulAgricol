@@ -10,6 +10,8 @@ import com.multitenant.repository.PersoanaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.multitenant.model.persoana.PersoanaFizica;
+
 import java.util.List;
 import java.time.LocalDate;
 import org.springframework.data.domain.Page;
@@ -21,13 +23,16 @@ public class ContractUtilizareService {
     private final ContractUtilizareRepository contractUtilizareRepository;
     private final ParcelaRepository parcelaRepository;
     private final PersoanaRepository persoanaRepository;
+    private final ContractKafkaProducer contractKafkaProducer;
 
     public ContractUtilizareService(ContractUtilizareRepository contractUtilizareRepository,
                                     ParcelaRepository parcelaRepository,
-                                    PersoanaRepository persoanaRepository) {
+                                    PersoanaRepository persoanaRepository,
+                                    ContractKafkaProducer contractKafkaProducer) {
         this.contractUtilizareRepository = contractUtilizareRepository;
         this.parcelaRepository = parcelaRepository;
         this.persoanaRepository = persoanaRepository;
+        this.contractKafkaProducer = contractKafkaProducer;
     }
 
     public Page<ContractUtilizare> getAllContracts(String uatCode, Pageable pageable) {
@@ -149,5 +154,37 @@ public class ContractUtilizareService {
         }
         return persoanaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(errorMessage));
+    }
+
+    @Transactional
+    public void notificaContracteAproapeExpirate(LocalDate dataLimita) {
+        if (dataLimita == null) {
+            throw new IllegalArgumentException("dataLimita cannot be null");
+        }
+        List<ContractUtilizare> contracte = contractUtilizareRepository.findByStatusContractAndDataSfarsitLessThan(
+                StatusContractUtilizare.ACTIV, dataLimita);
+        for (ContractUtilizare contract : contracte) {
+            Persoana locatorUtilizator = contract.getLocatorUtilizator();
+            if (locatorUtilizator != null) {
+                locatorUtilizator = (Persoana) org.hibernate.Hibernate.unproxy(locatorUtilizator);
+            }
+            String cnp = null;
+            if (locatorUtilizator instanceof PersoanaFizica) {
+                cnp = ((PersoanaFizica) locatorUtilizator).getCnp();
+            } else {
+                Persoana locatorProprietar = contract.getLocatorProprietar();
+                if (locatorProprietar != null) {
+                    locatorProprietar = (Persoana) org.hibernate.Hibernate.unproxy(locatorProprietar);
+                    if (locatorProprietar instanceof PersoanaFizica) {
+                        cnp = ((PersoanaFizica) locatorProprietar).getCnp();
+                    }
+                }
+            }
+
+            if (cnp != null) {
+                String mesajText = "Contractul cu numarul " + contract.getNumarContract() + " expira la data de " + contract.getDataSfarsit();
+                contractKafkaProducer.trimiteAlertaExpirare(cnp, mesajText);
+            }
+        }
     }
 }
