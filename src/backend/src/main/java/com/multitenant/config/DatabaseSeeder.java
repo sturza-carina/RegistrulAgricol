@@ -38,6 +38,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final com.multitenant.repository.CulturaParcelaRepository culturaParcelaRepository;
     private final com.multitenant.repository.PomRepository pomRepository;
     private final com.multitenant.repository.VitaDeVieRepository vitaDeVieRepository;
+    private final com.multitenant.repository.PasuneFaneataRepository pasuneFaneataRepository;
 
     public DatabaseSeeder(TenantService tenantService,
                           UserRepository userRepository,
@@ -56,7 +57,8 @@ public class DatabaseSeeder implements CommandLineRunner {
                           com.multitenant.repository.ContractUtilizareRepository contractUtilizareRepository,
                           com.multitenant.repository.CulturaParcelaRepository culturaParcelaRepository,
                           com.multitenant.repository.PomRepository pomRepository,
-                          com.multitenant.repository.VitaDeVieRepository vitaDeVieRepository) {
+                          com.multitenant.repository.VitaDeVieRepository vitaDeVieRepository,
+                          com.multitenant.repository.PasuneFaneataRepository pasuneFaneataRepository) {
         this.tenantService = tenantService;
         this.userRepository = userRepository;
         this.gospodarieRepository = gospodarieRepository;
@@ -75,6 +77,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         this.culturaParcelaRepository = culturaParcelaRepository;
         this.pomRepository = pomRepository;
         this.vitaDeVieRepository = vitaDeVieRepository;
+        this.pasuneFaneataRepository = pasuneFaneataRepository;
     }
 
     @Override
@@ -327,6 +330,29 @@ public class DatabaseSeeder implements CommandLineRunner {
                         vitaDeVieRepository.save(vita);
                     }
 
+                    // Seed PasuneFaneata pentru parcelele Pasune/Fanete
+                    if ("Pășune".equals(p.getCategorieFolosinta()) || "Fânețe".equals(p.getCategorieFolosinta())) {
+                        com.multitenant.model.registru.PasuneFaneata pf = new com.multitenant.model.registru.PasuneFaneata();
+                        boolean pasunat = "Pășune".equals(p.getCategorieFolosinta());
+                        pf.setTipFolosinta(pasunat
+                                ? com.multitenant.model.registru.TipFolosintaPasune.PASUNAT
+                                : com.multitenant.model.registru.TipFolosintaPasune.COSIT);
+                        pf.setSuprafataHa(p.getSuprafata());
+                        pf.setSpeciiDominante(pasunat ? "Păiuș, Trifoi alb" : "Timoftică, Trifoi roșu");
+                        if (pasunat) {
+                            pf.setNumarAnimalePasunat(12);
+                        } else {
+                            pf.setNumarCosiriAnuale(2);
+                        }
+                        pf.setProductieEstimataKgHa(pasunat ? 3500.0 : 4200.0);
+                        pf.setStareVegetatie("Bună");
+                        pf.setSistemIntretinere("Convențional");
+                        pf.setSistemIrigare("Fără irigare");
+                        pf.setObservatii("Sămânță de test generată prin seeder");
+                        pf.setParcela(p);
+                        pasuneFaneataRepository.save(pf);
+                    }
+
                     com.multitenant.model.persoana.PersoanaFizica persoana = new com.multitenant.model.persoana.PersoanaFizica();
                     persoana.setFirstName("Ion" + i);
                     persoana.setLastName("Popescu CJ");
@@ -524,6 +550,29 @@ public class DatabaseSeeder implements CommandLineRunner {
                         vita.setObservatii("Sămânță de test generată prin seeder");
                         vita.setParcela(p);
                         vitaDeVieRepository.save(vita);
+                    }
+
+                    // Seed PasuneFaneata pentru parcelele Pasune/Fanete
+                    if ("Pășune".equals(p.getCategorieFolosinta()) || "Fânețe".equals(p.getCategorieFolosinta())) {
+                        com.multitenant.model.registru.PasuneFaneata pf = new com.multitenant.model.registru.PasuneFaneata();
+                        boolean pasunat = "Pășune".equals(p.getCategorieFolosinta());
+                        pf.setTipFolosinta(pasunat
+                                ? com.multitenant.model.registru.TipFolosintaPasune.PASUNAT
+                                : com.multitenant.model.registru.TipFolosintaPasune.COSIT);
+                        pf.setSuprafataHa(p.getSuprafata());
+                        pf.setSpeciiDominante(pasunat ? "Golomăț, Trifoi alb" : "Lucernă, Timoftică");
+                        if (pasunat) {
+                            pf.setNumarAnimalePasunat(8);
+                        } else {
+                            pf.setNumarCosiriAnuale(3);
+                        }
+                        pf.setProductieEstimataKgHa(pasunat ? 3000.0 : 4800.0);
+                        pf.setStareVegetatie("În regenerare");
+                        pf.setSistemIntretinere("Ecologic");
+                        pf.setSistemIrigare("Aspersiune");
+                        pf.setObservatii("Sămânță de test generată prin seeder");
+                        pf.setParcela(p);
+                        pasuneFaneataRepository.save(pf);
                     }
 
                     com.multitenant.model.persoana.PersoanaFizica persoana = new com.multitenant.model.persoana.PersoanaFizica();
