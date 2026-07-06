@@ -1,5 +1,8 @@
 package com.multitenant.model.registru;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,7 +13,12 @@ import lombok.NoArgsConstructor;
 @Getter
 @Setter
 @NoArgsConstructor
+@SQLDelete(sql = "UPDATE pomi SET deleted = true WHERE id=?")
+@SQLRestriction("deleted = false")
 public class Pom {
+    @jakarta.persistence.Column(nullable = false)
+    private boolean deleted = false;
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,7 +29,7 @@ public class Pom {
     private TipInregistrarePom tipInregistrare;
 
     @Column(name = "specie", nullable = false, length = 100)
-    private String specie; // măr, păr, prun, nuc etc.
+    private String specie; // mÄƒr, pÄƒr, prun, nuc etc.
 
     @Column(name = "soi", length = 100)
     private String soi;
@@ -39,10 +47,10 @@ public class Pom {
     private Integer densitatePomiHa; // relevant pt. PLANTATIE
 
     @Column(name = "stare_pomi", length = 50)
-    private String starePomi; // tânăr, pe rod, îmbătrânit
+    private String starePomi; // tÃ¢nÄƒr, pe rod, Ã®mbÄƒtrÃ¢nit
 
     @Column(name = "sistem_intretinere", length = 100)
-    private String sistemIntretinere; // ecologic, convențional
+    private String sistemIntretinere; // ecologic, convenÈ›ional
 
     @Column(name = "sistem_irigare", length = 100)
     private String sistemIrigare;

@@ -1,14 +1,14 @@
-<div class="container" style="padding-top: 40px; max-width: 600px;">
+﻿<div class="container" style="padding-top: 40px; max-width: 600px;">
   <div class="card" style="text-align: center;">
     <h2 style="margin-bottom: 20px; color: var(--primary-color);">Verificare Stadiu Cerere</h2>
-    <p style="margin-bottom: 30px; color: var(--text-muted);">Introduceți codul cererii primit la depunere, împreună cu localitatea în care ați depus-o, pentru a verifica stadiul acesteia.</p>
+    <p style="margin-bottom: 30px; color: var(--text-muted);">IntroduceÈ›i codul cererii primit la depunere, Ã®mpreunÄƒ cu localitatea Ã®în care aÈ›i depus-o, pentru a verifica stadiul acesteia.</p>
 
     <form (ngSubmit)="checkStatus()" style="text-align: left;">
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
         <div class="form-group">
-          <label class="form-label">Județ *</label>
+          <label class="form-label">JudeÈ› *</label>
           <select class="form-control" [(ngModel)]="selectedJudet" name="judet" (change)="onJudetChange()" required>
-            <option value="">Selectați județul</option>
+            <option value="">SelectaÈ›i judeÈ›ul</option>
             <option *ngFor="let judet of judete" [value]="judet">{{ judet }}</option>
           </select>
         </div>
@@ -16,7 +16,7 @@
         <div class="form-group">
           <label class="form-label">Localitate (UAT) *</label>
           <select class="form-control" [(ngModel)]="uatId" name="uatId" required [disabled]="!selectedJudet">
-            <option value="">Selectați localitatea</option>
+            <option value="">SelectaÈ›i localitatea</option>
             <option *ngFor="let uat of localitati" [value]="uat.id">{{ uat.denumire }}</option>
           </select>
         </div>
@@ -28,7 +28,7 @@
       </div>
 
       <button type="submit" class="btn btn-primary" style="width: 100%;" [disabled]="isChecking || !codCerere || !uatId">
-        {{ isChecking ? 'Se verifică...' : 'Verifică' }}
+        {{ isChecking ? 'Se verificÄƒ...' : 'VerificÄƒ' }}
       </button>
     </form>
 
@@ -47,7 +47,7 @@
           'color': 'white',
           'background-color': cerereStatus.status === 'PENDING' ? '#f59e0b' : (cerereStatus.status === 'ACCEPTED' ? '#10b981' : '#ef4444')
         }">
-          {{ cerereStatus.status === 'PENDING' ? 'În Așteptare' : (cerereStatus.status === 'ACCEPTED' ? 'Aprobată' : 'Respinsă') }}
+          {{ cerereStatus.status === 'PENDING' ? 'ÃŽn AÈ™teptare' : (cerereStatus.status === 'ACCEPTED' ? 'AprobatÄƒ' : 'RespinsÄƒ') }}
         </span>
       </div>
     </div>

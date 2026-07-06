@@ -1,5 +1,8 @@
 package com.multitenant.model.registru;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,7 +15,12 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@SQLDelete(sql = "UPDATE documente SET deleted = true WHERE id=?")
+@SQLRestriction("deleted = false")
 public class Document {
+    @jakarta.persistence.Column(nullable = false)
+    private boolean deleted = false;
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

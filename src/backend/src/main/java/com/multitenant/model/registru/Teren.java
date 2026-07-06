@@ -1,5 +1,8 @@
 package com.multitenant.model.registru;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,7 +16,12 @@ import org.hibernate.envers.Audited;
 @Setter
 @NoArgsConstructor
 @Audited
+@SQLDelete(sql = "UPDATE terenuri SET deleted = true WHERE id=?")
+@SQLRestriction("deleted = false")
 public class Teren {
+    @jakarta.persistence.Column(nullable = false)
+    private boolean deleted = false;
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

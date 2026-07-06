@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Adeverinta Rol</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 40px;
+            color: #000;
+        }
+        .header {
+            width: 100%;
+            margin-bottom: 50px;
+        }
+        .header-left {
+            width: 50%;
+            float: left;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .header-right {
+            width: 50%;
+            float: right;
+            text-align: right;
+            font-size: 14px;
+        }
+        .clear {
+            clear: both;
+        }
+        .title-container {
+            text-align: center;
+            margin-top: 40px;
+            margin-bottom: 40px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            text-decoration: underline;
+            letter-spacing: 2px;
+        }
+        .content {
+            font-size: 16px;
+            line-height: 1.8;
+            text-align: justify;
+            text-indent: 50px;
+        }
+        .field-fill {
+            font-weight: bold;
+        }
+        .signatures {
+            margin-top: 100px;
+        }
+        .sign-left {
+            float: left;
+            width: 40%;
+            text-align: center;
+        }
+        .sign-right {
+            float: right;
+            width: 40%;
+            text-align: center;
+        }
+        .sign-title {
+            font-weight: bold;
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            JUDEȚUL / LOCALITATEA: (din sistem)<br/>
+            PRIMĂRIA<br/>
+            Compartiment Registrul Agricol
+        </div>
+        <div class="header-right">
+            Nr. <span th:text="${cerere.id}"></span> / <span th:text="${#temporals.format(cerere.createdAt, 'dd.MM.yyyy')}"></span>
+        </div>
+        <div class="clear"></div>
+    </div>
+
+    <div class="title-container">
+        <div class="title">ADEVERINȚĂ</div>
+    </div>
+
+    <div class="content">
+        Se adeverește prin prezenta de către Primărie, faptul că domnul/doamna 
+        <span class="field-fill" th:text="${cerere.nume}"></span>, 
+        identificat(ă) cu CNP/CUI <span class="field-fill"><span th:if="${cerere.cnpCui != null}" th:text="${cerere.cnpCui}"></span><span th:if="${cerere.cnpCui == null}">_____________</span></span>, 
+        cu domiciliul în <span class="field-fill" th:text="${cerere.domiciliu}"></span>, 
+        figurează înscris(ă) în evidențele Registrului Agricol la volumul și poziția corespunzătoare codului 
+        <span class="field-fill" th:text="${cerere.codCerere}"></span>.
+        <br/><br/>
+        Persoana sus-menționată este înregistrată cu bunurile mobile și imobile declarate (terenuri agricole, neagricole, păduri, construcții, mijloace de transport, utilaje agricole sau efective de animale), conform extrasului de rol curent din platforma digitală.
+        <br/><br/>
+        S-a eliberat prezenta adeverință la cerere, spre a-i servi titularului la instituțiile solicitante.
+    </div>
+
+    <div class="signatures">
+        <div class="sign-left">
+            <div class="sign-title">PRIMAR,</div>
+            <span>(L.S.)</span>
+        </div>
+        <div class="sign-right">
+            <div class="sign-title">ÎNTOCMIT,</div>
+            <span>Inspector Registrul Agricol</span>
+        </div>
+        <div class="clear"></div>
+    </div>
+</body>
+</html>

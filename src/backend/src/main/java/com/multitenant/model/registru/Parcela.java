@@ -1,5 +1,8 @@
 package com.multitenant.model.registru;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,7 +20,12 @@ import org.hibernate.envers.RelationTargetAuditMode;
 @Setter
 @NoArgsConstructor
 @Audited
+@SQLDelete(sql = "UPDATE parcele SET deleted = true WHERE id=?")
+@SQLRestriction("deleted = false")
 public class Parcela {
+    @jakarta.persistence.Column(nullable = false)
+    private boolean deleted = false;
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,7 +44,7 @@ public class Parcela {
     private String categorieFolosinta;
 
     /**
-     * Numarul cadastral al parcelei — alocat de ANCPI/Cadastru.
+     * Numarul cadastral al parcelei â€” alocat de ANCPI/Cadastru.
      * Cheie pentru sincronizarea cu RAN si pentru declaratiile APIA.
      */
     @Column(name = "numar_cadastral", length = 100)
@@ -82,10 +90,10 @@ public class Parcela {
         if (teren != null && org.hibernate.Hibernate.isInitialized(teren)) {
             Teren t = teren;
             if (t.getGospodarie() != null && org.hibernate.Hibernate.isInitialized(t.getGospodarie())) {
-                return "Gospodăria " + t.getGospodarie().getCodGospodarie();
+                return "GospodÄƒria " + t.getGospodarie().getCodGospodarie();
             }
         }
-        return "Gospodărie Necunoscută";
+        return "GospodÄƒrie NecunoscutÄƒ";
     }
 
     @Override

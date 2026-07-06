@@ -13,6 +13,7 @@ import { AuthService } from '../../services/auth.service';
 })
 export class Register {
   formData = {
+    tipPersoana: 'FIZICA',
     nume: '',
     prenume: '',
     cnp: '',
@@ -44,8 +45,8 @@ export class Register {
     this.error = '';
     
     // Basic validations
-    if (!this.formData.nume || !this.formData.prenume || !this.formData.cnp || !this.formData.email || !this.formData.telefon || !this.formData.parola) {
-      this.error = 'Toate datele personale sunt obligatorii.';
+    if (!this.formData.nume || (this.formData.tipPersoana === 'FIZICA' && !this.formData.prenume) || !this.formData.cnp || !this.formData.email || !this.formData.telefon || !this.formData.parola) {
+      this.error = 'Toate datele ' + (this.formData.tipPersoana === 'FIZICA' ? 'personale' : 'firmei') + ' sunt obligatorii.';
       return;
     }
     

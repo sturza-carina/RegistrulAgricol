@@ -26,8 +26,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
   activeUat: Uat | null = null;
   activeUatCode: string = '';
 
-  currentLocale: string = 'ro';
-
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -37,7 +35,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.currentLocale = window.location.pathname.startsWith('/en/') ? 'en' : 'ro';
     this.authService.currentUser
       .pipe(takeUntil(this.destroy$))
       .subscribe(u => { this.user = u; });
@@ -74,19 +71,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
-  }
-
-  changeLanguage(locale: string): void {
-    if (locale === this.currentLocale) return;
-    document.cookie = `lang=${locale};path=/;max-age=31536000`;
-    const path = window.location.pathname;
-    if (path.startsWith('/ro/') || path.startsWith('/en/')) {
-      const newPath = path.replace(/^\/(ro|en)/, `/${locale}`);
-      window.location.href = window.location.origin + newPath + window.location.search + window.location.hash;
-    } else {
-      alert(`Language switched to ${locale.toUpperCase()}. In production, this will redirect to /${locale}/. In development, run the corresponding build config (e.g. npm run start -- --configuration=${locale}) to view.`);
-      window.location.reload();
-    }
   }
 
   ngOnDestroy(): void {

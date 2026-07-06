@@ -1,5 +1,8 @@
 package com.multitenant.model.registru;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,7 +22,12 @@ import com.multitenant.util.CryptoUtils;
 @Getter
 @Setter
 @NoArgsConstructor
+@SQLDelete(sql = "UPDATE cereri SET deleted = true WHERE id=?")
+@SQLRestriction("deleted = false")
 public class Cerere {
+    @jakarta.persistence.Column(nullable = false)
+    private boolean deleted = false;
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -58,6 +66,10 @@ public class Cerere {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private StatusCerere status = StatusCerere.PENDING;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tip_cerere", nullable = false, length = 50)
+    private TipCerere tipCerere;
 
     @Column(name = "user_id")
     private Long userId; // The public.users id if logged in

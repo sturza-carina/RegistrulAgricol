@@ -16,6 +16,7 @@ import java.util.List;
 import java.time.LocalDate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.hibernate.Hibernate;
 
 @Service
 public class ContractUtilizareService {
@@ -35,19 +36,37 @@ public class ContractUtilizareService {
         this.contractKafkaProducer = contractKafkaProducer;
     }
 
+    @Transactional(readOnly = true)
     public Page<ContractUtilizare> getAllContracts(String uatCode, Pageable pageable) {
+        Page<ContractUtilizare> page;
         if (uatCode != null && !uatCode.isBlank()) {
-            return contractUtilizareRepository.findByUatCode(uatCode, pageable);
+            page = contractUtilizareRepository.findByUatCode(uatCode, pageable);
+        } else {
+            page = contractUtilizareRepository.findAll(pageable);
         }
-        return contractUtilizareRepository.findAll(pageable);
+        
+        page.getContent().forEach(contract -> {
+            Hibernate.initialize(contract.getParcela());
+            Hibernate.initialize(contract.getLocatorProprietar());
+            Hibernate.initialize(contract.getLocatorUtilizator());
+        });
+        
+        return page;
     }
 
+    @Transactional(readOnly = true)
     public ContractUtilizare getContractById(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("ID cannot be null");
         }
-        return contractUtilizareRepository.findById(id)
+        ContractUtilizare contract = contractUtilizareRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Contractul de utilizare nu a fost găsit"));
+                
+        Hibernate.initialize(contract.getParcela());
+        Hibernate.initialize(contract.getLocatorProprietar());
+        Hibernate.initialize(contract.getLocatorUtilizator());
+        
+        return contract;
     }
 
     @Transactional

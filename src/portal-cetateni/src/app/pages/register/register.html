@@ -1,29 +1,38 @@
 <div class="auth-container">
   <div class="auth-card register-card">
     <div class="auth-header">
-      <h2>Înregistrare Cetățean</h2>
+      <h2>Înregistrare Utilizator</h2>
       <p>Crează un cont pentru a accesa serviciile digitale</p>
     </div>
 
     <form (ngSubmit)="onSubmit()" #registerForm="ngForm" class="auth-form split-form">
       
+      <div class="form-section tip-persoana-selector" style="margin-bottom: 20px; display: flex; gap: 20px; justify-content: center;">
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 8px; color: #e2e8f0; font-weight: 500;">
+          <input type="radio" name="tipPersoana" value="FIZICA" [(ngModel)]="formData.tipPersoana"> Persoană Fizică
+        </label>
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 8px; color: #e2e8f0; font-weight: 500;">
+          <input type="radio" name="tipPersoana" value="JURIDICA" [(ngModel)]="formData.tipPersoana"> Persoană Juridică
+        </label>
+      </div>
+
       <div class="form-section">
-        <h3>Date Personale</h3>
+        <h3>{{ formData.tipPersoana === 'FIZICA' ? 'Date Personale' : 'Date Firmă' }}</h3>
         <div class="form-row">
-          <div class="form-group half">
-            <label for="nume">Nume *</label>
-            <input type="text" id="nume" name="nume" [(ngModel)]="formData.nume" required placeholder="Popescu">
+          <div class="form-group" [ngClass]="{'half': formData.tipPersoana === 'FIZICA', 'full': formData.tipPersoana === 'JURIDICA'}" [style.width]="formData.tipPersoana === 'JURIDICA' ? '100%' : 'auto'">
+            <label for="nume">{{ formData.tipPersoana === 'FIZICA' ? 'Nume *' : 'Denumire Firmă *' }}</label>
+            <input type="text" id="nume" name="nume" [(ngModel)]="formData.nume" required [placeholder]="formData.tipPersoana === 'FIZICA' ? 'Popescu' : 'SC Exemplu SRL'">
           </div>
-          <div class="form-group half">
+          <div class="form-group half" *ngIf="formData.tipPersoana === 'FIZICA'">
             <label for="prenume">Prenume *</label>
-            <input type="text" id="prenume" name="prenume" [(ngModel)]="formData.prenume" required placeholder="Ion">
+            <input type="text" id="prenume" name="prenume" [(ngModel)]="formData.prenume" [required]="formData.tipPersoana === 'FIZICA'" placeholder="Ion">
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group half">
-            <label for="cnp">CNP *</label>
-            <input type="text" id="cnp" name="cnp" [(ngModel)]="formData.cnp" required minlength="13" maxlength="13" placeholder="1234567890123">
+            <label for="cnp">{{ formData.tipPersoana === 'FIZICA' ? 'CNP *' : 'CUI *' }}</label>
+            <input type="text" id="cnp" name="cnp" [(ngModel)]="formData.cnp" required [minlength]="formData.tipPersoana === 'FIZICA' ? 13 : 2" [maxlength]="formData.tipPersoana === 'FIZICA' ? 13 : 20" [placeholder]="formData.tipPersoana === 'FIZICA' ? '1234567890123' : 'RO12345678'">
           </div>
           <div class="form-group half">
             <label for="telefon">Telefon *</label>
@@ -49,7 +58,7 @@
       </div>
 
       <div class="form-section">
-        <h3>Adresă de Domiciliu</h3>
+        <h3>{{ formData.tipPersoana === 'FIZICA' ? 'Adresă de Domiciliu' : 'Adresă Sediu Social' }}</h3>
         <div class="form-row">
           <div class="form-group half">
             <label for="judet">Județ *</label>

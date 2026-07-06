@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Registru Fitosanitar</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 10mm;
+        }
+        body {
+            font-family: "Roboto", sans-serif;
+            font-size: 8px;
+            color: #333;
+            line-height: 1.2;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .title {
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+        .subtitle {
+            font-size: 9px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 0.5px solid #aaa;
+            padding: 4px;
+            text-align: left;
+            vertical-align: top;
+            word-wrap: break-word;
+        }
+        th {
+            background-color: #f3f4f6;
+            font-weight: bold;
+            font-size: 8px;
+            text-align: center;
+        }
+        .center {
+            text-align: center;
+        }
+        .nowrap {
+            white-space: nowrap;
+        }
+        .row-even {
+            background-color: #fafafa;
+        }
+        .badge-signed {
+            color: #15803d;
+            font-weight: bold;
+        }
+        .badge-unsigned {
+            color: #b91c1c;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">Registrul de evidență a tratamentelor cu produse de protecție a plantelor</div>
+        <div class="subtitle">Conform Regulamentului (CE) nr. 1107/2009 — Structură oficială Autoritatea Națională Fitosanitară (ANF)</div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 3%;">Nr. crt.</th>
+                <th style="width: 10%;">Data efectuării (zi, lună, an, oră)</th>
+                <th style="width: 15%;">Cultura și Locul unde este situat terenul</th>
+                <th style="width: 6%;">Suprafața tratată (ha)</th>
+                <th style="width: 12%;">Agentul dăunător (boală, insectă, buruiană)</th>
+                <th style="width: 10%;">Produsul de protecție utilizat (PPP)</th>
+                <th style="width: 10%;">Doza omologată / Doza utilizată</th>
+                <th style="width: 8%;">Data începerii recoltării</th>
+                <th style="width: 10%;">Document dare în consum (nr/dată)</th>
+                <th style="width: 11%;">Nume responsabil tratament</th>
+                <th style="width: 5%;">Semnătura</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="t, iter : ${tratamente}" th:class="${iter.index % 2 == 1} ? 'row-even' : ''">
+                <td class="center" th:text="${iter.index + 1}">1</td>
+                <td th:text="${t.dataEfectuariiFormatted}">-</td>
+                <td>
+                    <span th:text="${t.culturaLocatie}">-</span>
+                </td>
+                <td class="center" th:text="${t.suprafataTratata}">0.00</td>
+                <td th:text="${t.agentDaunator}">-</td>
+                <td th:text="${t.catalogPppDenumire}">-</td>
+                <td th:text="${t.dozaFormatted}">-</td>
+                <td th:text="${t.dataIncepereRecoltareFormatted}">-</td>
+                <td th:text="${t.documentDareConsum != null && t.documentDareConsum != '' ? t.documentDareConsum : '-'}">-</td>
+                <td th:text="${t.responsabil}">-</td>
+                <td class="center">
+                    <span th:if="${t.semnaturaElectronica != null && t.semnaturaElectronica != ''}" class="badge-signed">Semnat</span>
+                    <span th:if="${t.semnaturaElectronica == null || t.semnaturaElectronica == ''}" class="badge-unsigned">Nesemnat</span>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(tratamente)}">
+                <td colspan="11" class="center" style="padding: 10px; font-style: italic;">
+                    Nu există tratamente înregistrate în această perioadă.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>

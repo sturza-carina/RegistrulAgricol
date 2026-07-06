@@ -11,8 +11,9 @@ public class CetateanSignupRequest {
     @NotBlank
     private String nume;
     
-    @NotBlank
     private String prenume;
+
+    private String tipPersoana;
     
     @NotBlank
     private String cnp;
