@@ -25,6 +25,9 @@ export class ContulMeu implements OnInit, OnDestroy {
   // Notifications
   notificari: any[] = [];
   
+  // Atestate Status
+  atestatStatus: any = null;
+
   isLoading = false;
   isSaving = false;
   successMessage: string | null = null;
@@ -77,6 +80,16 @@ export class ContulMeu implements OnInit, OnDestroy {
         if (this.profile.cnp) {
            this.connectWebSocket(this.profile.cnp);
         }
+        
+        // Fetch Atestate & Carnete Status
+        this.http.get<any>('/api/public/atestate/my-status').subscribe({
+          next: (status) => {
+            this.atestatStatus = status;
+            this.cdr.detectChanges();
+          },
+          error: (err) => console.error('Error loading atestate status', err)
+        });
+
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -91,7 +104,7 @@ export class ContulMeu implements OnInit, OnDestroy {
     if (!this.profile) return;
     
     // Basic validation
-    if (!this.profile.nume || !this.profile.prenume || !this.profile.telefon || !this.profile.judet || !this.profile.localitate || !this.profile.strada || !this.profile.numar) {
+    if (!this.profile.nume || (this.profile.tipPersoana === 'FIZICA' && !this.profile.prenume) || !this.profile.telefon || !this.profile.judet || !this.profile.localitate || !this.profile.strada || !this.profile.numar) {
       this.error = 'Te rugăm să completezi toate câmpurile obligatorii.';
       return;
     }

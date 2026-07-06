@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Carnet de Comercializare</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 30px;
+            color: #333;
+        }
+        .book-container {
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            background-color: #fdfdfd;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 22px;
+            color: #2c3e50;
+            margin: 5px 0;
+        }
+        .series-info {
+            text-align: right;
+            font-size: 14px;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .producer-info {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .row {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .label {
+            font-weight: bold;
+            display: inline-block;
+            width: 150px;
+        }
+        .products-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .products-table th, .products-table td {
+            border: 1px solid #bdc3c7;
+            padding: 8px;
+            text-align: left;
+            font-size: 13px;
+        }
+        .products-table th {
+            background-color: #34495e;
+            color: #fff;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            text-align: center;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="book-container">
+        <div class="header">
+            <h1>CARNET DE COMERCIALIZARE</h1>
+            <h3>A PRODUSELOR AGRICOLE</h3>
+        </div>
+
+        <div class="series-info">
+            Seria: <span th:text="${cerere.codCerere}"></span> | Nr: <span th:text="${cerere.id}"></span>
+        </div>
+
+        <div class="producer-info">
+            <div class="row">
+                <span class="label">Titular Atestat:</span>
+                <span th:text="${cerere.nume}"></span>
+            </div>
+            <div class="row">
+                <span class="label">CNP / CUI:</span>
+                <span th:if="${cerere.cnpCui != null}" th:text="${cerere.cnpCui}"></span><span th:if="${cerere.cnpCui == null}">-</span>
+            </div>
+            <div class="row">
+                <span class="label">Domiciliu:</span>
+                <span th:text="${cerere.domiciliu}"></span>
+            </div>
+            <div class="row">
+                <span class="label">Nr. Atestat Bază:</span>
+                <span>(Generat în sistem conform bazei de date - Registrul Agricol)</span>
+            </div>
+        </div>
+
+        <h4>Produse destinate comercializării:</h4>
+        <table class="products-table">
+            <thead>
+                <tr>
+                    <th>Nr. Crt.</th>
+                    <th>Denumire Produs</th>
+                    <th>Suprafața / Nr. Animale</th>
+                    <th>Cantitate estimată (kg/litri/buc)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Produse vegetale specifice exploatației</td>
+                    <td>Conform extras rol agricol</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Produse zootehnice / apicole</td>
+                    <td>Conform extras rol agricol</td>
+                    <td>-</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="footer">
+            <p>Acest carnet a fost eliberat pe baza cererii aprobate în platforma digitală și a atestatului de producător valabil.</p>
+            <p>Data eliberării: <span th:text="${#temporals.format(cerere.createdAt, 'dd.MM.yyyy')}"></span></p>
+        </div>
+    </div>
+</body>
+</html>

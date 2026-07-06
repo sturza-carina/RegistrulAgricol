@@ -1,0 +1,2 @@
+ALTER TABLE public.cetateni ADD COLUMN tip_persoana VARCHAR(20) DEFAULT 'FIZICA' NOT NULL;
+ALTER TABLE public.cetateni ALTER COLUMN prenume DROP NOT NULL;

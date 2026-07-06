@@ -67,6 +67,10 @@ public class Cerere {
     @Column(nullable = false, length = 20)
     private StatusCerere status = StatusCerere.PENDING;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tip_cerere", nullable = false, length = 50)
+    private TipCerere tipCerere;
+
     @Column(name = "user_id")
     private Long userId; // The public.users id if logged in
 

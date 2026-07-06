@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Atestat de Producator</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 40px;
+            color: #000;
+        }
+        .border-container {
+            border: 4px double #000;
+            padding: 30px;
+            min-height: 800px;
+            position: relative;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            font-size: 24px;
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+        }
+        .header h2 {
+            font-size: 20px;
+            margin: 0;
+            font-weight: normal;
+        }
+        .series {
+            text-align: right;
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+        .content {
+            font-size: 16px;
+            line-height: 1.8;
+            text-align: justify;
+        }
+        .bold-text {
+            font-weight: bold;
+        }
+        .field-fill {
+            border-bottom: 1px dotted #000;
+            display: inline-block;
+            padding: 0 10px;
+            font-weight: bold;
+            font-style: italic;
+        }
+        .footer-signatures {
+            margin-top: 80px;
+            width: 100%;
+        }
+        .signature-box {
+            display: inline-block;
+            width: 45%;
+            text-align: center;
+        }
+        .validity {
+            margin-top: 40px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .vize-table {
+            width: 100%;
+            margin-top: 40px;
+            border-collapse: collapse;
+        }
+        .vize-table th, .vize-table td {
+            border: 1px solid #000;
+            padding: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="border-container">
+        <div class="header">
+            <h1>ROMÂNIA</h1>
+            <h2>Județul / Localitatea: (generat automat)</h2>
+            <br/>
+            <h1>ATESTAT DE PRODUCĂTOR</h1>
+        </div>
+
+        <div class="series">
+            Seria <span th:text="${cerere.codCerere}"></span> Nr. <span th:if="${cerere.numarCadastral != null}" th:text="${cerere.numarCadastral}"></span><span th:if="${cerere.numarCadastral == null}">001</span>
+        </div>
+
+        <div class="content">
+            <p>
+                Urmare a cererii nr. <span class="field-fill" th:text="${cerere.id}"></span> și a verificărilor efectuate, se eliberează prezentul atestat de producător:
+            </p>
+            <p>
+                Domnului/Doamnei <span class="field-fill" th:text="${cerere.nume}"></span>, 
+                CNP/CUI <span class="field-fill"><span th:if="${cerere.cnpCui != null}" th:text="${cerere.cnpCui}"></span><span th:if="${cerere.cnpCui == null}">_____________</span></span>,
+                cu domiciliul/sediul în <span class="field-fill" th:text="${cerere.domiciliu}"></span>.
+            </p>
+            <p>
+                Titularul prezentului atestat este înregistrat în Registrul Agricol la rolul nr. <span class="field-fill" th:text="${cerere.codCerere}"></span>
+                și desfășoară activități agricole, având calitatea de producător agricol conform Legii nr. 145/2014.
+            </p>
+        </div>
+
+        <div class="validity">
+            Prezentul atestat este valabil 7 ani de la data emiterii, cu condiția vizării anuale.
+            <br/>
+            Data emiterii: <span th:text="${#temporals.format(cerere.createdAt, 'dd.MM.yyyy')}"></span>
+        </div>
+
+        <table class="vize-table">
+            <tr>
+                <th>Anul</th>
+                <th>Semnătura și ștampila primăriei</th>
+                <th>Aviz consultativ structură asociativă</th>
+            </tr>
+            <tr>
+                <td th:text="${#temporals.format(cerere.createdAt, 'yyyy')}"></td>
+                <td><br/><br/></td>
+                <td><br/><br/></td>
+            </tr>
+            <tr>
+                <td th:text="${T(java.time.Year).now().getValue() + 1}"></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
+
+        <div class="footer-signatures">
+            <div class="signature-box">
+                <strong>PRIMAR,</strong><br/><br/>
+                L.S.
+            </div>
+            <div class="signature-box">
+                <strong>SECRETAR GENERAL,</strong><br/><br/>
+                (semnătură)
+            </div>
+        </div>
+    </div>
+</body>
+</html>

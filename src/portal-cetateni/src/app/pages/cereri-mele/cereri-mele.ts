@@ -121,4 +121,18 @@ export class CereriMele implements OnInit {
       default: return status;
     }
   }
+
+  downloadPdf(cerere: Cerere) {
+    this.http.get(`/api/public/cereri/${cerere.id}/pdf`, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      },
+      error: (err) => {
+        console.error('Failed to download PDF', err);
+        alert('Eroare la descărcarea documentului.');
+      }
+    });
+  }
 }
+

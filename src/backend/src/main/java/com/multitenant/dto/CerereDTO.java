@@ -16,6 +16,7 @@ public class CerereDTO {
     private String cnpCui;
     private String codCerere;
     private StatusCerere status;
+    private String tipCerere;
     private Long userId;
     private Long uatId;
     private LocalDateTime createdAt;

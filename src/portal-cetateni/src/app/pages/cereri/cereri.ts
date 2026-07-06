@@ -7,6 +7,20 @@ import { AuthService } from '../../services/auth.service';
 
 import { ChangeDetectorRef } from '@angular/core';
 
+export enum TipCerere {
+  ELIBERARE_ATESTAT_PRODUCATOR = 'ELIBERARE_ATESTAT_PRODUCATOR',
+  ELIBERARE_CARNET_COMERCIALIZARE = 'ELIBERARE_CARNET_COMERCIALIZARE',
+  ADEVERINTA_ROL = 'ADEVERINTA_ROL',
+  SESIZARE_AMBROZIA = 'SESIZARE_AMBROZIA',
+  ADEVERINTA_AVIZ_CONSULTATIV = 'ADEVERINTA_AVIZ_CONSULTATIV',
+  ADEVERINTA_TEREN_PF = 'ADEVERINTA_TEREN_PF',
+  ADEVERINTA_TEREN_PJ = 'ADEVERINTA_TEREN_PJ',
+  COPIE_REGISTRU_1959_1963 = 'COPIE_REGISTRU_1959_1963',
+  EXTRAS_REGISTRU_PF = 'EXTRAS_REGISTRU_PF',
+  EXTRAS_REGISTRU_PJ = 'EXTRAS_REGISTRU_PJ',
+  ADEVERINTA_DETINERE_TEREN = 'ADEVERINTA_DETINERE_TEREN'
+}
+
 @Component({
   selector: 'app-cereri',
   imports: [CommonModule, FormsModule, HttpClientModule],
@@ -14,6 +28,25 @@ import { ChangeDetectorRef } from '@angular/core';
   styleUrl: './cereri.css',
 })
 export class Cereri implements OnInit {
+  TipCerere = TipCerere;
+  step: number = 1;
+
+  tipuriCereri = [
+    { id: TipCerere.ELIBERARE_ATESTAT_PRODUCATOR, title: 'Cerere pentru atestat de producător', description: 'Cerere pentru eliberarea atestatului de producător agricol.' },
+    { id: TipCerere.ELIBERARE_CARNET_COMERCIALIZARE, title: 'Cerere pentru carnet de comercializare', description: 'Cerere pentru eliberarea carnetului de comercializare a produselor.' },
+    { id: TipCerere.ADEVERINTA_ROL, title: 'Cerere adeverință rol', description: 'Cerere pentru adeverință rol.' },
+    { id: TipCerere.SESIZARE_AMBROZIA, title: 'Sesizare - terenuri infestate cu ambrozia', description: 'Sesizare referitoare la terenuri infestate cu buruiana ambrozia.' },
+    { id: TipCerere.ADEVERINTA_AVIZ_CONSULTATIV, title: 'Cerere adeverință pentru obținerea avizului consultativ', description: 'Cerere pentru eliberare adeverință necesar obținerii avizului.' },
+    { id: TipCerere.ADEVERINTA_TEREN_PF, title: 'Cerere adeverință teren înscris (Persoane Fizice)', description: 'adeverință pentru terenul înscris în registrul agricol (persoane fizice).' },
+    { id: TipCerere.ADEVERINTA_TEREN_PJ, title: 'Cerere adeverință teren înscris (Persoane Juridice)', description: 'adeverință pentru terenul înscris în registrul agricol (persoane juridice).' },
+    { id: TipCerere.COPIE_REGISTRU_1959_1963, title: 'Cerere copie registru (1959-1963)', description: 'Cerere copie din registrul agricol pentru perioada 1959-1963.' },
+    { id: TipCerere.EXTRAS_REGISTRU_PF, title: 'Cerere extras registru 2020-2024 (PF)', description: 'Extras din registrul agricol pentru perioada 2020-2024 (persoane fizice).' },
+    { id: TipCerere.EXTRAS_REGISTRU_PJ, title: 'Cerere extras registru 2020-2024 (PJ)', description: 'Extras din registrul agricol pentru perioada 2020-2024 (persoane juridice).' },
+    { id: TipCerere.ADEVERINTA_DETINERE_TEREN, title: 'Cerere adeverință deținere/nedeținere teren', description: 'adeverință că deține sau nu deține teren agricol.' }
+  ];
+
+  selectedTipTitle: string = '';
+
   toateLocalitatile: any[] = [];
   judete: string[] = [];
   localitati: any[] = [];
@@ -27,7 +60,8 @@ export class Cereri implements OnInit {
     email: '',
     numarCarteFunciara: '',
     numarCadastral: '',
-    uatId: ''
+    uatId: '',
+    tipCerere: ''
   };
 
   domiciliuObj: any = {
@@ -43,6 +77,7 @@ export class Cereri implements OnInit {
   isSubmitting = false;
   successCode: string | null = null;
   isLoadingUats = true;
+  atestatStatus: any = null;
 
   constructor(private http: HttpClient, private cdr: ChangeDetectorRef, private authService: AuthService) {}
 
@@ -85,8 +120,36 @@ export class Cereri implements OnInit {
           },
           error: (err) => console.error('Eroare la preluarea profilului', err)
         });
+        
+        // Fetch document status for preventing duplicate requests
+        this.http.get<any>('/api/public/atestate/my-status').subscribe({
+          next: (status) => {
+            this.atestatStatus = status;
+          },
+          error: (err) => console.error('Error loading atestate status', err)
+        });
       }
     });
+  }
+
+  selectTipCerere(tip: any) {
+    if (tip.id === TipCerere.ELIBERARE_ATESTAT_PRODUCATOR && this.atestatStatus?.areAtestat) {
+        alert("Dețineți deja un Atestat de Producător existent. Nu puteți trimite o altă cerere.");
+        return;
+    }
+    if (tip.id === TipCerere.ELIBERARE_CARNET_COMERCIALIZARE && this.atestatStatus?.areCarnet) {
+        alert("Dețineți deja un Carnet de Comercializare existent. Nu puteți trimite o altă cerere.");
+        return;
+    }
+  
+    this.cerere.tipCerere = tip.id;
+    this.selectedTipTitle = tip.title;
+    this.step = 2;
+  }
+
+  goBack() {
+    this.step = 1;
+    this.successCode = null;
   }
 
   onJudetChange() {

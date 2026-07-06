@@ -34,8 +34,12 @@ public class Cetatean {
     @Column(nullable = false, length = 255)
     private String nume;
 
-    @Column(nullable = false, length = 255)
+    @Column(length = 255)
     private String prenume;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tip_persoana", nullable = false, length = 20)
+    private TipPersoanaCetatean tipPersoana = TipPersoanaCetatean.FIZICA;
 
     @Column(nullable = false, length = 255)
     @Convert(converter = AesCryptoConverter.class)
@@ -77,6 +81,12 @@ public class Cetatean {
 
     @Column(length = 50)
     private String apartament;
+
+    @Column(name = "are_atestat_producator", nullable = false)
+    private boolean areAtestatProducator = false;
+
+    @Column(name = "are_carnet_comercializare", nullable = false)
+    private boolean areCarnetComercializare = false;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
