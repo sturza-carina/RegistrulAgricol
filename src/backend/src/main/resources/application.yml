@@ -9,6 +9,7 @@ spring:
   jackson:
     serialization:
       fail-on-empty-beans: false
+      write-dates-as-timestamps: false
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/multi_tenant_db}
     username: ${SPRING_DATASOURCE_USERNAME:admin}
@@ -43,3 +44,7 @@ spring:
 jwt:
   secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
   expiration: 86400000 # 24 hours
+
+app:
+  crypto:
+    aes-key: ${APP_CRYPTO_AES_KEY:MyDefaultAesSymmetricEncryptionKey2026Registru}

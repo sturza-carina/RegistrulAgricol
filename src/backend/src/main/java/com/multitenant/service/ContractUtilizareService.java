@@ -161,7 +161,7 @@ public class ContractUtilizareService {
         if (dataLimita == null) {
             throw new IllegalArgumentException("dataLimita cannot be null");
         }
-        List<ContractUtilizare> contracte = contractUtilizareRepository.findByStatusContractAndDataSfarsit(
+        List<ContractUtilizare> contracte = contractUtilizareRepository.findByStatusContractAndDataSfarsitLessThan(
                 StatusContractUtilizare.ACTIV, dataLimita);
         for (ContractUtilizare contract : contracte) {
             Persoana locatorUtilizator = contract.getLocatorUtilizator();

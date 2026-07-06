@@ -1,5 +1,6 @@
 package com.multitenant.repository;
 
+import com.multitenant.dto.SpecieRefDTO;
 import com.multitenant.dto.TipDocumentDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -36,6 +37,17 @@ public class LookupRepository {
                         rs.getString("cod"),
                         rs.getString("denumire"),
                         rs.getString("descriere")
+                )
+        );
+    }
+
+    public List<SpecieRefDTO> findAllSpeciiPomi() {
+        return jdbcTemplate.query(
+                "SELECT id, denumire AS nume, categorie_folosinta FROM public.specii_pomi ORDER BY denumire",
+                (rs, rowNum) -> new SpecieRefDTO(
+                        rs.getInt("id"),
+                        rs.getString("nume"),
+                        rs.getString("categorie_folosinta")
                 )
         );
     }

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { UATS } from '../../data/uats.data';
+import { AuthService } from '../../services/auth.service';
 
 import { ChangeDetectorRef } from '@angular/core';
 
@@ -43,12 +44,49 @@ export class Cereri implements OnInit {
   successCode: string | null = null;
   isLoadingUats = true;
 
-  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
+  constructor(private http: HttpClient, private cdr: ChangeDetectorRef, private authService: AuthService) {}
 
   ngOnInit() {
     this.toateLocalitatile = UATS;
     this.judete = [...new Set(UATS.filter(l => l && l.judet).map(l => l.judet))].sort((a: any, b: any) => a.localeCompare(b));
     this.isLoadingUats = false;
+
+    this.authService.currentUser$.subscribe(user => {
+      if (user && user.role === 'CETATEAN') {
+        this.http.get<any>('/api/public/cetatean/me').subscribe({
+          next: (cetatean) => {
+            if (cetatean) {
+              this.cerere.nume = [cetatean.nume, cetatean.prenume].filter(Boolean).join(' ');
+              this.cerere.cnpCui = cetatean.cnp || '';
+              this.cerere.telefon = cetatean.telefon || '';
+              this.cerere.email = cetatean.email || '';
+              
+              if (cetatean.judet) {
+                this.selectedJudet = cetatean.judet;
+                this.onJudetChange();
+              }
+              if (cetatean.localitate) {
+                const loc = this.localitati.find(l => l.denumire.toLowerCase() === cetatean.localitate.toLowerCase());
+                if (loc) {
+                  this.cerere.uatId = loc.id;
+                }
+              }
+              
+              this.domiciliuObj.strada = 'Str.';
+              this.domiciliuObj.numeStrada = cetatean.strada || '';
+              this.domiciliuObj.numar = cetatean.numar || '';
+              this.domiciliuObj.bloc = cetatean.bloc || '';
+              this.domiciliuObj.scara = cetatean.scara || '';
+              this.domiciliuObj.etaj = cetatean.etaj || '';
+              this.domiciliuObj.apartament = cetatean.apartament || '';
+              
+              this.cdr.detectChanges();
+            }
+          },
+          error: (err) => console.error('Eroare la preluarea profilului', err)
+        });
+      }
+    });
   }
 
   onJudetChange() {

@@ -31,11 +31,13 @@ public class GospodarieService {
         this.modelMapper = modelMapper;
     }
 
+    @Transactional(readOnly = true)
     public Page<GospodarieDTO> getAllGospodarii(Pageable pageable) {
         return gospodarieRepository.findAllByOrderByIdDesc(pageable)
                 .map(entity -> modelMapper.map(entity, GospodarieDTO.class));
     }
 
+    @Transactional(readOnly = true)
     public GospodarieDTO getGospodarieById(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("ID cannot be null");
@@ -93,6 +95,7 @@ public class GospodarieService {
         gospodarieRepository.deleteById(id);
     }
 
+    @Transactional(readOnly = true)
     public Page<GospodarieDTO> getAllGospodarii(String uatCode, Pageable pageable) {
         Page<Gospodarie> result;
         if (uatCode != null && !uatCode.isBlank()) {

@@ -19,20 +19,41 @@ public interface PersoanaRepository extends JpaRepository<Persoana, Long> {
            " (TYPE(p) = PersoanaFizica AND (" +
            "   LOWER(COALESCE(TREAT(p AS PersoanaFizica).firstName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS text), '%')) OR " +
            "   LOWER(COALESCE(TREAT(p AS PersoanaFizica).lastName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS text), '%')) OR " +
-           "   COALESCE(TREAT(p AS PersoanaFizica).cnp, '') LIKE CONCAT('%', CAST(:search AS text), '%') " +
+           "   TREAT(p AS PersoanaFizica).cnpHash = :searchHash " +
            " )) OR " +
            " (TYPE(p) = PersoanaJuridica AND (" +
            "   LOWER(COALESCE(TREAT(p AS PersoanaJuridica).companyName, '')) LIKE LOWER(CONCAT('%', CAST(:search AS text), '%')) OR " +
-           "   COALESCE(TREAT(p AS PersoanaJuridica).cui, '') LIKE CONCAT('%', CAST(:search AS text), '%') " +
+           "   TREAT(p AS PersoanaJuridica).cuiHash = :searchHash " +
            " )))")
-    Page<Persoana> searchPersons(@Param("search") String search, @Param("type") String type, Pageable pageable);
+    Page<Persoana> searchPersons(@Param("search") String search, @Param("searchHash") String searchHash, @Param("type") String type, Pageable pageable);
 
     @Query("SELECT p FROM Persoana p JOIN p.gospodarii g WHERE g.id = :gospodarieId")
     Page<Persoana> findByGospodarieId(@Param("gospodarieId") Long gospodarieId, Pageable pageable);
 
     Page<Persoana> findByPersonTypeOrderByIdDesc(String personType, Pageable pageable);
 
-    @Query("SELECT p FROM Persoana p WHERE TYPE(p) = PersoanaFizica AND TREAT(p AS PersoanaFizica).cnp = :cnp")
-    java.util.Optional<Persoana> findByCnp(@Param("cnp") String cnp);
+    @Query("SELECT p FROM Persoana p WHERE TYPE(p) = PersoanaFizica AND TREAT(p AS PersoanaFizica).cnpHash = :cnpHash")
+    java.util.Optional<Persoana> findByCnpHash(@Param("cnpHash") String cnpHash);
+
+    default java.util.Optional<Persoana> findByCnpClar(String cnp) {
+        if (cnp == null || cnp.trim().isEmpty()) {
+            return java.util.Optional.empty();
+        }
+        return findByCnpHash(com.multitenant.util.CryptoUtils.hashSha256(cnp.trim()));
+    }
+
+    default java.util.Optional<Persoana> findByCnp(String cnp) {
+        return findByCnpClar(cnp);
+    }
+
+    @Query("SELECT p FROM Persoana p WHERE TYPE(p) = PersoanaJuridica AND TREAT(p AS PersoanaJuridica).cuiHash = :cuiHash")
+    java.util.Optional<Persoana> findByCuiHash(@Param("cuiHash") String cuiHash);
+
+    default java.util.Optional<Persoana> findByCuiClar(String cui) {
+        if (cui == null || cui.trim().isEmpty()) {
+            return java.util.Optional.empty();
+        }
+        return findByCuiHash(com.multitenant.util.CryptoUtils.hashSha256(cui.trim()));
+    }
 }
 

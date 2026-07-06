@@ -1,5 +1,6 @@
 package com.multitenant.controller;
 
+import com.multitenant.dto.SpecieRefDTO;
 import com.multitenant.dto.TipDocumentDTO;
 import com.multitenant.repository.LookupRepository;
 import com.multitenant.service.LookupService;
@@ -38,5 +39,10 @@ public class LookupController {
     @GetMapping("/tip-document")
     public ResponseEntity<List<TipDocumentDTO>> getTipuriDocument() {
         return ResponseEntity.ok(lookupService.getTipuriDocument());
+    }
+
+    @GetMapping("/specii-pomi")
+    public ResponseEntity<List<SpecieRefDTO>> getSpeciiPomi() {
+        return ResponseEntity.ok(lookupService.getSpeciiPomi());
     }
 }

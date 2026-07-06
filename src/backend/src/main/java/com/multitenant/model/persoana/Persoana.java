@@ -14,7 +14,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "persons")
+@Table(name = "persons", indexes = {
+    @Index(name = "idx_persons_cnp_hash", columnList = "cnp_hash"),
+    @Index(name = "idx_persons_cui_hash", columnList = "cui_hash")
+})
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "person_type", discriminatorType = DiscriminatorType.STRING)
 @JsonTypeInfo(

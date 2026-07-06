@@ -42,7 +42,7 @@ public class ContractExpirationScheduler {
                     System.out.println("[ContractExpirationScheduler] " + expiredCount
                             + " contracts expired for tenant " + tenant.getId());
                 }
-                // Notificare contracte care expiră în 30 de zile
+                // Notificare contracte care expiră în mai puțin de 30de zile
                 contractUtilizareService.notificaContracteAproapeExpirate(today.plusDays(30));
             } finally {
                 if (originalTenant == null) {
