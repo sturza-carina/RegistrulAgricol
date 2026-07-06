@@ -22,6 +22,7 @@ import { AnimalIndividualFormComponent } from './pages/animal-individual-form/an
 import { EfectivGrupFormComponent } from './pages/efectiv-grup-form/efectiv-grup-form.component';
 import { AnimalTimelineComponent } from './pages/animal-timeline/animal-timeline.component';
 import { CereriAdminComponent } from './pages/cereri-admin/cereri-admin.component';
+import { EvidentaChimicaComponent } from './pages/evidenta-chimica/evidenta-chimica.component';
 
 export const routes: Routes = [
   { path: 'login',          component: LoginComponent },
@@ -53,6 +54,7 @@ export const routes: Routes = [
   { path: 'google-harta',   component: GoogleMapComponent },
   { path: 'contracte',      component: ContractManagementComponent },
   { path: 'cereri-admin',   component: CereriAdminComponent },
+  { path: 'evidenta-chimica', component: EvidentaChimicaComponent },
   { path: '',               redirectTo: '/login', pathMatch: 'full' }
 ];
 

@@ -17,6 +17,15 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import com.multitenant.model.registru.CatalogPpp;
+import com.multitenant.model.registru.CatalogIngrasaminte;
+import com.multitenant.model.registru.TratamentFitosanitar;
+import com.multitenant.model.registru.Fertilizare;
+import com.multitenant.repository.CatalogPppRepository;
+import com.multitenant.repository.CatalogIngrasaminteRepository;
+import com.multitenant.repository.TratamentFitosanitarRepository;
+import com.multitenant.repository.FertilizareRepository;
+
 @Component
 public class DatabaseSeeder implements CommandLineRunner {
 
@@ -39,6 +48,12 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final com.multitenant.repository.PomRepository pomRepository;
     private final com.multitenant.repository.VitaDeVieRepository vitaDeVieRepository;
     private final com.multitenant.repository.PasuneFaneataRepository pasuneFaneataRepository;
+    
+    // NEW REPOSITORIES FOR FERTILIZERS AND PPP SEEDING
+    private final CatalogPppRepository catalogPppRepository;
+    private final CatalogIngrasaminteRepository catalogIngrasaminteRepository;
+    private final TratamentFitosanitarRepository fitosanitarRepository;
+    private final FertilizareRepository fertilizareRepository;
 
     public DatabaseSeeder(TenantService tenantService,
                           UserRepository userRepository,
@@ -58,7 +73,11 @@ public class DatabaseSeeder implements CommandLineRunner {
                           com.multitenant.repository.CulturaParcelaRepository culturaParcelaRepository,
                           com.multitenant.repository.PomRepository pomRepository,
                           com.multitenant.repository.VitaDeVieRepository vitaDeVieRepository,
-                          com.multitenant.repository.PasuneFaneataRepository pasuneFaneataRepository) {
+                          com.multitenant.repository.PasuneFaneataRepository pasuneFaneataRepository,
+                          CatalogPppRepository catalogPppRepository,
+                          CatalogIngrasaminteRepository catalogIngrasaminteRepository,
+                          TratamentFitosanitarRepository fitosanitarRepository,
+                          FertilizareRepository fertilizareRepository) {
         this.tenantService = tenantService;
         this.userRepository = userRepository;
         this.gospodarieRepository = gospodarieRepository;
@@ -78,6 +97,10 @@ public class DatabaseSeeder implements CommandLineRunner {
         this.pomRepository = pomRepository;
         this.vitaDeVieRepository = vitaDeVieRepository;
         this.pasuneFaneataRepository = pasuneFaneataRepository;
+        this.catalogPppRepository = catalogPppRepository;
+        this.catalogIngrasaminteRepository = catalogIngrasaminteRepository;
+        this.fitosanitarRepository = fitosanitarRepository;
+        this.fertilizareRepository = fertilizareRepository;
     }
 
     @Override
@@ -270,6 +293,42 @@ public class DatabaseSeeder implements CommandLineRunner {
                     String pJson = "{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[23.569717, 46.810456], [23.569705, 46.810905], [23.571013, 46.810921], [23.571025, 46.810472], [23.569717, 46.810456]]]}, \"properties\": {}}";
                     p.setPolygon(mapper.readTree(pJson));
                     p = parcelaRepository.save(p);
+
+                    // Seed Tratamente si Fertilizari pentru parcelele Arabil (Cluj)
+                    if ("Arabil".equals(p.getCategorieFolosinta())) {
+                        java.util.List<CatalogPpp> ppps = catalogPppRepository.findAll();
+                        java.util.List<CatalogIngrasaminte> ingrasaminte = catalogIngrasaminteRepository.findAll();
+
+                        if (!ppps.isEmpty() && fitosanitarRepository.count() < 10) {
+                            CatalogPpp ppp = ppps.get(i % ppps.size());
+                            TratamentFitosanitar tf = new TratamentFitosanitar();
+                            tf.setParcela(p);
+                            tf.setCatalogPpp(ppp);
+                            tf.setDataEfectuarii(java.time.LocalDateTime.now().minusDays(15 + i));
+                            tf.setFenofaza(i % 2 == 0 ? "înfrățire" : "înspicare");
+                            tf.setAgentDaunator(i % 2 == 0 ? "Fuzarioză" : "Buruieni dicotiledonate");
+                            tf.setDozaUtilizata(ppp.getDozaOmologata() * 0.95);
+                            tf.setSuprafataTratata(p.getSuprafata());
+                            tf.setCantitateTotala(tf.getDozaUtilizata() * p.getSuprafata());
+                            tf.setResponsabil("Ing. Vasile Popescu");
+                            tf.setSemnaturaElectronica("Semnat Electronic");
+                            fitosanitarRepository.save(tf);
+                        }
+
+                        if (!ingrasaminte.isEmpty() && fertilizareRepository.count() < 10) {
+                            CatalogIngrasaminte ing = ingrasaminte.get(i % ingrasaminte.size());
+                            Fertilizare fert = new Fertilizare();
+                            fert.setParcela(p);
+                            fert.setCatalogIngrasaminte(ing);
+                            fert.setDataAplicarii(java.time.LocalDate.now().minusDays(25 + i));
+                            fert.setCantitateBruta(200.0);
+                            fert.setUnitateMasura("kg/ha");
+                            fert.setAportAzot(ing.getProcentAzot() * 200.0 / 100.0);
+                            fert.setAportFosfor(ing.getProcentFosfor() * 200.0 / 100.0);
+                            fert.setAportPotasiu(ing.getProcentPotasiu() * 200.0 / 100.0);
+                            fertilizareRepository.save(fert);
+                        }
+                    }
 
                     // Seed CulturaParcela pentru parcelele Arabil
                     if ("Arabil".equals(p.getCategorieFolosinta())) {
@@ -500,6 +559,42 @@ public class DatabaseSeeder implements CommandLineRunner {
                     p.setPolygon(mapper.readTree(pJson));
                     p = parcelaRepository.save(p);
 
+                    // Seed Tratamente si Fertilizari pentru parcelele Arabil (Bucuresti)
+                    if ("Arabil".equals(p.getCategorieFolosinta())) {
+                        java.util.List<CatalogPpp> ppps = catalogPppRepository.findAll();
+                        java.util.List<CatalogIngrasaminte> ingrasaminte = catalogIngrasaminteRepository.findAll();
+
+                        if (!ppps.isEmpty() && fitosanitarRepository.count() < 20) {
+                            CatalogPpp ppp = ppps.get(i % ppps.size());
+                            TratamentFitosanitar tf = new TratamentFitosanitar();
+                            tf.setParcela(p);
+                            tf.setCatalogPpp(ppp);
+                            tf.setDataEfectuarii(java.time.LocalDateTime.now().minusDays(15 + i));
+                            tf.setFenofaza(i % 2 == 0 ? "înfrățire" : "înspicare");
+                            tf.setAgentDaunator(i % 2 == 0 ? "Fuzarioză" : "Buruieni dicotiledonate");
+                            tf.setDozaUtilizata(ppp.getDozaOmologata() * 0.95);
+                            tf.setSuprafataTratata(p.getSuprafata());
+                            tf.setCantitateTotala(tf.getDozaUtilizata() * p.getSuprafata());
+                            tf.setResponsabil("Ing. Vasile Popescu");
+                            tf.setSemnaturaElectronica("Semnat Electronic");
+                            fitosanitarRepository.save(tf);
+                        }
+
+                        if (!ingrasaminte.isEmpty() && fertilizareRepository.count() < 20) {
+                            CatalogIngrasaminte ing = ingrasaminte.get(i % ingrasaminte.size());
+                            Fertilizare fert = new Fertilizare();
+                            fert.setParcela(p);
+                            fert.setCatalogIngrasaminte(ing);
+                            fert.setDataAplicarii(java.time.LocalDate.now().minusDays(25 + i));
+                            fert.setCantitateBruta(200.0);
+                            fert.setUnitateMasura("kg/ha");
+                            fert.setAportAzot(ing.getProcentAzot() * 200.0 / 100.0);
+                            fert.setAportFosfor(ing.getProcentFosfor() * 200.0 / 100.0);
+                            fert.setAportPotasiu(ing.getProcentPotasiu() * 200.0 / 100.0);
+                            fertilizareRepository.save(fert);
+                        }
+                    }
+
                     // Seed CulturaParcela pentru parcelele Arabil
                     if ("Arabil".equals(p.getCategorieFolosinta())) {
                         com.multitenant.model.registru.CulturaParcela cultura = new com.multitenant.model.registru.CulturaParcela();
@@ -605,6 +700,13 @@ public class DatabaseSeeder implements CommandLineRunner {
             }
 
 
+            // Force seed treatments and fertilizations if tables are empty (independent of household count)
+            TenantContext.setCurrentTenant("cluj");
+            seedFitosanitarAndFertilizareIfEmpty();
+
+            TenantContext.setCurrentTenant("bucuresti");
+            seedFitosanitarAndFertilizareIfEmpty();
+
             System.out.println("[DatabaseSeeder] Development data successfully seeded.");
         } catch (Exception e) {
             System.err.println("[DatabaseSeeder] Error seeding development data: " + e.getMessage());
@@ -612,6 +714,51 @@ public class DatabaseSeeder implements CommandLineRunner {
         } finally {
             // Clean up context to avoid side effects
             TenantContext.clear();
+        }
+    }
+
+    private void seedFitosanitarAndFertilizareIfEmpty() {
+        if (fitosanitarRepository.count() == 0 && fertilizareRepository.count() == 0) {
+            System.out.println("[DatabaseSeeder] Independent seeding of fitosanitar and fertilizare for: " + TenantContext.getCurrentTenant());
+            java.util.List<com.multitenant.model.registru.Parcela> parceleList = parcelaRepository.findAll();
+            java.util.List<CatalogPpp> ppps = catalogPppRepository.findAll();
+            java.util.List<CatalogIngrasaminte> ingrasaminte = catalogIngrasaminteRepository.findAll();
+
+            int count = 0;
+            for (com.multitenant.model.registru.Parcela p : parceleList) {
+                if ("Arabil".equals(p.getCategorieFolosinta())) {
+                    if (!ppps.isEmpty()) {
+                        CatalogPpp ppp = ppps.get(count % ppps.size());
+                        TratamentFitosanitar tf = new TratamentFitosanitar();
+                        tf.setParcela(p);
+                        tf.setCatalogPpp(ppp);
+                        tf.setDataEfectuarii(java.time.LocalDateTime.now().minusDays(10 + count));
+                        tf.setFenofaza(count % 2 == 0 ? "înfrățire" : "înspicare");
+                        tf.setAgentDaunator(count % 2 == 0 ? "Fuzarioză" : "Buruieni dicotiledonate");
+                        tf.setDozaUtilizata(ppp.getDozaOmologata() * 0.9);
+                        tf.setSuprafataTratata(p.getSuprafata());
+                        tf.setCantitateTotala(tf.getDozaUtilizata() * p.getSuprafata());
+                        tf.setResponsabil("Ing. Vasile Popescu");
+                        tf.setSemnaturaElectronica("Semnat Electronic");
+                        fitosanitarRepository.save(tf);
+                    }
+
+                    if (!ingrasaminte.isEmpty()) {
+                        CatalogIngrasaminte ing = ingrasaminte.get(count % ingrasaminte.size());
+                        Fertilizare fert = new Fertilizare();
+                        fert.setParcela(p);
+                        fert.setCatalogIngrasaminte(ing);
+                        fert.setDataAplicarii(java.time.LocalDate.now().minusDays(20 + count));
+                        fert.setCantitateBruta(200.0);
+                        fert.setUnitateMasura("kg/ha");
+                        fert.setAportAzot(ing.getProcentAzot() * 200.0 / 100.0);
+                        fert.setAportFosfor(ing.getProcentFosfor() * 200.0 / 100.0);
+                        fert.setAportPotasiu(ing.getProcentPotasiu() * 200.0 / 100.0);
+                        fertilizareRepository.save(fert);
+                    }
+                    count++;
+                }
+            }
         }
     }
 }
