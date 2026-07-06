@@ -10,21 +10,35 @@ export class RaportStatisticService {
 
   constructor(private http: HttpClient) {}
 
-  getComplet(an: number): Observable<any> {
-    const params = new HttpParams().set('an', an.toString());
+  getComplet(an: number, uatCode?: string): Observable<any> {
+    let params = new HttpParams().set('an', an.toString());
+    if (uatCode) {
+      params = params.set('uatCode', uatCode);
+    }
     return this.http.get<any>(`${this.apiUrl}/complet`, { params });
   }
 
-  exportVegetal(an: number): Observable<Blob> {
-    const params = new HttpParams().set('an', an.toString());
+  exportVegetal(an: number, uatCode?: string): Observable<Blob> {
+    let params = new HttpParams().set('an', an.toString());
+    if (uatCode) {
+      params = params.set('uatCode', uatCode);
+    }
     return this.http.get(`${this.apiUrl}/export/vegetal`, { params, responseType: 'blob' });
   }
 
-  exportZootehnic(): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/export/zootehnic`, { responseType: 'blob' });
+  exportZootehnic(uatCode?: string): Observable<Blob> {
+    let params = new HttpParams();
+    if (uatCode) {
+      params = params.set('uatCode', uatCode);
+    }
+    return this.http.get(`${this.apiUrl}/export/zootehnic`, { params, responseType: 'blob' });
   }
 
-  exportUtilaje(): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/export/utilaje`, { responseType: 'blob' });
+  exportUtilaje(uatCode?: string): Observable<Blob> {
+    let params = new HttpParams();
+    if (uatCode) {
+      params = params.set('uatCode', uatCode);
+    }
+    return this.http.get(`${this.apiUrl}/export/utilaje`, { params, responseType: 'blob' });
   }
 }

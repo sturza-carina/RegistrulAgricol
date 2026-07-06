@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LayoutComponent } from '../../components/layout/layout.component';
 import { AppTranslatePipe } from '../../services/translate.pipe';
 import { RaportStatisticService } from '../../services/raport-statistic.service';
+import { UatContextService } from '../../services/uat-context.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-statistici',
@@ -12,7 +14,10 @@ import { RaportStatisticService } from '../../services/raport-statistic.service'
   templateUrl: './statistici.component.html',
   styleUrl: './statistici.component.css'
 })
-export class StatisticiComponent implements OnInit {
+export class StatisticiComponent implements OnInit, OnDestroy {
+  private uatSubscription: Subscription | null = null;
+  activeUatCode: string | undefined = undefined;
+
   selectedYear: number = 2026;
   availableYears: number[] = [2024, 2025, 2026, 2027, 2028];
   
@@ -39,10 +44,22 @@ export class StatisticiComponent implements OnInit {
     utilajeCount: 0
   };
 
-  constructor(private statisticiService: RaportStatisticService) {}
+  constructor(
+    private statisticiService: RaportStatisticService,
+    private uatContextService: UatContextService
+  ) {}
 
   ngOnInit(): void {
-    this.fetchData();
+    this.uatSubscription = this.uatContextService.activeUat$.subscribe(uat => {
+      this.activeUatCode = uat?.codSiruta;
+      this.fetchData();
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.uatSubscription) {
+      this.uatSubscription.unsubscribe();
+    }
   }
 
   onYearChange(): void {
@@ -56,7 +73,7 @@ export class StatisticiComponent implements OnInit {
   fetchData(): void {
     this.loading = true;
     this.errorMessage = null;
-    this.statisticiService.getComplet(this.selectedYear).subscribe({
+    this.statisticiService.getComplet(this.selectedYear, this.activeUatCode).subscribe({
       next: (res) => {
         this.data = res || {
           culturi: [],
@@ -94,7 +111,7 @@ export class StatisticiComponent implements OnInit {
 
   exportVegetal(): void {
     this.loading = true;
-    this.statisticiService.exportVegetal(this.selectedYear).subscribe({
+    this.statisticiService.exportVegetal(this.selectedYear, this.activeUatCode).subscribe({
       next: (blob) => {
         this.downloadBlob(blob, `centralizator_vegetal_${this.selectedYear}.xlsx`);
         this.loading = false;
@@ -109,7 +126,7 @@ export class StatisticiComponent implements OnInit {
 
   exportZootehnic(): void {
     this.loading = true;
-    this.statisticiService.exportZootehnic().subscribe({
+    this.statisticiService.exportZootehnic(this.activeUatCode).subscribe({
       next: (blob) => {
         this.downloadBlob(blob, 'centralizator_zootehnic.xlsx');
         this.loading = false;
@@ -124,7 +141,7 @@ export class StatisticiComponent implements OnInit {
 
   exportUtilaje(): void {
     this.loading = true;
-    this.statisticiService.exportUtilaje().subscribe({
+    this.statisticiService.exportUtilaje(this.activeUatCode).subscribe({
       next: (blob) => {
         this.downloadBlob(blob, 'centralizator_utilaje.xlsx');
         this.loading = false;

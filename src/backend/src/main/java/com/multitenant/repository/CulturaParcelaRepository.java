@@ -20,8 +20,9 @@ public interface CulturaParcelaRepository extends JpaRepository<CulturaParcela, 
     @Query("SELECT new com.multitenant.dto.StatisticaCulturaDto(c.specieCultura, SUM(c.suprafataCultivataHa), SUM(c.productieTotalaTone)) " +
            "FROM CulturaParcela c " +
            "WHERE c.anAgricol = :an " +
+           "  AND (:uatCode IS NULL OR c.parcela.teren.gospodarie.uat.codSiruta = :uatCode) " +
            "GROUP BY c.specieCultura")
-    List<StatisticaCulturaDto> getStatisticiCulturi(@Param("an") Integer an);
+    List<StatisticaCulturaDto> getStatisticiCulturi(@Param("an") Integer an, @Param("uatCode") String uatCode);
 
 }
 

@@ -26,15 +26,17 @@ public class RaportStatisticController {
 
     @GetMapping("/complet")
     public ResponseEntity<StatisticiRaportCompletDto> getComplet(
-            @RequestParam(required = false, defaultValue = "2026") Integer an) {
-        StatisticiRaportCompletDto complet = raportStatisticService.getComplet(an);
+            @RequestParam(required = false, defaultValue = "2026") Integer an,
+            @RequestParam(required = false) String uatCode) {
+        StatisticiRaportCompletDto complet = raportStatisticService.getComplet(an, uatCode);
         return ResponseEntity.ok(complet);
     }
 
     @GetMapping("/export/vegetal")
     public ResponseEntity<byte[]> exportVegetal(
-            @RequestParam(required = false, defaultValue = "2026") Integer an) {
-        byte[] xlsxBytes = raportStatisticService.exportVegetalXlsx(an);
+            @RequestParam(required = false, defaultValue = "2026") Integer an,
+            @RequestParam(required = false) String uatCode) {
+        byte[] xlsxBytes = raportStatisticService.exportVegetalXlsx(an, uatCode);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
@@ -44,8 +46,9 @@ public class RaportStatisticController {
     }
 
     @GetMapping("/export/zootehnic")
-    public ResponseEntity<byte[]> exportZootehnic() {
-        byte[] xlsxBytes = raportStatisticService.exportZootehnicXlsx();
+    public ResponseEntity<byte[]> exportZootehnic(
+            @RequestParam(required = false) String uatCode) {
+        byte[] xlsxBytes = raportStatisticService.exportZootehnicXlsx(uatCode);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
@@ -55,8 +58,9 @@ public class RaportStatisticController {
     }
 
     @GetMapping("/export/utilaje")
-    public ResponseEntity<byte[]> exportUtilaje() {
-        byte[] xlsxBytes = raportStatisticService.exportUtilajeXlsx();
+    public ResponseEntity<byte[]> exportUtilaje(
+            @RequestParam(required = false) String uatCode) {
+        byte[] xlsxBytes = raportStatisticService.exportUtilajeXlsx(uatCode);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
