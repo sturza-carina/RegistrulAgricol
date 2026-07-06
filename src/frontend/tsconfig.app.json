@@ -4,7 +4,15 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/app",
-    "types": []
+    "baseUrl": ".",
+    "paths": {
+      "@utils/leaflet-esm": [
+        "src/app/shared/utils/leaflet-esm.ts"
+      ]
+    },
+    "types": [
+      "@angular/localize"
+    ]
   },
   "files": [
     "src/main.ts"

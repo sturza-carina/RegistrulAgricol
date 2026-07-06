@@ -2,7 +2,7 @@
   <app-breadcrumbs [items]="breadcrumbItems" style="display: block; margin-bottom: 15px;"></app-breadcrumbs>
   <div class="page-header-row">
     <div>
-      <h1 style="font-size:26px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--text-primary);margin-bottom:4px">
+      <h1 style="font-size:26px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--text-primary);margin-bottom:4px" i18n="@@tenantadmin_welcome_title">
         Bun venit, {{ user?.username || 'Admin' }}
       </h1>
       <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary)">
@@ -23,7 +23,7 @@
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--primary)">
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                 </svg>
-                Acțiuni Rapide
+                <ng-container i18n="@@tenantadmin_quick_actions">Acțiuni Rapide</ng-container>
               </span>
             </h3>
           </div>
@@ -38,8 +38,8 @@
                   </svg>
                 </div>
                 <div class="qa-text">
-                  <div class="qa-title">Creare UAT</div>
-                  <div class="qa-desc">Adaugă o unitate administrativ-teritorială</div>
+                  <div class="qa-title" i18n="@@tenantadmin_qa_create_uat">Creare UAT</div>
+                  <div class="qa-desc" i18n="@@tenantadmin_qa_create_uat_desc">Adaugă o unitate administrativ-teritorială</div>
                 </div>
                 <svg class="qa-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="9 18 15 12 9 6"/>
@@ -54,8 +54,8 @@
                   </svg>
                 </div>
                 <div class="qa-text">
-                  <div class="qa-title">Adaugă Gospodărie</div>
-                  <div class="qa-desc">Înregistrează o gospodărie nouă</div>
+                  <div class="qa-title" i18n="@@tenantadmin_qa_add_household">Adaugă Gospodărie</div>
+                  <div class="qa-desc" i18n="@@tenantadmin_qa_add_household_desc">Înregistrează o gospodărie nouă</div>
                 </div>
                 <svg class="qa-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="9 18 15 12 9 6"/>
@@ -70,8 +70,8 @@
                   </svg>
                 </div>
                 <div class="qa-text">
-                  <div class="qa-title">Adaugă Persoană</div>
-                  <div class="qa-desc">Înregistrează o persoană în sistem</div>
+                  <div class="qa-title" i18n="@@tenantadmin_qa_add_person">Adaugă Persoană</div>
+                  <div class="qa-desc" i18n="@@tenantadmin_qa_add_person_desc">Înregistrează o persoană în sistem</div>
                 </div>
                 <svg class="qa-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="9 18 15 12 9 6"/>
@@ -88,8 +88,8 @@
                   </svg>
                 </div>
                 <div class="qa-text">
-                  <div class="qa-title">Creare Utilizator</div>
-                  <div class="qa-desc">Adaugă un administrator sau agent</div>
+                  <div class="qa-title" i18n="@@tenantadmin_qa_create_user">Creare Utilizator</div>
+                  <div class="qa-desc" i18n="@@tenantadmin_qa_create_user_desc">Adaugă un administrator sau agent</div>
                 </div>
                 <svg class="qa-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="9 18 15 12 9 6"/>
@@ -104,10 +104,10 @@
                   </svg>
                 </div>
                 <div class="qa-text">
-                  <div class="qa-title">Rapoarte</div>
-                  <div class="qa-desc">Disponibil în curând</div>
+                  <div class="qa-title" i18n="@@tenantadmin_qa_reports">Rapoarte</div>
+                  <div class="qa-desc" i18n="@@tenantadmin_qa_reports_soon">Disponibil în curând</div>
                 </div>
-                <span style="font-size:10px;background:#f1f5f9;color:#94a3b8;padding:2px 8px;border-radius:10px;">Soon</span>
+                <span style="font-size:10px;background:#f1f5f9;color:#94a3b8;padding:2px 8px;border-radius:10px;" i18n="@@tenantadmin_soon_badge">Soon</span>
               </div>
 
               <div class="quick-action" style="opacity: 0.5; cursor: not-allowed;">
@@ -120,10 +120,10 @@
                   </svg>
                 </div>
                 <div class="qa-text">
-                  <div class="qa-title">Setări</div>
-                  <div class="qa-desc">Disponibil în curând</div>
+                  <div class="qa-title" i18n="@@tenantadmin_qa_settings">Setări</div>
+                  <div class="qa-desc" i18n="@@tenantadmin_qa_settings_soon">Disponibil în curând</div>
                 </div>
-                <span style="font-size:10px;background:#f1f5f9;color:#94a3b8;padding:2px 8px;border-radius:10px;">Soon</span>
+                <span style="font-size:10px;background:#f1f5f9;color:#94a3b8;padding:2px 8px;border-radius:10px;" i18n="@@tenantadmin_soon_badge">Soon</span>
               </div>
 
             </div>
@@ -138,14 +138,14 @@
                 <line x1="12" y1="16" x2="12" y2="12"></line>
                 <line x1="12" y1="8" x2="12.01" y2="8"></line>
               </svg>
-              <h3 style="font-size:16px; margin:0; color: white;">Ghid de Utilizare</h3>
+              <h3 style="font-size:16px; margin:0; color: white;" i18n="@@tenantadmin_banner_guide_title">Ghid de Utilizare</h3>
             </div>
-            <p style="font-size:13px; line-height:1.5; margin-bottom:12px; color: rgba(255,255,255,0.9);">Bine ai venit în Panoul de Control al organizației! De aici poți gestiona:</p>
+            <p style="font-size:13px; line-height:1.5; margin-bottom:12px; color: rgba(255,255,255,0.9);" i18n="@@tenantadmin_banner_guide_desc">Bine ai venit în Panoul de Control al organizației! De aici poți gestiona:</p>
             <ul style="font-size:13px; line-height:1.6; padding-left:20px; margin-bottom:0; color: white;">
-              <li><strong>UAT-uri:</strong> Configurează și administrează unitățile teritoriale.</li>
-              <li><strong>Gospodării:</strong> Înregistrează și gestionează datele agricole.</li>
-              <li><strong>Persoane:</strong> Adaugă proprietari și asociază-i cu gospodăriile lor.</li>
-              <li><strong>Utilizatori:</strong> Invită și gestionează accesul personalului.</li>
+              <li><strong i18n="@@tenantadmin_banner_list_uats">UAT-uri:</strong> <ng-container i18n="@@tenantadmin_banner_list_uats_desc">Configurează și administrează unitățile teritoriale.</ng-container></li>
+              <li><strong i18n="@@tenantadmin_banner_list_households">Gospodării:</strong> <ng-container i18n="@@tenantadmin_banner_list_households_desc">Înregistrează și gestionează datele agricole.</ng-container></li>
+              <li><strong i18n="@@tenantadmin_banner_list_persons">Persoane:</strong> <ng-container i18n="@@tenantadmin_banner_list_persons_desc">Adaugă proprietari și asociază-i cu gospodăriile lor.</ng-container></li>
+              <li><strong i18n="@@tenantadmin_banner_list_users">Utilizatori:</strong> <ng-container i18n="@@tenantadmin_banner_list_users_desc">Invită și gestionează accesul personalului.</ng-container></li>
             </ul>
           </div>
         </div>
@@ -156,7 +156,7 @@
 <div class="modal-overlay" *ngIf="showViewModal">
   <div class="modal-content">
     <div class="modal-header">
-      <h2>Detalii Utilizator</h2>
+      <h2 i18n="@@tenantadmin_view_modal_title">Detalii Utilizator</h2>
       <button class="close-btn" (click)="closeViewModal()">×</button>
     </div>
     <div style="padding: 10px 0;">
@@ -169,21 +169,24 @@
       </div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
         <div>
-          <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Username</label>
+          <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;" i18n="@@tenantadmin_username_label">Username</label>
           <div style="font-weight: 500;">{{ viewingUser?.username }}</div>
         </div>
         <div>
-          <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Rol</label>
+          <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;" i18n="@@tenantadmin_role_label">Rol</label>
           <span class="badge" [class]="viewingUser?.role.toLowerCase()">{{ viewingUser?.role }}</span>
         </div>
         <div>
-          <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Status</label>
-          <span class="badge" [class]="viewingUser?.activ ? 'activ' : 'inactiv'">{{ viewingUser?.activ ? 'Activ' : 'Inactiv' }}</span>
+          <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px;" i18n="@@tenantadmin_status_label">Status</label>
+          <span class="badge" [class]="viewingUser?.activ ? 'activ' : 'inactiv'">
+            <span *ngIf="viewingUser?.activ" i18n="@@tenantadmin_status_active">Activ</span>
+            <span *ngIf="!viewingUser?.activ" i18n="@@tenantadmin_status_inactive">Inactiv</span>
+          </span>
         </div>
       </div>
     </div>
     <div class="modal-actions">
-      <button type="button" class="btn-secondary" (click)="closeViewModal()">Închide</button>
+      <button type="button" class="btn-secondary" (click)="closeViewModal()" i18n="@@tenantadmin_close_btn">Închide</button>
     </div>
   </div>
 </div>
@@ -192,7 +195,7 @@
 <div class="modal-overlay" *ngIf="showEditModal">
   <div class="modal-content">
     <div class="modal-header">
-      <h2>Editare Utilizator</h2>
+      <h2 i18n="@@tenantadmin_edit_modal_title">Editare Utilizator</h2>
       <button class="close-btn" (click)="closeEditModal()">×</button>
     </div>
 
@@ -212,4 +215,3 @@
     </div>
   </div>
 </div>
-

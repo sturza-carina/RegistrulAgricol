@@ -17,14 +17,18 @@ public class ContractExpirationScheduler {
 
     private final TenantRepository tenantRepository;
     private final ContractUtilizareService contractUtilizareService;
+    private final ContractKafkaProducer contractKafkaProducer;
 
     public ContractExpirationScheduler(TenantRepository tenantRepository,
-                                       ContractUtilizareService contractUtilizareService) {
+                                       ContractUtilizareService contractUtilizareService,
+                                       ContractKafkaProducer contractKafkaProducer) {
         this.tenantRepository = tenantRepository;
         this.contractUtilizareService = contractUtilizareService;
+        this.contractKafkaProducer = contractKafkaProducer;
     }
 
-    @Scheduled(cron = "0 0 0 * * *", zone = "Europe/Bucharest")
+    // @Scheduled(cron = "0 0 0 * * *", zone = "Europe/Bucharest")
+    @Scheduled(cron = "0 */1 * * * *", zone = "Europe/Bucharest")
     public void expireContractsAtMidnight() {
         List<Tenant> tenants = tenantRepository.findAll();
         LocalDate today = LocalDate.now(BUCHAREST_ZONE);
@@ -38,6 +42,8 @@ public class ContractExpirationScheduler {
                     System.out.println("[ContractExpirationScheduler] " + expiredCount
                             + " contracts expired for tenant " + tenant.getId());
                 }
+                // Notificare contracte care expiră în mai puțin de 30de zile
+                contractUtilizareService.notificaContracteAproapeExpirate(today.plusDays(30));
             } finally {
                 if (originalTenant == null) {
                     TenantContext.clear();

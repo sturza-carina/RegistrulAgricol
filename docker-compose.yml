@@ -27,10 +27,12 @@ services:
       - SPRING_DATASOURCE_PASSWORD=admin_password
       - SPRING_JPA_HIBERNATE_DDL_AUTO=none
       - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
     volumes:
       - ./uploads:/data/documents
     depends_on:
       - db
+      - kafka
     networks:
       - app-network
     restart: unless-stopped
@@ -46,6 +48,51 @@ services:
       - "80:80"
     depends_on:
       - backend
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  portal-cetateni:
+    build:
+      context: ./src/portal-cetateni
+      dockerfile: Dockerfile
+    container_name: multi-tenant-portal-cetateni
+    ports:
+      - "4202:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: multi-tenant-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: multi-tenant-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
     networks:
       - app-network
     restart: unless-stopped

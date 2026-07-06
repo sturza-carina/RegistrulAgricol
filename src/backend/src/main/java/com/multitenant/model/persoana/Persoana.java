@@ -3,15 +3,21 @@ package com.multitenant.model.persoana;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import com.multitenant.model.common.Adresa;
 import com.multitenant.model.registru.Gospodarie;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "persons")
+@Table(name = "persons", indexes = {
+    @Index(name = "idx_persons_cnp_hash", columnList = "cnp_hash"),
+    @Index(name = "idx_persons_cui_hash", columnList = "cui_hash")
+})
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "person_type", discriminatorType = DiscriminatorType.STRING)
 @JsonTypeInfo(
@@ -23,8 +29,10 @@ import java.util.List;
     @JsonSubTypes.Type(value = PersoanaFizica.class, name = "PHYSICAL_PERSON"),
     @JsonSubTypes.Type(value = PersoanaJuridica.class, name = "LEGAL_ENTITY")
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
+@Audited
 public abstract class Persoana {
 
     @Column(name = "person_type", insertable = false, updatable = false)
@@ -59,6 +67,7 @@ public abstract class Persoana {
     private String tenantId;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "persoana", cascade = CascadeType.ALL, orphanRemoval = true)
+    @NotAudited
     private List<RelatieRudenie> relations = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -68,11 +77,12 @@ public abstract class Persoana {
         inverseJoinColumns = @JoinColumn(name = "gospodarie_id")
     )
     @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @NotAudited
     private List<Gospodarie> gospodarii = new ArrayList<>();
 
     @Transient
     public List<Long> getGospodarieIds() {
-        if (gospodarii == null) return new ArrayList<>();
+        if (gospodarii == null || !org.hibernate.Hibernate.isInitialized(gospodarii)) return new ArrayList<>();
         return gospodarii.stream().map(Gospodarie::getId).toList();
     }
 
@@ -89,6 +99,19 @@ public abstract class Persoana {
         } else {
             this.gospodarii = new ArrayList<>();
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Persoana other = (Persoana) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }
 

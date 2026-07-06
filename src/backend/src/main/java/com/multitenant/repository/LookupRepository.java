@@ -1,5 +1,6 @@
 package com.multitenant.repository;
 
+import com.multitenant.dto.SpecieRefDTO;
 import com.multitenant.dto.TipDocumentDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -15,17 +16,17 @@ public class LookupRepository {
 
     public List<String> findAllTipuriSol() {
         return jdbcTemplate.queryForList(
-                "SELECT nume FROM public.tip_sol ORDER BY nume", String.class);
+                "SELECT nume FROM public.tipuri_sol ORDER BY nume", String.class);
     }
 
     public List<String> findAllCategoriiFolosinta() {
         return jdbcTemplate.queryForList(
-                "SELECT nume FROM public.categorie_folosinta_ref ORDER BY nume", String.class);
+                "SELECT nume FROM public.categorii_folosinta_ref ORDER BY nume", String.class);
     }
 
     public List<String> findAllTipuriSursaApa() {
         return jdbcTemplate.queryForList(
-                "SELECT nume FROM public.tip_sursa_apa ORDER BY nume", String.class);
+                "SELECT nume FROM public.tipuri_sursa_apa ORDER BY nume", String.class);
     }
 
     public List<TipDocumentDTO> findAllTipuriDocument() {
@@ -36,6 +37,17 @@ public class LookupRepository {
                         rs.getString("cod"),
                         rs.getString("denumire"),
                         rs.getString("descriere")
+                )
+        );
+    }
+
+    public List<SpecieRefDTO> findAllSpeciiPomi() {
+        return jdbcTemplate.query(
+                "SELECT id, denumire AS nume, categorie_folosinta FROM public.specii_pomi ORDER BY denumire",
+                (rs, rowNum) -> new SpecieRefDTO(
+                        rs.getInt("id"),
+                        rs.getString("nume"),
+                        rs.getString("categorie_folosinta")
                 )
         );
     }

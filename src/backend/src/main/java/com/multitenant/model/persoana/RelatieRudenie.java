@@ -3,12 +3,14 @@ package com.multitenant.model.persoana;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "person_relations")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class RelatieRudenie {
 
@@ -39,6 +41,19 @@ public class RelatieRudenie {
     @Enumerated(EnumType.STRING)
     @Column(name = "relation_type")
     private KinshipType relationType;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RelatieRudenie other = (RelatieRudenie) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
 
 

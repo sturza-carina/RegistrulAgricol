@@ -22,6 +22,7 @@ public class UserDetailsImpl implements UserDetails {
     private String password;
     private String role;
     private String tenantId;
+    private Long uatId;
     private boolean active;
     private Collection<? extends GrantedAuthority> authorities;
 
@@ -34,6 +35,7 @@ public class UserDetailsImpl implements UserDetails {
                 user.getPassword(),
                 user.getRole(),
                 user.getTenantId(),
+                user.getUatId(),
                 user.isActiv(),
                 Collections.singletonList(authority));
     }

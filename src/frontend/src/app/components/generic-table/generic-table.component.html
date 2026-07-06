@@ -9,7 +9,7 @@
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
         <input type="text"
-               [placeholder]="filter.label"
+               [placeholder]="filter.label | appTranslate"
                [(ngModel)]="filterValues[filter.field]"
                (input)="applyFilters()"
                autocomplete="off"
@@ -22,8 +22,8 @@
               (change)="applyFilters()"
               class="input-field"
               style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border, #cbd5e1); min-width: 150px; background: white; cursor: pointer;">
-        <option [ngValue]="''">{{ filter.label }} (Toate)</option>
-        <option *ngFor="let opt of filter.options" [ngValue]="opt.value">{{ opt.label }}</option>
+        <option [ngValue]="''">{{ filter.label | appTranslate }} ({{ 'Toate' | appTranslate }})</option>
+        <option *ngFor="let opt of filter.options" [ngValue]="opt.value">{{ opt.label | appTranslate }}</option>
       </select>
 
     </ng-container>
@@ -36,7 +36,7 @@
   <!-- Header Actions -->
   <div class="header-actions" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">
     
-    <h3 *ngIf="title" style="margin: 0; font-size: 1.25rem; color: var(--text-primary);">{{ title }}</h3>
+    <h3 *ngIf="title" style="margin: 0; font-size: 1.25rem; color: var(--text-primary);">{{ title | appTranslate }}</h3>
     
     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-left: auto;">
       <button *ngIf="primaryActionText" class="btn-primary" (click)="onPrimaryAction()">
@@ -44,7 +44,7 @@
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
-        {{ primaryActionText }}
+        {{ primaryActionText | appTranslate }}
       </button>
     </div>
   </div>
@@ -55,9 +55,9 @@
       <thead>
         <tr>
           <th *ngFor="let col of columns" style="padding: 12px 16px; text-align: left; background: var(--primary-light, #f0fdf4); color: var(--text-secondary); font-weight: 500; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border, #e5e7eb);">
-            {{ col.header }}
+            {{ col.header | appTranslate }}
           </th>
-          <th *ngIf="actions && actions.length > 0" style="padding: 12px 16px; text-align: right; background: var(--primary-light, #f0fdf4); color: var(--text-secondary); font-weight: 500; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border, #e5e7eb);">
+          <th *ngIf="actions && actions.length > 0" style="padding: 12px 16px; text-align: right; background: var(--primary-light, #f0fdf4); color: var(--text-secondary); font-weight: 500; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border, #e5e7eb);" i18n="@@table_actions_header">
             Acțiuni
           </th>
         </tr>
@@ -70,14 +70,14 @@
             <div *ngIf="col.type === 'avatar'" class="user-cell" style="display: flex; align-items: center; gap: 12px;">
                <div class="user-avatar" [style.background]="row.avatarBg || '#e2e8f0'" style="width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff;">{{ row.initials || 'U' }}</div>
                <div class="user-name-cell">
-                 <div class="name"><strong>{{ getCellValue(row, col) }}</strong></div>
-                 <div class="handle" *ngIf="col.subField" style="font-family: monospace; color: var(--text-secondary); font-size: 12px;">{{ getNestedValue(row, col.subField) }}</div>
+                 <div class="name"><strong>{{ getCellValue(row, col) | appTranslate }}</strong></div>
+                 <div class="handle" *ngIf="col.subField" style="font-family: monospace; color: var(--text-secondary); font-size: 12px;">{{ getNestedValue(row, col.subField) | appTranslate }}</div>
                </div>
             </div>
 
             <!-- Badge Type -->
             <span *ngIf="col.type === 'badge'" class="badge" [ngClass]="getBadgeClass(row, col)">
-              {{ getCellValue(row, col) }}
+              {{ getCellValue(row, col) | appTranslate }}
             </span>
 
             <!-- Date Type -->
@@ -87,10 +87,10 @@
 
             <!-- Text/Default Type -->
             <span *ngIf="!col.type || col.type === 'text'">
-              <strong *ngIf="col.header === 'Cod Gospodărie' || col.header === 'Utilizator' || col.field === 'denumire' || col.header === 'Nume / Denumire' || col.header === 'Număr Crotal'">{{ getCellValue(row, col) }}</strong>
-              <ng-container *ngIf="col.header !== 'Cod Gospodărie' && col.header !== 'Utilizator' && col.field !== 'denumire' && col.header !== 'Nume / Denumire' && col.header !== 'Număr Crotal'">{{ getCellValue(row, col) }}</ng-container>
+              <strong *ngIf="col.header === 'Cod Gospodărie' || col.header === 'Utilizator' || col.field === 'denumire' || col.header === 'Nume / Denumire' || col.header === 'Număr Crotal'">{{ getCellValue(row, col) | appTranslate }}</strong>
+              <ng-container *ngIf="col.header !== 'Cod Gospodărie' && col.header !== 'Utilizator' && col.field !== 'denumire' && col.header !== 'Nume / Denumire' && col.header !== 'Număr Crotal'">{{ getCellValue(row, col) | appTranslate }}</ng-container>
               <br *ngIf="col.subField">
-              <small *ngIf="col.subField" style="color: var(--text-secondary)">{{ getNestedValue(row, col.subField) }}</small>
+              <small *ngIf="col.subField" style="color: var(--text-secondary)">{{ getNestedValue(row, col.subField) | appTranslate }}</small>
             </span>
 
           </td>
@@ -103,7 +103,7 @@
                   class="action-btn-icon"
                   [style.color]="getActionColor(action)"
                   (click)="action.action(row, $event); $event.stopPropagation()" 
-                  [title]="action.tooltip"
+                  [title]="action.tooltip | appTranslate"
                   style="background: none; border: none; cursor: pointer; padding: 6px; border-radius: 6px; transition: background 0.2s, color 0.2s;"
                   onmouseover="this.style.background='var(--body-bg, #f8fafc)'"
                   onmouseout="this.style.background='none'">
@@ -148,7 +148,7 @@
         </tr>
         <tr *ngIf="filteredData.length === 0">
           <td [colSpan]="columns.length + (actions.length > 0 ? 1 : 0)" style="text-align: center; padding: 30px; color: var(--text-muted);">
-            {{ emptyMessage }}
+            {{ emptyMessage | appTranslate }}
           </td>
         </tr>
       </tbody>
@@ -158,12 +158,12 @@
   <!-- Pagination -->
   <div style="padding:16px 0 0 0; display:flex; align-items:center; justify-content:space-between; border-top: 1px solid var(--card-border, #e5e7eb); margin-top: 16px;" *ngIf="filteredData.length > 0">
     <span style="font-size:13px;color:var(--text-muted)">
-      Pagina {{ currentPage }} din {{ totalPages || 1 }} (Total: {{ filteredData.length }} înregistrări)
+      <ng-container i18n="@@table_pagination_page">Pagina</ng-container> {{ currentPage }} <ng-container i18n="@@table_pagination_of">din</ng-container> {{ totalPages || 1 }} (Total: {{ filteredData.length }} <ng-container i18n="@@table_pagination_records">înregistrări</ng-container>)
     </span>
     <div class="pagination" style="display: flex; gap: 4px;">
-      <button (click)="prevPage()" [disabled]="currentPage === 1" style="background: white; border: 1px solid var(--border, #cbd5e1); border-radius: 6px; padding: 6px 12px; cursor: pointer; color: var(--text-secondary); font-size: 13px;" [style.opacity]="currentPage === 1 ? '0.5' : '1'">Înapoi</button>
+      <button (click)="prevPage()" [disabled]="currentPage === 1" style="background: white; border: 1px solid var(--border, #cbd5e1); border-radius: 6px; padding: 6px 12px; cursor: pointer; color: var(--text-secondary); font-size: 13px;" [style.opacity]="currentPage === 1 ? '0.5' : '1'" i18n="@@table_pagination_prev">Înapoi</button>
       <span style="font-size: 13px; font-weight: 600; padding: 6px 12px; color: var(--text-primary); background: var(--body-bg, #f8fafc); border-radius: 6px;">{{ currentPage }} / {{ totalPages || 1 }}</span>
-      <button (click)="nextPage()" [disabled]="currentPage === totalPages || totalPages === 0" style="background: white; border: 1px solid var(--border, #cbd5e1); border-radius: 6px; padding: 6px 12px; cursor: pointer; color: var(--text-secondary); font-size: 13px;" [style.opacity]="(currentPage === totalPages || totalPages === 0) ? '0.5' : '1'">Următoarea</button>
+      <button (click)="nextPage()" [disabled]="currentPage === totalPages || totalPages === 0" style="background: white; border: 1px solid var(--border, #cbd5e1); border-radius: 6px; padding: 6px 12px; cursor: pointer; color: var(--text-secondary); font-size: 13px;" [style.opacity]="(currentPage === totalPages || totalPages === 0) ? '0.5' : '1'" i18n="@@table_pagination_next">Următoarea</button>
     </div>
   </div>
 </div>

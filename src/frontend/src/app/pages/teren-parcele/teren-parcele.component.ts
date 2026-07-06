@@ -19,6 +19,13 @@ import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrum
 import { SursaApa } from '../../models/sursa-apa.model';
 import { SursaApaService } from '../../services/sursa-apa.service';
 import { LookupService } from '../../services/lookup.service';
+import { Pom, TipInregistrarePom } from '../../models/pom.model';
+import { PomService } from '../../services/pom.service';
+import { VitaDeVie, TipInregistrareVita } from '../../models/vita-de-vie.model';
+import { VitaDeVieService } from '../../services/vita-de-vie.service';
+import { PasuneFaneata, TipFolosintaPasune } from '../../models/pasune-faneata.model';
+import { PasuneFaneataService } from '../../services/pasune-faneata.service';
+import {SpecieRef} from '../../models/specie-ref.model';
 
 @Component({
   selector: 'app-teren-parcele',
@@ -75,6 +82,25 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   editingSursa: SursaApa | null = null;
   newSursa: Partial<SursaApa> = { stareFunctionare: true };
 
+  pomi: Pom[] = [];
+  isAddingPom = false;
+  editingPom: Pom | null = null;
+  newPom: Partial<Pom> = { tipInregistrare: TipInregistrarePom.IZOLAT };
+  tipuriInregistrarePom = [TipInregistrarePom.IZOLAT, TipInregistrarePom.PLANTATIE];
+  speciiPomiToate: SpecieRef[] = [];
+
+  vitaDeVie: VitaDeVie[] = [];
+  isAddingVita = false;
+  editingVita: VitaDeVie | null = null;
+  newVita: Partial<VitaDeVie> = { tipInregistrare: TipInregistrareVita.IZOLAT };
+  tipuriInregistrareVita = [TipInregistrareVita.IZOLAT, TipInregistrareVita.PLANTATIE];
+
+  pasuniFanete: PasuneFaneata[] = [];
+  isAddingPasune = false;
+  editingPasune: PasuneFaneata | null = null;
+  newPasune: Partial<PasuneFaneata> = { tipFolosinta: TipFolosintaPasune.PASUNAT };
+  tipuriFolosintaPasune = [TipFolosintaPasune.PASUNAT, TipFolosintaPasune.COSIT, TipFolosintaPasune.MIXT];
+
   categoriiFolosinta: string[] = [];
   tipuriSol: string[] = [];
   tipuriSursa: string[] = [];
@@ -91,6 +117,9 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     private googleMapsLoader: GoogleMapsLoaderService,
     private gospodarieService: GospodarieService,
     private lookupService: LookupService,
+    private pomiService: PomService,
+    private vitaDeVieService: VitaDeVieService,
+    private pasuneFaneataService: PasuneFaneataService,
     private http: HttpClient,
     private zone: NgZone
   ) {}
@@ -123,6 +152,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     this.lookupService.getCategoriiFolosinta().subscribe(v => this.categoriiFolosinta = v);
     this.lookupService.getTipuriSol().subscribe(v => this.tipuriSol = v);
     this.lookupService.getTipuriSursaApa().subscribe(v => this.tipuriSursa = v);
+    this.lookupService.getSpeciiPomi().subscribe(v => this.speciiPomiToate = v);
   }
 
   private pendingJudetPaths: google.maps.LatLngLiteral[][] | null = null;
@@ -555,9 +585,15 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     this.isAddingCultura = false;
     this.editingCultura = null;
     this.culturi = [];
+    this.pomi = [];
+    this.vitaDeVie = [];
+    this.pasuniFanete = [];
     if (p.id) {
-      this.loadCulturi(p.id);
+      if (this.showCulturi(p)) this.loadCulturi(p.id);
       this.loadSurse(p.id);
+      if (this.showPomi(p)) this.loadPomi(p.id);
+      if (this.showVita(p)) this.loadVita(p.id);
+      if (this.showPasuneFaneata(p)) this.loadPasuneFaneata(p.id);
     }
   }
 
@@ -568,6 +604,15 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     this.surse = [];
     this.isAddingSursa = false;
     this.editingSursa = null;
+    this.pomi = [];
+    this.isAddingPom = false;
+    this.editingPom = null;
+    this.vitaDeVie = [];
+    this.isAddingVita = false;
+    this.editingVita = null;
+    this.pasuniFanete = [];
+    this.isAddingPasune = false;
+    this.editingPasune = null;
   }
 
   deleteParcela(p: Parcela) {
@@ -723,5 +768,240 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
 
   goBack() {
     this.router.navigate(['/gospodarii', this.gospodarieId]);
+  }
+
+  showCulturi(p: Parcela | null): boolean {
+    if (!p || !p.categorieFolosinta) return false;
+    const val = this.normalizeString(p.categorieFolosinta);
+    return val === 'arabil';
+  }
+
+  showPomi(p: Parcela | null): boolean {
+    if (!p || !p.categorieFolosinta) return false;
+    const val = this.normalizeString(p.categorieFolosinta);
+    return val === 'livada';
+  }
+
+  showVita(p: Parcela | null): boolean {
+    if (!p || !p.categorieFolosinta) return false;
+    const val = this.normalizeString(p.categorieFolosinta);
+    return val === 'vii';
+  }
+
+  showPasuneFaneata(p: Parcela | null): boolean {
+    if (!p || !p.categorieFolosinta) return false;
+    const val = this.normalizeString(p.categorieFolosinta);
+    return val === 'pasune' || val === 'fanete';
+  }
+
+  loadPomi(parcelaId: number) {
+    this.pomiService.getPomi(parcelaId, 0, 1000).subscribe({
+      next: (response) => { this.pomi = response.content || []; },
+      error: () => this.pomi = []
+    });
+  }
+
+  openAddPomForm() {
+    this.isAddingPom = true;
+    this.editingPom = null;
+    this.newPom = { tipInregistrare: TipInregistrarePom.IZOLAT, specie: '' };
+  }
+
+  openEditPom(pom: Pom) {
+    this.isAddingPom = true;
+    this.editingPom = pom;
+    this.newPom = { ...pom };
+  }
+
+  cancelAddPom() {
+    this.isAddingPom = false;
+    this.editingPom = null;
+    this.newPom = { tipInregistrare: TipInregistrarePom.IZOLAT };
+  }
+
+  savePom() {
+    if (!this.newPom.specie?.trim() || !this.newPom.tipInregistrare) {
+      alert('Completați specia și tipul de înregistrare.');
+      return;
+    }
+    if (!this.viewingParcela?.id) return;
+
+    this.saving = true;
+    if (this.editingPom && this.editingPom.id) {
+      this.pomiService.updatePom(this.viewingParcela.id, this.editingPom.id, this.newPom as Pom).subscribe({
+        next: updated => {
+          this.saving = false;
+          const idx = this.pomi.findIndex(x => x.id === updated.id);
+          if (idx >= 0) this.pomi[idx] = updated;
+          this.cancelAddPom();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare pom.'); }
+      });
+    } else {
+      this.pomiService.createPom(this.viewingParcela.id, this.newPom as Pom).subscribe({
+        next: saved => {
+          this.saving = false;
+          this.pomi.push(saved);
+          this.cancelAddPom();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare pom.'); }
+      });
+    }
+  }
+
+  deletePom(pom: Pom) {
+    if (!pom.id || !this.viewingParcela?.id) return;
+    if (!confirm(`Ștergeți înregistrarea "${pom.specie}"?`)) return;
+    this.pomiService.deletePom(this.viewingParcela.id, pom.id).subscribe({
+      next: () => { this.pomi = this.pomi.filter(x => x.id !== pom.id); },
+      error: () => alert('Eroare la ștergere pom.')
+    });
+  }
+
+  loadVita(parcelaId: number) {
+    this.vitaDeVieService.getVitaDeVie(parcelaId, 0, 1000).subscribe({
+      next: (response) => { this.vitaDeVie = response.content || []; },
+      error: () => this.vitaDeVie = []
+    });
+  }
+
+  openAddVitaForm() {
+    this.isAddingVita = true;
+    this.editingVita = null;
+    this.newVita = { tipInregistrare: TipInregistrareVita.IZOLAT, specie: 'Viță de vie' };
+  }
+
+  openEditVita(vita: VitaDeVie) {
+    this.isAddingVita = true;
+    this.editingVita = vita;
+    this.newVita = { ...vita };
+  }
+
+  cancelAddVita() {
+    this.isAddingVita = false;
+    this.editingVita = null;
+    this.newVita = { tipInregistrare: TipInregistrareVita.IZOLAT };
+  }
+
+  saveVita() {
+    if (!this.newVita.specie?.trim() || !this.newVita.tipInregistrare) {
+      alert('Completați specia și tipul de înregistrare.');
+      return;
+    }
+    if (!this.viewingParcela?.id) return;
+
+    this.saving = true;
+    if (this.editingVita && this.editingVita.id) {
+      this.vitaDeVieService.updateVita(this.viewingParcela.id, this.editingVita.id, this.newVita as VitaDeVie).subscribe({
+        next: updated => {
+          this.saving = false;
+          const idx = this.vitaDeVie.findIndex(x => x.id === updated.id);
+          if (idx >= 0) this.vitaDeVie[idx] = updated;
+          this.cancelAddVita();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare viță de vie.'); }
+      });
+    } else {
+      this.vitaDeVieService.createVita(this.viewingParcela.id, this.newVita as VitaDeVie).subscribe({
+        next: saved => {
+          this.saving = false;
+          this.vitaDeVie.push(saved);
+          this.cancelAddVita();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare viță de vie.'); }
+      });
+    }
+  }
+
+  deleteVita(vita: VitaDeVie) {
+    if (!vita.id || !this.viewingParcela?.id) return;
+    if (!confirm(`Ștergeți înregistrarea "${vita.soi || vita.specie}"?`)) return;
+    this.vitaDeVieService.deleteVita(this.viewingParcela.id, vita.id).subscribe({
+      next: () => { this.vitaDeVie = this.vitaDeVie.filter(x => x.id !== vita.id); },
+      error: () => alert('Eroare la ștergere viță de vie.')
+    });
+  }
+
+  loadPasuneFaneata(parcelaId: number) {
+    this.pasuneFaneataService.getPasuneFaneata(parcelaId, 0, 1000).subscribe({
+      next: (response) => { this.pasuniFanete = response.content || []; },
+      error: () => this.pasuniFanete = []
+    });
+  }
+
+  openAddPasuneForm() {
+    this.isAddingPasune = true;
+    this.editingPasune = null;
+    this.newPasune = { tipFolosinta: TipFolosintaPasune.PASUNAT };
+  }
+
+  openEditPasune(pasune: PasuneFaneata) {
+    this.isAddingPasune = true;
+    this.editingPasune = pasune;
+    this.newPasune = { ...pasune };
+  }
+
+  cancelAddPasune() {
+    this.isAddingPasune = false;
+    this.editingPasune = null;
+    this.newPasune = { tipFolosinta: TipFolosintaPasune.PASUNAT };
+  }
+
+  savePasune() {
+    if (!this.newPasune.suprafataHa || !this.newPasune.tipFolosinta) {
+      alert('Completați suprafața și tipul de folosință.');
+      return;
+    }
+    if (!this.viewingParcela?.id) return;
+
+    this.saving = true;
+    if (this.editingPasune && this.editingPasune.id) {
+      this.pasuneFaneataService.update(this.viewingParcela.id, this.editingPasune.id, this.newPasune as PasuneFaneata).subscribe({
+        next: updated => {
+          this.saving = false;
+          const idx = this.pasuniFanete.findIndex(x => x.id === updated.id);
+          if (idx >= 0) this.pasuniFanete[idx] = updated;
+          this.cancelAddPasune();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare pășune/fânețe.'); }
+      });
+    } else {
+      this.pasuneFaneataService.create(this.viewingParcela.id, this.newPasune as PasuneFaneata).subscribe({
+        next: saved => {
+          this.saving = false;
+          this.pasuniFanete.push(saved);
+          this.cancelAddPasune();
+        },
+        error: err => { this.saving = false; console.error(err); alert('Eroare la salvare pășune/fânețe.'); }
+      });
+    }
+  }
+
+  deletePasune(pasune: PasuneFaneata) {
+    if (!pasune.id || !this.viewingParcela?.id) return;
+    if (!confirm(`Ștergeți înregistrarea de ${pasune.suprafataHa} ha?`)) return;
+    this.pasuneFaneataService.delete(this.viewingParcela.id, pasune.id).subscribe({
+      next: () => { this.pasuniFanete = this.pasuniFanete.filter(x => x.id !== pasune.id); },
+      error: () => alert('Eroare la ștergere pășune/fânețe.')
+    });
+  }
+
+  normalizeString(str: string): string {
+    if (!str) return '';
+    let res = str
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+    if (res === 'vie') res = 'vii';
+    return res;
+  }
+
+  get speciiPomiFiltrate(): string[] {
+    const cat = this.normalizeString(this.viewingParcela?.categorieFolosinta || '');
+    if (!cat) return [];
+    return this.speciiPomiToate
+      .filter(s => this.normalizeString(s.categorieFolosinta || '') === cat)
+      .map(s => s.nume);
   }
 }

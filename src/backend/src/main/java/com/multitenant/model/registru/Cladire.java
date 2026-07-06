@@ -1,13 +1,18 @@
 package com.multitenant.model.registru;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.RelationTargetAuditMode;
 
 @Entity
 @Table(name = "cladiri")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
+@Audited
 public class Cladire {
 
     @Id
@@ -35,6 +40,7 @@ public class Cladire {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teren_id")
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private Teren teren;
 
     @Transient
@@ -45,5 +51,18 @@ public class Cladire {
     @Transient
     public Long getTerenId() {
         return teren != null ? teren.getId() : null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Cladire other = (Cladire) o;
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

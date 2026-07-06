@@ -26,10 +26,12 @@ export interface TableAction {
   showIf?: (row: any) => boolean;
 }
 
+import { AppTranslatePipe } from '../../services/translate.pipe';
+
 @Component({
   selector: 'app-generic-table',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AppTranslatePipe],
   templateUrl: './generic-table.component.html',
   styleUrls: ['./generic-table.component.css']
 })

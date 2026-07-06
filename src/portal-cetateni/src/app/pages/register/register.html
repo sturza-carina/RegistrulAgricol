@@ -1,0 +1,113 @@
+<div class="auth-container">
+  <div class="auth-card register-card">
+    <div class="auth-header">
+      <h2>Înregistrare Cetățean</h2>
+      <p>Crează un cont pentru a accesa serviciile digitale</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #registerForm="ngForm" class="auth-form split-form">
+      
+      <div class="form-section">
+        <h3>Date Personale</h3>
+        <div class="form-row">
+          <div class="form-group half">
+            <label for="nume">Nume *</label>
+            <input type="text" id="nume" name="nume" [(ngModel)]="formData.nume" required placeholder="Popescu">
+          </div>
+          <div class="form-group half">
+            <label for="prenume">Prenume *</label>
+            <input type="text" id="prenume" name="prenume" [(ngModel)]="formData.prenume" required placeholder="Ion">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group half">
+            <label for="cnp">CNP *</label>
+            <input type="text" id="cnp" name="cnp" [(ngModel)]="formData.cnp" required minlength="13" maxlength="13" placeholder="1234567890123">
+          </div>
+          <div class="form-group half">
+            <label for="telefon">Telefon *</label>
+            <input type="tel" id="telefon" name="telefon" [(ngModel)]="formData.telefon" required placeholder="07xxxxxxxx">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email *</label>
+          <input type="email" id="email" name="email" [(ngModel)]="formData.email" required placeholder="adresa@email.com">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group half">
+            <label for="parola">Parolă *</label>
+            <input type="password" id="parola" name="parola" [(ngModel)]="formData.parola" required placeholder="••••••••">
+          </div>
+          <div class="form-group half">
+            <label for="confirmareParola">Confirmă Parola *</label>
+            <input type="password" id="confirmareParola" name="confirmareParola" [(ngModel)]="formData.confirmareParola" required placeholder="••••••••">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>Adresă de Domiciliu</h3>
+        <div class="form-row">
+          <div class="form-group half">
+            <label for="judet">Județ *</label>
+            <input type="text" id="judet" name="judet" [(ngModel)]="formData.judet" required placeholder="Ex: Cluj">
+          </div>
+          <div class="form-group half">
+            <label for="localitate">Localitate *</label>
+            <input type="text" id="localitate" name="localitate" [(ngModel)]="formData.localitate" required placeholder="Ex: Cluj-Napoca">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group three-quarter">
+            <label for="strada">Stradă *</label>
+            <input type="text" id="strada" name="strada" [(ngModel)]="formData.strada" required placeholder="Nume stradă">
+          </div>
+          <div class="form-group quarter">
+            <label for="numar">Nr. *</label>
+            <input type="text" id="numar" name="numar" [(ngModel)]="formData.numar" required placeholder="12A">
+          </div>
+        </div>
+
+        <div class="form-row quad">
+          <div class="form-group">
+            <label for="bloc">Bloc</label>
+            <input type="text" id="bloc" name="bloc" [(ngModel)]="formData.bloc" placeholder="B1">
+          </div>
+          <div class="form-group">
+            <label for="scara">Scară</label>
+            <input type="text" id="scara" name="scara" [(ngModel)]="formData.scara" placeholder="A">
+          </div>
+          <div class="form-group">
+            <label for="etaj">Etaj</label>
+            <input type="text" id="etaj" name="etaj" [(ngModel)]="formData.etaj" placeholder="2">
+          </div>
+          <div class="form-group">
+            <label for="apartament">Ap.</label>
+            <input type="text" id="apartament" name="apartament" [(ngModel)]="formData.apartament" placeholder="14">
+          </div>
+        </div>
+      </div>
+
+      <div class="error-msg" *ngIf="error">
+        {{ error }}
+      </div>
+      
+      <div class="success-msg" *ngIf="successMsg">
+        {{ successMsg }}
+      </div>
+
+      <button type="submit" class="auth-btn" [disabled]="registerForm.invalid || loading">
+        <span *ngIf="!loading">Creează Cont</span>
+        <span *ngIf="loading" class="spinner"></span>
+      </button>
+
+      <div class="auth-footer">
+        <p>Ai deja cont? <a routerLink="/login">Autentifică-te</a></p>
+      </div>
+    </form>
+  </div>
+</div>

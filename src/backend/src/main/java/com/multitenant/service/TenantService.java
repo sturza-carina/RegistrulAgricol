@@ -12,8 +12,10 @@ import java.util.List;
 import java.sql.Connection;
 import java.sql.Statement;
 import org.flywaydb.core.Flyway;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class TenantService {
 
     private final TenantRepository tenantRepository;
@@ -45,11 +47,19 @@ public class TenantService {
                     .dataSource(dataSource)
                     .schemas(schemaName)
                     .locations("classpath:db/tenant")
-                    .outOfOrder(true)
+                    .outOfOrder(false)
+                    .validateOnMigrate(true)
                     .load();
-            flyway.repair();
             flyway.migrate();
         } catch (Exception e) {
+            log.error("Flyway migration or schema creation failed for tenant: {}. Attempting schema cleanup...", schemaName, e);
+            try (Connection conn = dataSource.getConnection();
+                 Statement stmt = conn.createStatement()) {
+                stmt.execute("DROP SCHEMA IF EXISTS " + schemaName + " CASCADE");
+                log.info("Successfully dropped orphaned schema: {}", schemaName);
+            } catch (Exception dropEx) {
+                log.error("Could not clean up schema after Flyway failure: {}", schemaName, dropEx);
+            }
             throw new RuntimeException("Could not provision schema and run migrations for tenant: " + schemaName, e);
         }
 
@@ -84,9 +94,9 @@ public class TenantService {
                         .dataSource(dataSource)
                         .schemas(tenant.getSchemaName())
                         .locations("classpath:db/tenant")
-                        .outOfOrder(true)
+                        .outOfOrder(false)
+                        .validateOnMigrate(true)
                         .load();
-                flyway.repair();
                 flyway.migrate();
                 System.out.println("Successfully migrated schema: " + tenant.getSchemaName());
             } catch (Exception e) {

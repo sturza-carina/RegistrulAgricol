@@ -1,0 +1,161 @@
+<div class="dashboard-container">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2>Contul Meu</h2>
+    </div>
+    
+    <div class="user-profile" *ngIf="profile">
+      <div class="avatar">
+        {{ profile.prenume?.charAt(0) }}{{ profile.nume?.charAt(0) }}
+      </div>
+      <div class="user-info">
+        <h3>{{ profile.prenume }} {{ profile.nume }}</h3>
+        <p>Cetățean</p>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="javascript:void(0)" class="nav-item active">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        Profilul meu
+      </a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="main-header">
+      <h1>Setări Profil</h1>
+      <p class="subtitle">Gestionează datele tale personale de identificare și contact.</p>
+    </header>
+
+    <div class="content-wrapper" *ngIf="isLoading">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Se încarcă datele tale...</p>
+      </div>
+    </div>
+
+    <div class="content-wrapper" *ngIf="!isLoading && profile">
+      <div class="alert success" *ngIf="successMessage">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        {{ successMessage }}
+      </div>
+      
+      <div class="alert error" *ngIf="error">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        {{ error }}
+      </div>
+      
+      <!-- Contract Expiration Alerts -->
+      <div *ngIf="notificari && notificari.length > 0" class="notifications-container" style="margin-bottom: 25px;">
+        <div *ngFor="let notif of notificari" class="alert-banner warning" style="background-color: #fffbeb; border: 1px solid #fef3c7; border-left: 4px solid #d97706; padding: 15px; border-radius: 8px; margin-bottom: 12px; display: flex; gap: 12px; align-items: flex-start;">
+          <div style="color: #d97706; line-height: 1;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </div>
+          <div style="flex: 1;">
+            <strong style="color: #92400e; font-size: 0.95rem; display: block; margin-bottom: 3px;">Atenție: Expirare Contract</strong>
+            <p style="margin: 0; color: #b45309; font-size: 0.9rem; line-height: 1.4;">{{ notif.text }}</p>
+            <span style="font-size: 0.75rem; color: #d97706; display: block; margin-top: 5px; font-family: monospace;">{{ notif.data | date:'HH:mm:ss' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <form (ngSubmit)="salveazaDate()" #profileForm="ngForm" class="profile-form">
+        
+        <div class="form-section">
+          <h3 class="section-title">Date de identificare</h3>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nume">Nume</label>
+              <input type="text" id="nume" name="nume" [(ngModel)]="profile.nume" required>
+            </div>
+            <div class="form-group">
+              <label for="prenume">Prenume</label>
+              <input type="text" id="prenume" name="prenume" [(ngModel)]="profile.prenume" required>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="cnp">CNP</label>
+              <input type="text" id="cnp" name="cnp" [value]="profile.cnp" disabled class="readonly-input">
+              <small class="help-text">CNP-ul nu poate fi modificat.</small>
+            </div>
+            <div class="form-group">
+              <label for="email">Adresă de Email</label>
+              <input type="email" id="email" name="email" [value]="profile.email" disabled class="readonly-input">
+              <small class="help-text">Email-ul nu poate fi modificat.</small>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="telefon">Telefon de contact</label>
+              <input type="tel" id="telefon" name="telefon" [(ngModel)]="profile.telefon" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="section-title">Adresa de domiciliu</h3>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="judet">Județ</label>
+              <select id="judet" name="judet" [(ngModel)]="profile.judet" (change)="onJudetChange()" required>
+                <option value="">Selectează Județul</option>
+                <option *ngFor="let jud of judete" [value]="jud">{{ jud }}</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="localitate">Localitate</label>
+              <select id="localitate" name="localitate" [(ngModel)]="profile.localitate" [disabled]="!profile.judet" required>
+                <option value="">Selectează Localitatea</option>
+                <option *ngFor="let loc of localitati" [value]="loc.denumire">{{ loc.denumire }}</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group flex-2">
+              <label for="strada">Stradă</label>
+              <input type="text" id="strada" name="strada" [(ngModel)]="profile.strada" required>
+            </div>
+            <div class="form-group flex-1">
+              <label for="numar">Număr</label>
+              <input type="text" id="numar" name="numar" [(ngModel)]="profile.numar" required>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="bloc">Bloc</label>
+              <input type="text" id="bloc" name="bloc" [(ngModel)]="profile.bloc">
+            </div>
+            <div class="form-group">
+              <label for="scara">Scară</label>
+              <input type="text" id="scara" name="scara" [(ngModel)]="profile.scara">
+            </div>
+            <div class="form-group">
+              <label for="etaj">Etaj</label>
+              <input type="text" id="etaj" name="etaj" [(ngModel)]="profile.etaj">
+            </div>
+            <div class="form-group">
+              <label for="apartament">Ap.</label>
+              <input type="text" id="apartament" name="apartament" [(ngModel)]="profile.apartament">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" [disabled]="profileForm.invalid || isSaving">
+            <span *ngIf="!isSaving">Salvează Modificările</span>
+            <span *ngIf="isSaving" class="spinner"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>

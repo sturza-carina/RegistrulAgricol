@@ -1,5 +1,6 @@
 package com.multitenant.service;
 
+import com.multitenant.dto.SpecieRefDTO;
 import com.multitenant.dto.TipDocumentDTO;
 import com.multitenant.repository.LookupRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,5 +28,9 @@ public class LookupService {
 
     public List<TipDocumentDTO> getTipuriDocument() {
         return lookupRepository.findAllTipuriDocument();
+    }
+
+    public List<SpecieRefDTO> getSpeciiPomi() {
+        return lookupRepository.findAllSpeciiPomi();
     }
 }

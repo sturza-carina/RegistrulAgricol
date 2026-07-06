@@ -25,11 +25,23 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetailsImpl)) {
+        if (authentication == null) {
             return ResponseEntity.status(401).build();
         }
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        return ResponseEntity.ok(userDetails);
+        if (authentication.getPrincipal() instanceof UserDetailsImpl) {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            return ResponseEntity.ok(userDetails);
+        } else if (authentication.getPrincipal() instanceof com.multitenant.model.core.Cetatean) {
+            com.multitenant.model.core.Cetatean cetatean = (com.multitenant.model.core.Cetatean) authentication.getPrincipal();
+            return ResponseEntity.ok(new UserInfoResponse(
+                    cetatean.getId(),
+                    cetatean.getEmail(),
+                    "CETATEAN",
+                    null,
+                    null
+            ));
+        }
+        return ResponseEntity.status(401).build();
     }
 
     @Autowired
@@ -63,7 +75,8 @@ public class AuthController {
                         userDetails.getId(),
                         userDetails.getUsername(),
                         userDetails.getRole(),
-                        userDetails.getTenantId()
+                        userDetails.getTenantId(),
+                        userDetails.getUatId()
                 ));
     }
 
@@ -84,6 +97,7 @@ public class AuthController {
                 "",
                 userDetails.getRole(),
                 request.getTenantId(),
+                userDetails.getUatId(),
                 true,
                 userDetails.getAuthorities()
         );
@@ -107,7 +121,8 @@ public class AuthController {
                         impersonatedDetails.getId(),
                         impersonatedDetails.getUsername(),
                         impersonatedDetails.getRole(),
-                        impersonatedDetails.getTenantId()
+                        impersonatedDetails.getTenantId(),
+                        impersonatedDetails.getUatId()
                 ));
     }
 

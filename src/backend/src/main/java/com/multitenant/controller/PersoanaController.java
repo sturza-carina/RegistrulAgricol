@@ -1,6 +1,7 @@
 package com.multitenant.controller;
 
 import com.multitenant.annotation.TenantRequired;
+import com.multitenant.annotation.GdprAudited;
 import com.multitenant.model.persoana.Persoana;
 import com.multitenant.service.PersoanaService;
 import org.springframework.http.ResponseEntity;
@@ -22,11 +23,13 @@ public class PersoanaController {
     }
 
     @PostMapping
+    @GdprAudited(entity = "Persoana")
     public ResponseEntity<?> createPerson(@Valid @RequestBody Persoana persoana) {
         return ResponseEntity.ok(persoanaService.createPerson(persoana));
     }
 
     @GetMapping
+    @GdprAudited(entity = "Persoana")
     public ResponseEntity<?> getAllPersons(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String type,
@@ -35,27 +38,32 @@ public class PersoanaController {
     }
 
     @GetMapping("/gospodarie/{gospodarieId}")
+    @GdprAudited(entity = "Persoana")
     public ResponseEntity<?> getPersonsByGospodarieId(@PathVariable Long gospodarieId, Pageable pageable) {
         return ResponseEntity.ok(persoanaService.getPersonsByGospodarieId(gospodarieId, pageable));
     }
 
     @GetMapping("/{id}")
+    @GdprAudited(entity = "Persoana")
     public ResponseEntity<?> getPersonById(@PathVariable Long id) {
         return ResponseEntity.ok(persoanaService.getPersonById(id));
     }
 
     @PutMapping("/{id}")
+    @GdprAudited(entity = "Persoana")
     public ResponseEntity<?> updatePerson(@PathVariable Long id, @Valid @RequestBody Persoana persoana) {
         return ResponseEntity.ok(persoanaService.updatePerson(id, persoana));
     }
 
     @DeleteMapping("/{id}")
+    @GdprAudited(entity = "Persoana")
     public ResponseEntity<?> deletePerson(@PathVariable Long id) {
         persoanaService.deletePerson(id);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{persoanaId}/gospodarii/{gospodarieId}")
+    @GdprAudited(entity = "Persoana")
     public ResponseEntity<?> addPersonToGospodarie(@PathVariable Long persoanaId, @PathVariable Long gospodarieId) {
         persoanaService.addPersonToGospodarie(persoanaId, gospodarieId);
         return ResponseEntity.ok().build();

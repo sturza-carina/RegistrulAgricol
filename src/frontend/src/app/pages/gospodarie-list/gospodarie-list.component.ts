@@ -16,10 +16,12 @@ import { GenericTableComponent, TableColumn, TableFilter, TableAction } from '..
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 import { ActiveUatBannerComponent } from '../../components/active-uat-banner/active-uat-banner.component';
 
+import { AppTranslatePipe } from '../../services/translate.pipe';
+
 @Component({
   selector: 'app-gospodarie-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, LayoutComponent, PageHeaderComponent, FormsModule, GenericTableComponent, BreadcrumbsComponent, ActiveUatBannerComponent],
+  imports: [CommonModule, RouterLink, LayoutComponent, PageHeaderComponent, FormsModule, GenericTableComponent, BreadcrumbsComponent, ActiveUatBannerComponent, AppTranslatePipe],
   templateUrl: './gospodarie-list.component.html'
 })
 export class GospodarieListComponent implements OnInit, OnDestroy {
