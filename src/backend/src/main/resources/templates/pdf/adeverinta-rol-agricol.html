@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Adeverință Rol Agricol</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+            @bottom-center {
+                content: "Pagina " counter(page) " din " counter(pages);
+                font-family: 'Roboto', sans-serif;
+                font-size: 10pt;
+            }
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            font-size: 12pt;
+            line-height: 1.5;
+            color: #000;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .institution-name {
+            font-weight: bold;
+            font-size: 14pt;
+            text-transform: uppercase;
+        }
+        .document-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 16pt;
+            margin: 40px 0 20px 0;
+            text-transform: uppercase;
+        }
+        .content {
+            text-align: justify;
+        }
+        .field {
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 50px;
+            width: 100%;
+        }
+        .signature-table {
+            width: 100%;
+            text-align: center;
+            margin-top: 40px;
+        }
+        .signature-table td {
+            width: 50%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="institution-name">ROMÂNIA</div>
+    <div class="institution-name">Județul <span th:text="${judet}">[Județ]</span></div>
+    <div class="institution-name">Primăria <span th:text="${primarie}">[Primărie]</span></div>
+    <div>Nr. _______ din _____/_____/_______</div>
+</div>
+
+<div class="document-title">
+    ADEVERINȚĂ
+</div>
+
+<div class="content">
+    <p>
+        Prin prezenta se adeverește că domnul/doamna <span class="field" th:text="${numeComplet}">[Nume Prenume]</span>,
+        <span th:text="${identificare}">[CNP/CUI]</span> <span class="field" th:text="${cnp}">[CNP]</span>, cu domiciliul/sediul în <span th:text="${domiciliu}">[Domiciliu]</span>,
+        figurează înscris(ă) în Registrul Agricol al comunei/orașului <span th:text="${primarie}">[Primărie]</span>, 
+        (Gospodăria/Rolul nr. <span class="field" th:text="${codGospodarie}">[Cod]</span>), cu următoarele date sumare:
+    </p>
+
+    <ul>
+        <li>Teren agricol în proprietate/folosință: <span class="field" th:text="${suprafataTotala}">0</span> ha.</li>
+        <li>Animale (total capete declarate): <span class="field" th:text="${totalAnimale}">0</span>.</li>
+    </ul>
+
+    <p>
+        S-a eliberat prezenta adeverință pentru a-i servi la <span class="field">______________________________</span>.
+    </p>
+</div>
+
+<table class="signature-table">
+    <tr>
+        <td>
+            <strong>PRIMAR,</strong><br/><br/><br/>
+            _________________________
+        </td>
+        <td>
+            <strong>SECRETAR GENERAL,</strong><br/><br/><br/>
+            _________________________
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>
