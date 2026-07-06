@@ -1,0 +1,719 @@
+<app-layout>
+  <div class="evidenta-container">
+    <app-breadcrumbs [items]="breadcrumbItems"></app-breadcrumbs>
+    <app-page-header 
+      [title]="'Tratamente & Fertilizări' | appTranslate" 
+      [description]="'Digitalizarea și monitorizarea tratamentelor cu PPP și a îngrășămintelor conform standardelor ANF și Directivei Nitraților' | appTranslate">
+    </app-page-header>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-navigation">
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'tratamente'" 
+        (click)="onTabChange('tratamente')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+        {{ 'Registru Fitosanitar (Pesticide)' | appTranslate }}
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'fertilizari'" 
+        (click)="onTabChange('fertilizari')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        {{ 'Evidență Fertilizări' | appTranslate }}
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'cataloage'" 
+        (click)="onTabChange('cataloage')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+        {{ 'Cataloage PPP & Îngrășăminte' | appTranslate }}
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'fila'" 
+        (click)="onTabChange('fila')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        {{ 'Fila Parcelei (Istoric)' | appTranslate }}
+      </button>
+    </div>
+
+    <!-- TAB 1: REGISTRU FITOSANITAR -->
+    <div *ngIf="activeTab === 'tratamente'" class="tab-content card">
+      <div class="content-header">
+        <h2>{{ 'Registru Evidență Tratamente cu Produse de Protecție a Plantelor (PPP)' | appTranslate }}</h2>
+        <div class="actions">
+          <button class="btn btn-secondary" (click)="downloadANFRegistru()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;margin-right:8px;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+            {{ 'Export PDF Oficial (ANF)' | appTranslate }}
+          </button>
+          <button class="btn btn-primary" (click)="openAddPesticideModal()">
+            + {{ 'Adaugă Tratament Fitosanitar' | appTranslate }}
+          </button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>{{ 'Dată efectuare / Fenofază' | appTranslate }}</th>
+              <th>{{ 'Parcelă / Gospodărie' | appTranslate }}</th>
+              <th>{{ 'Agent dăunător vizat' | appTranslate }}</th>
+              <th>{{ 'PPP Utilizat' | appTranslate }}</th>
+              <th>{{ 'Suprafață (ha)' | appTranslate }}</th>
+              <th>{{ 'Doză utilizată' | appTranslate }}</th>
+              <th>{{ 'Cantitate Totală' | appTranslate }}</th>
+              <th>{{ 'Responsabil' | appTranslate }}</th>
+              <th>{{ 'Trasabilitate (Recoltare/Doc)' | appTranslate }}</th>
+              <th>{{ 'Semnătură / Audit' | appTranslate }}</th>
+              <th *ngIf="isAdmin">{{ 'Acțiuni' | appTranslate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of tratamente; let i = index">
+              <td>{{ i + 1 + tratamentePage * pageSize }}</td>
+              <td>
+                <div class="bold">{{ t.dataEfectuarii | date:'dd.MM.yyyy HH:mm' }}</div>
+                <div class="small-muted">{{ t.fenofaza }}</div>
+              </td>
+              <td>
+                <div class="bold">{{ t.parcelaDenumire }}</div>
+              </td>
+              <td>{{ t.agentDaunator }}</td>
+              <td>
+                <div class="bold color-primary">{{ t.catalogPppDenumire }}</div>
+                <div class="small-muted">{{ 'Doză omol: ' | appTranslate }} {{ t.catalogPppDozaOmologata }}</div>
+              </td>
+              <td>{{ t.suprafataTratata }} ha</td>
+              <td [class.color-warning]="t.dozaDepasita">{{ t.dozaUtilizata }}</td>
+              <td><span class="bold">{{ t.cantitateTotala | number:'1.2-2' }}</span></td>
+              <td>{{ t.responsabil }}</td>
+              <td>
+                <div *ngIf="t.dataIncepereRecoltare">
+                  <span class="small-muted">{{ 'Recoltare: ' | appTranslate }}</span>
+                  <span class="bold">{{ t.dataIncepereRecoltare | date:'dd.MM.yyyy' }}</span>
+                </div>
+                <div *ngIf="t.documentDareConsum" class="small-muted">
+                  Doc: {{ t.documentDareConsum }}
+                </div>
+                <div *ngIf="!t.dataIncepereRecoltare && !t.documentDareConsum">-</div>
+              </td>
+              <td>
+                <span class="badge" [class.badge-success]="t.semnaturaElectronica" [class.badge-secondary]="!t.semnaturaElectronica">
+                  {{ (t.semnaturaElectronica ? 'Semnat' : 'Nesemnat') | appTranslate }}
+                </span>
+                <span *ngIf="t.dozaDepasita" class="badge badge-error" [title]="t.justificareSupradozaj">
+                  {{ 'Supradozaj' | appTranslate }} ⚠️
+                </span>
+              </td>
+              <td *ngIf="isAdmin" class="actions-cell">
+                <button class="icon-btn" (click)="deleteTratament(t.id!)" title="Șterge">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="delete-icon"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="tratamente.length === 0">
+              <td colspan="12" class="empty-message">{{ 'Nu există tratamente fitosanitare înregistrate.' | appTranslate }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: EVIDENȚĂ FERTILIZĂRI -->
+    <div *ngIf="activeTab === 'fertilizari'" class="tab-content card">
+      <div class="content-header">
+        <h2>{{ 'Evidență Tratamente de Fertilizare și Calcul Aport Substanță Activă (N-P-K)' | appTranslate }}</h2>
+        <button class="btn btn-primary" (click)="openAddFertilizareModal()">
+          + {{ 'Adaugă Fertilizare' | appTranslate }}
+        </button>
+      </div>
+
+      <!-- Quick Directive Panel -->
+      <div class="directive-panel">
+        <div class="panel-icon">ℹ️</div>
+        <div class="panel-body">
+          <h3>{{ 'Directiva Nitrați (Reguli de Control)' | appTranslate }}</h3>
+          <p>{{ 'Aportul maxim admis de azot organic (provenit din gunoi de grajd, compost etc.) pe fiecare parcelă este limitat legal la 170 kg N/hectar/an calendaristic. Depășirea acestei valori atrage penalități APIA.' | appTranslate }}</p>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>{{ 'Dată aplicare' | appTranslate }}</th>
+              <th>{{ 'Parcelă' | appTranslate }}</th>
+              <th>{{ 'Îngrășământ' | appTranslate }}</th>
+              <th>{{ 'Tip îngrășământ' | appTranslate }}</th>
+              <th>{{ 'Cantitate aplicată' | appTranslate }}</th>
+              <th>{{ 'Aport Azot (N)' | appTranslate }}</th>
+              <th>{{ 'Aport Fosfor (P)' | appTranslate }}</th>
+              <th>{{ 'Aport Potasiu (K)' | appTranslate }}</th>
+              <th *ngIf="isAdmin">{{ 'Acțiuni' | appTranslate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let f of fertilizari; let i = index">
+              <td>{{ i + 1 + fertilizariPage * pageSize }}</td>
+              <td class="bold">{{ f.dataAplicarii | date:'dd.MM.yyyy' }}</td>
+              <td class="bold">{{ f.parcelaDenumire }}</td>
+              <td>{{ f.catalogIngrasaminteDenumire }}</td>
+              <td>
+                <span class="badge" [class.badge-organic]="f.catalogIngrasaminteTip === 'Organic'" [class.badge-chemical]="f.catalogIngrasaminteTip === 'Chimic'">
+                  {{ f.catalogIngrasaminteTip | appTranslate }}
+                </span>
+              </td>
+              <td>{{ f.cantitateBruta }} {{ f.unitateMasura }}</td>
+              <td class="bold color-nitrogen">{{ f.aportAzot | number:'1.1-2' }} kg/ha</td>
+              <td class="bold color-phosphorus">{{ f.aportFosfor | number:'1.1-2' }} kg/ha</td>
+              <td class="bold color-potassium">{{ f.aportPotasiu | number:'1.1-2' }} kg/ha</td>
+              <td *ngIf="isAdmin" class="actions-cell">
+                <button class="icon-btn" (click)="deleteFertilizare(f.id!)" title="Șterge">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="delete-icon"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="fertilizari.length === 0">
+              <td colspan="10" class="empty-message">{{ 'Nu există înregistrări de fertilizare.' | appTranslate }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: CATALOAGE PRODUSE -->
+    <div *ngIf="activeTab === 'cataloage'" class="tab-content card">
+      <div class="sub-tabs">
+        <button class="sub-tab-btn" [class.active]="catalogSubTab === 'ppp'" (click)="onCatalogSubTabChange('ppp')">
+          {{ 'Nomenclator Produse Protecție Plante (PPP)' | appTranslate }}
+        </button>
+        <button class="sub-tab-btn" [class.active]="catalogSubTab === 'ingrasaminte'" (click)="onCatalogSubTabChange('ingrasaminte')">
+          {{ 'Nomenclator Îngrășăminte & Fertilizatori' | appTranslate }}
+        </button>
+      </div>
+
+      <!-- PPP CATALOG SUB TAB -->
+      <div *ngIf="catalogSubTab === 'ppp'">
+        <div class="content-header" style="margin-top: 20px;">
+          <input 
+            type="text" 
+            class="search-input" 
+            [(ngModel)]="pppSearchQuery" 
+            (ngModelChange)="searchPpp()"
+            [placeholder]="'Caută produs după denumire comercială...' | appTranslate" />
+          <button *ngIf="isAdmin" class="btn btn-primary" (click)="openAddPppCatalogModal()">
+            + {{ 'Adaugă Produs în Catalog' | appTranslate }}
+          </button>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>{{ 'Denumire Comercială' | appTranslate }}</th>
+                <th>{{ 'Tip Produs' | appTranslate }}</th>
+                <th>{{ 'Dăunători / Boli vizate' | appTranslate }}</th>
+                <th>{{ 'Doză Omologată Maximă' | appTranslate }}</th>
+                <th>{{ 'Timp Pauză Până la Recoltare (zile)' | appTranslate }}</th>
+                <th *ngIf="isAdmin">{{ 'Acțiuni' | appTranslate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of pppProducts">
+                <td class="bold color-primary">{{ p.denumireComerciala }}</td>
+                <td>{{ p.tip }}</td>
+                <td>{{ p.daunatorVizat || '-' }}</td>
+                <td class="bold">{{ p.dozaOmologata }} L/ha sau kg/ha</td>
+                <td>
+                  <span class="badge badge-warning">{{ p.timpPauza }} {{ 'zile' | appTranslate }}</span>
+                </td>
+                <td *ngIf="isAdmin" class="actions-cell">
+                  <button class="icon-btn" (click)="deletePppCatalogItem(p.id!)" title="Șterge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="delete-icon"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="pppProducts.length === 0">
+                <td colspan="6" class="empty-message">{{ 'Niciun produs PPP găsit.' | appTranslate }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- INGRASAMINTE CATALOG SUB TAB -->
+      <div *ngIf="catalogSubTab === 'ingrasaminte'">
+        <div class="content-header" style="margin-top: 20px;">
+          <input 
+            type="text" 
+            class="search-input" 
+            [(ngModel)]="ingrasaminteSearchQuery" 
+            (ngModelChange)="searchIngrasaminte()"
+            [placeholder]="'Caută îngrășământ după denumire...' | appTranslate" />
+          <button *ngIf="isAdmin" class="btn btn-primary" (click)="openAddIngrasamantCatalogModal()">
+            + {{ 'Adaugă Îngrășământ în Catalog' | appTranslate }}
+          </button>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>{{ 'Denumire Îngrășământ' | appTranslate }}</th>
+                <th>{{ 'Tip' | appTranslate }}</th>
+                <th>{{ 'Concentrație Azot (% N)' | appTranslate }}</th>
+                <th>{{ 'Concentrație Fosfor (% P)' | appTranslate }}</th>
+                <th>{{ 'Concentrație Potasiu (% K)' | appTranslate }}</th>
+                <th *ngIf="isAdmin">{{ 'Acțiuni' | appTranslate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let i of fertilizerProducts">
+                <td class="bold color-primary">{{ i.denumire }}</td>
+                <td>
+                  <span class="badge" [class.badge-organic]="i.tip === 'Organic'" [class.badge-chemical]="i.tip === 'Chimic'">
+                    {{ i.tip | appTranslate }}
+                  </span>
+                </td>
+                <td class="bold color-nitrogen">{{ i.procentAzot }}%</td>
+                <td class="bold color-phosphorus">{{ i.procentFosfor }}%</td>
+                <td class="bold color-potassium">{{ i.procentPotasiu }}%</td>
+                <td *ngIf="isAdmin" class="actions-cell">
+                  <button class="icon-btn" (click)="deleteIngrasamantCatalogItem(i.id!)" title="Șterge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="delete-icon"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="fertilizerProducts.length === 0">
+                <td colspan="6" class="empty-message">{{ 'Niciun îngrășământ găsit.' | appTranslate }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: FILA PARCELEI (ISTORIC) -->
+    <div *ngIf="activeTab === 'fila'" class="tab-content card">
+      <div class="content-header selection-bar">
+        <div class="filter-group">
+          <label for="filaParcela">{{ 'Selectează Parcelă:' | appTranslate }}</label>
+          <select id="filaParcela" [(ngModel)]="selectedFilaParcelaId" (change)="loadFilaParcelei()" class="form-control">
+            <option *ngFor="let p of parcele" [value]="p.id">{{ p.denumire }} ({{ p.suprafata }} ha) - {{ p.gospodarieName || 'Fermă' }}</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="filaAn">{{ 'An Agricol / Calendaristic:' | appTranslate }}</label>
+          <select id="filaAn" [(ngModel)]="selectedFilaAn" (change)="loadFilaParcelei()" class="form-control">
+            <option [value]="2026">2026</option>
+            <option [value]="2025">2025</option>
+            <option [value]="2024">2024</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Fila timeline view -->
+      <div class="fila-timeline">
+        <div *ngFor="let f of filaInterventii" class="timeline-item" [class.timeline-ppp]="f.tipInterventie === 'Pesticid (PPP)'" [class.timeline-fert]="f.tipInterventie === 'Fertilizare'">
+          <div class="timeline-badge">
+            <span *ngIf="f.tipInterventie === 'Pesticid (PPP)'">🧪</span>
+            <span *ngIf="f.tipInterventie === 'Fertilizare'">🌱</span>
+          </div>
+          <div class="timeline-card">
+            <div class="timeline-header">
+              <span class="timeline-date">{{ f.data | date:'dd.MM.yyyy' }}</span>
+              <span class="timeline-type">{{ f.tipInterventie | appTranslate }}</span>
+            </div>
+            <div class="timeline-body">
+              <h4 class="product-title">{{ f.denumireProdus }} <span class="prod-type-label">({{ f.tipProdus }})</span></h4>
+              
+              <div class="details-row">
+                <div>
+                  <span class="label">{{ 'Cantitate / Doză aplicată:' | appTranslate }}</span>
+                  <span class="val">{{ f.dozaCantitate }} {{ f.unitateMasura }}</span>
+                </div>
+                <div *ngIf="f.suprafataTratata">
+                  <span class="label">{{ 'Suprafață tratată:' | appTranslate }}</span>
+                  <span class="val">{{ f.suprafataTratata }} ha</span>
+                </div>
+              </div>
+
+              <div class="info-bubble">
+                {{ f.detaliiTinta }}
+              </div>
+
+              <div class="timeline-footer">
+                <span class="responsabil-txt" *ngIf="f.responsabil && f.responsabil !== '-'">
+                  👤 {{ 'Responsabil: ' | appTranslate }} {{ f.responsabil }}
+                </span>
+                <span class="status-txt" [class.warning-status]="f.statusAlerta?.includes('Supradozaj')">
+                  {{ f.statusAlerta | appTranslate }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="filaInterventii.length === 0" class="empty-message-timeline">
+          {{ 'Nu există nicio intervenție agrotehnică înregistrată pe această parcelă în anul selectat.' | appTranslate }}
+        </div>
+      </div>
+    </div>
+  </div>
+</app-layout>
+
+<!-- ============================================== -->
+<!-- MODAL: ADAUGĂ/EDITARE TRATAMENT FITOSANITAR -->
+<!-- ============================================== -->
+<div class="modal-backdrop" *ngIf="showPesticideModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>{{ 'Adaugă Tratament Fitosanitar' | appTranslate }}</h3>
+      <button class="close-btn" (click)="showPesticideModal = false">×</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="alert alert-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <form #pesticideForm="ngForm">
+        <!-- Parcela -->
+        <div class="form-group">
+          <label class="required">{{ 'Parcelă Teren' | appTranslate }}</label>
+          <select class="form-control" name="parcelaId" [(ngModel)]="currentPesticide.parcelaId" required>
+            <option [value]="0" disabled selected>{{ '-- Selectează parcelă --' | appTranslate }}</option>
+            <option *ngFor="let p of parcele" [value]="p.id">{{ p.denumire }} ({{ p.suprafata }} ha) - {{ p.gospodarieName }}</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <!-- Data -->
+          <div class="form-group">
+            <label class="required">{{ 'Data și Ora Aplicării' | appTranslate }}</label>
+            <input type="datetime-local" class="form-control" name="dataEfectuarii" [(ngModel)]="currentPesticide.dataEfectuarii" required />
+          </div>
+
+          <!-- Fenofaza -->
+          <div class="form-group">
+            <label class="required">{{ 'Fenofaza Culturii' | appTranslate }}</label>
+            <select class="form-control" name="fenofaza" [(ngModel)]="currentPesticide.fenofaza" required>
+              <option value="înfrățire">{{ 'Înfrățire' | appTranslate }}</option>
+              <option value="înspicare">{{ 'Înspicare' | appTranslate }}</option>
+              <option value="apariția primelor frunze">{{ 'Apariția primelor frunze' | appTranslate }}</option>
+              <option value="înflorire">{{ 'Înflorire' | appTranslate }}</option>
+              <option value="formarea boabelor">{{ 'Formarea boabelor' | appTranslate }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Agentul Daunator -->
+        <div class="form-group">
+          <label class="required">{{ 'Agent dăunător (boală / insectă / buruiană)' | appTranslate }}</label>
+          <input type="text" class="form-control" name="agentDaunator" [(ngModel)]="currentPesticide.agentDaunator" [placeholder]="'Ex: Gândacul de Colorado, Mană' | appTranslate" required />
+        </div>
+
+        <!-- Autocomplete PPP -->
+        <div class="form-group">
+          <label class="required">{{ 'Produs PPP (Catalog Fitosanitar)' | appTranslate }}</label>
+          <select class="form-control" name="catalogPppId" [(ngModel)]="currentPesticide.catalogPppId" (change)="onPppSelected()" required>
+            <option [value]="0" disabled selected>{{ '-- Selectează produs PPP --' | appTranslate }}</option>
+            <option *ngFor="let p of pppProducts" [value]="p.id">{{ p.denumireComerciala }} ({{ p.tip }}) - Omol: {{ p.dozaOmologata }}</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <!-- Doza Utilizata -->
+          <div class="form-group">
+            <label class="required">{{ 'Doză Utilizată (L/ha sau kg/ha)' | appTranslate }}</label>
+            <input type="number" step="0.01" class="form-control" name="dozaUtilizata" [(ngModel)]="currentPesticide.dozaUtilizata" (ngModelChange)="checkOverdosage()" required />
+          </div>
+
+          <!-- Suprafata Tratata -->
+          <div class="form-group">
+            <label class="required">{{ 'Suprafață tratată (ha)' | appTranslate }}</label>
+            <input type="number" step="0.01" class="form-control" name="suprafataTratata" [(ngModel)]="currentPesticide.suprafataTratata" required />
+          </div>
+        </div>
+
+        <!-- Read-only auto calculated Total Quantity -->
+        <div class="auto-calc-box">
+          <span class="label">{{ 'Cantitate Totală Utilizată (Calculată automat):' | appTranslate }}</span>
+          <span class="value">{{ totalFitosanitarQty | number:'1.2-2' }} L / kg</span>
+        </div>
+
+        <!-- Overdosage Justification field -->
+        <div class="warning-box" *ngIf="showOverdoseWarning">
+          <div class="warning-title">⚠️ {{ 'Avertisment Supradozaj!' | appTranslate }}</div>
+          <p>{{ 'Doza utilizată este mai mare decât doza maximă omologată. Pentru a putea salva, trebuie să introduceți o justificare tehnică.' | appTranslate }}</p>
+          <div class="form-group">
+            <label class="required">{{ 'Justificare Supradozaj' | appTranslate }}</label>
+            <textarea class="form-control" name="justificareSupradozaj" [(ngModel)]="currentPesticide.justificareSupradozaj" rows="2" [placeholder]="'Ex: Infestare severă constatată prin buletin de prognoză...' | appTranslate"></textarea>
+          </div>
+        </div>
+
+        <!-- Responsabil -->
+        <div class="form-group">
+          <label class="required">{{ 'Nume Responsabil Tratament' | appTranslate }}</label>
+          <input type="text" class="form-control" name="responsabil" [(ngModel)]="currentPesticide.responsabil" required />
+        </div>
+
+        <!-- Digital Signature Confirm -->
+        <div class="signature-checkbox">
+          <input type="checkbox" id="semnatCheckbox" name="semnatCheckbox" [(ngModel)]="currentPesticide.semnaturaElectronica" />
+          <label for="semnatCheckbox">{{ 'Semnează digital tratamentul fitosanitar (echivalent semnătură olografă conform normelor ANF)' | appTranslate }}</label>
+        </div>
+
+        <hr />
+        <h4 style="margin-top: 15px; margin-bottom: 10px;">{{ 'Date de Trasabilitate (Opționale la aplicare)' | appTranslate }}</h4>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>{{ 'Dată începere recoltare' | appTranslate }}</label>
+            <input type="date" class="form-control" name="dataIncepereRecoltare" [(ngModel)]="currentPesticide.dataIncepereRecoltare" />
+          </div>
+          <div class="form-group">
+            <label>{{ 'Document dare în consum (nr/dată)' | appTranslate }}</label>
+            <input type="text" class="form-control" name="documentDareConsum" [(ngModel)]="currentPesticide.documentDareConsum" [placeholder]="'Ex: Aviz nr. 123 / 10.10.2026' | appTranslate" />
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="showPesticideModal = false">{{ 'Anulare' | appTranslate }}</button>
+      <button class="btn btn-primary" [disabled]="!pesticideForm.valid" (click)="savePesticide()">{{ 'Salvează' | appTranslate }}</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- MODAL: ADAUGĂ FERTILIZARE -->
+<!-- ============================================== -->
+<div class="modal-backdrop" *ngIf="showFertilizareModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>{{ 'Adaugă Fertilizare' | appTranslate }}</h3>
+      <button class="close-btn" (click)="showFertilizareModal = false">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="alert alert-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+      <div class="alert alert-error" *ngIf="nitrateLimitErrorMessage">
+        {{ nitrateLimitErrorMessage }}
+      </div>
+
+      <form #fertilizareForm="ngForm">
+        <!-- Parcela -->
+        <div class="form-group">
+          <label class="required">{{ 'Parcelă' | appTranslate }}</label>
+          <select class="form-control" name="fertilizareParcelaId" [(ngModel)]="currentFertilizare.parcelaId" required>
+            <option [value]="0" disabled selected>{{ '-- Selectează parcelă --' | appTranslate }}</option>
+            <option *ngFor="let p of parcele" [value]="p.id">{{ p.denumire }} ({{ p.suprafata }} ha) - {{ p.gospodarieName }}</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <!-- Data -->
+          <div class="form-group">
+            <label class="required">{{ 'Dată Aplicare' | appTranslate }}</label>
+            <input type="date" class="form-control" name="dataAplicarii" [(ngModel)]="currentFertilizare.dataAplicarii" required />
+          </div>
+
+          <!-- Ingrasamant -->
+          <div class="form-group">
+            <label class="required">{{ 'Alege Îngrășământ' | appTranslate }}</label>
+            <select class="form-control" name="catalogIngrasaminteId" [(ngModel)]="currentFertilizare.catalogIngrasaminteId" (change)="onIngrasamantSelected()" required>
+              <option [value]="0" disabled selected>{{ '-- Selectează îngrășământ --' | appTranslate }}</option>
+              <option *ngFor="let i of fertilizerProducts" [value]="i.id">{{ i.denumire }} ({{ i.tip }}) - N:{{ i.procentAzot }}% P:{{ i.procentFosfor }}%</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <!-- Cantitate Bruta -->
+          <div class="form-group">
+            <label class="required">{{ 'Cantitate Brută Aplicată' | appTranslate }}</label>
+            <input type="number" step="0.01" class="form-control" name="cantitateBruta" [(ngModel)]="currentFertilizare.cantitateBruta" required />
+          </div>
+
+          <!-- Unitate Masura -->
+          <div class="form-group">
+            <label class="required">{{ 'Unitate de măsură' | appTranslate }}</label>
+            <select class="form-control" name="unitateMasura" [(ngModel)]="currentFertilizare.unitateMasura" required>
+              <option value="kg/ha">kg / ha</option>
+              <option value="tone/ha">tone / ha</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Active Substance calculations panel -->
+        <div class="active-substance-calc-panel" *ngIf="selectedIngrasamantProduct">
+          <h4>{{ 'Aport Substanță Activă Calcutată (Per Hectar):' | appTranslate }}</h4>
+          <div class="npk-row">
+            <div class="npk-col nitrogen-bg">
+              <span class="npk-label">Azot (N)</span>
+              <span class="npk-val">{{ calculatedActiveN | number:'1.1-2' }} kg/ha</span>
+            </div>
+            <div class="npk-col phosphorus-bg">
+              <span class="npk-label">Fosfor (P)</span>
+              <span class="npk-val">{{ calculatedActiveP | number:'1.1-2' }} kg/ha</span>
+            </div>
+            <div class="npk-col potassium-bg">
+              <span class="npk-label">Potasiu (K)</span>
+              <span class="npk-val">{{ calculatedActiveK | number:'1.1-2' }} kg/ha</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Winter warning validation modal overlay block -->
+        <div class="warning-box" *ngIf="showWinterWarning">
+          <div class="warning-title">❄️ {{ 'Avertisment Perioadă de Interdicție de Iarnă!' | appTranslate }}</div>
+          <p>{{ winterWarningMessage }}</p>
+          <p>{{ 'Dacă doriți să forțați salvarea din cauze excepționale (conform excepțiilor din codul de bune practici), apăsați pe butonul de mai jos.' | appTranslate }}</p>
+          <button class="btn btn-warning btn-sm" (click)="saveFertilizare(true)">
+            {{ 'Forțează Salvarea' | appTranslate }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer" *ngIf="!showWinterWarning">
+      <button class="btn btn-secondary" (click)="showFertilizareModal = false">{{ 'Anulare' | appTranslate }}</button>
+      <button class="btn btn-primary" [disabled]="!fertilizareForm.valid" (click)="saveFertilizare(false)">{{ 'Salvează' | appTranslate }}</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- MODAL: CATALOG PPP (PRODUCT) -->
+<!-- ============================================== -->
+<div class="modal-backdrop" *ngIf="showPppCatalogModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>{{ 'Adaugă Produs în Catalog PPP' | appTranslate }}</h3>
+      <button class="close-btn" (click)="showPppCatalogModal = false">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="alert alert-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <form #pppCatalogForm="ngForm">
+        <div class="form-group">
+          <label class="required">{{ 'Denumire Comercială Produs' | appTranslate }}</label>
+          <input type="text" class="form-control" name="denumireComerciala" [(ngModel)]="currentCatalogPpp.denumireComerciala" required />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">{{ 'Tip PPP' | appTranslate }}</label>
+            <select class="form-control" name="tip" [(ngModel)]="currentCatalogPpp.tip" required>
+              <option value="Fungicid">Fungicid</option>
+              <option value="Erbicid">Erbicid</option>
+              <option value="Insecticid">Insecticid</option>
+              <option value="Acaricid">Acaricid</option>
+              <option value="Nematicid">Nematicid</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="required">{{ 'Doză Omologată (L/ha sau kg/ha)' | appTranslate }}</label>
+            <input type="number" step="0.01" class="form-control" name="dozaOmologata" [(ngModel)]="currentCatalogPpp.dozaOmologata" required />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">{{ 'Timp de Pauză Până la Recoltare (zile)' | appTranslate }}</label>
+            <input type="number" class="form-control" name="timpPauza" [(ngModel)]="currentCatalogPpp.timpPauza" required />
+          </div>
+          <div class="form-group">
+            <label>{{ 'Dăunători / Boală vizată' | appTranslate }}</label>
+            <input type="text" class="form-control" name="daunatorVizat" [(ngModel)]="currentCatalogPpp.daunatorVizat" />
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="showPppCatalogModal = false">{{ 'Anulare' | appTranslate }}</button>
+      <button class="btn btn-primary" [disabled]="!pppCatalogForm.valid" (click)="savePppCatalogItem()">{{ 'Salvează' | appTranslate }}</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- MODAL: CATALOG ÎNGRĂȘĂMINTE -->
+<!-- ============================================== -->
+<div class="modal-backdrop" *ngIf="showIngrasamantCatalogModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>{{ 'Adaugă Îngrășământ în Catalog' | appTranslate }}</h3>
+      <button class="close-btn" (click)="showIngrasamantCatalogModal = false">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="alert alert-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <form #ingrasamantCatalogForm="ngForm">
+        <div class="form-group">
+          <label class="required">{{ 'Denumire Îngrășământ' | appTranslate }}</label>
+          <input type="text" class="form-control" name="catalogIngrasamantDenumire" [(ngModel)]="currentCatalogIngrasamant.denumire" required />
+        </div>
+
+        <div class="form-group">
+          <label class="required">{{ 'Tip Îngrășământ' | appTranslate }}</label>
+          <select class="form-control" name="catalogIngrasamantTip" [(ngModel)]="currentCatalogIngrasamant.tip" required>
+            <option value="Chimic">Chimic</option>
+            <option value="Organic">Organic</option>
+          </select>
+        </div>
+
+        <h4 style="margin-top: 15px; margin-bottom: 10px;">{{ 'Concentrație Substanță Activă (%)' | appTranslate }}</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">{{ 'Azot (N %)' | appTranslate }}</label>
+            <input type="number" step="0.1" class="form-control" name="procentAzot" [(ngModel)]="currentCatalogIngrasamant.procentAzot" required />
+          </div>
+          <div class="form-group">
+            <label class="required">{{ 'Fosfor (P %)' | appTranslate }}</label>
+            <input type="number" step="0.1" class="form-control" name="procentFosfor" [(ngModel)]="currentCatalogIngrasamant.procentFosfor" required />
+          </div>
+          <div class="form-group">
+            <label class="required">{{ 'Potasiu (K %)' | appTranslate }}</label>
+            <input type="number" step="0.1" class="form-control" name="procentPotasiu" [(ngModel)]="currentCatalogIngrasamant.procentPotasiu" required />
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="showIngrasamantCatalogModal = false">{{ 'Anulare' | appTranslate }}</button>
+      <button class="btn btn-primary" [disabled]="!ingrasamantCatalogForm.valid" (click)="saveIngrasamantCatalogItem()">{{ 'Salvează' | appTranslate }}</button>
+    </div>
+  </div>
+</div>

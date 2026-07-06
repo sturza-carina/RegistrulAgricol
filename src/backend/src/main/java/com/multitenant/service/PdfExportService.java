@@ -12,15 +12,18 @@ import com.multitenant.model.registru.CarteFunciara;
 import com.multitenant.model.registru.Gospodarie;
 import com.multitenant.model.registru.Parcela;
 import com.multitenant.model.registru.Teren;
+import com.multitenant.model.registru.TratamentFitosanitar;
 import com.multitenant.repository.CarteFunciaraRepository;
 import com.multitenant.repository.ParcelaRepository;
 import com.multitenant.repository.PersoanaRepository;
 import com.multitenant.repository.TerenRepository;
+import com.multitenant.repository.TratamentFitosanitarRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -30,15 +33,18 @@ public class PdfExportService {
     private final CarteFunciaraRepository carteFunciaraRepository;
     private final ParcelaRepository parcelaRepository;
     private final PersoanaRepository persoanaRepository;
+    private final TratamentFitosanitarRepository tratamentFitosanitarRepository;
 
     public PdfExportService(TerenRepository terenRepository,
                             CarteFunciaraRepository carteFunciaraRepository,
                             ParcelaRepository parcelaRepository,
-                            PersoanaRepository persoanaRepository) {
+                            PersoanaRepository persoanaRepository,
+                            TratamentFitosanitarRepository tratamentFitosanitarRepository) {
         this.terenRepository = terenRepository;
         this.carteFunciaraRepository = carteFunciaraRepository;
         this.parcelaRepository = parcelaRepository;
         this.persoanaRepository = persoanaRepository;
+        this.tratamentFitosanitarRepository = tratamentFitosanitarRepository;
     }
 
     public byte[] generateCarteFunciaraPdf(Long terenId) throws Exception {
@@ -130,9 +136,106 @@ public class PdfExportService {
         }
     }
 
+    public byte[] generateRegistruPesticidePdf() throws Exception {
+        List<TratamentFitosanitar> tratamente = tratamentFitosanitarRepository.findAllWithRelations();
+        DateTimeFormatter dtFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+        DateTimeFormatter dateOnlyFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            // A4 landscape layout is ideal for 11 columns
+            Document document = new Document(PageSize.A4.rotate());
+            PdfWriter.getInstance(document, baos);
+            document.open();
+
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
+            Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
+            Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8);
+            Font cellFont = FontFactory.getFont(FontFactory.HELVETICA, 8);
+
+            // Title
+            Paragraph title = new Paragraph("REGISTRUL DE EVIDENȚĂ A TRATAMENTELOR CU PRODUSE DE PROTECȚIE A PLANTELOR", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingAfter(5);
+            document.add(title);
+
+            Paragraph subtitle = new Paragraph("Conform Regulamentului (CE) nr. 1107/2009 — Structură oficială Autoritatea Națională Fitosanitară (ANF)", subtitleFont);
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            subtitle.setSpacingAfter(20);
+            document.add(subtitle);
+
+            // Table setup with 11 columns
+            PdfPTable table = new PdfPTable(11);
+            table.setWidthPercentage(100);
+            // Column widths distribution summing to 100
+            table.setWidths(new float[]{3.5f, 9.5f, 12.0f, 6.0f, 10.0f, 10.0f, 10.0f, 9.5f, 10.0f, 12.5f, 7.0f});
+
+            // Table Headers
+            addHeaderCell(table, "Nr. crt", headerFont);
+            addHeaderCell(table, "Data efectuării (zi, lună, an, oră)", headerFont);
+            addHeaderCell(table, "Cultura și Locul unde este situat terenul", headerFont);
+            addHeaderCell(table, "Suprafața tratată (ha)", headerFont);
+            addHeaderCell(table, "Agentul dăunător (boală, insectă, buruiană)", headerFont);
+            addHeaderCell(table, "Produsul de protecție utilizat (PPP)", headerFont);
+            addHeaderCell(table, "Doza omologată / Doza utilizată", headerFont);
+            addHeaderCell(table, "Data începerii recoltării", headerFont);
+            addHeaderCell(table, "Document dare în consum (nr/dată)", headerFont);
+            addHeaderCell(table, "Nume responsabil tratament", headerFont);
+            addHeaderCell(table, "Semnătura", headerFont);
+
+            int index = 1;
+            for (TratamentFitosanitar t : tratamente) {
+                addCellToTable(table, String.valueOf(index++), cellFont);
+                addCellToTable(table, t.getDataEfectuarii() != null ? t.getDataEfectuarii().format(dtFormatter) : "-", cellFont);
+                
+                String culturaLocatie = "";
+                if (t.getParcela() != null) {
+                    culturaLocatie += "Parcela: " + t.getParcela().getDenumire();
+                    if (t.getParcela().getGospodarieName() != null) {
+                        culturaLocatie += "\n" + t.getParcela().getGospodarieName();
+                    }
+                } else {
+                    culturaLocatie = "-";
+                }
+                addCellToTable(table, culturaLocatie, cellFont);
+                addCellToTable(table, String.valueOf(t.getSuprafataTratata()), cellFont);
+                addCellToTable(table, t.getAgentDaunator() != null ? t.getAgentDaunator() : "-", cellFont);
+                addCellToTable(table, t.getCatalogPpp() != null ? t.getCatalogPpp().getDenumireComerciala() : "-", cellFont);
+                
+                String dozaInfo = "-";
+                if (t.getCatalogPpp() != null) {
+                    dozaInfo = String.format("Omol: %.2f / Util: %.2f", t.getCatalogPpp().getDozaOmologata(), t.getDozaUtilizata());
+                }
+                addCellToTable(table, dozaInfo, cellFont);
+                
+                addCellToTable(table, t.getDataIncepereRecoltare() != null ? t.getDataIncepereRecoltare().format(dateOnlyFormatter) : "-", cellFont);
+                addCellToTable(table, t.getDocumentDareConsum() != null ? t.getDocumentDareConsum() : "-", cellFont);
+                addCellToTable(table, t.getResponsabil() != null ? t.getResponsabil() : "-", cellFont);
+                
+                String semnatura = "Nesemnat";
+                if (t.getSemnaturaElectronica() != null && !t.getSemnaturaElectronica().trim().isEmpty()) {
+                    semnatura = "Semnat electronic";
+                }
+                addCellToTable(table, semnatura, cellFont);
+            }
+
+            document.add(table);
+            document.close();
+            return baos.toByteArray();
+        }
+    }
+
+    private void addHeaderCell(PdfPTable table, String text, Font font) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setBackgroundColor(new java.awt.Color(230, 230, 230));
+        cell.setPadding(4);
+        table.addCell(cell);
+    }
+
     private void addCellToTable(PdfPTable table, String text, Font font) {
         PdfPCell cell = new PdfPCell(new Phrase(text, font));
-        cell.setPadding(5);
+        cell.setPadding(4);
         table.addCell(cell);
     }
 
@@ -190,3 +293,4 @@ public class PdfExportService {
         }
     }
 }
+

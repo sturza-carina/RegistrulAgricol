@@ -2380,6 +2380,222 @@
           <context context-type="linenumber">243</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="dict_treatments_fertilizations" datatype="html">
+        <source>Tratamente &amp; Fertilizări</source>
+        <target>Treatments &amp; Fertilizations</target>
+      </trans-unit>
+      <trans-unit id="dict_pesticides_registry" datatype="html">
+        <source>Registru Fitosanitar (Pesticide)</source>
+        <target>Pesticides Registry</target>
+      </trans-unit>
+      <trans-unit id="dict_fertilizations_logs" datatype="html">
+        <source>Evidență Fertilizări</source>
+        <target>Fertilizations Logs</target>
+      </trans-unit>
+      <trans-unit id="dict_catalogs_ppp_fertilizers" datatype="html">
+        <source>Cataloage PPP &amp; Îngrășăminte</source>
+        <target>Catalogs PPP &amp; Fertilizers</target>
+      </trans-unit>
+      <trans-unit id="dict_plot_history_sheet" datatype="html">
+        <source>Fila Parcelei (Istoric)</source>
+        <target>Plot History Sheet</target>
+      </trans-unit>
+      <trans-unit id="dict_pesticides_desc" datatype="html">
+        <source>Digitalizarea și monitorizarea tratamentelor cu PPP și a îngrășămintelor conform standardelor ANF și Directivei Nitraților</source>
+        <target>Digitization and monitoring of PPP treatments and fertilizers according to ANF and Nitrates Directive standards</target>
+      </trans-unit>
+      <trans-unit id="dict_ppp_title" datatype="html">
+        <source>Registru Evidență Tratamente cu Produse de Protecție a Plantelor (PPP)</source>
+        <target>Register of Plant Protection Product (PPP) Treatments</target>
+      </trans-unit>
+      <trans-unit id="dict_export_pdf_anf" datatype="html">
+        <source>Export PDF Oficial (ANF)</source>
+        <target>Export Official PDF (ANF)</target>
+      </trans-unit>
+      <trans-unit id="dict_add_fitosanitar" datatype="html">
+        <source>Adaugă Tratament Fitosanitar</source>
+        <target>Add Fitosanitar Treatment</target>
+      </trans-unit>
+      <trans-unit id="dict_date_phenophase" datatype="html">
+        <source>Dată efectuare / Fenofază</source>
+        <target>Application Date / Phenophase</target>
+      </trans-unit>
+      <trans-unit id="dict_parcel_household" datatype="html">
+        <source>Parcelă / Gospodărie</source>
+        <target>Parcel / Household</target>
+      </trans-unit>
+      <trans-unit id="dict_target_pest" datatype="html">
+        <source>Agent dăunător vizat</source>
+        <target>Target Pest/Disease</target>
+      </trans-unit>
+      <trans-unit id="dict_ppp_used" datatype="html">
+        <source>PPP Utilizat</source>
+        <target>PPP Used</target>
+      </trans-unit>
+      <trans-unit id="dict_area_ha" datatype="html">
+        <source>Suprafață (ha)</source>
+        <target>Area (ha)</target>
+      </trans-unit>
+      <trans-unit id="dict_used_dose" datatype="html">
+        <source>Doză utilizată</source>
+        <target>Used Dose</target>
+      </trans-unit>
+      <trans-unit id="dict_total_quantity" datatype="html">
+        <source>Cantitate Totală</source>
+        <target>Total Quantity</target>
+      </trans-unit>
+      <trans-unit id="dict_responsible_person" datatype="html">
+        <source>Responsabil</source>
+        <target>Responsible</target>
+      </trans-unit>
+      <trans-unit id="dict_traceability" datatype="html">
+        <source>Trasabilitate (Recoltare/Doc)</source>
+        <target>Traceability (Harvest/Doc)</target>
+      </trans-unit>
+      <trans-unit id="dict_signature_audit" datatype="html">
+        <source>Semnătură / Audit</source>
+        <target>Signature / Audit</target>
+      </trans-unit>
+      <trans-unit id="dict_no_treatments_registered" datatype="html">
+        <source>Nu există tratamente fitosanitare înregistrate.</source>
+        <target>No fitosanitar treatments registered.</target>
+      </trans-unit>
+      <trans-unit id="dict_fertilizations_title" datatype="html">
+        <source>Evidență Tratamente de Fertilizare și Calcul Aport Substanță Activă (N-P-K)</source>
+        <target>Fertilization Treatments Evidence and Active substance calculation (N-P-K)</target>
+      </trans-unit>
+      <trans-unit id="dict_add_fertilization" datatype="html">
+        <source>Adaugă Fertilizare</source>
+        <target>Add Fertilization</target>
+      </trans-unit>
+      <trans-unit id="dict_nitrate_directive" datatype="html">
+        <source>Directiva Nitrați (Reguli de Control)</source>
+        <target>Nitrates Directive (Control Rules)</target>
+      </trans-unit>
+      <trans-unit id="dict_nitrate_directive_desc" datatype="html">
+        <source>Aportul maxim admis de azot organic (provenit din gunoi de grajd, compost etc.) pe fiecare parcelă este limitat legal la 170 kg N/hectar/an calendaristic. Depășirea acestei valori atrage penalități APIA.</source>
+        <target>The maximum allowed organic nitrogen input (from manure, compost, etc.) per parcel is legally limited to 170 kg N/hectare/calendar year. Exceeding this value leads to APIA penalties.</target>
+      </trans-unit>
+      <trans-unit id="dict_app_date" datatype="html">
+        <source>Dată aplicare</source>
+        <target>Application date</target>
+      </trans-unit>
+      <trans-unit id="dict_parcel" datatype="html">
+        <source>Parcelă</source>
+        <target>Parcel</target>
+      </trans-unit>
+      <trans-unit id="dict_fertilizer" datatype="html">
+        <source>Îngrășământ</source>
+        <target>Fertilizer</target>
+      </trans-unit>
+      <trans-unit id="dict_fertilizer_type" datatype="html">
+        <source>Tip îngrășământ</source>
+        <target>Fertilizer type</target>
+      </trans-unit>
+      <trans-unit id="dict_applied_qty" datatype="html">
+        <source>Cantitate aplicată</source>
+        <target>Applied quantity</target>
+      </trans-unit>
+      <trans-unit id="dict_nitrogen_aport" datatype="html">
+        <source>Aport Azot (N)</source>
+        <target>Nitrogen Aport (N)</target>
+      </trans-unit>
+      <trans-unit id="dict_phosphorus_aport" datatype="html">
+        <source>Aport Fosfor (P)</source>
+        <target>Phosphorus Aport (P)</target>
+      </trans-unit>
+      <trans-unit id="dict_potassium_aport" datatype="html">
+        <source>Aport Potasiu (K)</source>
+        <target>Potassium Aport (K)</target>
+      </trans-unit>
+      <trans-unit id="dict_no_fertilizations" datatype="html">
+        <source>Nu există înregistrări de fertilizare.</source>
+        <target>No fertilizations recorded.</target>
+      </trans-unit>
+      <trans-unit id="dict_ppp_nomenclator" datatype="html">
+        <source>Nomenclator Produse Protecție Plante (PPP)</source>
+        <target>Plant Protection Products (PPP) Directory</target>
+      </trans-unit>
+      <trans-unit id="dict_fert_nomenclator" datatype="html">
+        <source>Nomenclator Îngrășăminte &amp; Fertilizatori</source>
+        <target>Fertilizers Directory</target>
+      </trans-unit>
+      <trans-unit id="dict_search_ppp" datatype="html">
+        <source>Caută produs după denumire comercială...</source>
+        <target>Search product by commercial name...</target>
+      </trans-unit>
+      <trans-unit id="dict_add_ppp_cat" datatype="html">
+        <source>Adaugă Produs în Catalog</source>
+        <target>Add Product to Catalog</target>
+      </trans-unit>
+      <trans-unit id="dict_comm_name" datatype="html">
+        <source>Denumire Comercială</source>
+        <target>Commercial Name</target>
+      </trans-unit>
+      <trans-unit id="dict_prod_type" datatype="html">
+        <source>Tip Produs</source>
+        <target>Product Type</target>
+      </trans-unit>
+      <trans-unit id="dict_target_disease" datatype="html">
+        <source>Dăunători / Boli vizate</source>
+        <target>Target Pests / Diseases</target>
+      </trans-unit>
+      <trans-unit id="dict_max_approved_dose" datatype="html">
+        <source>Doză Omologată Maximă</source>
+        <target>Max Approved Dose</target>
+      </trans-unit>
+      <trans-unit id="dict_safety_pauza" datatype="html">
+        <source>Timp Pauză Până la Recoltare (zile)</source>
+        <target>Harvest Safety Interval (days)</target>
+      </trans-unit>
+      <trans-unit id="dict_no_ppp_found" datatype="html">
+        <source>Niciun produs PPP găsit.</source>
+        <target>No PPP products found.</target>
+      </trans-unit>
+      <trans-unit id="dict_search_fert" datatype="html">
+        <source>Caută îngrășământ după denumire...</source>
+        <target>Search fertilizer by name...</target>
+      </trans-unit>
+      <trans-unit id="dict_add_fert_cat" datatype="html">
+        <source>Adaugă Îngrășământ în Catalog</source>
+        <target>Add Fertilizer to Catalog</target>
+      </trans-unit>
+      <trans-unit id="dict_fert_name" datatype="html">
+        <source>Denumire Îngrășământ</source>
+        <target>Fertilizer Name</target>
+      </trans-unit>
+      <trans-unit id="dict_type" datatype="html">
+        <source>Tip</source>
+        <target>Type</target>
+      </trans-unit>
+      <trans-unit id="dict_nitrogen_pct" datatype="html">
+        <source>Concentrație Azot (% N)</source>
+        <target>Nitrogen Concentration (% N)</target>
+      </trans-unit>
+      <trans-unit id="dict_phosphorus_pct" datatype="html">
+        <source>Concentrație Fosfor (% P)</source>
+        <target>Phosphorus Concentration (% P)</target>
+      </trans-unit>
+      <trans-unit id="dict_potassium_pct" datatype="html">
+        <source>Concentrație Potasiu (% K)</source>
+        <target>Potassium Concentration (% K)</target>
+      </trans-unit>
+      <trans-unit id="dict_no_fert_found" datatype="html">
+        <source>Niciun îngrășământ găsit.</source>
+        <target>No fertilizers found.</target>
+      </trans-unit>
+      <trans-unit id="dict_select_parcel_label" datatype="html">
+        <source>Selectează Parcelă:</source>
+        <target>Select Parcel:</target>
+      </trans-unit>
+      <trans-unit id="dict_ag_year_label" datatype="html">
+        <source>An Agricol / Calendaristic:</source>
+        <target>Agricultural / Calendar Year:</target>
+      </trans-unit>
+      <trans-unit id="dict_no_ag_interventions" datatype="html">
+        <source>Nu există nicio intervenție agrotehnică înregistrată pe această parcelă în anul selectat.</source>
+        <target>No agrotechnical interventions recorded on this parcel in the selected year.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
