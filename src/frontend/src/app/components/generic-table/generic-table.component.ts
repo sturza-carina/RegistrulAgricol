@@ -20,7 +20,7 @@ export interface TableFilter {
 }
 
 export interface TableAction {
-  icon: 'view' | 'edit' | 'delete' | 'add' | 'history';
+  icon: 'view' | 'edit' | 'delete' | 'add' | 'history' | 'print';
   tooltip: string;
   action: (row: any, event: Event) => void;
   showIf?: (row: any) => boolean;

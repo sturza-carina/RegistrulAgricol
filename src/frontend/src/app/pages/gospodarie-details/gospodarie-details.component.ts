@@ -64,7 +64,8 @@ export class GospodarieDetailsComponent implements OnInit {
   ];
 
   membriActions: TableAction[] = [
-    { icon: 'edit', tooltip: 'Detalii / Editare', action: (row) => this.editPerson(row.id) }
+    { icon: 'edit', tooltip: 'Detalii / Editare', action: (row) => this.editPerson(row.id) },
+    { icon: 'print', tooltip: 'Emite Adeverință', action: (row) => this.generateAdeverinta(row.id) }
   ];
 
   toatePersoaneleActions: TableAction[] = [
@@ -251,6 +252,16 @@ export class GospodarieDetailsComponent implements OnInit {
         this.terenuri = this.terenuri.filter(t => t.id !== teren.id);
       },
       error: () => alert('Eroare la ștergere teren.')
+    });
+  }
+
+  generateAdeverinta(persoanaId: number) {
+    this.gospodarieService.generateAdeverintaRolAgricol(this.gospodarieId, persoanaId).subscribe({
+      next: (blob: Blob) => {
+        const fileURL = URL.createObjectURL(blob);
+        window.open(fileURL, '_blank'); // Opens the PDF in a new tab
+      },
+      error: () => alert('Eroare la generarea adeverinței. Vă rugăm să reîncercați.')
     });
   }
 

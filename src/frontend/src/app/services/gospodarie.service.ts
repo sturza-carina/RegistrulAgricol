@@ -37,4 +37,11 @@ export class GospodarieService {
   deleteGospodarie(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  generateAdeverintaRolAgricol(gospodarieId: number, persoanaId: number): Observable<Blob> {
+    // Note: ensure API prefix handles '/api/v1' if not configured elsewhere
+    return this.http.get(`/api/v1/adeverinte/rol-agricol/${gospodarieId}/persoana/${persoanaId}`, {
+      responseType: 'blob'
+    });
+  }
 }
