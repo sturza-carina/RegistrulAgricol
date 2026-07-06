@@ -1,0 +1,304 @@
+<app-layout>
+  <!-- Page Header -->
+  <div class="stats-header">
+    <div class="header-left">
+      <h1>{{ 'Centralizatoare Statistice (DAJ / INS)' | appTranslate }}</h1>
+      <p class="subtitle">{{ 'Rapoarte centralizate privind exploatațiile vegetale, zootehnice și utilajele agricole din UAT.' | appTranslate }}</p>
+    </div>
+    
+    <div class="header-right">
+      <div class="year-selector-wrapper">
+        <label for="yearSelect">{{ 'An Raportare' | appTranslate }}:</label>
+        <select id="yearSelect" [(ngModel)]="selectedYear" (change)="onYearChange()" class="year-select">
+          <option *ngFor="let year of availableYears" [value]="year">{{ year }}</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-overlay" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>{{ 'Se încarcă datele statistice...' | appTranslate }}</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-banner" *ngIf="errorMessage">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="error-icon">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <span>{{ errorMessage | appTranslate }}</span>
+  </div>
+
+  <!-- Summary Cards Grid -->
+  <div class="stats-grid" *ngIf="!loading">
+    <!-- Card 1: Vegetal -->
+    <div class="stat-card card-vegetal" [class.active-card]="activeTab === 'VEGETAL'" (click)="setTab('VEGETAL')">
+      <div class="card-icon-wrapper">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <div class="card-info">
+        <h3>{{ 'Sector Vegetal' | appTranslate }}</h3>
+        <div class="metric-value">{{ totals.suprafataVegetalHa | number:'1.2-2' }} <span class="metric-unit">ha</span></div>
+        <p class="metric-sub">{{ totals.culturiCount }} {{ 'culturi înregistrate' | appTranslate }}</p>
+      </div>
+    </div>
+
+    <!-- Card 2: Zootehnic -->
+    <div class="stat-card card-zootehnic" [class.active-card]="activeTab === 'ZOOTEHNIC'" (click)="setTab('ZOOTEHNIC')">
+      <div class="card-icon-wrapper">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+          <circle cx="12" cy="10" r="3"/>
+          <path d="M12 21c3.5 0 6-2.5 6-6.5S15.5 8 12 8s-6 2.5-6 6.5S8.5 21 12 21z"/>
+        </svg>
+      </div>
+      <div class="card-info">
+        <h3>{{ 'Sector Zootehnic' | appTranslate }}</h3>
+        <div class="metric-value">{{ totals.capeteIndividuale + totals.capeteGrup }} <span class="metric-unit">{{ 'Capete' | appTranslate }}</span></div>
+        <p class="metric-sub">{{ totals.capeteIndividuale }} {{ 'individuale' | appTranslate }} / {{ totals.capeteGrup }} {{ 'de grup' | appTranslate }}</p>
+      </div>
+    </div>
+
+    <!-- Card 3: Utilaje -->
+    <div class="stat-card card-utilaje" [class.active-card]="activeTab === 'UTILAJE'" (click)="setTab('UTILAJE')">
+      <div class="card-icon-wrapper">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+        </svg>
+      </div>
+      <div class="card-info">
+        <h3>{{ 'Mijloace Transport / Utilaje' | appTranslate }}</h3>
+        <div class="metric-value">{{ totals.utilajeCount }} <span class="metric-unit">{{ 'Unități' | appTranslate }}</span></div>
+        <p class="metric-sub">{{ 'Utilaje și mașini agricole înregistrate' | appTranslate }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div class="tabs-nav-container" *ngIf="!loading">
+    <div class="tabs-nav">
+      <button class="tab-button" [class.active]="activeTab === 'VEGETAL'" (click)="setTab('VEGETAL')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        {{ 'Centralizator Vegetal' | appTranslate }}
+      </button>
+      <button class="tab-button" [class.active]="activeTab === 'ZOOTEHNIC'" (click)="setTab('ZOOTEHNIC')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M14.31 8l5.74 9.94M9.69 8h11.48M7.38 12l5.74-9.94M9.69 16L3.95 6.06M14.31 16H2.83M16.62 12l-5.74 9.94"></path>
+        </svg>
+        {{ 'Centralizator Zootehnic' | appTranslate }}
+      </button>
+      <button class="tab-button" [class.active]="activeTab === 'UTILAJE'" (click)="setTab('UTILAJE')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        {{ 'Centralizator Utilaje' | appTranslate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Dynamic Content Area -->
+  <div class="tab-content-area" *ngIf="!loading">
+    
+    <!-- 1. TAB VEGETAL -->
+    <div class="tab-panel" *ngIf="activeTab === 'VEGETAL'">
+      <div class="panel-header">
+        <div class="panel-header-title">
+          <h2>{{ 'Centralizator Culturi Agricole și Categoriilor de Folosință' | appTranslate }}</h2>
+          <p>{{ 'Date agregate privind suprafețele cultivate și tipul terenurilor pentru anul' | appTranslate }} {{ selectedYear }}</p>
+        </div>
+        <button class="btn-export" (click)="exportVegetal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+          </svg>
+          {{ 'Exportă Raport Excel (CSV)' | appTranslate }}
+        </button>
+      </div>
+
+      <div class="inner-grid">
+        <!-- Sub-section: Culturi -->
+        <div class="table-section-card">
+          <h3 class="section-title">
+            <span class="dot green"></span>
+            {{ 'Suprafețe Cultivate' | appTranslate }}
+          </h3>
+          <div class="table-responsive">
+            <table class="premium-table">
+              <thead>
+                <tr>
+                  <th>{{ 'Specie Cultură / Plantă' | appTranslate }}</th>
+                  <th class="text-right">{{ 'Suprafață Totală (ha)' | appTranslate }}</th>
+                  <th class="text-right">{{ 'Producție Totală Estimată (t)' | appTranslate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let culture of data.culturi">
+                  <td class="font-semibold">{{ culture.specieCultura }}</td>
+                  <td class="text-right num-font">{{ culture.suprafataTotalaHa | number:'1.2-2' }}</td>
+                  <td class="text-right num-font">{{ culture.productieTotalaTone | number:'1.2-2' }}</td>
+                </tr>
+                <tr *ngIf="!data.culturi || data.culturi.length === 0">
+                  <td colspan="3" class="empty-row">{{ 'Nicio cultură înregistrată pentru acest an.' | appTranslate }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Sub-section: Categorii Folosinta -->
+        <div class="table-section-card">
+          <h3 class="section-title">
+            <span class="dot yellow"></span>
+            {{ 'Categorii de Folosință Teren' | appTranslate }}
+          </h3>
+          <div class="table-responsive">
+            <table class="premium-table">
+              <thead>
+                <tr>
+                  <th>{{ 'Categorie de Folosință' | appTranslate }}</th>
+                  <th class="text-right">{{ 'Suprafață Totală (ha)' | appTranslate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let cat of data.categoriiFolosinta">
+                  <td class="font-semibold">{{ cat.categorieFolosinta }}</td>
+                  <td class="text-right num-font">{{ cat.suprafataTotalaHa | number:'1.4-4' }}</td>
+                </tr>
+                <tr *ngIf="!data.categoriiFolosinta || data.categoriiFolosinta.length === 0">
+                  <td colspan="2" class="empty-row">{{ 'Nicio categorie de folosință înregistrată.' | appTranslate }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. TAB ZOOTEHNIC -->
+    <div class="tab-panel" *ngIf="activeTab === 'ZOOTEHNIC'">
+      <div class="panel-header">
+        <div class="panel-header-title">
+          <h2>{{ 'Centralizator Efective de Animale' | appTranslate }}</h2>
+          <p>{{ 'Situația consolidată a efectivelor zootehnice (animale identificate individual și în grup).' | appTranslate }}</p>
+        </div>
+        <button class="btn-export" (click)="exportZootehnic()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+          </svg>
+          {{ 'Exportă Raport Excel (CSV)' | appTranslate }}
+        </button>
+      </div>
+
+      <div class="inner-grid">
+        <!-- Sub-section: Animale Individuale -->
+        <div class="table-section-card">
+          <h3 class="section-title">
+            <span class="dot blue"></span>
+            {{ 'Animale Identificate Individual (Crotalate)' | appTranslate }}
+          </h3>
+          <div class="table-responsive">
+            <table class="premium-table">
+              <thead>
+                <tr>
+                  <th>{{ 'Specie Animal' | appTranslate }}</th>
+                  <th class="text-right">{{ 'Total Capete' | appTranslate }}</th>
+                  <th class="text-right">{{ 'Masculi' | appTranslate }}</th>
+                  <th class="text-right">{{ 'Femele' | appTranslate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let animal of data.animaleIndividuale">
+                  <td class="font-semibold">{{ animal.specie }}</td>
+                  <td class="text-right num-font font-bold text-primary-color">{{ animal.totalCapete }}</td>
+                  <td class="text-right num-font text-secondary-color">{{ animal.masculi }}</td>
+                  <td class="text-right num-font text-secondary-color">{{ animal.femele }}</td>
+                </tr>
+                <tr *ngIf="!data.animaleIndividuale || data.animaleIndividuale.length === 0">
+                  <td colspan="4" class="empty-row">{{ 'Niciun animal identificat individual înregistrat.' | appTranslate }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Sub-section: Efective de Grup -->
+        <div class="table-section-card">
+          <h3 class="section-title">
+            <span class="dot purple"></span>
+            {{ 'Efective de Grup (Pasări, Apicole etc.)' | appTranslate }}
+          </h3>
+          <div class="table-responsive">
+            <table class="premium-table">
+              <thead>
+                <tr>
+                  <th>{{ 'Specie / Categorie Grup' | appTranslate }}</th>
+                  <th class="text-right">{{ 'Total Capete / Familii' | appTranslate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let grup of data.efectiveGrup">
+                  <td class="font-semibold">{{ grup.specie }}</td>
+                  <td class="text-right num-font font-bold text-primary-color">{{ grup.totalCapete }}</td>
+                </tr>
+                <tr *ngIf="!data.efectiveGrup || data.efectiveGrup.length === 0">
+                  <td colspan="2" class="empty-row">{{ 'Niciun efectiv de grup înregistrat.' | appTranslate }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. TAB UTILAJE -->
+    <div class="tab-panel" *ngIf="activeTab === 'UTILAJE'">
+      <div class="panel-header">
+        <div class="panel-header-title">
+          <h2>{{ 'Centralizator Mașini și Utilaje Agricole' | appTranslate }}</h2>
+          <p>{{ 'Inventarul complet al utilajelor, tractoarelor și mijloacelor de transport înregistrate în UAT.' | appTranslate }}</p>
+        </div>
+        <button class="btn-export" (click)="exportUtilaje()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+          </svg>
+          {{ 'Exportă Raport Excel (CSV)' | appTranslate }}
+        </button>
+      </div>
+
+      <div class="table-section-card full-width">
+        <h3 class="section-title">
+          <span class="dot orange"></span>
+          {{ 'Parcul de Mașini și Utilaje Agricole' | appTranslate }}
+        </h3>
+        <div class="table-responsive">
+          <table class="premium-table">
+            <thead>
+              <tr>
+                <th>{{ 'Denumire / Tip Utilaj sau Mașină Agricolă' | appTranslate }}</th>
+                <th class="text-right" style="width: 250px;">{{ 'Total Unități Înregistrate' | appTranslate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let utilaj of data.utilaje">
+                <td class="font-semibold">{{ utilaj.tipUtilaj }}</td>
+                <td class="text-right num-font font-bold text-primary-color" style="padding-right: 40px;">{{ utilaj.totalUnitati }}</td>
+              </tr>
+              <tr *ngIf="!data.utilaje || data.utilaje.length === 0">
+                <td colspan="2" class="empty-row">{{ 'Niciun utilaj sau mașină agricolă înregistrată.' | appTranslate }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</app-layout>

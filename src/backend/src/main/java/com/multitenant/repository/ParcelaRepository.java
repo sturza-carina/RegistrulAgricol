@@ -1,5 +1,6 @@
 package com.multitenant.repository;
 
+import com.multitenant.dto.StatisticaCategorieFolosintaDto;
 import com.multitenant.model.registru.Parcela;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -14,4 +15,10 @@ import org.springframework.data.domain.Pageable;
 public interface ParcelaRepository extends JpaRepository<Parcela, Long> {
     @Query("SELECT p FROM Parcela p WHERE p.teren.id = :terenId")
     Page<Parcela> findByTerenId(@Param("terenId") Long terenId, Pageable pageable);
+
+    @Query("SELECT new com.multitenant.dto.StatisticaCategorieFolosintaDto(p.categorieFolosinta, SUM(p.suprafata)) " +
+           "FROM Parcela p " +
+           "GROUP BY p.categorieFolosinta")
+    List<StatisticaCategorieFolosintaDto> getStatisticiCategoriiFolosinta();
 }
+
