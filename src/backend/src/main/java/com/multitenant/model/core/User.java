@@ -1,5 +1,8 @@
 package com.multitenant.model.core;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,7 +14,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Getter
 @Setter
 @NoArgsConstructor
+@SQLDelete(sql = "UPDATE users SET deleted = true WHERE id=?")
+@SQLRestriction("deleted = false")
 public class User {
+    @jakarta.persistence.Column(nullable = false)
+    private boolean deleted = false;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -38,7 +46,7 @@ public class User {
     @Column(nullable = false)
     private boolean activ = true;
 
-    // Plain Long — references uat.id in the tenant schema (no JPA cross-schema FK)
+    // Plain Long â€” references uat.id in the tenant schema (no JPA cross-schema FK)
     @Column(name = "uat_id")
     private Long uatId;
 

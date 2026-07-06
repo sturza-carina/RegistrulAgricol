@@ -1,5 +1,8 @@
 package com.multitenant.model.persoana;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -12,7 +15,12 @@ import lombok.NoArgsConstructor;
 @Getter
 @Setter
 @NoArgsConstructor
+@SQLDelete(sql = "UPDATE person_relations SET deleted = true WHERE id=?")
+@SQLRestriction("deleted = false")
 public class RelatieRudenie {
+    @jakarta.persistence.Column(nullable = false)
+    private boolean deleted = false;
+
 
     public enum KinshipType {
         PARENT,

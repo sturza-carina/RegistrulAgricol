@@ -1,5 +1,8 @@
 package com.multitenant.model.registru;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,7 +15,12 @@ import com.multitenant.model.persoana.Persoana;
 @Getter
 @Setter
 @NoArgsConstructor
+@SQLDelete(sql = "UPDATE contracte_utilizare SET deleted = true WHERE id=?")
+@SQLRestriction("deleted = false")
 public class ContractUtilizare {
+    @jakarta.persistence.Column(nullable = false)
+    private boolean deleted = false;
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

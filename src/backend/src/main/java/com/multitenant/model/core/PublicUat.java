@@ -1,5 +1,8 @@
 package com.multitenant.model.core;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -7,7 +10,7 @@ import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
- * Global UAT master registry — stored in public.uat.
+ * Global UAT master registry â€” stored in public.uat.
  * Managed exclusively by ROLE_SUPER_ADMIN.
  * Tenant admins "claim" UATs from this list into their local tenant schema's uat table.
  */
@@ -17,7 +20,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @Setter
 @NoArgsConstructor
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@SQLDelete(sql = "UPDATE uats SET deleted = true WHERE id=?")
+@SQLRestriction("deleted = false")
 public class PublicUat {
+    @jakarta.persistence.Column(nullable = false)
+    private boolean deleted = false;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
