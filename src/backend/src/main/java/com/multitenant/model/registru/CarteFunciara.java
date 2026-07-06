@@ -1,5 +1,8 @@
 package com.multitenant.model.registru;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,7 +28,12 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@SQLDelete(sql = "UPDATE carti_funciare SET deleted = true WHERE id=?")
+@SQLRestriction("deleted = false")
 public class CarteFunciara {
+    @jakarta.persistence.Column(nullable = false)
+    private boolean deleted = false;
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,7 +50,7 @@ public class CarteFunciara {
     private Teren teren;
 
     /**
-     * Numarul Cartii Funciare — alocat de ANCPI/Cadastru.
+     * Numarul Cartii Funciare â€” alocat de ANCPI/Cadastru.
      * Nullable la creare, completat ulterior de operator.
      */
     @Column(name = "numar_cf", length = 100)

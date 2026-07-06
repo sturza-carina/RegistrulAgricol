@@ -1,5 +1,8 @@
 package com.multitenant.model.core;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,7 +15,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @Setter
 @NoArgsConstructor
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@SQLDelete(sql = "UPDATE uats SET deleted = true WHERE id=?")
+@SQLRestriction("deleted = false")
 public class Uat {
+    @jakarta.persistence.Column(nullable = false)
+    private boolean deleted = false;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

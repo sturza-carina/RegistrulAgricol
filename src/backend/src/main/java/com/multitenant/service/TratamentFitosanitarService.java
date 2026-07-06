@@ -112,6 +112,13 @@ public class TratamentFitosanitarService {
         tratamentFitosanitarRepository.save(entity);
     }
 
+    @Transactional(readOnly = true)
+    public List<TratamentFitosanitarDTO> getAllTratamente() {
+        return tratamentFitosanitarRepository.findAllWithRelations().stream()
+                .map(this::mapToDto)
+                .toList();
+    }
+
     public TratamentFitosanitarDTO mapToDto(TratamentFitosanitar entity) {
         TratamentFitosanitarDTO dto = new TratamentFitosanitarDTO();
         dto.setId(entity.getId());

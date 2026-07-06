@@ -1,5 +1,8 @@
 package com.multitenant.model.persoana;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -12,7 +15,12 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @NoArgsConstructor
+@SQLDelete(sql = "UPDATE identity_documents SET deleted = true WHERE id=?")
+@SQLRestriction("deleted = false")
 public class ActIdentitate {
+    @jakarta.persistence.Column(nullable = false)
+    private boolean deleted = false;
+
 
     public enum IdentityCardType {
         IDENTITY_CARD,

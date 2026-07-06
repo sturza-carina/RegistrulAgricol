@@ -3,7 +3,7 @@ package com.multitenant.controller;
 import com.multitenant.annotation.TenantRequired;
 import com.multitenant.dto.TratamentFitosanitarDTO;
 import com.multitenant.service.TratamentFitosanitarService;
-import com.multitenant.service.PdfExportService;
+import com.multitenant.service.PdfGeneratorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class TratamentFitosanitarController {
 
     private final TratamentFitosanitarService tratamentFitosanitarService;
-    private final PdfExportService pdfExportService;
+    private final PdfGeneratorService pdfGeneratorService;
 
     @GetMapping
     public ResponseEntity<Page<TratamentFitosanitarDTO>> getTratamente(
@@ -67,12 +67,47 @@ public class TratamentFitosanitarController {
     @GetMapping("/export/pdf")
     public ResponseEntity<byte[]> downloadRegistruPdf() {
         try {
-            byte[] pdfBytes = pdfExportService.generateRegistruPesticidePdf();
+            java.util.List<TratamentFitosanitarDTO> dtos = tratamentFitosanitarService.getAllTratamente();
+            java.util.List<java.util.Map<String, Object>> mappedList = dtos.stream().map(d -> {
+                java.util.Map<String, Object> map = new java.util.HashMap<>();
+                map.put("dataEfectuariiFormatted", d.getDataEfectuarii() != null 
+                        ? d.getDataEfectuarii().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")) 
+                        : "-");
+                
+                String culturaLoc = "";
+                if (d.getParcelaDenumire() != null) {
+                    culturaLoc = "Parcela: " + d.getParcelaDenumire();
+                }
+                map.put("culturaLocatie", culturaLoc);
+                map.put("suprafataTratata", d.getSuprafataTratata());
+                map.put("agentDaunator", d.getAgentDaunator() != null ? d.getAgentDaunator() : "-");
+                map.put("catalogPppDenumire", d.getCatalogPppDenumire() != null ? d.getCatalogPppDenumire() : "-");
+                
+                String dozaInfo = "-";
+                if (d.getCatalogPppDozaOmologata() != null) {
+                    dozaInfo = String.format("Omol: %.2f / Util: %.2f", d.getCatalogPppDozaOmologata(), d.getDozaUtilizata());
+                }
+                map.put("dozaFormatted", dozaInfo);
+                
+                map.put("dataIncepereRecoltareFormatted", d.getDataIncepereRecoltare() != null 
+                        ? d.getDataIncepereRecoltare().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy")) 
+                        : "-");
+                map.put("documentDareConsum", d.getDocumentDareConsum());
+                map.put("responsabil", d.getResponsabil());
+                map.put("semnaturaElectronica", d.getSemnaturaElectronica());
+                return map;
+            }).toList();
+
+            java.util.Map<String, Object> variables = new java.util.HashMap<>();
+            variables.put("tratamente", mappedList);
+
+            byte[] pdfBytes = pdfGeneratorService.generatePdfFromHtml("registru-pesticide", variables);
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"registru_tratamente_ppp.pdf\"")
                     .contentType(MediaType.APPLICATION_PDF)
                     .body(pdfBytes);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }
     }

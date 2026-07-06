@@ -1,5 +1,8 @@
 package com.multitenant.model.animal;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.multitenant.model.persoana.Persoana;
 import com.multitenant.model.registru.Gospodarie;
@@ -14,7 +17,12 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @NoArgsConstructor
+@SQLDelete(sql = "UPDATE efective_grup SET deleted = true WHERE id=?")
+@SQLRestriction("deleted = false")
 public class EfectivGrup {
+    @jakarta.persistence.Column(nullable = false)
+    private boolean deleted = false;
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,10 +54,10 @@ public class EfectivGrup {
     private int numarCapeteFamilii;
 
     /**
-     * Data la care a fost înregistrată această stare a efectivului.
-     * Fiecare înregistrare este un snapshot imutabil — numărul de capete
-     * nu se actualizează direct, ci se adaugă un rând nou cu data curentă.
-     * ANSVSA impune datarea explicită a fiecărei modificări de efectiv.
+     * Data la care a fost Ã®nregistratÄƒ aceastÄƒ stare a efectivului.
+     * Fiecare Ã®nregistrare este un snapshot imutabil â€” numÄƒrul de capete
+     * nu se actualizeazÄƒ direct, ci se adaugÄƒ un rÃ¢nd nou cu data curentÄƒ.
+     * ANSVSA impune datarea explicitÄƒ a fiecÄƒrei modificÄƒri de efectiv.
      */
     @Column(name = "data_inregistrare", nullable = false)
     private LocalDate dataInregistrare = LocalDate.now();
