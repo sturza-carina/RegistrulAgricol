@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Document Cerere</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 40px;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 20px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            font-size: 18px;
+            color: #666;
+        }
+        .content {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .field-row {
+            margin-bottom: 15px;
+        }
+        .field-label {
+            font-weight: bold;
+            width: 200px;
+            display: inline-block;
+        }
+        .field-value {
+            display: inline-block;
+        }
+        .footer {
+            margin-top: 100px;
+            text-align: right;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title" th:text="${cerere.tipCerere.name()}">Atestat / Adeverinta</div>
+        <div class="subtitle" th:text="'Cod: ' + ${cerere.codCerere}">Cod Cerere: -</div>
+    </div>
+
+    <div class="content">
+        <p>Prin prezenta se certifica faptul ca datele cererii aprobate sunt urmatoarele:</p>
+
+        <div class="field-row">
+            <span class="field-label">Nume Solicitant:</span>
+            <span class="field-value" th:text="${cerere.nume}">-</span>
+        </div>
+
+        <div class="field-row">
+            <span class="field-label">Domiciliu:</span>
+            <span class="field-value" th:text="${cerere.domiciliu}">-</span>
+        </div>
+
+        <div class="field-row" th:if="${cerere.telefon != null}">
+            <span class="field-label">Telefon:</span>
+            <span class="field-value" th:text="${cerere.telefon}">-</span>
+        </div>
+
+        <div class="field-row" th:if="${cerere.email != null}">
+            <span class="field-label">Email:</span>
+            <span class="field-value" th:text="${cerere.email}">-</span>
+        </div>
+
+        <div class="field-row" th:if="${cerere.numarCarteFunciara != null}">
+            <span class="field-label">Numar CF:</span>
+            <span class="field-value" th:text="${cerere.numarCarteFunciara}">-</span>
+        </div>
+
+        <p style="margin-top: 40px;">
+            Aceasta este o generare automata a cererii 
+            <strong th:text="${cerere.codCerere}"></strong> 
+            care a fost aprobata si solutionata de catre functionarii primariei.
+        </p>
+    </div>
+
+    <div class="footer">
+        <p>Generat la data: <span th:text="${#dates.format(#dates.createNow(), 'dd/MM/yyyy HH:mm')}"></span></p>
+    </div>
+</body>
+</html>

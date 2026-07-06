@@ -73,10 +73,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private String parseJwt(HttpServletRequest request) {
         if (request.getCookies() != null) {
+            String adminJwt = null;
+            String cetateanJwt = null;
             for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
                 if ("jwt".equals(cookie.getName())) {
-                    return cookie.getValue();
+                    adminJwt = cookie.getValue();
+                } else if ("jwt_cetatean".equals(cookie.getName())) {
+                    cetateanJwt = cookie.getValue();
                 }
+            }
+
+            boolean isCetateanRoute = request.getRequestURI().startsWith("/api/public/");
+            if (isCetateanRoute && cetateanJwt != null) {
+                return cetateanJwt;
+            } else if (!isCetateanRoute && adminJwt != null) {
+                return adminJwt;
+            } else if (cetateanJwt != null) {
+                return cetateanJwt;
+            } else if (adminJwt != null) {
+                return adminJwt;
             }
         }
 

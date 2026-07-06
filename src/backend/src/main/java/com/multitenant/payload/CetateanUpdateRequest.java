@@ -10,7 +10,6 @@ public class CetateanUpdateRequest {
     @NotBlank
     private String nume;
 
-    @NotBlank
     private String prenume;
 
     @NotBlank

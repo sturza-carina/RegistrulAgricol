@@ -1,6 +1,7 @@
 package com.multitenant.controller;
 
 import com.multitenant.model.core.Cetatean;
+import com.multitenant.model.core.TipPersoanaCetatean;
 import com.multitenant.payload.CetateanLoginRequest;
 import com.multitenant.payload.CetateanSignupRequest;
 import com.multitenant.payload.UserInfoResponse;
@@ -43,12 +44,22 @@ public class CetateanAuthController {
         }
 
         if (cetateanRepository.findByCnpClar(request.getCnp()).isPresent()) {
-            return ResponseEntity.badRequest().body("Error: CNP is already in use!");
+            return ResponseEntity.badRequest().body("Error: CNP/CUI is already in use!");
+        }
+
+        TipPersoanaCetatean tipPersoana = TipPersoanaCetatean.FIZICA;
+        if (request.getTipPersoana() != null && request.getTipPersoana().equals("JURIDICA")) {
+            tipPersoana = TipPersoanaCetatean.JURIDICA;
+        }
+
+        if (tipPersoana == TipPersoanaCetatean.FIZICA && (request.getPrenume() == null || request.getPrenume().trim().isEmpty())) {
+            return ResponseEntity.badRequest().body("Error: Prenume is required for Persoana Fizica!");
         }
 
         Cetatean cetatean = new Cetatean();
+        cetatean.setTipPersoana(tipPersoana);
         cetatean.setNume(request.getNume());
-        cetatean.setPrenume(request.getPrenume());
+        cetatean.setPrenume(tipPersoana == TipPersoanaCetatean.FIZICA ? request.getPrenume() : null);
         cetatean.setCnp(request.getCnp());
         cetatean.setEmail(request.getEmail());
         cetatean.setParola(passwordEncoder.encode(request.getParola()));
@@ -79,7 +90,7 @@ public class CetateanAuthController {
 
         String jwt = jwtUtils.generateCetateanJwtToken(cetatean);
 
-        ResponseCookie jwtCookie = ResponseCookie.from("jwt", jwt)
+        ResponseCookie jwtCookie = ResponseCookie.from("jwt_cetatean", jwt)
                 .httpOnly(true)
                 .secure(false) // Set to true in production if using HTTPS
                 .path("/")
@@ -114,6 +125,20 @@ public class CetateanAuthController {
         return ResponseEntity.ok(cetatean);
     }
     
+    @PostMapping("/signout")
+    public ResponseEntity<?> logoutCetatean() {
+        ResponseCookie cookie = ResponseCookie.from("jwt_cetatean", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body("Signed out successfully!");
+    }
+    
     @PutMapping("/me")
     public ResponseEntity<?> updateCurrentCetatean(@Valid @RequestBody CetateanUpdateRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -128,7 +153,12 @@ public class CetateanAuthController {
         Cetatean cetatean = cetateanOpt.get();
 
         cetatean.setNume(request.getNume());
-        cetatean.setPrenume(request.getPrenume());
+        if (cetatean.getTipPersoana() == TipPersoanaCetatean.FIZICA) {
+            if (request.getPrenume() == null || request.getPrenume().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Error: Prenume is required for Persoana Fizica!");
+            }
+            cetatean.setPrenume(request.getPrenume());
+        }
         cetatean.setTelefon(request.getTelefon());
         cetatean.setJudet(request.getJudet());
         cetatean.setLocalitate(request.getLocalitate());

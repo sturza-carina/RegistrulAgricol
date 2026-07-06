@@ -6,18 +6,31 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
+import java.util.Optional;
 import java.time.LocalDate;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ContractUtilizareRepository extends JpaRepository<ContractUtilizare, Long> {
+
+    @NonNull
+    @EntityGraph(attributePaths = {"parcela", "locatorProprietar", "locatorUtilizator"})
+    Page<ContractUtilizare> findAll(@NonNull Pageable pageable);
+
+    @NonNull
+    @EntityGraph(attributePaths = {"parcela", "locatorProprietar", "locatorUtilizator"})
+    Optional<ContractUtilizare> findById(@NonNull Long id);
+
+    @EntityGraph(attributePaths = {"parcela", "locatorProprietar", "locatorUtilizator"})
     Page<ContractUtilizare> findByParcelaId(Long parcelaId, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"parcela", "locatorProprietar", "locatorUtilizator"})
     @Query("SELECT c FROM ContractUtilizare c WHERE c.parcela.teren.gospodarie.uat.codSiruta = :uatCode")
     Page<ContractUtilizare> findByUatCode(@Param("uatCode") String uatCode, Pageable pageable);
 

@@ -19,6 +19,17 @@ export class AuthService {
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient, private router: Router) {
+    const userStr = localStorage.getItem('cetateanUser');
+    if (userStr) {
+      try {
+        const parsed = JSON.parse(userStr);
+        if (parsed && parsed.role === 'CETATEAN') {
+          this.currentUserSubject.next(parsed);
+        }
+      } catch (e) {
+        console.error('Failed to parse user from localStorage', e);
+      }
+    }
     this.checkSession();
   }
 
@@ -31,15 +42,25 @@ export class AuthService {
   }
 
   checkSession() {
-    this.http.get<User>('/api/auth/me').subscribe({
-      next: (user) => {
-        if (user && user.role === 'CETATEAN') {
-          this.currentUserSubject.next(user);
+    this.http.get<any>('/api/public/cetatean/me').subscribe({
+      next: (cetatean) => {
+        if (cetatean && cetatean.id) {
+          const normalizedUser: User = {
+            id: cetatean.id,
+            username: cetatean.email,
+            role: 'CETATEAN'
+          };
+          localStorage.setItem('cetateanUser', JSON.stringify(normalizedUser));
+          this.currentUserSubject.next(normalizedUser);
         } else {
+          localStorage.removeItem('cetateanUser');
           this.currentUserSubject.next(null);
         }
       },
-      error: () => this.currentUserSubject.next(null)
+      error: () => {
+        localStorage.removeItem('cetateanUser');
+        this.currentUserSubject.next(null);
+      }
     });
   }
 
@@ -47,6 +68,7 @@ export class AuthService {
     return this.http.post<User>(`${this.apiUrl}/login`, { email, parola }).pipe(
       tap(user => {
         if (user && user.role === 'CETATEAN') {
+          localStorage.setItem('cetateanUser', JSON.stringify(user));
           this.currentUserSubject.next(user);
         }
       }),
@@ -61,14 +83,16 @@ export class AuthService {
   }
 
   logout() {
-    this.http.post('/api/auth/signout', {}, { responseType: 'text' }).subscribe({
+    this.http.post(`${this.apiUrl}/signout`, {}, { responseType: 'text' }).subscribe({
       next: () => {
+        localStorage.removeItem('cetateanUser');
         this.currentUserSubject.next(null);
-        this.router.navigate(['/login']);
+        this.router.navigate(['/']);
       },
       error: () => {
+        localStorage.removeItem('cetateanUser');
         this.currentUserSubject.next(null);
-        this.router.navigate(['/login']);
+        this.router.navigate(['/']);
       }
     });
   }

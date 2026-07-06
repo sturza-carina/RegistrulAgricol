@@ -1,12 +1,32 @@
 <div class="container">
-  <div class="card">
+  <div class="card" *ngIf="step === 1 && !successCode">
+    <h2 style="margin-bottom: 20px; font-size: 1.5rem; color: #1e293b; text-align: center;">Selectați tipul cererii</h2>
+    <div class="cerere-grid">
+      <div class="cerere-card" *ngFor="let tip of tipuriCereri" (click)="selectTipCerere(tip)">
+        <div class="cerere-icon">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+        </div>
+        <h4 class="cerere-title">{{ tip.title }}</h4>
+        <p class="cerere-desc">{{ tip.description }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" *ngIf="step === 2 || successCode">
     <div *ngIf="successCode" style="background: #ecfdf5; border: 1px solid #10b981; color: #065f46; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
       <h3 style="margin-bottom: 10px;">Cerere trimisă cu succes!</h3>
       <p>Codul cererii dumneavoastră este: <strong style="font-size: 1.2rem; color: #0ea5e9;">{{ successCode }}</strong></p>
       <p style="font-size: 0.9rem; margin-top: 10px;">Vă rugăm să păstrați acest cod pentru a putea verifica stadiul cererii.</p>
     </div>
 
-    <form *ngIf="!successCode" (ngSubmit)="submitCerere()">
+    <form *ngIf="step === 2 && !successCode" (ngSubmit)="submitCerere()">
+      <div class="form-header" style="display: flex; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px;">
+        <button type="button" class="back-btn" (click)="goBack()">
+          <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        </button>
+        <h2 style="margin: 0; font-size: 1.25rem; color: #0f172a; margin-left: 15px;">{{ selectedTipTitle }}</h2>
+      </div>
+
       <p class="warning-text"><span class="warning-text-bold">ATENTIE!</span> Va rugam ca pe intreg parcursul inregistrarii cererii sa evitati folosirea diacriticelor si a caracterelor speciale</p>
       <p class="warning-text" style="margin-bottom: 25px;">Pentru cererile depuse de <span class="warning-text-bold">cetatenii straini care nu detin CNP</span> se va folosi CNP 1111111111111</p>
 
@@ -135,27 +155,26 @@
             </div>
           </div>
         </div>
-        <div class="form-col">
-           <!-- Empty space like in image -->
-        </div>
       </div>
 
       <p class="warning-text warning-text-bold" style="margin-top: 15px;">Se va folosi adresa de DOMICILIU / SEDIU</p>
 
-      <div class="section-title">Date de identificare ale terenului:</div>
+      <div *ngIf="cerere.tipCerere === TipCerere.ADEVERINTA_ROL">
+        <div class="section-title">Date de identificare ale terenului:</div>
 
-      <div class="inline-row">
-        <div class="inline-group">
-          <label>Număr carte funciară<span style="color:#ff0000">*</span></label>
-          <input type="text" [(ngModel)]="cerere.numarCarteFunciara" name="numarCarteFunciara" required>
-        </div>
-        <div class="inline-group">
-          <label>Număr cadastral sau topografic<span style="color:#ff0000">*</span></label>
-          <input type="text" [(ngModel)]="cerere.numarCadastral" name="numarCadastral" required>
+        <div class="inline-row">
+          <div class="inline-group">
+            <label>Număr carte funciară</label>
+            <input type="text" [(ngModel)]="cerere.numarCarteFunciara" name="numarCarteFunciara">
+          </div>
+          <div class="inline-group">
+            <label>Număr cadastral sau topografic</label>
+            <input type="text" [(ngModel)]="cerere.numarCadastral" name="numarCadastral">
+          </div>
         </div>
       </div>
 
-      <div style="overflow: hidden;">
+      <div style="overflow: hidden; margin-top: 20px;">
         <button type="submit" class="submit-btn" [disabled]="isSubmitting || !cerere.nume || !cerere.uatId || !cerere.cnpCui">
           {{ isSubmitting ? 'Se trimite...' : 'Trimite Cererea' }}
         </button>
@@ -163,3 +182,4 @@
     </form>
   </div>
 </div>
+

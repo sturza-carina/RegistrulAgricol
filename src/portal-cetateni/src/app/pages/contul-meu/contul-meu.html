@@ -9,8 +9,8 @@
         {{ profile.prenume?.charAt(0) }}{{ profile.nume?.charAt(0) }}
       </div>
       <div class="user-info">
-        <h3>{{ profile.prenume }} {{ profile.nume }}</h3>
-        <p>Cetățean</p>
+        <h3>{{ profile.tipPersoana === 'FIZICA' ? profile.prenume + ' ' + profile.nume : profile.nume }}</h3>
+        <p>{{ profile.tipPersoana === 'JURIDICA' ? 'Persoană Juridică' : 'Cetățean' }}</p>
       </div>
     </div>
 
@@ -60,17 +60,90 @@
         </div>
       </div>
 
+      <!-- Atestat & Carnet Status section -->
+      <div *ngIf="atestatStatus" class="documents-status" style="display: flex; gap: 20px; margin-bottom: 30px;">
+        <!-- Atestat Card -->
+        <div class="status-card" style="flex: 1; padding: 20px; border-radius: 10px; border: 1px solid var(--border-color); background-color: white;">
+          <h3 style="margin-top: 0; color: var(--text-color); font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            Atestat de Producător
+          </h3>
+          
+          <div *ngIf="atestatStatus.areAtestat" style="margin-top: 15px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+              <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #10b981;"></span>
+              <strong style="color: #10b981;">Existent</strong>
+            </div>
+            <p *ngIf="atestatStatus.numarAtestat" style="margin: 5px 0; font-size: 0.9rem; color: #4b5563;">Număr: <strong>{{ atestatStatus.numarAtestat }}</strong></p>
+            <p *ngIf="atestatStatus.atestatValabilPanaLa" style="margin: 5px 0; font-size: 0.9rem; color: #4b5563;">Valabil până la: <strong>{{ atestatStatus.atestatValabilPanaLa | date:'dd.MM.yyyy' }}</strong></p>
+          </div>
+          
+          <div *ngIf="!atestatStatus.areAtestat" style="margin-top: 15px;">
+             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+              <ng-container *ngIf="atestatStatus.stareCerereAtestat === 'PENDING'">
+                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #f59e0b;"></span>
+                <strong style="color: #f59e0b;">Cerere în așteptare</strong>
+              </ng-container>
+              <ng-container *ngIf="atestatStatus.stareCerereAtestat === 'DECLINED'">
+                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #ef4444;"></span>
+                <strong style="color: #ef4444;">Cerere refuzată</strong>
+              </ng-container>
+              <ng-container *ngIf="!atestatStatus.stareCerereAtestat || atestatStatus.stareCerereAtestat === 'ACCEPTED'">
+                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #ef4444;"></span>
+                <strong style="color: #ef4444;">Inexistent</strong>
+              </ng-container>
+            </div>
+            <a *ngIf="!atestatStatus.stareCerereAtestat || atestatStatus.stareCerereAtestat === 'DECLINED' || atestatStatus.stareCerereAtestat === 'ACCEPTED'" href="/cereri" class="btn-primary" style="display: inline-block; text-decoration: none; font-size: 0.85rem; padding: 8px 16px;">Solicită Eliberare</a>
+          </div>
+        </div>
+
+        <!-- Carnet Card -->
+        <div class="status-card" style="flex: 1; padding: 20px; border-radius: 10px; border: 1px solid var(--border-color); background-color: white;">
+          <h3 style="margin-top: 0; color: var(--text-color); font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            Carnet de Comercializare
+          </h3>
+          
+          <div *ngIf="atestatStatus.areCarnet" style="margin-top: 15px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+              <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #10b981;"></span>
+              <strong style="color: #10b981;">Existent</strong>
+            </div>
+            <p *ngIf="atestatStatus.numarCarnet" style="margin: 5px 0; font-size: 0.9rem; color: #4b5563;">Număr: <strong>{{ atestatStatus.numarCarnet }}</strong></p>
+            <p *ngIf="atestatStatus.carnetDataEliberare" style="margin: 5px 0; font-size: 0.9rem; color: #4b5563;">Data eliberării: <strong>{{ atestatStatus.carnetDataEliberare | date:'dd.MM.yyyy' }}</strong></p>
+          </div>
+          
+          <div *ngIf="!atestatStatus.areCarnet" style="margin-top: 15px;">
+             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+              <ng-container *ngIf="atestatStatus.stareCerereCarnet === 'PENDING'">
+                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #f59e0b;"></span>
+                <strong style="color: #f59e0b;">Cerere în așteptare</strong>
+              </ng-container>
+              <ng-container *ngIf="atestatStatus.stareCerereCarnet === 'DECLINED'">
+                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #ef4444;"></span>
+                <strong style="color: #ef4444;">Cerere refuzată</strong>
+              </ng-container>
+              <ng-container *ngIf="!atestatStatus.stareCerereCarnet || atestatStatus.stareCerereCarnet === 'ACCEPTED'">
+                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #ef4444;"></span>
+                <strong style="color: #ef4444;">Inexistent</strong>
+              </ng-container>
+            </div>
+            <a *ngIf="!atestatStatus.stareCerereCarnet || atestatStatus.stareCerereCarnet === 'DECLINED' || atestatStatus.stareCerereCarnet === 'ACCEPTED'" href="/cereri" class="btn-primary" style="display: inline-block; text-decoration: none; font-size: 0.85rem; padding: 8px 16px;">Solicită Eliberare</a>
+          </div>
+        </div>
+      </div>
+
       <form (ngSubmit)="salveazaDate()" #profileForm="ngForm" class="profile-form">
         
         <div class="form-section">
           <h3 class="section-title">Date de identificare</h3>
           
           <div class="form-row">
-            <div class="form-group">
-              <label for="nume">Nume</label>
+            <div class="form-group" [ngClass]="{'half': profile.tipPersoana === 'FIZICA'}" [style.width]="profile.tipPersoana === 'JURIDICA' ? '100%' : 'auto'">
+              <label for="nume">{{ profile.tipPersoana === 'FIZICA' ? 'Nume' : 'Denumire Firmă' }}</label>
               <input type="text" id="nume" name="nume" [(ngModel)]="profile.nume" required>
             </div>
-            <div class="form-group">
+            <div class="form-group half" *ngIf="profile.tipPersoana === 'FIZICA'">
               <label for="prenume">Prenume</label>
               <input type="text" id="prenume" name="prenume" [(ngModel)]="profile.prenume" required>
             </div>
@@ -78,9 +151,9 @@
           
           <div class="form-row">
             <div class="form-group">
-              <label for="cnp">CNP</label>
+              <label for="cnp">{{ profile.tipPersoana === 'FIZICA' ? 'CNP' : 'CUI' }}</label>
               <input type="text" id="cnp" name="cnp" [value]="profile.cnp" disabled class="readonly-input">
-              <small class="help-text">CNP-ul nu poate fi modificat.</small>
+              <small class="help-text">{{ profile.tipPersoana === 'FIZICA' ? 'CNP-ul' : 'CUI-ul' }} nu poate fi modificat.</small>
             </div>
             <div class="form-group">
               <label for="email">Adresă de Email</label>
