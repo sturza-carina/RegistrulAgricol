@@ -45,7 +45,7 @@ public class AdeverintaController {
             @PathVariable Long gospodarieId,
             @PathVariable Long persoanaId) {
         
-        Gospodarie gospodarie = gospodarieRepository.findById(gospodarieId)
+        Gospodarie gospodarie = gospodarieRepository.findByIdWithUat(gospodarieId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Gospodaria nu a fost gasita"));
         
         Persoana persoana = persoanaRepository.findById(persoanaId)
