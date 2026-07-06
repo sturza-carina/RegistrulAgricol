@@ -54,6 +54,8 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final CatalogIngrasaminteRepository catalogIngrasaminteRepository;
     private final TratamentFitosanitarRepository fitosanitarRepository;
     private final FertilizareRepository fertilizareRepository;
+    private final com.multitenant.repository.AnimalIndividualRepository animalIndividualRepository;
+    private final com.multitenant.repository.EfectivGrupRepository efectivGrupRepository;
 
     public DatabaseSeeder(TenantService tenantService,
                           UserRepository userRepository,
@@ -77,7 +79,9 @@ public class DatabaseSeeder implements CommandLineRunner {
                           CatalogPppRepository catalogPppRepository,
                           CatalogIngrasaminteRepository catalogIngrasaminteRepository,
                           TratamentFitosanitarRepository fitosanitarRepository,
-                          FertilizareRepository fertilizareRepository) {
+                          FertilizareRepository fertilizareRepository,
+                          com.multitenant.repository.AnimalIndividualRepository animalIndividualRepository,
+                          com.multitenant.repository.EfectivGrupRepository efectivGrupRepository) {
         this.tenantService = tenantService;
         this.userRepository = userRepository;
         this.gospodarieRepository = gospodarieRepository;
@@ -101,6 +105,8 @@ public class DatabaseSeeder implements CommandLineRunner {
         this.catalogIngrasaminteRepository = catalogIngrasaminteRepository;
         this.fitosanitarRepository = fitosanitarRepository;
         this.fertilizareRepository = fertilizareRepository;
+        this.animalIndividualRepository = animalIndividualRepository;
+        this.efectivGrupRepository = efectivGrupRepository;
     }
 
     @Override
@@ -332,19 +338,33 @@ public class DatabaseSeeder implements CommandLineRunner {
 
                     // Seed CulturaParcela pentru parcelele Arabil
                     if ("Arabil".equals(p.getCategorieFolosinta())) {
-                        com.multitenant.model.registru.CulturaParcela cultura = new com.multitenant.model.registru.CulturaParcela();
-                        cultura.setAnAgricol(2025);
-                        cultura.setSpecieCultura(i % 2 == 0 ? "Grâu" : "Porumb");
-                        cultura.setSuprafataCultivataHa(p.getSuprafata());
-                        cultura.setDataInsamantare(java.time.LocalDate.of(2025, 3, 15));
-                        cultura.setDataRecoltare(java.time.LocalDate.of(2025, 8, 20));
-                        cultura.setProductieHectarKg(4500.0 + i * 100);
-                        cultura.setProductieTotalaTone((4500.0 + i * 100) * p.getSuprafata() / 1000);
-                        cultura.setSistemIrigare("Aspersiune");
-                        cultura.setTipSol("Cernoziom");
-                        cultura.setCulturaPrecedenta("Rapiță");
-                        cultura.setParcela(p);
-                        culturaParcelaRepository.save(cultura);
+                        com.multitenant.model.registru.CulturaParcela cultura2025 = new com.multitenant.model.registru.CulturaParcela();
+                        cultura2025.setAnAgricol(2025);
+                        cultura2025.setSpecieCultura(i % 2 == 0 ? "Grâu" : "Porumb");
+                        cultura2025.setSuprafataCultivataHa(p.getSuprafata());
+                        cultura2025.setDataInsamantare(java.time.LocalDate.of(2025, 3, 15));
+                        cultura2025.setDataRecoltare(java.time.LocalDate.of(2025, 8, 20));
+                        cultura2025.setProductieHectarKg(4500.0 + i * 100);
+                        cultura2025.setProductieTotalaTone((4500.0 + i * 100) * p.getSuprafata() / 1000);
+                        cultura2025.setSistemIrigare("Aspersiune");
+                        cultura2025.setTipSol("Cernoziom");
+                        cultura2025.setCulturaPrecedenta("Rapiță");
+                        cultura2025.setParcela(p);
+                        culturaParcelaRepository.save(cultura2025);
+
+                        com.multitenant.model.registru.CulturaParcela cultura2026 = new com.multitenant.model.registru.CulturaParcela();
+                        cultura2026.setAnAgricol(2026);
+                        cultura2026.setSpecieCultura(i % 2 == 0 ? "Orz" : "Floarea-soarelui");
+                        cultura2026.setSuprafataCultivataHa(p.getSuprafata());
+                        cultura2026.setDataInsamantare(java.time.LocalDate.of(2026, 4, 5));
+                        cultura2026.setDataRecoltare(java.time.LocalDate.of(2026, 9, 10));
+                        cultura2026.setProductieHectarKg(4800.0 + i * 120);
+                        cultura2026.setProductieTotalaTone((4800.0 + i * 120) * p.getSuprafata() / 1000);
+                        cultura2026.setSistemIrigare("Picurare");
+                        cultura2026.setTipSol("Cernoziom");
+                        cultura2026.setCulturaPrecedenta(i % 2 == 0 ? "Grâu" : "Porumb");
+                        cultura2026.setParcela(p);
+                        culturaParcelaRepository.save(cultura2026);
                     }
 
                     // Seed Pom pentru parcelele Livadă
@@ -448,13 +468,80 @@ public class DatabaseSeeder implements CommandLineRunner {
                     cladireRepository.save(cladire);
 
                     com.multitenant.model.registru.Machinery machinery = new com.multitenant.model.registru.Machinery();
-                    machinery.setTipUtilaj("Tractor");
-                    machinery.setMarca("John Deere");
-                    machinery.setModel("X" + i);
-                    machinery.setAnFabricatie(2010 + i);
-                    machinery.setNumarInmatriculare(String.format("CJ-%02d-TRC", i));
+                    String[] tipuriUtilaje = {"Tractor", "Plug", "Remorcă", "Semănătoare", "Combină", "Grapă"};
+                    String tipUtilaj = tipuriUtilaje[i % tipuriUtilaje.length];
+                    machinery.setTipUtilaj(tipUtilaj);
+                    machinery.setMarca(i % 2 == 0 ? "John Deere" : "New Holland");
+                    machinery.setModel("Model " + i);
+                    machinery.setAnFabricatie(2010 + (i % 15));
+                    machinery.setNumarInmatriculare(String.format("CJ-%02d-AGR", i));
                     machinery.setGospodarie(savedG);
                     machineryRepository.save(machinery);
+
+                    // Seed animal individual for Cluj
+                    if (i % 3 == 0) {
+                        com.multitenant.model.animal.AnimalIndividual bovine = new com.multitenant.model.animal.AnimalIndividual();
+                        bovine.setGospodarie(savedG);
+                        bovine.setProprietar(persoana);
+                        bovine.setNumarCrotal("RO-CJ-" + String.format("%05d", 1000 + i));
+                        bovine.setSpecie(com.multitenant.model.animal.SpecieAnimal.BOVINE);
+                        bovine.setRasa(i % 2 == 0 ? "Bălțată Românească" : "Holstein");
+                        bovine.setSex(i % 2 == 0 ? com.multitenant.model.animal.SexAnimal.FEMININ : com.multitenant.model.animal.SexAnimal.MASCULIN);
+                        bovine.setDataNastere(java.time.LocalDate.now().minusYears(2).minusMonths(i));
+                        bovine.setGreutateKg(450.0 + i * 15);
+                        bovine.setStareActiva(true);
+                        bovine.setTenantId("cluj");
+                        animalIndividualRepository.save(bovine);
+                    } else if (i % 3 == 1) {
+                        com.multitenant.model.animal.AnimalIndividual ovine = new com.multitenant.model.animal.AnimalIndividual();
+                        ovine.setGospodarie(savedG);
+                        ovine.setProprietar(persoana);
+                        ovine.setNumarCrotal("RO-CJ-" + String.format("%05d", 2000 + i));
+                        ovine.setSpecie(com.multitenant.model.animal.SpecieAnimal.OVINE);
+                        ovine.setRasa("Țurcană");
+                        ovine.setSex(com.multitenant.model.animal.SexAnimal.FEMININ);
+                        ovine.setDataNastere(java.time.LocalDate.now().minusYears(1).minusMonths(i));
+                        ovine.setGreutateKg(60.0 + i);
+                        ovine.setStareActiva(true);
+                        ovine.setTenantId("cluj");
+                        animalIndividualRepository.save(ovine);
+                    } else {
+                        com.multitenant.model.animal.AnimalIndividual caprine = new com.multitenant.model.animal.AnimalIndividual();
+                        caprine.setGospodarie(savedG);
+                        caprine.setProprietar(persoana);
+                        caprine.setNumarCrotal("RO-CJ-" + String.format("%05d", 3000 + i));
+                        caprine.setSpecie(com.multitenant.model.animal.SpecieAnimal.CAPRINE);
+                        caprine.setRasa("Carpatină");
+                        caprine.setSex(com.multitenant.model.animal.SexAnimal.FEMININ);
+                        caprine.setDataNastere(java.time.LocalDate.now().minusYears(1).minusMonths(i));
+                        caprine.setGreutateKg(45.0 + i);
+                        caprine.setStareActiva(true);
+                        caprine.setTenantId("cluj");
+                        animalIndividualRepository.save(caprine);
+                    }
+
+                    // Seed animal grup for Cluj
+                    if (i % 2 == 0) {
+                        com.multitenant.model.animal.EfectivGrup pasari = new com.multitenant.model.animal.EfectivGrup();
+                        pasari.setGospodarie(savedG);
+                        pasari.setProprietar(persoana);
+                        pasari.setSpecie(com.multitenant.model.animal.SpecieAnimal.PASARI);
+                        pasari.setNumarCapeteFamilii(50 + i * 5);
+                        pasari.setDataInregistrare(java.time.LocalDate.now());
+                        pasari.setDetalii("Găini, Rațe, Gâște");
+                        pasari.setTenantId("cluj");
+                        efectivGrupRepository.save(pasari);
+                    } else {
+                        com.multitenant.model.animal.EfectivGrup apicole = new com.multitenant.model.animal.EfectivGrup();
+                        apicole.setGospodarie(savedG);
+                        apicole.setProprietar(persoana);
+                        apicole.setSpecie(com.multitenant.model.animal.SpecieAnimal.APICOLE);
+                        apicole.setNumarCapeteFamilii(10 + i);
+                        apicole.setDataInregistrare(java.time.LocalDate.now());
+                        apicole.setDetalii("Familii de albine productive");
+                        apicole.setTenantId("cluj");
+                        efectivGrupRepository.save(apicole);
+                    }
                 }
 
                 // Adaugam o cerere dummy pentru cetatean
@@ -597,19 +684,33 @@ public class DatabaseSeeder implements CommandLineRunner {
 
                     // Seed CulturaParcela pentru parcelele Arabil
                     if ("Arabil".equals(p.getCategorieFolosinta())) {
-                        com.multitenant.model.registru.CulturaParcela cultura = new com.multitenant.model.registru.CulturaParcela();
-                        cultura.setAnAgricol(2025);
-                        cultura.setSpecieCultura("Floarea-soarelui");
-                        cultura.setSuprafataCultivataHa(p.getSuprafata());
-                        cultura.setDataInsamantare(java.time.LocalDate.of(2025, 4, 10));
-                        cultura.setDataRecoltare(java.time.LocalDate.of(2025, 9, 5));
-                        cultura.setProductieHectarKg(2800.0 + i * 30);
-                        cultura.setProductieTotalaTone((2800.0 + i * 30) * p.getSuprafata() / 1000);
-                        cultura.setSistemIrigare("Fără irigare");
-                        cultura.setTipSol("Brun-roșcat");
-                        cultura.setCulturaPrecedenta("Grâu");
-                        cultura.setParcela(p);
-                        culturaParcelaRepository.save(cultura);
+                        com.multitenant.model.registru.CulturaParcela cultura2025 = new com.multitenant.model.registru.CulturaParcela();
+                        cultura2025.setAnAgricol(2025);
+                        cultura2025.setSpecieCultura("Floarea-soarelui");
+                        cultura2025.setSuprafataCultivataHa(p.getSuprafata());
+                        cultura2025.setDataInsamantare(java.time.LocalDate.of(2025, 4, 10));
+                        cultura2025.setDataRecoltare(java.time.LocalDate.of(2025, 9, 5));
+                        cultura2025.setProductieHectarKg(2800.0 + i * 30);
+                        cultura2025.setProductieTotalaTone((2800.0 + i * 30) * p.getSuprafata() / 1000);
+                        cultura2025.setSistemIrigare("Fără irigare");
+                        cultura2025.setTipSol("Brun-roșcat");
+                        cultura2025.setCulturaPrecedenta("Grâu");
+                        cultura2025.setParcela(p);
+                        culturaParcelaRepository.save(cultura2025);
+
+                        com.multitenant.model.registru.CulturaParcela cultura2026 = new com.multitenant.model.registru.CulturaParcela();
+                        cultura2026.setAnAgricol(2026);
+                        cultura2026.setSpecieCultura("Sfeclă de zahăr");
+                        cultura2026.setSuprafataCultivataHa(p.getSuprafata());
+                        cultura2026.setDataInsamantare(java.time.LocalDate.of(2026, 3, 20));
+                        cultura2026.setDataRecoltare(java.time.LocalDate.of(2026, 10, 5));
+                        cultura2026.setProductieHectarKg(55000.0 + i * 500);
+                        cultura2026.setProductieTotalaTone((55000.0 + i * 500) * p.getSuprafata() / 1000);
+                        cultura2026.setSistemIrigare("Aspersiune");
+                        cultura2026.setTipSol("Brun-roșcat");
+                        cultura2026.setCulturaPrecedenta("Floarea-soarelui");
+                        cultura2026.setParcela(p);
+                        culturaParcelaRepository.save(cultura2026);
                     }
 
                     // Seed Pom pentru parcelele Livadă
@@ -689,13 +790,80 @@ public class DatabaseSeeder implements CommandLineRunner {
                     cladireRepository.save(cladire);
 
                     com.multitenant.model.registru.Machinery machinery = new com.multitenant.model.registru.Machinery();
-                    machinery.setTipUtilaj("Combina");
-                    machinery.setMarca("Claas");
+                    String[] tipuriUtilaje = {"Tractor", "Semănătoare", "Plug", "Combină", "Presă de balotat"};
+                    String tipUtilaj = tipuriUtilaje[i % tipuriUtilaje.length];
+                    machinery.setTipUtilaj(tipUtilaj);
+                    machinery.setMarca(i % 2 == 0 ? "Claas" : "Fendt");
                     machinery.setModel("Lexion " + i);
-                    machinery.setAnFabricatie(2015 + i);
+                    machinery.setAnFabricatie(2015 + (i % 10));
                     machinery.setNumarInmatriculare(String.format("B-%02d-CMB", i));
                     machinery.setGospodarie(savedG);
                     machineryRepository.save(machinery);
+
+                    // Seed animal individual for Bucuresti
+                    if (i % 3 == 0) {
+                        com.multitenant.model.animal.AnimalIndividual porcine = new com.multitenant.model.animal.AnimalIndividual();
+                        porcine.setGospodarie(savedG);
+                        porcine.setProprietar(persoana);
+                        porcine.setNumarCrotal("RO-B-" + String.format("%05d", 4000 + i));
+                        porcine.setSpecie(com.multitenant.model.animal.SpecieAnimal.PORCINE);
+                        porcine.setRasa("Marele Alb");
+                        porcine.setSex(com.multitenant.model.animal.SexAnimal.FEMININ);
+                        porcine.setDataNastere(java.time.LocalDate.now().minusMonths(6).minusDays(i));
+                        porcine.setGreutateKg(110.0 + i * 5);
+                        porcine.setStareActiva(true);
+                        porcine.setTenantId("bucuresti");
+                        animalIndividualRepository.save(porcine);
+                    } else if (i % 3 == 1) {
+                        com.multitenant.model.animal.AnimalIndividual bovine = new com.multitenant.model.animal.AnimalIndividual();
+                        bovine.setGospodarie(savedG);
+                        bovine.setProprietar(persoana);
+                        bovine.setNumarCrotal("RO-B-" + String.format("%05d", 5000 + i));
+                        bovine.setSpecie(com.multitenant.model.animal.SpecieAnimal.BOVINE);
+                        bovine.setRasa("Brună de Maramureș");
+                        bovine.setSex(com.multitenant.model.animal.SexAnimal.FEMININ);
+                        bovine.setDataNastere(java.time.LocalDate.now().minusYears(3).minusMonths(i));
+                        bovine.setGreutateKg(500.0 + i * 10);
+                        bovine.setStareActiva(true);
+                        bovine.setTenantId("bucuresti");
+                        animalIndividualRepository.save(bovine);
+                    } else {
+                        com.multitenant.model.animal.AnimalIndividual ecvine = new com.multitenant.model.animal.AnimalIndividual();
+                        ecvine.setGospodarie(savedG);
+                        ecvine.setProprietar(persoana);
+                        ecvine.setNumarCrotal("RO-B-" + String.format("%05d", 6000 + i));
+                        ecvine.setSpecie(com.multitenant.model.animal.SpecieAnimal.ECVINE);
+                        ecvine.setRasa("Semigreu Românesc");
+                        ecvine.setSex(com.multitenant.model.animal.SexAnimal.MASCULIN);
+                        ecvine.setDataNastere(java.time.LocalDate.now().minusYears(4).minusMonths(i));
+                        ecvine.setGreutateKg(600.0 + i * 8);
+                        ecvine.setStareActiva(true);
+                        ecvine.setTenantId("bucuresti");
+                        animalIndividualRepository.save(ecvine);
+                    }
+
+                    // Seed animal grup for Bucuresti
+                    if (i % 2 == 0) {
+                        com.multitenant.model.animal.EfectivGrup pasari = new com.multitenant.model.animal.EfectivGrup();
+                        pasari.setGospodarie(savedG);
+                        pasari.setProprietar(persoana);
+                        pasari.setSpecie(com.multitenant.model.animal.SpecieAnimal.PASARI);
+                        pasari.setNumarCapeteFamilii(80 + i * 10);
+                        pasari.setDataInregistrare(java.time.LocalDate.now());
+                        pasari.setDetalii("Păsări curte asortate");
+                        pasari.setTenantId("bucuresti");
+                        efectivGrupRepository.save(pasari);
+                    } else {
+                        com.multitenant.model.animal.EfectivGrup altele = new com.multitenant.model.animal.EfectivGrup();
+                        altele.setGospodarie(savedG);
+                        altele.setProprietar(persoana);
+                        altele.setSpecie(com.multitenant.model.animal.SpecieAnimal.ALTELE);
+                        altele.setNumarCapeteFamilii(100 + i * 20);
+                        altele.setDataInregistrare(java.time.LocalDate.now());
+                        altele.setDetalii("Iepuri de casă");
+                        altele.setTenantId("bucuresti");
+                        efectivGrupRepository.save(altele);
+                    }
                 }
             }
 

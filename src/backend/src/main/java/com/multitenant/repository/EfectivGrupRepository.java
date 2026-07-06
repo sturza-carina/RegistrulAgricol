@@ -39,4 +39,16 @@ public interface EfectivGrupRepository extends JpaRepository<EfectivGrup, Long> 
             ORDER BY e.specie
             """)
     List<EfectivGrup> findLatestSnapshotByGospodarieId(@Param("gospodarieId") Long gospodarieId);
+
+    @Query("SELECT new com.multitenant.dto.StatisticaEfectivGrupDto(eg.specie, SUM(eg.numarCapeteFamilii)) " +
+           "FROM EfectivGrup eg " +
+           "WHERE eg.dataInregistrare = (" +
+           "    SELECT MAX(eg2.dataInregistrare) " +
+           "    FROM EfectivGrup eg2 " +
+           "    WHERE eg2.gospodarie.id = eg.gospodarie.id " +
+           "      AND eg2.specie = eg.specie" +
+           ") " +
+           "GROUP BY eg.specie")
+    List<com.multitenant.dto.StatisticaEfectivGrupDto> getStatisticiEfectiveGrup();
 }
+
