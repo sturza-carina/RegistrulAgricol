@@ -25,4 +25,13 @@ public interface AnimalIndividualRepository extends JpaRepository<AnimalIndividu
      */
     @Query("SELECT COUNT(a) > 0 FROM AnimalIndividual a WHERE a.numarCrotal = :crotal AND a.stareActiva = true AND (:excludeId IS NULL OR a.id != :excludeId)")
     boolean existsByNumarCrotalAndIdNot(@Param("crotal") String crotal, @Param("excludeId") Long excludeId);
+
+    @Query("SELECT new com.multitenant.dto.StatisticaAnimalDto(a.specie, COUNT(a), " +
+           "SUM(CASE WHEN a.sex = com.multitenant.model.animal.SexAnimal.MASCULIN THEN 1L ELSE 0L END), " +
+           "SUM(CASE WHEN a.sex = com.multitenant.model.animal.SexAnimal.FEMININ THEN 1L ELSE 0L END)) " +
+           "FROM AnimalIndividual a " +
+           "WHERE a.stareActiva = true " +
+           "GROUP BY a.specie")
+    List<com.multitenant.dto.StatisticaAnimalDto> getStatisticiAnimaleIndividuale();
 }
+

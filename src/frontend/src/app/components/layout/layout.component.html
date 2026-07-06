@@ -12,6 +12,29 @@
         </div>
       </div>
 
+      <!-- Language Switcher -->
+      <div class="lang-switcher-container relative inline-block text-left" style="margin-right: 20px;">
+        <button type="button" (click)="toggleLangDropdown()" class="flex items-center justify-center p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" style="border: none; background: transparent; cursor: pointer; color: var(--text-secondary);">
+          <!-- Globe Icon -->
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+        </button>
+
+        <div *ngIf="showLangDropdown" class="absolute right-0 mt-2 w-36 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[9999]" style="border: 1px solid var(--border-color, #e2e8f0); min-width: 140px;">
+          <div class="py-1">
+            <button (click)="changeLanguage('ro')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors block font-medium" [style.color]="currentLocale === 'ro' ? 'var(--primary)' : '#4b5563'" [style.font-weight]="currentLocale === 'ro' ? '700' : '500'" style="border: none; background: transparent; cursor: pointer; font-size: 13px;">
+              Română
+            </button>
+            <button (click)="changeLanguage('en')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors block font-medium" [style.color]="currentLocale === 'en' ? 'var(--primary)' : '#4b5563'" [style.font-weight]="currentLocale === 'en' ? '700' : '500'" style="border: none; background: transparent; cursor: pointer; font-size: 13px;">
+              English
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="user-chip" *ngIf="user">
         <div class="user-info">
           <div class="user-name">{{ user.username || 'Admin User' }}</div>
