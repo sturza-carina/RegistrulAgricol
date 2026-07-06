@@ -53,6 +53,8 @@ export class EvidentaChimicaComponent implements OnInit, OnDestroy {
   parcele: Parcela[] = [];
   pppProducts: CatalogPpp[] = [];
   fertilizerProducts: CatalogIngrasaminte[] = [];
+  dropdownPppProducts: CatalogPpp[] = [];
+  dropdownFertilizerProducts: CatalogIngrasaminte[] = [];
   tratamente: TratamentFitosanitar[] = [];
   fertilizari: Fertilizare[] = [];
   filaInterventii: FilaParcelei[] = [];
@@ -122,6 +124,7 @@ export class EvidentaChimicaComponent implements OnInit, OnDestroy {
     this.loadFertilizari();
     this.loadPppCatalog();
     this.loadIngrasaminteCatalog();
+    this.loadDropdownCatalogs();
   }
 
   ngOnDestroy(): void {
@@ -220,6 +223,19 @@ export class EvidentaChimicaComponent implements OnInit, OnDestroy {
       });
   }
 
+  loadDropdownCatalogs(): void {
+    this.catalogPppService.getCatalog('', 0, 1000)
+      .subscribe(res => {
+        this.dropdownPppProducts = res.content || [];
+        console.log('[loadDropdownCatalogs] Loaded PPPs:', this.dropdownPppProducts);
+      });
+    this.catalogIngrasaminteService.getCatalog('', 0, 1000)
+      .subscribe(res => {
+        this.dropdownFertilizerProducts = res.content || [];
+        console.log('[loadDropdownCatalogs] Loaded Fertilizers:', this.dropdownFertilizerProducts);
+      });
+  }
+
   loadFilaParcelei(): void {
     if (!this.selectedFilaParcelaId) return;
     this.filaParceleiService.getFilaParcelei(this.selectedFilaParcelaId, this.selectedFilaAn)
@@ -259,13 +275,19 @@ export class EvidentaChimicaComponent implements OnInit, OnDestroy {
 
   onPppSelected(): void {
     const id = Number(this.currentPesticide.catalogPppId);
-    this.selectedPppProduct = this.pppProducts.find(p => p.id === id) || null;
+    this.selectedPppProduct = this.dropdownPppProducts.find(p => p.id === id) || null;
+    console.log('[onPppSelected] selectedProduct:', this.selectedPppProduct);
     this.checkOverdosage();
   }
 
-  checkOverdosage(): void {
-    if (this.selectedPppProduct && this.currentPesticide.dozaUtilizata) {
-      this.showOverdoseWarning = this.currentPesticide.dozaUtilizata > this.selectedPppProduct.dozaOmologata;
+  checkOverdosage(newVal?: number): void {
+    const val = newVal !== undefined ? newVal : this.currentPesticide.dozaUtilizata;
+    console.log('[checkOverdosage] dozaUtilizata:', val, 'product:', this.selectedPppProduct);
+    if (this.selectedPppProduct && val !== undefined && val !== null) {
+      const utilized = Number(val);
+      const allowed = Number(this.selectedPppProduct.dozaOmologata);
+      this.showOverdoseWarning = utilized > allowed;
+      console.log('[checkOverdosage] utilized:', utilized, 'allowed:', allowed, 'warning:', this.showOverdoseWarning);
     } else {
       this.showOverdoseWarning = false;
     }
@@ -332,7 +354,7 @@ export class EvidentaChimicaComponent implements OnInit, OnDestroy {
 
   onIngrasamantSelected(): void {
     const id = Number(this.currentFertilizare.catalogIngrasaminteId);
-    this.selectedIngrasamantProduct = this.fertilizerProducts.find(i => i.id === id) || null;
+    this.selectedIngrasamantProduct = this.dropdownFertilizerProducts.find(i => i.id === id) || null;
   }
 
   get calculatedActiveN(): number {
@@ -403,6 +425,7 @@ export class EvidentaChimicaComponent implements OnInit, OnDestroy {
       next: () => {
         this.showPppCatalogModal = false;
         this.loadPppCatalog();
+        this.loadDropdownCatalogs();
       },
       error: err => {
         this.errorMessage = err.error || 'A apărut o eroare la salvarea catalogului PPP.';
@@ -414,6 +437,7 @@ export class EvidentaChimicaComponent implements OnInit, OnDestroy {
     if (confirm('Sunteți sigur că doriți să ștergeți acest produs din catalog?')) {
       this.catalogPppService.delete(id).subscribe(() => {
         this.loadPppCatalog();
+        this.loadDropdownCatalogs();
       });
     }
   }
@@ -434,6 +458,7 @@ export class EvidentaChimicaComponent implements OnInit, OnDestroy {
       next: () => {
         this.showIngrasamantCatalogModal = false;
         this.loadIngrasaminteCatalog();
+        this.loadDropdownCatalogs();
       },
       error: err => {
         this.errorMessage = err.error || 'A apărut o eroare la salvarea catalogului de îngrășăminte.';
@@ -445,6 +470,7 @@ export class EvidentaChimicaComponent implements OnInit, OnDestroy {
     if (confirm('Sunteți sigur că doriți să ștergeți acest îngrășământ din catalog?')) {
       this.catalogIngrasaminteService.delete(id).subscribe(() => {
         this.loadIngrasaminteCatalog();
+        this.loadDropdownCatalogs();
       });
     }
   }

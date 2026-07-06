@@ -436,7 +436,7 @@
           <label class="required">{{ 'Produs PPP (Catalog Fitosanitar)' | appTranslate }}</label>
           <select class="form-control" name="catalogPppId" [(ngModel)]="currentPesticide.catalogPppId" (change)="onPppSelected()" required>
             <option [value]="0" disabled selected>{{ '-- Selectează produs PPP --' | appTranslate }}</option>
-            <option *ngFor="let p of pppProducts" [value]="p.id">{{ p.denumireComerciala }} ({{ p.tip }}) - Omol: {{ p.dozaOmologata }}</option>
+            <option *ngFor="let p of dropdownPppProducts" [value]="p.id">{{ p.denumireComerciala }} ({{ p.tip }}) - Omol: {{ p.dozaOmologata }}</option>
           </select>
         </div>
 
@@ -444,7 +444,7 @@
           <!-- Doza Utilizata -->
           <div class="form-group">
             <label class="required">{{ 'Doză Utilizată (L/ha sau kg/ha)' | appTranslate }}</label>
-            <input type="number" step="0.01" class="form-control" name="dozaUtilizata" [(ngModel)]="currentPesticide.dozaUtilizata" (ngModelChange)="checkOverdosage()" required />
+            <input type="number" step="0.01" class="form-control" name="dozaUtilizata" [(ngModel)]="currentPesticide.dozaUtilizata" (ngModelChange)="checkOverdosage($event)" required />
           </div>
 
           <!-- Suprafata Tratata -->
@@ -545,7 +545,7 @@
             <label class="required">{{ 'Alege Îngrășământ' | appTranslate }}</label>
             <select class="form-control" name="catalogIngrasaminteId" [(ngModel)]="currentFertilizare.catalogIngrasaminteId" (change)="onIngrasamantSelected()" required>
               <option [value]="0" disabled selected>{{ '-- Selectează îngrășământ --' | appTranslate }}</option>
-              <option *ngFor="let i of fertilizerProducts" [value]="i.id">{{ i.denumire }} ({{ i.tip }}) - N:{{ i.procentAzot }}% P:{{ i.procentFosfor }}%</option>
+              <option *ngFor="let i of dropdownFertilizerProducts" [value]="i.id">{{ i.denumire }} ({{ i.tip }}) - N:{{ i.procentAzot }}% P:{{ i.procentFosfor }}%</option>
             </select>
           </div>
         </div>
