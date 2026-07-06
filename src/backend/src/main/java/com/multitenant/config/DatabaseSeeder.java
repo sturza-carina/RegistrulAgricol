@@ -700,6 +700,13 @@ public class DatabaseSeeder implements CommandLineRunner {
             }
 
 
+            // Force seed treatments and fertilizations if tables are empty (independent of household count)
+            TenantContext.setCurrentTenant("cluj");
+            seedFitosanitarAndFertilizareIfEmpty();
+
+            TenantContext.setCurrentTenant("bucuresti");
+            seedFitosanitarAndFertilizareIfEmpty();
+
             System.out.println("[DatabaseSeeder] Development data successfully seeded.");
         } catch (Exception e) {
             System.err.println("[DatabaseSeeder] Error seeding development data: " + e.getMessage());
@@ -707,6 +714,51 @@ public class DatabaseSeeder implements CommandLineRunner {
         } finally {
             // Clean up context to avoid side effects
             TenantContext.clear();
+        }
+    }
+
+    private void seedFitosanitarAndFertilizareIfEmpty() {
+        if (fitosanitarRepository.count() == 0 && fertilizareRepository.count() == 0) {
+            System.out.println("[DatabaseSeeder] Independent seeding of fitosanitar and fertilizare for: " + TenantContext.getCurrentTenant());
+            java.util.List<com.multitenant.model.registru.Parcela> parceleList = parcelaRepository.findAll();
+            java.util.List<CatalogPpp> ppps = catalogPppRepository.findAll();
+            java.util.List<CatalogIngrasaminte> ingrasaminte = catalogIngrasaminteRepository.findAll();
+
+            int count = 0;
+            for (com.multitenant.model.registru.Parcela p : parceleList) {
+                if ("Arabil".equals(p.getCategorieFolosinta())) {
+                    if (!ppps.isEmpty()) {
+                        CatalogPpp ppp = ppps.get(count % ppps.size());
+                        TratamentFitosanitar tf = new TratamentFitosanitar();
+                        tf.setParcela(p);
+                        tf.setCatalogPpp(ppp);
+                        tf.setDataEfectuarii(java.time.LocalDateTime.now().minusDays(10 + count));
+                        tf.setFenofaza(count % 2 == 0 ? "înfrățire" : "înspicare");
+                        tf.setAgentDaunator(count % 2 == 0 ? "Fuzarioză" : "Buruieni dicotiledonate");
+                        tf.setDozaUtilizata(ppp.getDozaOmologata() * 0.9);
+                        tf.setSuprafataTratata(p.getSuprafata());
+                        tf.setCantitateTotala(tf.getDozaUtilizata() * p.getSuprafata());
+                        tf.setResponsabil("Ing. Vasile Popescu");
+                        tf.setSemnaturaElectronica("Semnat Electronic");
+                        fitosanitarRepository.save(tf);
+                    }
+
+                    if (!ingrasaminte.isEmpty()) {
+                        CatalogIngrasaminte ing = ingrasaminte.get(count % ingrasaminte.size());
+                        Fertilizare fert = new Fertilizare();
+                        fert.setParcela(p);
+                        fert.setCatalogIngrasaminte(ing);
+                        fert.setDataAplicarii(java.time.LocalDate.now().minusDays(20 + count));
+                        fert.setCantitateBruta(200.0);
+                        fert.setUnitateMasura("kg/ha");
+                        fert.setAportAzot(ing.getProcentAzot() * 200.0 / 100.0);
+                        fert.setAportFosfor(ing.getProcentFosfor() * 200.0 / 100.0);
+                        fert.setAportPotasiu(ing.getProcentPotasiu() * 200.0 / 100.0);
+                        fertilizareRepository.save(fert);
+                    }
+                    count++;
+                }
+            }
         }
     }
 }

@@ -85,7 +85,8 @@ public class TratamentFitosanitarController {
                 
                 String dozaInfo = "-";
                 if (d.getCatalogPppDozaOmologata() != null) {
-                    dozaInfo = String.format("Omol: %.2f / Util: %.2f", d.getCatalogPppDozaOmologata(), d.getDozaUtilizata());
+                    double util = d.getDozaUtilizata() != null ? d.getDozaUtilizata() : 0.0;
+                    dozaInfo = String.format("Omol: %.2f / Util: %.2f", d.getCatalogPppDozaOmologata(), util);
                 }
                 map.put("dozaFormatted", dozaInfo);
                 
