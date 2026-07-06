@@ -31,7 +31,8 @@ public interface AnimalIndividualRepository extends JpaRepository<AnimalIndividu
            "SUM(CASE WHEN a.sex = com.multitenant.model.animal.SexAnimal.FEMININ THEN 1L ELSE 0L END)) " +
            "FROM AnimalIndividual a " +
            "WHERE a.stareActiva = true " +
+           "  AND (:uatCode IS NULL OR a.gospodarie.uat.codSiruta = :uatCode) " +
            "GROUP BY a.specie")
-    List<com.multitenant.dto.StatisticaAnimalDto> getStatisticiAnimaleIndividuale();
+    List<com.multitenant.dto.StatisticaAnimalDto> getStatisticiAnimaleIndividuale(@Param("uatCode") String uatCode);
 }
 

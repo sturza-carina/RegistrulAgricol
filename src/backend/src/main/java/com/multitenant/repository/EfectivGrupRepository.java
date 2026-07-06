@@ -48,7 +48,8 @@ public interface EfectivGrupRepository extends JpaRepository<EfectivGrup, Long> 
            "    WHERE eg2.gospodarie.id = eg.gospodarie.id " +
            "      AND eg2.specie = eg.specie" +
            ") " +
+           "  AND (:uatCode IS NULL OR eg.gospodarie.uat.codSiruta = :uatCode) " +
            "GROUP BY eg.specie")
-    List<com.multitenant.dto.StatisticaEfectivGrupDto> getStatisticiEfectiveGrup();
+    List<com.multitenant.dto.StatisticaEfectivGrupDto> getStatisticiEfectiveGrup(@Param("uatCode") String uatCode);
 }
 

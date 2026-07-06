@@ -18,7 +18,8 @@ public interface MachineryRepository extends JpaRepository<Machinery, Long> {
 
     @Query("SELECT new com.multitenant.dto.StatisticaUtilajDto(m.tipUtilaj, COUNT(m)) " +
            "FROM Machinery m " +
+           "WHERE (:uatCode IS NULL OR m.gospodarie.uat.codSiruta = :uatCode) " +
            "GROUP BY m.tipUtilaj")
-    List<com.multitenant.dto.StatisticaUtilajDto> getStatisticiUtilaje();
+    List<com.multitenant.dto.StatisticaUtilajDto> getStatisticiUtilaje(@Param("uatCode") String uatCode);
 }
 

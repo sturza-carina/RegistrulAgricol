@@ -18,7 +18,8 @@ public interface ParcelaRepository extends JpaRepository<Parcela, Long> {
 
     @Query("SELECT new com.multitenant.dto.StatisticaCategorieFolosintaDto(p.categorieFolosinta, SUM(p.suprafata)) " +
            "FROM Parcela p " +
+           "WHERE (:uatCode IS NULL OR p.teren.gospodarie.uat.codSiruta = :uatCode) " +
            "GROUP BY p.categorieFolosinta")
-    List<StatisticaCategorieFolosintaDto> getStatisticiCategoriiFolosinta();
+    List<StatisticaCategorieFolosintaDto> getStatisticiCategoriiFolosinta(@Param("uatCode") String uatCode);
 }
 
