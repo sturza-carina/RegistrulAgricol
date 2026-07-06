@@ -1,5 +1,8 @@
 package com.multitenant.model.core;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,7 +21,12 @@ import com.multitenant.util.CryptoUtils;
 @Getter
 @Setter
 @NoArgsConstructor
+@SQLDelete(sql = "UPDATE cetateni SET deleted = true WHERE id=?")
+@SQLRestriction("deleted = false")
 public class Cetatean {
+    @jakarta.persistence.Column(nullable = false)
+    private boolean deleted = false;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

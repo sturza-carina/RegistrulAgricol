@@ -1,5 +1,8 @@
 package com.multitenant.model.registru;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,7 +13,12 @@ import lombok.NoArgsConstructor;
 @Getter
 @Setter
 @NoArgsConstructor
+@SQLDelete(sql = "UPDATE vita_de_vie SET deleted = true WHERE id=?")
+@SQLRestriction("deleted = false")
 public class VitaDeVie {
+    @jakarta.persistence.Column(nullable = false)
+    private boolean deleted = false;
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,10 +29,10 @@ public class VitaDeVie {
     private TipInregistrareVita tipInregistrare;
 
     @Column(name = "specie", nullable = false, length = 100)
-    private String specie; // Viță de vie
+    private String specie; // ViÈ›Äƒ de vie
 
     @Column(name = "soi", length = 100)
-    private String soi; // Fetească Regală, Cabernet Sauvignon etc.
+    private String soi; // FeteascÄƒ RegalÄƒ, Cabernet Sauvignon etc.
 
     @Column(name = "an_plantare")
     private Integer anPlantare;
@@ -39,10 +47,10 @@ public class VitaDeVie {
     private Integer densitateViteHa; // relevant pt. PLANTATIE
 
     @Column(name = "stare_vita", length = 50)
-    private String stareVita; // tânără, pe rod, îmbătrânită
+    private String stareVita; // tÃ¢nÄƒrÄƒ, pe rod, Ã®mbÄƒtrÃ¢nitÄƒ
 
     @Column(name = "sistem_intretinere", length = 100)
-    private String sistemIntretinere; // ecologic, convențional
+    private String sistemIntretinere; // ecologic, convenÈ›ional
 
     @Column(name = "sistem_irigare", length = 100)
     private String sistemIrigare;
