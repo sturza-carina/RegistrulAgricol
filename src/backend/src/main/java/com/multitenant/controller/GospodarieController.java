@@ -7,6 +7,8 @@ import com.multitenant.service.GospodarieService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.multitenant.dto.IstoricMembruDTO;
+import java.util.List;
 import org.springframework.data.domain.Pageable;
 
 @RestController
@@ -51,5 +53,42 @@ public class GospodarieController {
     public ResponseEntity<?> getAllGospodarii(
             @RequestParam(required = false) String uatCode, Pageable pageable) {
         return ResponseEntity.ok(gospodarieService.getAllGospodarii(uatCode, pageable));
+    }
+
+    @PutMapping("/{gospodarieId}/cap-gospodarie/{persoanaId}")
+    @GdprAudited(entity = "Gospodarie")
+    public ResponseEntity<?> seteazaCapGospodariePath(@PathVariable Long gospodarieId, @PathVariable Long persoanaId) {
+        gospodarieService.seteazaCapGospodarie(gospodarieId, persoanaId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{gospodarieId}/cap-gospodarie")
+    @GdprAudited(entity = "Gospodarie")
+    public ResponseEntity<?> seteazaCapGospodarieQuery(@PathVariable Long gospodarieId, @RequestParam(required = false) Long persoanaId) {
+        gospodarieService.seteazaCapGospodarie(gospodarieId, persoanaId);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{gospodarieId}/istoric-membri")
+    @GdprAudited(entity = "Gospodarie")
+    public ResponseEntity<List<IstoricMembruDTO>> getIstoricMembri(@PathVariable Long gospodarieId) {
+        return ResponseEntity.ok(gospodarieService.getIstoricMembri(gospodarieId));
+    }
+
+    @PostMapping("/{gospodarieId}/istoric-membri")
+    @GdprAudited(entity = "Gospodarie")
+    public ResponseEntity<?> adaugaEvenimentIstoric(@PathVariable Long gospodarieId, @RequestBody IstoricMembruDTO dto) {
+        gospodarieService.adaugaEvenimentIstoric(gospodarieId, dto);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{gospodarieId}/istoric-membri/{evenimentId}")
+    @GdprAudited(entity = "Gospodarie")
+    public ResponseEntity<?> updateEvenimentIstoric(
+            @PathVariable Long gospodarieId,
+            @PathVariable Long evenimentId,
+            @RequestBody IstoricMembruDTO dto) {
+        gospodarieService.updateEvenimentIstoric(gospodarieId, evenimentId, dto);
+        return ResponseEntity.ok().build();
     }
 }

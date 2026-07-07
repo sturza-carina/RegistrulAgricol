@@ -40,8 +40,7 @@ public class PersoanaFizica extends Persoana {
     @NotAudited
     private List<ActIdentitate> identityDocuments = new ArrayList<>();
 
-    @Column(name = "is_head_of_household")
-    private Boolean isHeadOfHousehold;
+
 
     public void setCnp(String cnp) {
         this.cnp = cnp;

@@ -147,7 +147,6 @@ public class PersoanaService {
             existingPhysical.setLastName(updatedPhysical.getLastName());
             existingPhysical.setCnp(updatedPhysical.getCnp());
             existingPhysical.setDateOfBirth(updatedPhysical.getDateOfBirth());
-            existingPhysical.setIsHeadOfHousehold(updatedPhysical.getIsHeadOfHousehold());
 
             // Merge identity documents using orphanRemoval
             existingPhysical.getIdentityDocuments().clear();

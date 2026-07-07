@@ -40,10 +40,17 @@ import { AppTranslatePipe } from '../../services/translate.pipe';
 })
 export class GospodarieDetailsComponent implements OnInit {
   gospodarieId!: number;
-  gospodarie: Gospodarie | null = null;
+  gospodarie: any | null = null; // Use any to avoid strict type mismatch if needed, or keep Gospodarie
   persoane: any[] = [];
   terenuri: Teren[] = [];
   activeTab: string = 'GENERAL';
+
+  // Member History
+  istoricEvenimente: any[] = [];
+  showIstoricForm = false;
+  isEditingIstoric = false;
+  editingIstoricId: number | null = null;
+  noulEveniment = { persoanaId: null as number | null, tipEveniment: '', dataEveniment: '', observatii: '' };
 
   // Carte Funciara
   carteFunciaraRows: CarteFunciara[] = [];
@@ -68,7 +75,7 @@ export class GospodarieDetailsComponent implements OnInit {
   membriColumns: TableColumn[] = [
     { field: 'nameDisplay', header: 'Nume / Denumire', format: (val, row) => row.personType === 'LEGAL_ENTITY' ? row.companyName : `${row.firstName} ${row.lastName}` },
     { field: 'idDisplay', header: 'CNP / CUI', format: (val, row) => row.personType === 'LEGAL_ENTITY' ? row.cui : row.cnp },
-    { field: 'isHeadOfHousehold', header: 'Rol', type: 'badge', format: val => val ? 'Cap Gospodărie' : 'Membru', badgeClasses: { 'true': 'user', 'false': 'viewer' } }
+    { field: 'id', header: 'Rol', type: 'badge', format: (val, row) => (this.gospodarie && this.gospodarie.capGospodarie && row.id === this.gospodarie.capGospodarie.id) ? 'Cap Gospodărie' : 'Membru', badgeClasses: { 'Cap Gospodărie': 'user', 'Membru': 'viewer' } }
   ];
 
   membriFilters: TableFilter[] = [
@@ -77,7 +84,18 @@ export class GospodarieDetailsComponent implements OnInit {
 
   membriActions: TableAction[] = [
     { icon: 'edit', tooltip: 'Detalii / Editare', action: (row) => this.editPerson(row.id) },
-    { icon: 'print', tooltip: 'Emite Adeverință', action: (row) => this.generateAdeverinta(row.id) }
+    { 
+      icon: 'print', 
+      tooltip: 'Emite Adeverință', 
+      action: (row) => this.generateAdeverinta(row.id),
+      showIf: (row) => this.gospodarie && this.gospodarie.capGospodarie && this.gospodarie.capGospodarie.id === row.id
+    },
+    { 
+      icon: 'add', 
+      tooltip: 'Desemnează Cap de Gospodărie', 
+      action: (row) => this.desemneazaCap(row.id),
+      showIf: (row) => !this.gospodarie || !this.gospodarie.capGospodarie || !this.gospodarie.capGospodarie.id
+    }
   ];
 
   toatePersoaneleActions: TableAction[] = [
@@ -129,6 +147,8 @@ export class GospodarieDetailsComponent implements OnInit {
       this.updateBreadcrumbs();
       if (this.activeTab === 'CARTE_FUNCIARA') {
         this.loadCarteFunciara();
+      } else if (this.activeTab === 'MEMBER_HISTORY') {
+        this.loadIstoricMembri();
       }
     });
   }
@@ -168,6 +188,7 @@ export class GospodarieDetailsComponent implements OnInit {
       case 'TERENURI': tabName = 'Terenuri Agricole'; break;
       case 'BUILDINGS': tabName = 'Clădiri'; break;
       case 'MEMBERS': tabName = 'Membri'; break;
+      case 'MEMBER_HISTORY': tabName = 'Istoric Membri'; break;
       case 'ANIMALS': tabName = 'Animale'; break;
       case 'MACHINERY': tabName = 'Utilaje'; break;
       case 'DOCUMENTS': tabName = 'Documente'; break;
@@ -364,4 +385,75 @@ export class GospodarieDetailsComponent implements OnInit {
     });
   }
 
+  desemneazaCap(persoanaId: number) {
+    if (!confirm('Sigur doriți să desemnați această persoană ca Cap de Gospodărie?')) return;
+    this.gospodarieService.seteazaCapGospodarie(this.gospodarieId, persoanaId).subscribe({
+      next: () => {
+        alert('Cap de gospodărie desemnat cu succes!');
+        this.loadDetails(); // reload to refresh the state and badge
+      },
+      error: () => alert('Eroare la desemnare cap de gospodărie.')
+    });
+  }
+
+  loadIstoricMembri() {
+    this.gospodarieService.getIstoricMembri(this.gospodarieId).subscribe({
+      next: (data) => {
+        this.istoricEvenimente = data;
+      },
+      error: () => {
+        this.istoricEvenimente = [];
+      }
+    });
+  }
+
+  openAddIstoricModal() {
+    this.isEditingIstoric = false;
+    this.editingIstoricId = null;
+    this.noulEveniment = { persoanaId: null, tipEveniment: '', dataEveniment: '', observatii: '' };
+    this.showIstoricForm = true;
+  }
+
+  editEvenimentIstoric(ev: any) {
+    this.isEditingIstoric = true;
+    this.editingIstoricId = ev.id;
+    this.noulEveniment = {
+      persoanaId: ev.persoanaId,
+      tipEveniment: ev.tipEveniment,
+      dataEveniment: ev.dataEveniment ? ev.dataEveniment.split('T')[0] : '',
+      observatii: ev.observatii || ''
+    };
+    this.showIstoricForm = true;
+  }
+
+  salveazaEvenimentIstoric() {
+    if (!this.noulEveniment.persoanaId || !this.noulEveniment.tipEveniment || !this.noulEveniment.dataEveniment) {
+      alert('Vă rugăm să completați toate câmpurile obligatorii.');
+      return;
+    }
+
+    if (this.isEditingIstoric && this.editingIstoricId) {
+      this.gospodarieService.updateEvenimentIstoric(this.gospodarieId, this.editingIstoricId, this.noulEveniment).subscribe({
+        next: () => {
+          alert('Eveniment modificat cu succes!');
+          this.showIstoricForm = false;
+          this.isEditingIstoric = false;
+          this.editingIstoricId = null;
+          this.noulEveniment = { persoanaId: null, tipEveniment: '', dataEveniment: '', observatii: '' };
+          this.loadIstoricMembri();
+        },
+        error: () => alert('Eroare la modificarea evenimentului istoric.')
+      });
+    } else {
+      this.gospodarieService.adaugaEvenimentIstoric(this.gospodarieId, this.noulEveniment).subscribe({
+        next: () => {
+          alert('Eveniment înregistrat cu succes!');
+          this.showIstoricForm = false;
+          this.noulEveniment = { persoanaId: null, tipEveniment: '', dataEveniment: '', observatii: '' };
+          this.loadIstoricMembri();
+        },
+        error: () => alert('Eroare la salvarea evenimentului istoric.')
+      });
+    }
+  }
 }
