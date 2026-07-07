@@ -30,7 +30,6 @@ export interface PersoanaFizica extends Persoana {
   lastName: string;
   cnp?: string;
   dateOfBirth?: string; // YYYY-MM-DD
-  isHeadOfHousehold?: boolean;
 }
 
 export interface PersoanaJuridica extends Persoana {

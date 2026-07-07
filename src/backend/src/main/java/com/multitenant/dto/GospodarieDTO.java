@@ -14,6 +14,7 @@ public class GospodarieDTO {
     private TipGospodarie tipGospodarie;
     private boolean activa;
     private UatRef uat;
+    private PersoanaDTO capGospodarie;
 
     @Data
     @NoArgsConstructor

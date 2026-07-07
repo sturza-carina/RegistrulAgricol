@@ -44,4 +44,23 @@ export class GospodarieService {
       responseType: 'blob'
     });
   }
+
+  seteazaCapGospodarie(gospodarieId: number, persoanaId: number | null): Observable<void> {
+    if (persoanaId === null) {
+      return this.http.put<void>(`${this.apiUrl}/${gospodarieId}/cap-gospodarie`, null);
+    }
+    return this.http.put<void>(`${this.apiUrl}/${gospodarieId}/cap-gospodarie/${persoanaId}`, null);
+  }
+
+  getIstoricMembri(gospodarieId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/${gospodarieId}/istoric-membri`);
+  }
+
+  adaugaEvenimentIstoric(gospodarieId: number, eveniment: any): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${gospodarieId}/istoric-membri`, eveniment);
+  }
+
+  updateEvenimentIstoric(gospodarieId: number, evenimentId: number, eveniment: any): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${gospodarieId}/istoric-membri/${evenimentId}`, eveniment);
+  }
 }
