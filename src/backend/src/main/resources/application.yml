@@ -46,5 +46,14 @@ jwt:
   expiration: 86400000 # 24 hours
 
 app:
+  documents:
+    storage-path: ${APP_DOCUMENTS_STORAGE_PATH:/data/documents}
+  signature:
+    storage-path: ${APP_SIGNATURE_STORAGE_PATH:/data/signed-contracts}
+  signnow:
+    base-url: ${SIGNNOW_BASE_URL:https://api.signnow.com}
+    basic-token: ${SIGNNOW_BASIC_TOKEN:}
+    username: ${SIGNNOW_USERNAME:}
+    password: ${SIGNNOW_PASSWORD:}
   crypto:
     aes-key: ${APP_CRYPTO_AES_KEY:MyDefaultAesSymmetricEncryptionKey2026Registru}

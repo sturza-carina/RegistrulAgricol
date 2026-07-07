@@ -54,7 +54,7 @@ export class ContractManagementComponent implements OnInit {
   statusuriContract = ['ACTIV', 'EXPIRAT', 'REZILIAT', 'SUSPENDAT'];
 
   columns: TableColumn[] = [
-    { field: 'numarContract', header: 'Nr. Contract', type: 'text', format: (val, row) => `${val} (Semnat: ${row.dataSemnare || '-'})` },
+    { field: 'numarContract', header: 'Nr. Contract', type: 'text', format: (val, row) => `${val} (Semnat: ${row.dataSemnare || '-'})${row.semnatElectronic ? ' ✓ Semnat electronic' : ''}` },
     { field: 'tipContract', header: 'Tip', type: 'badge' },
     { field: 'parcela.denumire', header: 'Parcela Asoc.', type: 'text', format: (val) => val || '-' },
     { field: 'dataInceput', header: 'Valabilitate', type: 'text', format: (val, row) => `${row.dataInceput || 'N/A'} → ${row.dataSfarsit || 'Nedefinit'}` },
@@ -136,9 +136,9 @@ export class ContractManagementComponent implements OnInit {
       }
     });
 
-    this.http.get<any[]>('/api/parcele').subscribe({
+    this.http.get<any>('/api/parcele', { params: { size: '1000' } }).subscribe({
       next: (data) => {
-        this.parcele = data;
+        this.parcele = data.content || data;
         this.buildFormConfig();
       },
       error: (err) => console.error('Eroare parcele', err)
@@ -347,6 +347,85 @@ export class ContractManagementComponent implements OnInit {
         }
       });
     }
+  }
+
+  signingContract: ContractUtilizare | null = null;
+  emailSemnatar = '';
+  verificandStatus = false;
+
+  startSemnare(contract: ContractUtilizare): void {
+    if (!contract.id) return;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.signingContract = contract;
+    this.emailSemnatar = contract.locatorProprietar?.email || contract.locatorUtilizator?.email || '';
+  }
+
+  cancelSemnare(): void {
+    this.signingContract = null;
+    this.emailSemnatar = '';
+  }
+
+  confirmTrimiteSpreSemnare(): void {
+    const contractId = this.signingContract?.id;
+    if (!contractId || !this.emailSemnatar) return;
+
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.contractService.trimiteSpreSemnare(contractId, this.emailSemnatar).subscribe({
+      next: (updated) => {
+        this.successMessage = `Contractul a fost trimis spre semnare electronică la ${this.emailSemnatar} (prin SignNow).`;
+        this.signingContract = null;
+        this.emailSemnatar = '';
+        this.loadTenantData();
+        if (this.viewingContract?.id === contractId) {
+          this.viewingContract = updated;
+        }
+      },
+      error: (err) => {
+        this.errorMessage = err.error?.message || err.error || 'A apărut o eroare la trimiterea contractului spre semnare.';
+      }
+    });
+  }
+
+  verificaStatusSemnare(contract: ContractUtilizare): void {
+    if (!contract.id) return;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.verificandStatus = true;
+    this.contractService.verificaStatusSemnare(contract.id).subscribe({
+      next: (updated) => {
+        this.verificandStatus = false;
+        this.successMessage = updated.semnatElectronic
+          ? 'Contractul a fost semnat! Documentul final poate fi descărcat.'
+          : 'Contractul nu a fost încă semnat de destinatar. Mai încearcă puțin mai târziu.';
+        this.loadTenantData();
+        if (this.viewingContract?.id === contract.id) {
+          this.viewingContract = updated;
+        }
+      },
+      error: (err) => {
+        this.verificandStatus = false;
+        this.errorMessage = err.error?.message || err.error || 'A apărut o eroare la verificarea statusului de semnare.';
+      }
+    });
+  }
+
+  downloadDocumentSemnat(contract: ContractUtilizare): void {
+    if (!contract.id) return;
+    this.contractService.downloadDocumentSemnat(contract.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `contract-${contract.numarContract}-semnat.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.errorMessage = 'Nu s-a putut descărca documentul semnat.';
+      }
+    });
   }
 
   updateBreadcrumbs(): void {

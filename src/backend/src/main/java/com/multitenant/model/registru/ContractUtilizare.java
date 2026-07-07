@@ -79,6 +79,33 @@ public class ContractUtilizare {
     @Column(name = "este_activ")
     private boolean esteActiv = true;
 
+    @Column(name = "semnat_electronic")
+    private boolean semnatElectronic = false;
+
+    @Column(name = "data_semnaturii_electronice")
+    private java.time.LocalDateTime dataSemnaturiiElectronice;
+
+    @Column(name = "cale_document_semnat", length = 500)
+    private String caleDocumentSemnat;
+
+    @Column(name = "hash_document_semnat", length = 128)
+    private String hashDocumentSemnat;
+
+    @Column(name = "semnat_de_utilizator_id")
+    private Long semnatDeUtilizatorId;
+
+    @Column(name = "signnow_document_id", length = 100)
+    private String signNowDocumentId;
+
+    @Column(name = "signnow_status", length = 30)
+    private String signNowStatus;
+
+    @Column(name = "signnow_trimis_la")
+    private java.time.LocalDateTime signNowTrimisLa;
+
+    @Column(name = "signnow_email_semnatar", length = 255)
+    private String signNowEmailSemnatar;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
