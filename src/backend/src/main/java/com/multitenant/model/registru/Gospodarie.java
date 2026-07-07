@@ -11,6 +11,7 @@ import com.multitenant.model.common.Adresa;
 import com.multitenant.model.core.Uat;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
+import com.multitenant.model.persoana.Persoana;
 
 @Entity
 @Table(name = "gospodarii")
@@ -45,6 +46,10 @@ public class Gospodarie {
     @JoinColumn(name = "uat_id")
     @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private Uat uat;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cap_gospodarie_id")
+    private Persoana capGospodarie;
 
     @Override
     public boolean equals(Object o) {

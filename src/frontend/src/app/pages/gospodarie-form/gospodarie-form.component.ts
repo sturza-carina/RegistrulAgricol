@@ -49,7 +49,8 @@ export class GospodarieFormComponent implements OnInit {
               { label: 'Asociație', value: 'ASOCIATIE' }
             ]
           },
-          { name: 'activa', label: 'Activă', type: 'checkbox', required: false, width: 'half' }
+          { name: 'activa', label: 'Activă', type: 'checkbox', required: false, width: 'half' },
+          { name: 'capGospodarieNume', label: 'Cap de Gospodărie', type: 'text', required: false, width: 'full', disabled: true, showIf: () => this.isEditMode }
         ]
       },
       {
@@ -181,12 +182,27 @@ export class GospodarieFormComponent implements OnInit {
       const county = data.uat?.judet ?? data.adresa?.county ?? '';
       const uatId = data.uat?.id ? String(data.uat.id) : null;
 
+      let capNume = '';
+      if (data.capGospodarie && data.capGospodarie.id) {
+        capNume = data.capGospodarie.personType === 'LEGAL_ENTITY' 
+          ? data.capGospodarie.companyName 
+          : `${data.capGospodarie.firstName} ${data.capGospodarie.lastName}`;
+        if (data.capGospodarie.cnp) {
+          capNume += ` (CNP: ${data.capGospodarie.cnp})`;
+        } else if (data.capGospodarie.cui) {
+          capNume += ` (CUI: ${data.capGospodarie.cui})`;
+        }
+      } else {
+        capNume = 'Nespecificat (se poate desemna din tab-ul Membri)';
+      }
+
       const initData: any = {
         codGospodarie: data.codGospodarie,
         tipGospodarie: data.tipGospodarie,
         activa: data.activa,
         county: county,
-        uatId: uatId
+        uatId: uatId,
+        capGospodarieNume: capNume
       };
 
       if (data.adresa) {

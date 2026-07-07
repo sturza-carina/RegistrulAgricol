@@ -439,8 +439,29 @@ public class DatabaseSeeder implements CommandLineRunner {
                     persoana.setDateOfBirth(java.time.LocalDate.of(1990, 1, 1).plusDays(i));
                     persoana.setAdresa(a);
                     persoana.getGospodarii().add(savedG);
-                    persoana.setIsHeadOfHousehold(true);
                     persoana = persoanaRepository.save(persoana);
+
+                    // Seed additional members for testing (not head of household)
+                    com.multitenant.model.persoana.PersoanaFizica membru1 = new com.multitenant.model.persoana.PersoanaFizica();
+                    membru1.setFirstName("Maria" + i);
+                    membru1.setLastName("Popescu CJ");
+                    membru1.setCnp(String.format("292020212%04d", i));
+                    membru1.setDateOfBirth(java.time.LocalDate.of(1992, 2, 2).plusDays(i));
+                    membru1.setAdresa(a);
+                    membru1.getGospodarii().add(savedG);
+                    persoanaRepository.save(membru1);
+
+                    com.multitenant.model.persoana.PersoanaFizica membru2 = new com.multitenant.model.persoana.PersoanaFizica();
+                    membru2.setFirstName("Andrei" + i);
+                    membru2.setLastName("Popescu CJ");
+                    membru2.setCnp(String.format("515050512%04d", i));
+                    membru2.setDateOfBirth(java.time.LocalDate.of(2015, 5, 5).plusDays(i));
+                    membru2.setAdresa(a);
+                    membru2.getGospodarii().add(savedG);
+                    persoanaRepository.save(membru2);
+
+                    savedG.setCapGospodarie(persoana);
+                    savedG = gospodarieRepository.save(savedG);
 
                     if (i == 1) {
                         com.multitenant.model.registru.ContractUtilizare contract = new com.multitenant.model.registru.ContractUtilizare();
@@ -556,6 +577,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                     cerere.setCodCerere("REQ-" + System.currentTimeMillis());
                     cerere.setUatId(clujNapoca.getId());
                     cerere.setUserId(c.getId());
+                    cerere.setTipCerere(com.multitenant.model.registru.TipCerere.ADEVERINTA_ROL);
                     cerere.setStatus(com.multitenant.model.registru.StatusCerere.PENDING);
                     cerereRepository.save(cerere);
                 }
@@ -778,8 +800,29 @@ public class DatabaseSeeder implements CommandLineRunner {
                     persoana.setDateOfBirth(java.time.LocalDate.of(1980, 2, 2).plusDays(i));
                     persoana.setAdresa(a);
                     persoana.getGospodarii().add(savedG);
-                    persoana.setIsHeadOfHousehold(true);
-                    persoanaRepository.save(persoana);
+                    persoana = persoanaRepository.save(persoana);
+
+                    // Seed additional members for testing (not head of household)
+                    com.multitenant.model.persoana.PersoanaFizica membru1 = new com.multitenant.model.persoana.PersoanaFizica();
+                    membru1.setFirstName("Elena" + i);
+                    membru1.setLastName("Ionescu BUC");
+                    membru1.setCnp(String.format("285030323%04d", i));
+                    membru1.setDateOfBirth(java.time.LocalDate.of(1985, 3, 3).plusDays(i));
+                    membru1.setAdresa(a);
+                    membru1.getGospodarii().add(savedG);
+                    persoanaRepository.save(membru1);
+
+                    com.multitenant.model.persoana.PersoanaFizica membru2 = new com.multitenant.model.persoana.PersoanaFizica();
+                    membru2.setFirstName("Gheorghe" + i);
+                    membru2.setLastName("Ionescu BUC");
+                    membru2.setCnp(String.format("518040423%04d", i));
+                    membru2.setDateOfBirth(java.time.LocalDate.of(2018, 4, 4).plusDays(i));
+                    membru2.setAdresa(a);
+                    membru2.getGospodarii().add(savedG);
+                    persoanaRepository.save(membru2);
+
+                    savedG.setCapGospodarie(persoana);
+                    savedG = gospodarieRepository.save(savedG);
 
                     com.multitenant.model.registru.Cladire cladire = new com.multitenant.model.registru.Cladire();
                     cladire.setDestinatie("Anexa");

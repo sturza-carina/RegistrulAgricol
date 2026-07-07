@@ -27,4 +27,5 @@ export interface Gospodarie {
   tipGospodarie: string; // 'INDIVIDUALA', 'COLECTIVA', 'ASOCIATIE'
   activa: boolean;
   uat?: Uat;
+  capGospodarie?: any;
 }

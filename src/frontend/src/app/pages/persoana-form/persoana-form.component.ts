@@ -55,7 +55,6 @@ export class PersonFormComponent implements OnInit {
           { name: 'lastName', label: 'Nume', type: 'text', required: true, width: 'half', showIf: (m) => m.personType === 'PHYSICAL_PERSON' },
           { name: 'cnp', label: 'CNP', type: 'text', required: true, width: 'half', showIf: (m) => m.personType === 'PHYSICAL_PERSON' },
           { name: 'dateOfBirth', label: 'Data Nașterii', type: 'date', required: false, width: 'half', showIf: (m) => m.personType === 'PHYSICAL_PERSON' },
-          { name: 'isHeadOfHousehold', label: 'Cap Gospodărie', type: 'checkbox', required: false, width: 'full', showIf: (m) => m.personType === 'PHYSICAL_PERSON' },
 
           // Legal Entity Fields
           { name: 'companyName', label: 'Denumire Companie', type: 'text', required: true, width: 'half', showIf: (m) => m.personType === 'LEGAL_ENTITY' },
@@ -219,8 +218,7 @@ export class PersonFormComponent implements OnInit {
         firstName: formData.firstName,
         lastName: formData.lastName,
         cnp: formData.cnp,
-        dateOfBirth: formData.dateOfBirth,
-        isHeadOfHousehold: formData.isHeadOfHousehold
+        dateOfBirth: formData.dateOfBirth
       } as PersoanaFizica;
     } else {
       payload = {
