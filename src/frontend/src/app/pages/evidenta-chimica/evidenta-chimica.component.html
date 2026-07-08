@@ -442,26 +442,41 @@
 
         <div class="form-row">
           <!-- Doza Utilizata -->
-          <div class="form-group">
-            <label class="required">{{ 'Doză Utilizată (L/ha sau kg/ha)' | appTranslate }}</label>
-            <input type="number" step="0.01" class="form-control" name="dozaUtilizata" [(ngModel)]="currentPesticide.dozaUtilizata" (ngModelChange)="checkOverdosage($event)" required />
+          <div class="form-group" style="flex: 2; display: flex; gap: 8px;">
+            <div style="flex: 1;">
+              <label class="required">{{ 'Doză Utilizată' | appTranslate }}</label>
+              <input type="number" step="0.01" class="form-control" name="dozaUtilizata" [(ngModel)]="currentPesticide.dozaUtilizata" (ngModelChange)="checkOverdosage($event)" required />
+            </div>
+            <div style="width: 120px;">
+              <label class="required">{{ 'Unitate' | appTranslate }}</label>
+              <select class="form-control" name="unitateMasuraDoza" [(ngModel)]="currentPesticide.unitateMasuraDoza" (change)="checkOverdosage()">
+                <option value="L/ha">L/ha</option>
+                <option value="kg/ha">kg/ha</option>
+                <option value="ml/10L">ml/10L</option>
+                <option value="ml/1000mp">ml/1000mp</option>
+                <option value="l/1000mp">l/1000mp</option>
+                <option value="g/10L">g/10L</option>
+                <option value="g/1000mp">g/1000mp</option>
+                <option value="kg/1000mp">kg/1000mp</option>
+              </select>
+            </div>
           </div>
 
           <!-- Suprafata Tratata -->
-          <div class="form-group">
+          <div class="form-group" style="flex: 1;">
             <label class="required">{{ 'Suprafață tratată (ha)' | appTranslate }}</label>
             <input type="number" step="0.01" class="form-control" name="suprafataTratata" [(ngModel)]="currentPesticide.suprafataTratata" required />
           </div>
         </div>
 
         <!-- Read-only auto calculated Total Quantity -->
-        <div class="auto-calc-box">
+        <div class="auto-calc-box" *ngIf="!(selectedPppProduct?.tip === 'Combatere Biologică / Polenizatori' || selectedPppProduct?.tip === 'Combatere Biologica / Polenizatori' || selectedPppProduct?.tip?.toLowerCase()?.includes('biologic'))">
           <span class="label">{{ 'Cantitate Totală Utilizată (Calculată automat):' | appTranslate }}</span>
-          <span class="value">{{ totalFitosanitarQty | number:'1.2-2' }} L / kg</span>
+          <span class="value">{{ totalFitosanitarQty | number:'1.2-2' }} {{ currentPesticide.unitateMasuraDoza || 'L' }}</span>
         </div>
 
         <!-- Overdosage Justification field -->
-        <div class="warning-box" *ngIf="showOverdoseWarning">
+        <div class="warning-box" *ngIf="showOverdoseWarning && !(selectedPppProduct?.tip === 'Combatere Biologică / Polenizatori' || selectedPppProduct?.tip === 'Combatere Biologica / Polenizatori' || selectedPppProduct?.tip?.toLowerCase()?.includes('biologic'))">
           <div class="warning-title">⚠️ {{ 'Avertisment Supradozaj!' | appTranslate }}</div>
           <p>{{ 'Doza utilizată este mai mare decât doza maximă omologată. Pentru a putea salva, trebuie să introduceți o justificare tehnică.' | appTranslate }}</p>
           <div class="form-group">
@@ -469,6 +484,22 @@
             <textarea class="form-control" name="justificareSupradozaj" [(ngModel)]="currentPesticide.justificareSupradozaj" rows="2" [placeholder]="'Ex: Infestare severă constatată prin buletin de prognoză...' | appTranslate"></textarea>
           </div>
         </div>
+
+        <!-- Biological treatments variables -->
+        <ng-container *ngIf="selectedPppProduct?.tip === 'Combatere Biologică / Polenizatori' || selectedPppProduct?.tip === 'Combatere Biologica / Polenizatori' || selectedPppProduct?.tip?.toLowerCase()?.includes('biologic')">
+          <hr style="margin: 15px 0;" />
+          <h4 style="margin-bottom: 10px; color: var(--primary);">{{ 'Lansare Organisme Biologice' | appTranslate }}</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label>{{ 'Dată lansare organism' | appTranslate }}</label>
+              <input type="date" class="form-control" name="dataLansarii" [(ngModel)]="currentPesticide.dataLansarii" />
+            </div>
+            <div class="form-group">
+              <label>{{ 'Număr cutii / indivizi lansați' | appTranslate }}</label>
+              <input type="number" class="form-control" name="numarCutiiIndivizi" [(ngModel)]="currentPesticide.numarCutiiIndivizi" />
+            </div>
+          </div>
+        </ng-container>
 
         <!-- Responsabil -->
         <div class="form-group">
@@ -482,19 +513,21 @@
           <label for="semnatCheckbox">{{ 'Semnează digital tratamentul fitosanitar (echivalent semnătură olografă conform normelor ANF)' | appTranslate }}</label>
         </div>
 
-        <hr />
-        <h4 style="margin-top: 15px; margin-bottom: 10px;">{{ 'Date de Trasabilitate (Opționale la aplicare)' | appTranslate }}</h4>
+        <ng-container *ngIf="!(selectedPppProduct?.tip === 'Combatere Biologică / Polenizatori' || selectedPppProduct?.tip === 'Combatere Biologica / Polenizatori' || selectedPppProduct?.tip?.toLowerCase()?.includes('biologic'))">
+          <hr />
+          <h4 style="margin-top: 15px; margin-bottom: 10px;">{{ 'Date de Trasabilitate (Opționale la aplicare)' | appTranslate }}</h4>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>{{ 'Dată începere recoltare' | appTranslate }}</label>
-            <input type="date" class="form-control" name="dataIncepereRecoltare" [(ngModel)]="currentPesticide.dataIncepereRecoltare" />
+          <div class="form-row">
+            <div class="form-group">
+              <label>{{ 'Dată începere recoltare' | appTranslate }}</label>
+              <input type="date" class="form-control" name="dataIncepereRecoltare" [(ngModel)]="currentPesticide.dataIncepereRecoltare" />
+            </div>
+            <div class="form-group">
+              <label>{{ 'Document dare în consum (nr/dată)' | appTranslate }}</label>
+              <input type="text" class="form-control" name="documentDareConsum" [(ngModel)]="currentPesticide.documentDareConsum" [placeholder]="'Ex: Aviz nr. 123 / 10.10.2026' | appTranslate" />
+            </div>
           </div>
-          <div class="form-group">
-            <label>{{ 'Document dare în consum (nr/dată)' | appTranslate }}</label>
-            <input type="text" class="form-control" name="documentDareConsum" [(ngModel)]="currentPesticide.documentDareConsum" [placeholder]="'Ex: Aviz nr. 123 / 10.10.2026' | appTranslate" />
-          </div>
-        </div>
+        </ng-container>
       </form>
     </div>
 

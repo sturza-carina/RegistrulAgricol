@@ -14,6 +14,10 @@ import { Parcela } from '../../models/parcela.model';
 import { CategorieFolosinta } from '../../models/categorie-folosinta.model';
 import { CulturaParcela } from '../../models/cultura-parcela.model';
 import { CulturaParcelaService } from '../../services/cultura-parcela.service';
+import { CicluProductie } from '../../models/ciclu-productie.model';
+import { CicluProductieService } from '../../services/ciclu-productie.service';
+import { Recoltare } from '../../models/recoltare.model';
+import { RecoltareService } from '../../services/recoltare.service';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 import { SursaApa } from '../../models/sursa-apa.model';
@@ -59,7 +63,8 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   viewingParcela: Parcela | null = null;
 
   newParcela: Parcela = {
-    denumire: '', suprafata: 0, categorieFolosinta: 'Arabil', polygon: null, stereo70Coordinates: ''
+    denumire: '', suprafata: 0, categorieFolosinta: 'Arabil', polygon: null, stereo70Coordinates: '',
+    tipMediu: 'CAMP_DESCHIS', suprafataUtilaMp: 0
   };
   points: { x: string; y: string }[] = [
     { x: '', y: '' }, { x: '', y: '' }, { x: '', y: '' }
@@ -101,6 +106,16 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   newPasune: Partial<PasuneFaneata> = { tipFolosinta: TipFolosintaPasune.PASUNAT };
   tipuriFolosintaPasune = [TipFolosintaPasune.PASUNAT, TipFolosintaPasune.COSIT, TipFolosintaPasune.MIXT];
 
+  cicluri: CicluProductie[] = [];
+  isAddingCiclu = false;
+  editingCiclu: CicluProductie | null = null;
+  newCiclu: Partial<CicluProductie> = { status: 'ACTIV', programSprijin: false };
+
+  recoltari: Recoltare[] = [];
+  isAddingRecoltare = false;
+  editingRecoltare: Recoltare | null = null;
+  newRecoltare: Partial<Recoltare> = { cantitateKg: 0 };
+
   categoriiFolosinta: string[] = [];
   tipuriSol: string[] = [];
   tipuriSursa: string[] = [];
@@ -120,6 +135,8 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     private pomiService: PomService,
     private vitaDeVieService: VitaDeVieService,
     private pasuneFaneataService: PasuneFaneataService,
+    private cicluService: CicluProductieService,
+    private recoltareService: RecoltareService,
     private http: HttpClient,
     private zone: NgZone
   ) {}
@@ -466,7 +483,15 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
 
   openAddParcelaForm() {
     this.viewingParcela = null;
-    this.newParcela = { denumire: '', suprafata: 0, categorieFolosinta: '', polygon: null, stereo70Coordinates: '' };
+    this.newParcela = {
+      denumire: '',
+      suprafata: 0,
+      categorieFolosinta: '',
+      polygon: null,
+      stereo70Coordinates: '',
+      tipMediu: 'CAMP_DESCHIS',
+      suprafataUtilaMp: 0
+    };
     this.points = [{ x: '', y: '' }, { x: '', y: '' }, { x: '', y: '' }];
     this.calculatedArea = null;
     this.isAddingParcela = true;
@@ -594,6 +619,10 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
       if (this.showPomi(p)) this.loadPomi(p.id);
       if (this.showVita(p)) this.loadVita(p.id);
       if (this.showPasuneFaneata(p)) this.loadPasuneFaneata(p.id);
+      if (p.tipMediu !== 'CAMP_DESCHIS') {
+        this.loadCicluri(p.id);
+        this.loadRecoltari(p.id);
+      }
     }
   }
 
@@ -1003,5 +1032,145 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     return this.speciiPomiToate
       .filter(s => this.normalizeString(s.categorieFolosinta || '') === cat)
       .map(s => s.nume);
+  }
+
+  // --- CICLURI DE PRODUCTIE METHODS ---
+  loadCicluri(parcelaId: number) {
+    this.cicluService.getCicluri(parcelaId, 0, 100).subscribe({
+      next: (response) => { this.cicluri = response.content || []; },
+      error: () => this.cicluri = []
+    });
+  }
+
+  openAddCicluForm() {
+    this.isAddingCiclu = true;
+    this.editingCiclu = null;
+    this.newCiclu = { 
+      parcelaId: this.viewingParcela?.id,
+      cultura: '', 
+      dataInfiintare: new Date().toISOString().substring(0, 10), 
+      status: 'ACTIV', 
+      programSprijin: false 
+    };
+  }
+
+  openEditCiclu(ciclu: CicluProductie) {
+    this.isAddingCiclu = true;
+    this.editingCiclu = ciclu;
+    this.newCiclu = { ...ciclu };
+  }
+
+  cancelAddCiclu() {
+    this.isAddingCiclu = false;
+    this.editingCiclu = null;
+    this.newCiclu = { status: 'ACTIV', programSprijin: false };
+  }
+
+  saveCiclu() {
+    if (!this.newCiclu.cultura?.trim() || !this.newCiclu.dataInfiintare) {
+      alert('Introduceți cultura și data înființării.');
+      return;
+    }
+
+    this.saving = true;
+    const payload = { ...this.newCiclu, parcelaId: this.viewingParcela?.id } as CicluProductie;
+
+    const action = this.editingCiclu && this.editingCiclu.id
+      ? this.cicluService.updateCiclu(this.editingCiclu.id, payload)
+      : this.cicluService.createCiclu(payload);
+
+    action.subscribe({
+      next: (saved) => {
+        this.saving = false;
+        if (saved.warning) {
+          alert(saved.warning);
+        }
+        this.cancelAddCiclu();
+        if (this.viewingParcela?.id) this.loadCicluri(this.viewingParcela.id);
+      },
+      error: (err) => {
+        this.saving = false;
+        console.error(err);
+        const msg = err.error?.message || err.error || 'Eroare la salvare ciclu.';
+        alert(msg);
+      }
+    });
+  }
+
+  deleteCiclu(ciclu: CicluProductie) {
+    if (!ciclu.id || !this.viewingParcela?.id) return;
+    if (!confirm(`Ștergeți ciclul de "${ciclu.cultura}"?`)) return;
+    this.cicluService.deleteCiclu(ciclu.id).subscribe({
+      next: () => { this.cicluri = this.cicluri.filter(c => c.id !== ciclu.id); },
+      error: () => alert('Eroare la ștergere ciclu.')
+    });
+  }
+
+  // --- RECOLTARI METHODS ---
+  loadRecoltari(parcelaId: number) {
+    this.recoltareService.getRecoltari(parcelaId, 0, 100).subscribe({
+      next: (response) => { this.recoltari = response.content || []; },
+      error: () => this.recoltari = []
+    });
+  }
+
+  openAddRecoltareForm() {
+    this.isAddingRecoltare = true;
+    this.editingRecoltare = null;
+    this.newRecoltare = {
+      parcelaId: this.viewingParcela?.id,
+      cultura: '',
+      dataRecoltare: new Date().toISOString().substring(0, 10),
+      cantitateKg: 0
+    };
+  }
+
+  openEditRecoltare(rec: Recoltare) {
+    this.isAddingRecoltare = true;
+    this.editingRecoltare = rec;
+    this.newRecoltare = { ...rec };
+  }
+
+  cancelAddRecoltare() {
+    this.isAddingRecoltare = false;
+    this.editingRecoltare = null;
+    this.newRecoltare = { cantitateKg: 0 };
+  }
+
+  saveRecoltare() {
+    if (!this.newRecoltare.dataRecoltare || !this.newRecoltare.cantitateKg) {
+      alert('Introduceți data recoltării și cantitatea.');
+      return;
+    }
+
+    this.saving = true;
+    const payload = { ...this.newRecoltare, parcelaId: this.viewingParcela?.id } as Recoltare;
+
+    const action = this.editingRecoltare && this.editingRecoltare.id
+      ? this.recoltareService.updateRecoltare(this.editingRecoltare.id, payload)
+      : this.recoltareService.createRecoltare(payload);
+
+    action.subscribe({
+      next: (saved) => {
+        this.saving = false;
+        this.cancelAddRecoltare();
+        if (this.viewingParcela?.id) this.loadRecoltari(this.viewingParcela.id);
+      },
+      error: (err) => {
+        this.saving = false;
+        console.error(err);
+        const msg = err.error?.message || err.error || 'Eroare la salvare recoltare.';
+        alert(msg);
+      }
+    });
+  }
+
+  deleteRecoltare(rec: Recoltare) {
+    if (!rec.id || !this.viewingParcela?.id) return;
+    if (!confirm(`Ștergeți recoltarea de ${rec.cantitateKg} kg?`)) return;
+    this.recoltareService.deleteRecoltare(rec.id).subscribe({
+      next: () => { this.recoltari = this.recoltari.filter(r => r.id !== rec.id); },
+      error: () => alert('Eroare la ștergere recoltare.')
+    });
   }
 }

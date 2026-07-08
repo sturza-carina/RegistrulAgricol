@@ -5,6 +5,7 @@ import { LayoutComponent } from '../../components/layout/layout.component';
 import { AppTranslatePipe } from '../../services/translate.pipe';
 import { RaportStatisticService } from '../../services/raport-statistic.service';
 import { UatContextService } from '../../services/uat-context.service';
+import { RecoltareService } from '../../services/recoltare.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -44,9 +45,12 @@ export class StatisticiComponent implements OnInit, OnDestroy {
     utilajeCount: 0
   };
 
+  recoltariCentralizator: any[] = [];
+
   constructor(
     private statisticiService: RaportStatisticService,
-    private uatContextService: UatContextService
+    private uatContextService: UatContextService,
+    private recoltareService: RecoltareService
   ) {}
 
   ngOnInit(): void {
@@ -83,12 +87,24 @@ export class StatisticiComponent implements OnInit, OnDestroy {
           utilaje: []
         };
         this.calculateSummaries();
+        this.fetchCentralizatorRecoltari();
         this.loading = false;
       },
       error: (err) => {
         console.error('Error fetching statistics:', err);
         this.errorMessage = 'A apărut o eroare la încărcarea datelor statistice. Vă rugăm să reîncercați.';
         this.loading = false;
+      }
+    });
+  }
+
+  fetchCentralizatorRecoltari(): void {
+    this.recoltareService.getCentralizator(this.selectedYear).subscribe({
+      next: (res) => {
+        this.recoltariCentralizator = res || [];
+      },
+      error: (err) => {
+        console.error('Error fetching yield statistics:', err);
       }
     });
   }

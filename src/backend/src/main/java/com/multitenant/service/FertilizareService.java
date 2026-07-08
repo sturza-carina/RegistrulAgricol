@@ -1,12 +1,11 @@
 package com.multitenant.service;
 
 import com.multitenant.dto.FertilizareDTO;
-import com.multitenant.model.registru.CatalogIngrasaminte;
-import com.multitenant.model.registru.Parcela;
-import com.multitenant.model.registru.Fertilizare;
+import com.multitenant.model.registru.*;
 import com.multitenant.repository.CatalogIngrasaminteRepository;
 import com.multitenant.repository.ParcelaRepository;
 import com.multitenant.repository.FertilizareRepository;
+import com.multitenant.repository.CicluProductieRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +21,7 @@ public class FertilizareService {
     private final FertilizareRepository fertilizareRepository;
     private final ParcelaRepository parcelaRepository;
     private final CatalogIngrasaminteRepository catalogIngrasaminteRepository;
+    private final CicluProductieRepository cicluProductieRepository;
 
     @Transactional(readOnly = true)
     public Page<FertilizareDTO> getFertilizari(Long parcelaId, Pageable pageable) {
@@ -72,6 +72,19 @@ public class FertilizareService {
 
         LocalDate date = dto.getDataAplicarii();
         
+        // Auto link active cycle
+        List<CicluProductie> activeCycles = cicluProductieRepository.findActiveCyclesOnDate(parcela.getId(), date);
+        CicluProductie activeCycle = activeCycles.isEmpty() ? null : activeCycles.get(0);
+
+        if (parcela.getTipMediu() == TipMediu.SOLAR || parcela.getTipMediu() == TipMediu.SERA_INCALZITA) {
+            if (activeCycle == null) {
+                throw new IllegalArgumentException("În spații protejate (Solar/Seră), fertilizările trebuie obligatoriu asociate unui ciclu de producție activ la data aplicării.");
+            }
+            entity.setCicluProductie(activeCycle);
+        } else {
+            entity.setCicluProductie(activeCycle);
+        }
+
         // Check winter interdiction period (November 15 - March 15)
         if (isInWinterInterdictionPeriod(date) && !confirmInterdictie) {
             throw new IllegalArgumentException("Avertisment Perioadă de Interdicție! Data selectată (" + date 
@@ -155,6 +168,11 @@ public class FertilizareService {
         dto.setAportAzot(entity.getAportAzot());
         dto.setAportFosfor(entity.getAportFosfor());
         dto.setAportPotasiu(entity.getAportPotasiu());
+        
+        if (entity.getCicluProductie() != null) {
+            dto.setCicluProductieId(entity.getCicluProductie().getId());
+            dto.setCicluProductieCultura(entity.getCicluProductie().getCultura());
+        }
         
         return dto;
     }

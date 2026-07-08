@@ -20,4 +20,6 @@ public class FertilizareDTO {
     private Double aportAzot;
     private Double aportFosfor;
     private Double aportPotasiu;
+    private Long cicluProductieId;
+    private String cicluProductieCultura;
 }

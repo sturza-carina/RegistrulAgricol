@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Registru Spații Protejate</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 15mm;
+        }
+        body {
+            font-family: "Roboto", sans-serif;
+            font-size: 10px;
+            color: #333;
+            line-height: 1.4;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .title {
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            color: #1e3a8a;
+        }
+        .subtitle {
+            font-size: 11px;
+            color: #555;
+        }
+        .parcel-block {
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+        .parcel-header {
+            font-size: 12px;
+            font-weight: bold;
+            background-color: #e2e8f0;
+            padding: 6px 10px;
+            border-left: 4px solid #1e3a8a;
+            margin-bottom: 5px;
+        }
+        .parcel-details {
+            font-size: 10px;
+            color: #444;
+            margin-bottom: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+        }
+        th, td {
+            border: 0.5px solid #cbd5e1;
+            padding: 6px 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8fafc;
+            font-weight: bold;
+            color: #1e293b;
+        }
+        .center {
+            text-align: center;
+        }
+        .empty-message {
+            font-style: italic;
+            color: #64748b;
+            padding: 10px;
+            text-align: center;
+            background-color: #f8fafc;
+            border: 0.5px solid #cbd5e1;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">Registru de Evidență pentru Spații Protejate</div>
+        <div class="subtitle">Succesiunea culturilor pe parcursul anului agricol <span th:text="${anAgricol}">2026</span></div>
+    </div>
+
+    <div th:each="p : ${parcele}" class="parcel-block">
+        <div class="parcel-header" th:text="${p.denumire}">Solarul Nr. 1</div>
+        <div class="parcel-details">
+            Tip Mediu: <strong th:text="${p.tipMediu}">SOLAR</strong> | 
+            Suprafață Utilă: <strong th:text="${p.suprafataUtilaMp} + ' mp'">0 mp</strong>
+        </div>
+
+        <table th:if="${not #lists.isEmpty(p.cicluri)}">
+            <thead>
+                <tr>
+                    <th style="width: 10%;" class="center">Nr. Crt.</th>
+                    <th style="width: 40%;">Cultura / Specie</th>
+                    <th style="width: 25%;" class="center">Data Înființare</th>
+                    <th style="width: 25%;" class="center">Data Defrișare / Finalizare</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="c, iter : ${p.cicluri}">
+                    <td class="center" th:text="${iter.index + 1}">1</td>
+                    <td th:text="${c.cultura}">Salată</td>
+                    <td class="center" th:text="${c.dataInfiintare}">01.03.2026</td>
+                    <td class="center" th:text="${c.dataDefrișare}">15.05.2026</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div th:if="${#lists.isEmpty(p.cicluri)}" class="empty-message">
+            Nu există cicluri de cultură înregistrate pentru acest spațiu protejat în anul agricol selectat.
+        </div>
+    </div>
+
+    <div th:if="${#lists.isEmpty(parcele)}" class="empty-message">
+        Nu există sere sau solarii înregistrate în sistem.
+    </div>
+</body>
+</html>
