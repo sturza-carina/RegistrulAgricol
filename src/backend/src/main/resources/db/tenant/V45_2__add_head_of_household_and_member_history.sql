@@ -3,14 +3,20 @@ ALTER TABLE persons DROP COLUMN IF EXISTS is_head_of_household;
 ALTER TABLE persons_aud DROP COLUMN IF EXISTS is_head_of_household;
 
 -- Adăugare cap de gospodărie în tabela gospodării (asociază o gospodărie cu un cap de familie)
-ALTER TABLE gospodarii ADD COLUMN cap_gospodarie_id BIGINT;
-ALTER TABLE gospodarii ADD CONSTRAINT fk_gospodarii_cap_gospodarie FOREIGN KEY (cap_gospodarie_id) REFERENCES persons(id) ON DELETE SET NULL;
+ALTER TABLE gospodarii ADD COLUMN IF NOT EXISTS cap_gospodarie_id BIGINT;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_gospodarii_cap_gospodarie') THEN
+        ALTER TABLE gospodarii ADD CONSTRAINT fk_gospodarii_cap_gospodarie FOREIGN KEY (cap_gospodarie_id) REFERENCES persons(id) ON DELETE SET NULL;
+    END IF;
+END $$;
 
 -- Adăugare cap de gospodărie în tabela de audit gospodării pentru Envers
-ALTER TABLE gospodarii_aud ADD COLUMN cap_gospodarie_id BIGINT;
+ALTER TABLE gospodarii_aud ADD COLUMN IF NOT EXISTS cap_gospodarie_id BIGINT;
 
 -- Creare tabelă istoric membri pentru urmărirea evenimentelor de intrare/ieșire
-CREATE TABLE istoric_membri_gospodarie (
+CREATE TABLE IF NOT EXISTS istoric_membri_gospodarie (
     id BIGSERIAL PRIMARY KEY,
     gospodarie_id BIGINT NOT NULL,
     persoana_id BIGINT NOT NULL,
@@ -24,7 +30,7 @@ CREATE TABLE istoric_membri_gospodarie (
 );
 
 -- Creare tabelă audit istoric membri pentru Envers
-CREATE TABLE istoric_membri_gospodarie_aud (
+CREATE TABLE IF NOT EXISTS istoric_membri_gospodarie_aud (
     id BIGINT NOT NULL,
     rev INTEGER NOT NULL,
     revtype SMALLINT,
@@ -37,4 +43,3 @@ CREATE TABLE istoric_membri_gospodarie_aud (
     PRIMARY KEY (id, rev),
     FOREIGN KEY (rev) REFERENCES revinfo(rev)
 );
-

@@ -140,6 +140,26 @@
               <p *ngIf="ev.observatii" style="margin: 0; font-size: 14px; color: var(--text-secondary); line-height: 1.4; border-left: 3px solid var(--border, #cbd5e1); padding-left: 10px; font-style: italic;">
                 {{ ev.observatii }}
               </p>
+
+              <!-- Act doveditor / Document link -->
+              <div *ngIf="ev.documentId" style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; background: var(--body-bg, #f8fafc); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border, #cbd5e1);">
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary);">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                  </svg>
+                  <span style="font-weight: 500; color: var(--text-primary);">{{ ev.numeFisierDocument }}</span>
+                </div>
+                <button class="btn btn-sm btn-outline-primary" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; font-size: 12px;" (click)="downloadDocument(ev)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  <span>{{ 'Descarcă' | appTranslate }}</span>
+                </button>
+              </div>
+
               <div style="margin-top: 8px; font-size: 11px; color: var(--text-muted); text-align: right;">
                 {{ 'Adăugat la:' | appTranslate }} {{ ev.createdAt | date:'dd.MM.yyyy HH:mm' }}
               </div>
@@ -421,6 +441,26 @@
       <div class="form-group" style="margin-bottom: 0;">
         <label>{{ 'Observații / Mențiuni' | appTranslate }}</label>
         <textarea [(ngModel)]="noulEveniment.observatii" rows="3" class="form-control" [placeholder]="'Detalii referitoare la documentul doveditor (certificat de naștere, deces, hotărâre judecătorească etc.)...' | appTranslate"></textarea>
+      </div>
+
+      <!-- Document doveditor (Atașament) -->
+      <div class="form-group" style="margin-top: 15px;">
+        <label>{{ 'Atașează Document Doveditor (Certificat, Hotărâre etc.)' | appTranslate }}</label>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <input type="file" (change)="onIstoricFileSelected($event)" class="form-control" style="padding: 4px 8px; height: auto;">
+          <button *ngIf="selectedIstoricFile" type="button" class="btn btn-sm btn-outline-danger" (click)="clearSelectedIstoricFile()" style="padding: 6px 12px;">{{ 'Șterge' | appTranslate }}</button>
+        </div>
+        <small class="text-muted" style="font-size: 11px; display: block; margin-top: 4px;">{{ 'Documentul va fi salvat în fișierele gospodăriei și asociat acestui eveniment.' | appTranslate }}</small>
+      </div>
+
+      <!-- Document deja asociat -->
+      <div *ngIf="noulEveniment.documentId" style="margin-top: 10px; display: flex; align-items: center; gap: 8px; font-size: 13px; background: var(--body-bg, #f8fafc); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border, #cbd5e1);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary);">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <span style="font-weight: 500; color: var(--text-primary);">{{ noulEveniment.numeFisierDocument }}</span>
+        <span style="color: var(--text-secondary);">({{ 'Document Deja Asociat' | appTranslate }})</span>
       </div>
     </div>
 

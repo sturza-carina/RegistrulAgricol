@@ -26,6 +26,7 @@ public class DocumentService {
 
     private final DocumentRepository documentRepository;
     private final GospodarieRepository gospodarieRepository;
+    private final com.multitenant.repository.IstoricMembruRepository istoricMembruRepository;
 
     @Value("${app.documents.storage-path:/data/documents}")
     private String storageBasePath;
@@ -40,9 +41,12 @@ public class DocumentService {
 
     private static final long MAX_FILE_SIZE_BYTES = 10L * 1024 * 1024; // 10 MB
 
-    public DocumentService(DocumentRepository documentRepository, GospodarieRepository gospodarieRepository) {
+    public DocumentService(DocumentRepository documentRepository, 
+                           GospodarieRepository gospodarieRepository,
+                           com.multitenant.repository.IstoricMembruRepository istoricMembruRepository) {
         this.documentRepository = documentRepository;
         this.gospodarieRepository = gospodarieRepository;
+        this.istoricMembruRepository = istoricMembruRepository;
     }
 
     public Page<Document> getAllDocuments(String uatCode, Pageable pageable) {
@@ -132,6 +136,9 @@ public class DocumentService {
     public void deleteDocument(Long id, Long gospodarieId) {
         Document document = documentRepository.findByIdAndGospodarieId(id, gospodarieId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Documentul nu a fost găsit"));
+
+        // Nullify any associations from member history so that the history record itself is preserved but without the document link
+        istoricMembruRepository.nullifyDocumentAssociation(id);
 
         try {
             Files.deleteIfExists(Paths.get(document.getCaleStocare()));

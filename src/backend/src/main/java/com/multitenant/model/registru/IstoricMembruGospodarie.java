@@ -42,6 +42,12 @@ public class IstoricMembruGospodarie {
     @Column(name = "tip_eveniment", nullable = false, length = 50)
     private TipEvenimentMembru tipEveniment;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "document_id")
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
+    @org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
+    private Document document;
+
     @Column(name = "data_eveniment", nullable = false)
     private LocalDate dataEveniment;
 
