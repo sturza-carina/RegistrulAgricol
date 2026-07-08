@@ -18,4 +18,9 @@ export interface TratamentFitosanitar {
   documentDareConsum?: string;
   dozaDepasita?: boolean;
   justificareSupradozaj?: string;
+  unitateMasuraDoza?: string;
+  dataLansarii?: string;
+  numarCutiiIndivizi?: number;
+  cicluProductieId?: number;
+  cicluProductieCultura?: string;
 }

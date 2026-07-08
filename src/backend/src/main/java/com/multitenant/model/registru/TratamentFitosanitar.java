@@ -69,9 +69,29 @@ public class TratamentFitosanitar {
     @Column(name = "justificare_supradozaj", columnDefinition = "TEXT")
     private String justificareSupradozaj;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ciclu_productie_id")
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
+    private CicluProductie cicluProductie;
+
+    @Column(name = "unitate_masura_doza", length = 50)
+    private String unitateMasuraDoza;
+
+    @Column(name = "data_lansarii")
+    private LocalDate dataLansarii;
+
+    @Column(name = "numar_cutii_indivizi")
+    private Integer numarCutiiIndivizi;
+
     @Transient
     public Long getParcelaId() {
         return parcela != null ? parcela.getId() : null;
+    }
+
+    @Transient
+    public Long getCicluProductieId() {
+        return cicluProductie != null ? cicluProductie.getId() : null;
     }
 
     @Transient

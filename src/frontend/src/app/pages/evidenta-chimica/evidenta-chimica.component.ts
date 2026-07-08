@@ -146,7 +146,10 @@ export class EvidentaChimicaComponent implements OnInit, OnDestroy {
       semnaturaElectronica: '',
       dataIncepereRecoltare: '',
       documentDareConsum: '',
-      justificareSupradozaj: ''
+      justificareSupradozaj: '',
+      unitateMasuraDoza: 'L/ha',
+      dataLansarii: '',
+      numarCutiiIndivizi: undefined
     };
   }
 

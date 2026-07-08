@@ -94,6 +94,10 @@ public class ParcelaService {
             existing.setTipZona(updatedParcela.getTipZona());
         if (updatedParcela.getTitularDreptFolosinta() != null)
             existing.setTitularDreptFolosinta(updatedParcela.getTitularDreptFolosinta());
+        if (updatedParcela.getTipMediu() != null)
+            existing.setTipMediu(updatedParcela.getTipMediu());
+        if (updatedParcela.getSuprafataUtilaMp() != null)
+            existing.setSuprafataUtilaMp(updatedParcela.getSuprafataUtilaMp());
 
         if (updatedParcela.getStereo70Coordinates() != null && !updatedParcela.getStereo70Coordinates().trim().isEmpty()) {
             existing.setStereo70Coordinates(updatedParcela.getStereo70Coordinates());
@@ -158,6 +162,8 @@ public class ParcelaService {
         compareField("suprafata", current.getSuprafata(), previous != null ? previous.getSuprafata() : null, diffs);
         compareField("categorieFolosinta", current.getCategorieFolosinta(), previous != null ? previous.getCategorieFolosinta() : null, diffs);
         compareField("polygon", current.getPolygon(), previous != null ? previous.getPolygon() : null, diffs);
+        compareField("tipMediu", current.getTipMediu(), previous != null ? previous.getTipMediu() : null, diffs);
+        compareField("suprafataUtilaMp", current.getSuprafataUtilaMp(), previous != null ? previous.getSuprafataUtilaMp() : null, diffs);
 
         return diffs;
     }

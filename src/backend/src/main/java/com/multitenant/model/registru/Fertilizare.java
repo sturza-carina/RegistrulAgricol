@@ -50,9 +50,20 @@ public class Fertilizare {
     @Column(name = "aport_potasiu", nullable = false)
     private Double aportPotasiu; // kg K / ha
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ciclu_productie_id")
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
+    private CicluProductie cicluProductie;
+
     @Transient
     public Long getParcelaId() {
         return parcela != null ? parcela.getId() : null;
+    }
+
+    @Transient
+    public Long getCicluProductieId() {
+        return cicluProductie != null ? cicluProductie.getId() : null;
     }
 
     @Transient

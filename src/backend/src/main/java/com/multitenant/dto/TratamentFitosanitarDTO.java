@@ -25,4 +25,9 @@ public class TratamentFitosanitarDTO {
     private String documentDareConsum;
     private Boolean dozaDepasita;
     private String justificareSupradozaj;
+    private Long cicluProductieId;
+    private String cicluProductieCultura;
+    private String unitateMasuraDoza;
+    private LocalDate dataLansarii;
+    private Integer numarCutiiIndivizi;
 }

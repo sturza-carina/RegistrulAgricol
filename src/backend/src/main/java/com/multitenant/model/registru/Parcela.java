@@ -59,6 +59,13 @@ public class Parcela {
     @Column(name = "tip_zona", length = 20)
     private TipZona tipZona;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tip_mediu", nullable = false, length = 30)
+    private TipMediu tipMediu = TipMediu.CAMP_DESCHIS;
+
+    @Column(name = "suprafata_utila_mp")
+    private Double suprafataUtilaMp;
+
     /**
      * Titularul dreptului de folosinta al parcelei.
      * Poate fi numele unui proprietar, al unui arendas sau al unui concesionar.

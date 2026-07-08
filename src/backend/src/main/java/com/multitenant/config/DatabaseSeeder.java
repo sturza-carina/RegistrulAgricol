@@ -557,6 +557,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                     cerere.setUatId(clujNapoca.getId());
                     cerere.setUserId(c.getId());
                     cerere.setStatus(com.multitenant.model.registru.StatusCerere.PENDING);
+                    cerere.setTipCerere(com.multitenant.model.registru.TipCerere.ADEVERINTA_ROL);
                     cerereRepository.save(cerere);
                 }
             }

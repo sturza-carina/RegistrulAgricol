@@ -115,6 +115,8 @@
         <p><strong>Denumire:</strong> {{ viewingParcela.denumire }}</p>
         <p><strong>Suprafață:</strong> {{ viewingParcela.suprafata }} ha</p>
         <p><strong>Categorie:</strong> {{ viewingParcela.categorieFolosinta }}</p>
+        <p><strong>Tip Mediu:</strong> {{ viewingParcela.tipMediu === 'CAMP_DESCHIS' ? 'Câmp deschis' : viewingParcela.tipMediu === 'SOLAR' ? 'Solar' : 'Seră încălzită' }}</p>
+        <p *ngIf="viewingParcela.tipMediu !== 'CAMP_DESCHIS'"><strong>Suprafață Utilă:</strong> {{ viewingParcela.suprafataUtilaMp }} mp</p>
         <p><strong>Geometrie:</strong> {{ viewingParcela.polygon ? 'Mapat' : 'Nemapat' }}</p>
         <button class="btn-delete-parcela" (click)="deleteParcela(viewingParcela)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;">
@@ -626,7 +628,131 @@
           </div>
         </div>
 
+        <!-- CICLURI DE PRODUCTIE / RECOLTARI FOR PROTECTED SPACES -->
+        <ng-container *ngIf="viewingParcela.tipMediu !== 'CAMP_DESCHIS'">
+          <hr style="border-color: rgba(255,255,255,0.1); margin: 16px 0;">
 
+          <!-- CICLURI DE PRODUCTIE SECTION -->
+          <div *ngIf="!isAddingCiclu" class="cultura-block">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <div class="list-label" style="font-size: 14px; color: #60a5fa;">Cicluri de Producție</div>
+              <button class="btn-secondary" style="font-size:12px; padding:4px 8px; border-color: #3b82f6; color: #60a5fa;" (click)="openAddCicluForm()">
+                + Ciclu Nou
+              </button>
+            </div>
+
+            <div *ngIf="cicluri.length > 0" class="categorie-list">
+              <div *ngFor="let c of cicluri" class="categorie-item" style="border-left: 3px solid #3b82f6;">
+                <div>
+                  <div class="categorie-name">{{ c.cultura }}</div>
+                  <div class="categorie-meta">
+                    Început: {{ c.dataInfiintare }}
+                    <span *ngIf="c.dataDefisare"> · Sfârșit: {{ c.dataDefisare }}</span>
+                    · <span [style.color]="c.status === 'ACTIV' ? '#4ade80' : '#94a3b8'">{{ c.status }}</span>
+                    <span *ngIf="c.programSprijin" style="margin-left:5px; font-size:10px; padding:1px 4px; background:#1e3a8a; border-radius:3px; color:#93c5fd;">Sprijin</span>
+                  </div>
+                </div>
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <button class="btn-icon" (click)="openEditCiclu(c)" title="Editează">✎</button>
+                  <button class="btn-icon-delete" (click)="deleteCiclu(c)" title="Șterge">✕</button>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="cicluri.length === 0" class="empty-state">
+              Niciun ciclu de producție pe această parcelă.
+            </div>
+          </div>
+
+          <div *ngIf="isAddingCiclu" class="add-categorie-form" style="border-top: 2px solid #3b82f6; margin-top: 10px;">
+            <h3 style="margin:0 0 12px;font-size:14px;color:#60a5fa;">{{ editingCiclu ? 'Editează Ciclu' : 'Ciclu de Producție Nou' }}</h3>
+
+            <div class="form-group">
+              <label>Cultura *</label>
+              <input type="text" class="form-control" [(ngModel)]="newCiclu.cultura" placeholder="ex: Tomate">
+            </div>
+            <div class="form-group">
+              <label>Data Înființare *</label>
+              <input type="date" class="form-control" [(ngModel)]="newCiclu.dataInfiintare">
+            </div>
+            <div class="form-group" *ngIf="editingCiclu">
+              <label>Data Defrișare/Defișare</label>
+              <input type="date" class="form-control" [(ngModel)]="newCiclu.dataDefisare">
+            </div>
+            <div class="form-group" style="display:flex; align-items:center; gap:8px;">
+              <label style="margin:0;">Program Sprijin</label>
+              <input type="checkbox" [(ngModel)]="newCiclu.programSprijin">
+            </div>
+            <div class="form-group" *ngIf="editingCiclu">
+              <label>Status</label>
+              <select class="form-control" [(ngModel)]="newCiclu.status">
+                <option value="ACTIV">ACTIV</option>
+                <option value="FINALIZAT">FINALIZAT</option>
+              </select>
+            </div>
+
+            <div class="form-actions" style="margin-top: 15px;">
+              <button class="btn-secondary rounded-btn" (click)="cancelAddCiclu()" [disabled]="saving">Anulează</button>
+              <button class="btn-primary" style="background-color: #2563eb; border: none;" (click)="saveCiclu()" [disabled]="saving">
+                {{ saving ? 'Salvare...' : 'Salvează' }}
+              </button>
+            </div>
+          </div>
+
+          <hr style="border-color: rgba(255,255,255,0.1); margin: 16px 0;">
+
+          <!-- RECOLTARI SECTION -->
+          <div *ngIf="!isAddingRecoltare" class="cultura-block">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <div class="list-label" style="font-size: 14px; color: #fbbf24;">Recoltări</div>
+              <button class="btn-secondary" style="font-size:12px; padding:4px 8px; border-color: #f59e0b; color: #fbbf24;" (click)="openAddRecoltareForm()">
+                + Recoltare Nouă
+              </button>
+            </div>
+
+            <div *ngIf="recoltari.length > 0" class="categorie-list">
+              <div *ngFor="let r of recoltari" class="categorie-item" style="border-left: 3px solid #f59e0b;">
+                <div>
+                  <div class="categorie-name">{{ r.cultura }} - {{ r.cantitateKg }} kg</div>
+                  <div class="categorie-meta">
+                    Data: {{ r.dataRecoltare }}
+                    <span *ngIf="r.cicluProductieCultura" style="color: #60a5fa;"> (Ciclu: {{ r.cicluProductieCultura }})</span>
+                  </div>
+                </div>
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <button class="btn-icon" (click)="openEditRecoltare(r)" title="Editează">✎</button>
+                  <button class="btn-icon-delete" (click)="deleteRecoltare(r)" title="Șterge">✕</button>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="recoltari.length === 0" class="empty-state">
+              Nicio recoltare pe această parcelă.
+            </div>
+          </div>
+
+          <div *ngIf="isAddingRecoltare" class="add-categorie-form" style="border-top: 2px solid #f59e0b; margin-top: 10px;">
+            <h3 style="margin:0 0 12px;font-size:14px;color:#fbbf24;">{{ editingRecoltare ? 'Editează Recoltare' : 'Adaugă Recoltare' }}</h3>
+
+            <div class="form-group">
+              <label>Cultura *</label>
+              <input type="text" class="form-control" [(ngModel)]="newRecoltare.cultura" placeholder="ex: Tomate">
+            </div>
+            <div class="form-group">
+              <label>Data Recoltare *</label>
+              <input type="date" class="form-control" [(ngModel)]="newRecoltare.dataRecoltare">
+            </div>
+            <div class="form-group">
+              <label>Cantitate (kg) *</label>
+              <input type="number" class="form-control" [(ngModel)]="newRecoltare.cantitateKg">
+            </div>
+
+            <div class="form-actions" style="margin-top: 15px;">
+              <button class="btn-secondary rounded-btn" (click)="cancelAddRecoltare()" [disabled]="saving">Anulează</button>
+              <button class="btn-primary" style="background-color: #d97706; border: none;" (click)="saveRecoltare()" [disabled]="saving">
+                {{ saving ? 'Salvare...' : 'Salvează' }}
+              </button>
+            </div>
+          </div>
+        </ng-container>
       </div>
 
 
@@ -648,6 +774,18 @@
             <option value="">Selectează...</option>
             <option *ngFor="let cat of categoriiFolosinta" [value]="cat">{{ cat }}</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label>Tip Mediu</label>
+          <select class="form-control" [(ngModel)]="newParcela.tipMediu">
+            <option value="CAMP_DESCHIS">Câmp deschis</option>
+            <option value="SOLAR">Solar</option>
+            <option value="SERA_INCALZITA">Seră încălzită</option>
+          </select>
+        </div>
+        <div class="form-group" *ngIf="newParcela.tipMediu !== 'CAMP_DESCHIS'">
+          <label>Suprafață Utilă (mp) *</label>
+          <input type="number" class="form-control" [(ngModel)]="newParcela.suprafataUtilaMp">
         </div>
 
         <div class="coords-header">

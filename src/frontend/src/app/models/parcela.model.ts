@@ -7,4 +7,6 @@ export interface Parcela {
     terenId?: number;
     gospodarieName?: string;
     stereo70Coordinates?: string;
+    tipMediu?: string;
+    suprafataUtilaMp?: number;
 }

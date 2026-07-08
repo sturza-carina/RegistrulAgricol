@@ -14,4 +14,6 @@ export interface Fertilizare {
   aportAzot?: number;
   aportFosfor?: number;
   aportPotasiu?: number;
+  cicluProductieId?: number;
+  cicluProductieCultura?: string;
 }

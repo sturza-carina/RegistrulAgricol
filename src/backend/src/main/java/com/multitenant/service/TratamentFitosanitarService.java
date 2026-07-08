@@ -1,17 +1,18 @@
 package com.multitenant.service;
 
 import com.multitenant.dto.TratamentFitosanitarDTO;
-import com.multitenant.model.registru.CatalogPpp;
-import com.multitenant.model.registru.Parcela;
-import com.multitenant.model.registru.TratamentFitosanitar;
+import com.multitenant.model.registru.*;
 import com.multitenant.repository.CatalogPppRepository;
 import com.multitenant.repository.ParcelaRepository;
 import com.multitenant.repository.TratamentFitosanitarRepository;
+import com.multitenant.repository.CicluProductieRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -22,6 +23,7 @@ public class TratamentFitosanitarService {
     private final TratamentFitosanitarRepository tratamentFitosanitarRepository;
     private final ParcelaRepository parcelaRepository;
     private final CatalogPppRepository catalogPppRepository;
+    private final CicluProductieRepository cicluProductieRepository;
 
     @Transactional(readOnly = true)
     public Page<TratamentFitosanitarDTO> getTratamente(Long parcelaId, Pageable pageable) {
@@ -70,23 +72,46 @@ public class TratamentFitosanitarService {
         CatalogPpp ppp = catalogPppRepository.findById(dto.getCatalogPppId())
                 .orElseThrow(() -> new RuntimeException("Produsul PPP selectat nu există în catalog."));
 
-        // Doza validation & overdosage check
-        boolean isOverdosed = dto.getDozaUtilizata() > ppp.getDozaOmologata();
-        if (isOverdosed) {
-            if (dto.getJustificareSupradozaj() == null || dto.getJustificareSupradozaj().trim().isEmpty()) {
-                throw new IllegalArgumentException("Doza utilizată (" + dto.getDozaUtilizata() + ") depășește doza omologată (" 
-                        + ppp.getDozaOmologata() + "). Vă rugăm să specificați o justificare pentru a înregistra acest tratament.");
+        LocalDate date = dto.getDataEfectuarii().toLocalDate();
+        List<CicluProductie> activeCycles = cicluProductieRepository.findActiveCyclesOnDate(parcela.getId(), date);
+        CicluProductie activeCycle = activeCycles.isEmpty() ? null : activeCycles.get(0);
+
+        if (parcela.getTipMediu() == TipMediu.SOLAR || parcela.getTipMediu() == TipMediu.SERA_INCALZITA) {
+            if (activeCycle == null) {
+                throw new IllegalArgumentException("În spații protejate (Solar/Seră), tratamentele trebuie obligatoriu asociate unui ciclu de producție activ la data efectuării.");
             }
-            entity.setDozaDepasita(true);
-            entity.setJustificareSupradozaj(dto.getJustificareSupradozaj());
+            entity.setCicluProductie(activeCycle);
         } else {
+            entity.setCicluProductie(activeCycle);
+        }
+
+        boolean isBiological = ppp.getTip().equalsIgnoreCase("Combatere Biologică / Polenizatori") 
+                || ppp.getTip().equalsIgnoreCase("Combatere Biologica / Polenizatori")
+                || ppp.getTip().toLowerCase().contains("biologic");
+
+        if (isBiological) {
             entity.setDozaDepasita(false);
             entity.setJustificareSupradozaj(null);
+        } else {
+            Double dozaUtilizataLHa = convertToLitersPerHectare(dto.getDozaUtilizata(), dto.getUnitateMasuraDoza());
+            boolean isOverdosed = dozaUtilizataLHa > ppp.getDozaOmologata();
+            if (isOverdosed) {
+                if (dto.getJustificareSupradozaj() == null || dto.getJustificareSupradozaj().trim().isEmpty()) {
+                    throw new IllegalArgumentException("Doza utilizată (" + dto.getDozaUtilizata() + " " + (dto.getUnitateMasuraDoza() != null ? dto.getUnitateMasuraDoza() : "L/ha") 
+                            + ", echivalentă cu " + String.format("%.3f", dozaUtilizataLHa) + " L/ha) depășește doza omologată (" 
+                            + ppp.getDozaOmologata() + " L/ha). Vă rugăm să specificați o justificare pentru a înregistra acest tratament.");
+                }
+                entity.setDozaDepasita(true);
+                entity.setJustificareSupradozaj(dto.getJustificareSupradozaj());
+            } else {
+                entity.setDozaDepasita(false);
+                entity.setJustificareSupradozaj(null);
+            }
         }
 
         // Pause time validation
-        if (dto.getDataIncepereRecoltare() != null) {
-            LocalDate minHarvestDate = dto.getDataEfectuarii().toLocalDate().plusDays(ppp.getTimpPauza());
+        if (!isBiological && dto.getDataIncepereRecoltare() != null) {
+            LocalDate minHarvestDate = date.plusDays(ppp.getTimpPauza());
             if (dto.getDataIncepereRecoltare().isBefore(minHarvestDate)) {
                 throw new IllegalArgumentException("Nerespectare Timp de Pauză ANF! Data recoltării nu poate fi mai devreme decât " 
                         + minHarvestDate + " (timp de pauză necesar: " + ppp.getTimpPauza() + " zile pentru " + ppp.getDenumireComerciala() + ").");
@@ -100,14 +125,20 @@ public class TratamentFitosanitarService {
         entity.setCatalogPpp(ppp);
         entity.setDozaUtilizata(dto.getDozaUtilizata());
         entity.setSuprafataTratata(dto.getSuprafataTratata());
-        
-        // Auto calculate total quantity
         entity.setCantitateTotala(dto.getSuprafataTratata() * dto.getDozaUtilizata());
-        
         entity.setResponsabil(dto.getResponsabil());
         entity.setSemnaturaElectronica(dto.getSemnaturaElectronica());
         entity.setDataIncepereRecoltare(dto.getDataIncepereRecoltare());
         entity.setDocumentDareConsum(dto.getDocumentDareConsum());
+        entity.setUnitateMasuraDoza(dto.getUnitateMasuraDoza());
+
+        if (isBiological) {
+            entity.setDataLansarii(dto.getDataLansarii() != null ? dto.getDataLansarii() : date);
+            entity.setNumarCutiiIndivizi(dto.getNumarCutiiIndivizi());
+        } else {
+            entity.setDataLansarii(null);
+            entity.setNumarCutiiIndivizi(null);
+        }
 
         tratamentFitosanitarRepository.save(entity);
     }
@@ -149,6 +180,32 @@ public class TratamentFitosanitarService {
         dto.setDozaDepasita(entity.getDozaDepasita());
         dto.setJustificareSupradozaj(entity.getJustificareSupradozaj());
         
+        if (entity.getCicluProductie() != null) {
+            dto.setCicluProductieId(entity.getCicluProductie().getId());
+            dto.setCicluProductieCultura(entity.getCicluProductie().getCultura());
+        }
+        dto.setUnitateMasuraDoza(entity.getUnitateMasuraDoza());
+        dto.setDataLansarii(entity.getDataLansarii());
+        dto.setNumarCutiiIndivizi(entity.getNumarCutiiIndivizi());
+        
         return dto;
+    }
+
+    private Double convertToLitersPerHectare(Double doza, String unitate) {
+        if (doza == null) return 0.0;
+        if (unitate == null || unitate.trim().isEmpty() || unitate.equalsIgnoreCase("L/ha") || unitate.equalsIgnoreCase("kg/ha")) {
+            return doza;
+        }
+        String u = unitate.toLowerCase().trim();
+        if (u.contains("ml/10l") || u.contains("g/10l") || u.contains("ml/10 l") || u.contains("g/10 l")) {
+            return doza / 10.0;
+        }
+        if (u.contains("ml/1000mp") || u.contains("g/1000mp") || u.contains("ml/1000 mp") || u.contains("g/1000 mp")) {
+            return doza / 100.0;
+        }
+        if (u.contains("l/1000mp") || u.contains("kg/1000mp") || u.contains("l/1000 mp") || u.contains("kg/1000 mp")) {
+            return doza * 10.0;
+        }
+        return doza;
     }
 }
