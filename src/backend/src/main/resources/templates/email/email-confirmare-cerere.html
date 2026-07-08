@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmare Depunere Cerere</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; background-color: #f8fafc; margin: 0; padding: 0; }
+        .wrapper { width: 100%; padding: 40px 0; background-color: #f1f5f9; }
+        .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; overflow: hidden; }
+        .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; padding: 30px; text-align: center; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 700; }
+        .content { padding: 30px; line-height: 1.6; }
+        .cod-cerere { display: inline-block; background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font-family: monospace; font-size: 18px; font-weight: 700; padding: 10px 20px; border-radius: 6px; margin: 15px 0; }
+        .footer { background-color: #f8fafc; padding: 20px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>Cerere Înregistrată cu Succes</h1>
+            </div>
+            <div class="content">
+                <p>Bună ziua, <strong><span th:text="${nume}">Cetățean</span></strong>,</p>
+                <p>Vă confirmăm că cererea dumneavoastră a fost trimisă cu succes prin Portalul de Cetățeni al Registrului Agricol.</p>
+                
+                <p>Codul unic de identificare al cererii dumneavoastră este:</p>
+                <div class="center" style="text-align: center;">
+                    <span class="cod-cerere" th:text="${codCerere}">cerere-1234abcd</span>
+                </div>
+                
+                <p>Veți primi notificări suplimentare pe această adresă de email imediat ce cererea dumneavoastră va fi analizată și soluționată de către funcționarii primăriei.</p>
+                
+                <p>Vă mulțumim,<br><strong>Echipa Registrul Agricol</strong></p>
+            </div>
+            <div class="footer">
+                Acesta este un email automat generat de sistem. Vă rugăm să nu răspundeți la acest mesaj.
+            </div>
+        </div>
+    </div>
+</body>
+</html>
