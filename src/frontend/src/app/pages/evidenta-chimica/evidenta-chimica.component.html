@@ -67,6 +67,12 @@
         </div>
       </div>
 
+      <app-active-uat-banner 
+        *ngIf="activeUat && user?.role !== 'ROLE_SUPER_ADMIN'"
+        [prefix]="'Tratamente din:'"
+        [uatName]="activeUat.denumire">
+      </app-active-uat-banner>
+
       <app-generic-table 
         [data]="mappedTratamente"
         [columns]="tratamenteColumns"

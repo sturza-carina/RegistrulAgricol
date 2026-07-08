@@ -21,6 +21,7 @@ import { CatalogIngrasaminte } from '../../models/catalog-ingrasaminte.model';
 import { TratamentFitosanitar } from '../../models/tratament-fitosanitar.model';
 import { Fertilizare } from '../../models/fertilizare.model';
 import { FilaParcelei } from '../../models/fila-parcelei.model';
+import { Uat } from '../../models/gospodarie.model';
 
 // Layout components
 import { LayoutComponent } from '../../components/layout/layout.component';
@@ -28,11 +29,13 @@ import { PageHeaderComponent } from '../../components/page-header/page-header.co
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
 import { GenericTableComponent, TableColumn, TableAction } from '../../components/generic-table/generic-table.component';
 import { AppTranslatePipe } from '../../services/translate.pipe';
+import { ActiveUatBannerComponent } from '../../components/active-uat-banner/active-uat-banner.component';
+import { UatContextService } from '../../services/uat-context.service';
 
 @Component({
   selector: 'app-evidenta-chimica',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, LayoutComponent, PageHeaderComponent, BreadcrumbsComponent, AppTranslatePipe, GenericTableComponent],
+  imports: [CommonModule, FormsModule, RouterModule, LayoutComponent, PageHeaderComponent, BreadcrumbsComponent, AppTranslatePipe, GenericTableComponent, ActiveUatBannerComponent],
   templateUrl: './evidenta-chimica.component.html',
   styleUrls: ['./evidenta-chimica.component.css']
 })
@@ -43,6 +46,7 @@ export class EvidentaChimicaComponent implements OnInit, OnDestroy {
   // User & context
   user: any;
   isAdmin = false;
+  activeUat: Uat | null = null;
   private destroy$ = new Subject<void>();
 
   // Breadcrumbs
@@ -143,7 +147,8 @@ export class EvidentaChimicaComponent implements OnInit, OnDestroy {
     private catalogIngrasaminteService: CatalogIngrasaminteService,
     private tratamentFitosanitarService: TratamentFitosanitarService,
     private fertilizareService: FertilizareService,
-    private filaParceleiService: FilaParceleiService
+    private filaParceleiService: FilaParceleiService,
+    private uatContext: UatContextService
   ) {}
 
   ngOnInit(): void {
@@ -152,6 +157,12 @@ export class EvidentaChimicaComponent implements OnInit, OnDestroy {
       .subscribe((u: any) => {
         this.user = u;
         this.isAdmin = u?.role === 'ROLE_ADMIN' || u?.role === 'ROLE_SUPER_ADMIN';
+      });
+
+    this.uatContext.activeUat$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(uat => {
+        this.activeUat = uat;
       });
 
     this.loadParcele();

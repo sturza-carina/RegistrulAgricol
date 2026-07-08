@@ -166,6 +166,9 @@ export class GenericTableComponent implements OnInit, OnChanges {
     if (col.format) {
       return col.format(rawVal, row);
     }
+    if (typeof rawVal === 'number' && !Number.isInteger(rawVal)) {
+      return Math.round(rawVal * 100) / 100;
+    }
     return rawVal;
   }
 

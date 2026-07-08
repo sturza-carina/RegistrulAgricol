@@ -28,6 +28,8 @@ export class CereriMele implements OnInit {
   error = '';
   selectedFilter: string = 'ALL'; // ALL, PENDING, ACCEPTED, DECLINED
   selectedCerereId: number | null = null;
+  currentPage = 1;
+  itemsPerPage = 6;
 
   constructor(private http: HttpClient, private wsService: WebsocketService, private cdr: ChangeDetectorRef) {}
 
@@ -89,6 +91,7 @@ export class CereriMele implements OnInit {
     } else {
       this.filteredCereri = this.cereri.filter(c => c.status === this.selectedFilter);
     }
+    this.currentPage = 1; // reset page on filter change
   }
 
   setFilter(filter: string) {
@@ -101,6 +104,22 @@ export class CereriMele implements OnInit {
       this.selectedCerereId = null;
     } else {
       this.selectedCerereId = id;
+    }
+  }
+
+  get paginatedCereri(): Cerere[] {
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    return this.filteredCereri.slice(start, start + this.itemsPerPage);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredCereri.length / this.itemsPerPage) || 1;
+  }
+
+  setPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.selectedCerereId = null;
     }
   }
 
