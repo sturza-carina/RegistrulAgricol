@@ -12,10 +12,19 @@ export class GospodarieService {
 
   constructor(private http: HttpClient) {}
 
-  getAllGospodarii(uatCode?: string, page: number = 0, size: number = 20): Observable<PaginatedResponse<Gospodarie>> {
+  getAllGospodarii(uatCode?: string, tipGospodarie?: string, activa?: boolean, search?: string, page: number = 0, size: number = 20): Observable<PaginatedResponse<Gospodarie>> {
     let params = new HttpParams();
     if (uatCode) {
       params = params.set('uatCode', uatCode);
+    }
+    if (tipGospodarie) {
+      params = params.set('tipGospodarie', tipGospodarie);
+    }
+    if (activa !== undefined && activa !== null) {
+      params = params.set('activa', activa.toString());
+    }
+    if (search) {
+      params = params.set('search', search);
     }
     params = params.set('page', page.toString());
     params = params.set('size', size.toString());

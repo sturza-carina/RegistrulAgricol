@@ -28,6 +28,7 @@ services:
       - SPRING_JPA_HIBERNATE_DDL_AUTO=none
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - APP_CRYPTO_SALT=${APP_CRYPTO_SALT}
     volumes:
       - ./uploads:/data/documents
     depends_on:

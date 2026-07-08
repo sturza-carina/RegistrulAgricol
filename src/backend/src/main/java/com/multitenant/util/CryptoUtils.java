@@ -4,10 +4,22 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import jakarta.annotation.PostConstruct;
+
+@Component
 public class CryptoUtils {
 
-    // Fixed salt matched with the SQL migration script V37
-    private static final String SALT = "RegistruAgricolDeterministicSalt_2026";
+    private static String SALT = "RegistruAgricolDeterministicSalt_2026"; // Fallback default
+
+    @Value("${app.crypto.salt:RegistruAgricolDeterministicSalt_2026}")
+    private String configuredSalt;
+
+    @PostConstruct
+    public void init() {
+        CryptoUtils.SALT = this.configuredSalt;
+    }
 
     /**
      * Generates a deterministic SHA-256 hash of a string combined with a fixed salt.

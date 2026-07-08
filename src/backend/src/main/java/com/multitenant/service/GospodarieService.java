@@ -146,13 +146,20 @@ public class GospodarieService {
     }
 
     @Transactional(readOnly = true)
-    public Page<GospodarieDTO> getAllGospodarii(String uatCode, Pageable pageable) {
-        Page<Gospodarie> result;
-        if (uatCode != null && !uatCode.isBlank()) {
-            result = gospodarieRepository.findByUat_CodSirutaOrderByIdDesc(uatCode, pageable);
-        } else {
-            result = gospodarieRepository.findAllByOrderByIdDesc(pageable);
+    public Page<GospodarieDTO> getAllGospodarii(String uatCode, String tipGospodarieStr, Boolean activa, String search, Pageable pageable) {
+        if (uatCode == null) uatCode = "";
+        if (search == null) search = "";
+
+        com.multitenant.model.registru.TipGospodarie tip = null;
+        if (tipGospodarieStr != null) {
+            try {
+                tip = com.multitenant.model.registru.TipGospodarie.valueOf(tipGospodarieStr);
+            } catch (IllegalArgumentException e) {
+                // ignore invalid tip
+            }
         }
+
+        Page<Gospodarie> result = gospodarieRepository.findWithFilters(uatCode, tip, activa, search, pageable);
         return result.map(this::convertToDTO);
     }
 

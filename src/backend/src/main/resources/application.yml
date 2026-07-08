@@ -68,5 +68,6 @@ app:
     password: ${SIGNNOW_PASSWORD:}
   crypto:
     aes-key: ${APP_CRYPTO_AES_KEY:MyDefaultAesSymmetricEncryptionKey2026Registru}
+    salt: ${APP_CRYPTO_SALT:RegistruAgricolDeterministicSalt_2026}
   mail:
     from: ${APP_MAIL_FROM:test@test.ro}

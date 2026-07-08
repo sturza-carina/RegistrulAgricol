@@ -6,7 +6,7 @@
   </div>
 </ng-container>
 
-<div class="app-shell" *ngIf="!isEmbedded">
+<div class="app-shell" *ngIf="!isEmbedded && !isModal">
   <app-sidebar></app-sidebar>
 
   <main class="main-content">
@@ -47,3 +47,22 @@
     </div>
   </main>
 </div>
+
+<ng-container *ngIf="isModal">
+  <div class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; overflow-y: auto; padding: 20px;">
+    <div class="modal-content card" style="width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; background: var(--card-bg); padding: 30px; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); position: relative;">
+      
+      <button (click)="cancel()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted);">&times;</button>
+      
+      <h2 style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin-top: 0; margin-bottom: 24px; font-family: 'DM Serif Display', serif;">
+        {{ isEditMode ? 'Editare Gospodărie' : 'Adăugare Gospodărie' }}
+      </h2>
+
+      <div style="padding: 0; margin-top: -10px;">
+        <app-generic-form [config]="formConfig" [initialData]="formInitialData" [isSubmitting]="isSaving"
+          (fieldChange)="onFieldValueChange($event)" (formSubmit)="save($event)" (formCancel)="cancel()">
+        </app-generic-form>
+      </div>
+    </div>
+  </div>
+</ng-container>

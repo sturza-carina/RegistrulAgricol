@@ -26,12 +26,13 @@ import { FilaParcelei } from '../../models/fila-parcelei.model';
 import { LayoutComponent } from '../../components/layout/layout.component';
 import { PageHeaderComponent } from '../../components/page-header/page-header.component';
 import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrumbs/breadcrumbs.component';
+import { GenericTableComponent, TableColumn, TableAction } from '../../components/generic-table/generic-table.component';
 import { AppTranslatePipe } from '../../services/translate.pipe';
 
 @Component({
   selector: 'app-evidenta-chimica',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, LayoutComponent, PageHeaderComponent, BreadcrumbsComponent, AppTranslatePipe],
+  imports: [CommonModule, FormsModule, RouterModule, LayoutComponent, PageHeaderComponent, BreadcrumbsComponent, AppTranslatePipe, GenericTableComponent],
   templateUrl: './evidenta-chimica.component.html',
   styleUrls: ['./evidenta-chimica.component.css']
 })
@@ -77,6 +78,40 @@ export class EvidentaChimicaComponent implements OnInit, OnDestroy {
   // Search queries
   pppSearchQuery = '';
   ingrasaminteSearchQuery = '';
+
+  tratamenteColumns: TableColumn[] = [
+    { field: 'dataEfectuariiFormatat', header: 'Dată efectuare / Fenofază', subField: 'fenofaza' },
+    { field: 'parcelaDenumire', header: 'Parcelă / Gospodărie' },
+    { field: 'agentDaunator', header: 'Agent dăunător vizat' },
+    { field: 'catalogPppDenumire', header: 'PPP Utilizat', subField: 'dozaOmolFormatat' },
+    { field: 'suprafataTratataFormatat', header: 'Suprafață (ha)' },
+    { field: 'dozaUtilizataStr', header: 'Doză utilizată' },
+    { field: 'cantitateTotalaForm', header: 'Cantitate Totală' },
+    { field: 'responsabil', header: 'Responsabil' },
+    { field: 'trasabilitateMain', header: 'Trasabilitate (Recoltare/Doc)', subField: 'trasabilitateSub' },
+    { field: 'semnaturaText', header: 'Semnătură / Audit', type: 'badge', badgeClasses: { 'Semnat': 'badge-success', 'Nesemnat': 'badge-secondary' } }
+  ];
+
+  tratamenteActions: TableAction[] = [
+    { icon: 'delete', tooltip: 'Șterge', action: (row) => this.deleteTratament(row.id!), showIf: () => this.isAdmin }
+  ];
+
+  get mappedTratamente() {
+    return this.tratamente.map(t => {
+      const isSemnat = !!t.semnaturaElectronica;
+      return {
+        ...t,
+        dataEfectuariiFormatat: t.dataEfectuarii ? new Date(t.dataEfectuarii).toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '',
+        dozaOmolFormatat: 'Doză omol: ' + t.catalogPppDozaOmologata,
+        suprafataTratataFormatat: t.suprafataTratata + ' ha',
+        cantitateTotalaForm: t.cantitateTotala ? t.cantitateTotala.toFixed(2) : '-',
+        trasabilitateMain: t.dataIncepereRecoltare ? 'Recoltare: ' + new Date(t.dataIncepereRecoltare).toLocaleDateString('ro-RO') : (t.documentDareConsum ? 'Doc: ' + t.documentDareConsum : '-'),
+        trasabilitateSub: t.dataIncepereRecoltare && t.documentDareConsum ? 'Doc: ' + t.documentDareConsum : '',
+        semnaturaText: isSemnat ? 'Semnat' : 'Nesemnat',
+        dozaUtilizataStr: t.dozaDepasita ? t.dozaUtilizata + ' ⚠️' : t.dozaUtilizata,
+      };
+    });
+  }
 
   // Form Modals
   showPesticideModal = false;
@@ -245,6 +280,15 @@ export class EvidentaChimicaComponent implements OnInit, OnDestroy {
       .subscribe(res => {
         this.filaInterventii = res || [];
       });
+  }
+
+  get tratamenteTotalPages(): number {
+    return Math.ceil(this.tratamenteTotal / this.pageSize) || 1;
+  }
+
+  onTratamentePageChange(page: number): void {
+    this.tratamentePage = page - 1;
+    this.loadTratamente();
   }
 
   // --- ACTIONS ---

@@ -118,7 +118,7 @@ export class PersonFormComponent implements OnInit {
     });
 
     if (!this.hideGospodarieSelect) {
-      this.gospodarieService.getAllGospodarii(undefined, 0, 1000).subscribe({
+      this.gospodarieService.getAllGospodarii(undefined, undefined, undefined, undefined, 0, 1000).subscribe({
         next: (response) => {
           const gospodarii = response.content;
           const section = this.formConfig.sections.find(s => s.title === 'Contact și Registru Agricol');

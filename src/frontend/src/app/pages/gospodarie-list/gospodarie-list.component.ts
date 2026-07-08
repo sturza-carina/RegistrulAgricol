@@ -17,11 +17,12 @@ import { BreadcrumbsComponent, BreadcrumbItem } from '../../components/breadcrum
 import { ActiveUatBannerComponent } from '../../components/active-uat-banner/active-uat-banner.component';
 
 import { AppTranslatePipe } from '../../services/translate.pipe';
+import { GospodarieFormComponent } from '../gospodarie-form/gospodarie-form.component';
 
 @Component({
   selector: 'app-gospodarie-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, LayoutComponent, PageHeaderComponent, FormsModule, GenericTableComponent, BreadcrumbsComponent, ActiveUatBannerComponent, AppTranslatePipe],
+  imports: [CommonModule, RouterLink, LayoutComponent, PageHeaderComponent, FormsModule, GenericTableComponent, BreadcrumbsComponent, ActiveUatBannerComponent, AppTranslatePipe, GospodarieFormComponent],
   templateUrl: './gospodarie-list.component.html'
 })
 export class GospodarieListComponent implements OnInit, OnDestroy {
@@ -29,6 +30,9 @@ export class GospodarieListComponent implements OnInit, OnDestroy {
   user: any = null;
   selectedGospodarie: Gospodarie | null = null;
   activeUat: Uat | null = null;
+
+  showGospodarieModal = false;
+  editGospodarieId: number | null = null;
 
   breadcrumbItems: BreadcrumbItem[] = [
     { label: 'Gospodării', link: '/gospodarii' }
@@ -38,11 +42,11 @@ export class GospodarieListComponent implements OnInit, OnDestroy {
     { field: 'codGospodarie', header: 'Cod Gospodărie' },
     { field: 'tipGospodarie', header: 'Tip', type: 'badge', badgeClasses: { 'INDIVIDUALA': 'viewer', 'COLECTIVA': 'viewer', 'ASOCIATIE': 'viewer' } },
     { field: 'adresa.localitate', header: 'Localitate / Adresă', format: (val, row) => val || row.uat?.denumire || '-', subField: 'adresa.street' },
-    { field: 'activa', header: 'Status', type: 'badge', format: val => val ? 'Activă' : 'Inactivă', badgeClasses: { 'true': 'admin', 'false': 'viewer' } }
+    { field: 'activa', header: 'Status', type: 'badge', format: val => val ? 'Activă' : 'Inactivă', badgeClasses: { 'true': 'activ', 'false': 'inactiv' } }
   ];
 
   filters: TableFilter[] = [
-    { field: 'search', label: 'Caută după adresă sau cod...', type: 'search', searchFields: ['codGospodarie', 'adresa.street', 'adresa.localitate', 'uat.denumire'] },
+    { field: 'search', label: 'Caută după adresă sau cod gospodărie...', type: 'search', searchFields: ['codGospodarie', 'adresa.street', 'adresa.localitate', 'uat.denumire'] },
     { field: 'tipGospodarie', label: 'Tip Gospodărie', type: 'select', options: [{ label: 'Individuală', value: 'INDIVIDUALA' }, { label: 'Colectivă', value: 'COLECTIVA' }, { label: 'Asociație', value: 'ASOCIATIE' }] },
     { field: 'activa', label: 'Status', type: 'select', options: [{ label: 'Activă', value: true }, { label: 'Inactivă', value: false }] }
   ];
@@ -58,7 +62,7 @@ export class GospodarieListComponent implements OnInit, OnDestroy {
     private uatContext: UatContextService,
     private authService: AuthService,
     private router: Router
-  ) {}
+  ) { }
 
 
   ngOnInit(): void {
@@ -101,7 +105,7 @@ export class GospodarieListComponent implements OnInit, OnDestroy {
     // Actually, GospodarieService currently only accepts uatCode, page, and size
     // It doesn't have backend filtering for search, tip, and status yet.
     // I should pass page and size, and implement filtering later if requested.
-    this.gospodarieService.getAllGospodarii(uatCode, this.currentPage - 1, this.pageSize).subscribe({
+    this.gospodarieService.getAllGospodarii(uatCode, this.currentTip, this.currentStatus, this.currentSearch, this.currentPage - 1, this.pageSize).subscribe({
       next: (response) => {
         this.totalPages = response.totalPages;
         this.gospodarii = response.content;
@@ -116,7 +120,9 @@ export class GospodarieListComponent implements OnInit, OnDestroy {
   }
 
   onFilterChange(filters: Record<string, any>) {
-    // Backend filtering not yet implemented for Gospodarie, so this just resets page
+    this.currentSearch = filters['search'] || '';
+    this.currentTip = filters['tipGospodarie'] || '';
+    this.currentStatus = filters['activa'];
     this.currentPage = 1;
     this.loadGospodarii();
   }
@@ -124,7 +130,12 @@ export class GospodarieListComponent implements OnInit, OnDestroy {
 
 
   goToCreate() {
-    this.router.navigate(['/gospodarii/new']);
+    if (this.authService.currentUserSubject.value?.role === 'ROLE_SUPER_ADMIN' && !this.uatContext.getActiveUat()?.tenantId) {
+      alert('Vă rugăm să selectați mai întâi un UAT.');
+      return;
+    }
+    this.editGospodarieId = null;
+    this.showGospodarieModal = true;
   }
 
   selectGospodarie(g: Gospodarie): void {
@@ -133,7 +144,8 @@ export class GospodarieListComponent implements OnInit, OnDestroy {
 
   editSelected() {
     if (this.selectedGospodarie) {
-      this.router.navigate(['/gospodarii/edit', this.selectedGospodarie.id]);
+      this.editGospodarieId = this.selectedGospodarie.id ?? null;
+      this.showGospodarieModal = true;
     }
   }
 
@@ -173,7 +185,15 @@ export class GospodarieListComponent implements OnInit, OnDestroy {
   }
 
   editGospodarie(id?: number) {
-    if (id) this.router.navigate(['/gospodarii/edit', id]);
+    if (id) {
+      this.editGospodarieId = id ?? null;
+      this.showGospodarieModal = true;
+    }
+  }
+
+  closeGospodarieModal() {
+    this.showGospodarieModal = false;
+    this.loadGospodarii();
   }
 
   addParcelaSelected(): void {

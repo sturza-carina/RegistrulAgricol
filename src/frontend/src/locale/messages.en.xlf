@@ -2596,6 +2596,46 @@
         <source>Nu există nicio intervenție agrotehnică înregistrată pe această parcelă în anul selectat.</source>
         <target>No agrotechnical interventions recorded on this parcel in the selected year.</target>
       </trans-unit>
+      <trans-unit id="dict_choose_lang" datatype="html">
+        <source>Alegeți Limba</source>
+        <target>Choose Language</target>
+      </trans-unit>
+      <trans-unit id="dict_cert_notifications" datatype="html">
+        <source>Notificări cereri</source>
+        <target>Certificate requests notifications</target>
+      </trans-unit>
+      <trans-unit id="dict_logout" datatype="html">
+        <source>Deconectare</source>
+        <target>Logout</target>
+      </trans-unit>
+      <trans-unit id="dict_search_household_addr_code" datatype="html">
+        <source>Caută după adresă sau cod gospodărie...</source>
+        <target>Search by address or household code...</target>
+      </trans-unit>
+      <trans-unit id="dict_household_type" datatype="html">
+        <source>Tip Gospodărie</source>
+        <target>Household Type</target>
+      </trans-unit>
+      <trans-unit id="dict_type_individual" datatype="html">
+        <source>Individuală</source>
+        <target>Individual</target>
+      </trans-unit>
+      <trans-unit id="dict_type_collective" datatype="html">
+        <source>Colectivă</source>
+        <target>Collective</target>
+      </trans-unit>
+      <trans-unit id="dict_type_association" datatype="html">
+        <source>Asociație</source>
+        <target>Association</target>
+      </trans-unit>
+      <trans-unit id="dict_status" datatype="html">
+        <source>Status</source>
+        <target>Status</target>
+      </trans-unit>
+      <trans-unit id="dict_all" datatype="html">
+        <source>Toate</source>
+        <target>All</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

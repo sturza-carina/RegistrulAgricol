@@ -242,7 +242,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   updateBreadcrumbs() {
     this.breadcrumbItems = [
       { label: 'Gospodării', link: '/gospodarii' },
-      { label: 'Detalii Gospodărie', link: `/gospodarii/${this.gospodarieId}?tab=TERENURI` },
+      { label: 'Detalii Gospodărie', link: `/gospodarii/${this.gospodarieId}`, queryParams: { tab: 'TERENURI' } },
       { label: `Teren: ${this.teren?.denumire || ''}` }
     ];
   }

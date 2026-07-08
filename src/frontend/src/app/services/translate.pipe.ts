@@ -336,7 +336,21 @@ export class AppTranslatePipe implements PipeTransform {
     'Parcul de Mașini și Utilaje Agricole': $localize`:@@dict_machinery_park_title:Parcul de Mașini și Utilaje Agricole`,
     'Denumire / Tip Utilaj sau Mașină Agricolă': $localize`:@@dict_machinery_type_name:Denumire / Tip Utilaj sau Mașină Agricolă`,
     'Total Unități Înregistrate': $localize`:@@dict_total_registered_units:Total Unități Înregistrate`,
-    'Niciun utilaj sau mașină agricolă înregistrată.': $localize`:@@dict_no_machinery_registered:Niciun utilaj sau mașină agricolă înregistrată.`
+    'Niciun utilaj sau mașină agricolă înregistrată.': $localize`:@@dict_no_machinery_registered:Niciun utilaj sau mașină agricolă înregistrată.`,
+    
+    // Topbar
+    'Alegeți Limba': $localize`:@@dict_choose_lang:Alegeți Limba`,
+    'Notificări cereri': $localize`:@@dict_cert_notifications:Notificări cereri`,
+    'Deconectare': $localize`:@@dict_logout:Deconectare`,
+
+    // Table Filters
+    'Caută după adresă sau cod gospodărie...': $localize`:@@dict_search_household_addr_code:Caută după adresă sau cod gospodărie...`,
+    'Tip Gospodărie': $localize`:@@dict_household_type:Tip Gospodărie`,
+    'Individuală': $localize`:@@dict_type_individual:Individuală`,
+    'Colectivă': $localize`:@@dict_type_collective:Colectivă`,
+    'Asociație': $localize`:@@dict_type_association:Asociație`,
+    'Status': $localize`:@@dict_status:Status`,
+    'Toate': $localize`:@@dict_all:Toate`
   };
 
   transform(value: any): any {

@@ -51,8 +51,12 @@ public class GospodarieController {
     @GetMapping
     @GdprAudited(entity = "Gospodarie")
     public ResponseEntity<?> getAllGospodarii(
-            @RequestParam(required = false) String uatCode, Pageable pageable) {
-        return ResponseEntity.ok(gospodarieService.getAllGospodarii(uatCode, pageable));
+            @RequestParam(required = false) String uatCode,
+            @RequestParam(required = false) String tipGospodarie,
+            @RequestParam(required = false) Boolean activa,
+            @RequestParam(required = false) String search,
+            Pageable pageable) {
+        return ResponseEntity.ok(gospodarieService.getAllGospodarii(uatCode, tipGospodarie, activa, search, pageable));
     }
 
     @PutMapping("/{gospodarieId}/cap-gospodarie/{persoanaId}")

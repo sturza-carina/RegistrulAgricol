@@ -81,7 +81,7 @@ export class ParcelaMapComponent implements OnInit, OnDestroy {
   }
 
   loadGospodarii() {
-    this.gospodarieService.getAllGospodarii(undefined, 0, 1000).subscribe(response => this.gospodarii = response.content);
+    this.gospodarieService.getAllGospodarii(undefined, undefined, undefined, undefined, 0, 1000).subscribe(response => this.gospodarii = response.content);
   }
 
   onGospodarieChange() {

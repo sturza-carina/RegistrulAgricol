@@ -8,10 +8,12 @@ import { Client, Message } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { filter } from 'rxjs/operators';
 
+import { AppTranslatePipe } from '../../services/translate.pipe';
+
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, SidebarComponent],
+  imports: [CommonModule, SidebarComponent, AppTranslatePipe],
   templateUrl: './layout.component.html'
 })
 export class LayoutComponent implements OnInit, OnDestroy {

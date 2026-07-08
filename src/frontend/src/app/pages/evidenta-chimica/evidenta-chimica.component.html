@@ -67,73 +67,18 @@
         </div>
       </div>
 
-      <div class="table-container">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>{{ 'Dată efectuare / Fenofază' | appTranslate }}</th>
-              <th>{{ 'Parcelă / Gospodărie' | appTranslate }}</th>
-              <th>{{ 'Agent dăunător vizat' | appTranslate }}</th>
-              <th>{{ 'PPP Utilizat' | appTranslate }}</th>
-              <th>{{ 'Suprafață (ha)' | appTranslate }}</th>
-              <th>{{ 'Doză utilizată' | appTranslate }}</th>
-              <th>{{ 'Cantitate Totală' | appTranslate }}</th>
-              <th>{{ 'Responsabil' | appTranslate }}</th>
-              <th>{{ 'Trasabilitate (Recoltare/Doc)' | appTranslate }}</th>
-              <th>{{ 'Semnătură / Audit' | appTranslate }}</th>
-              <th *ngIf="isAdmin">{{ 'Acțiuni' | appTranslate }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let t of tratamente; let i = index">
-              <td>{{ i + 1 + tratamentePage * pageSize }}</td>
-              <td>
-                <div class="bold">{{ t.dataEfectuarii | date:'dd.MM.yyyy HH:mm' }}</div>
-                <div class="small-muted">{{ t.fenofaza }}</div>
-              </td>
-              <td>
-                <div class="bold">{{ t.parcelaDenumire }}</div>
-              </td>
-              <td>{{ t.agentDaunator }}</td>
-              <td>
-                <div class="bold color-primary">{{ t.catalogPppDenumire }}</div>
-                <div class="small-muted">{{ 'Doză omol: ' | appTranslate }} {{ t.catalogPppDozaOmologata }}</div>
-              </td>
-              <td>{{ t.suprafataTratata }} ha</td>
-              <td [class.color-warning]="t.dozaDepasita">{{ t.dozaUtilizata }}</td>
-              <td><span class="bold">{{ t.cantitateTotala | number:'1.2-2' }}</span></td>
-              <td>{{ t.responsabil }}</td>
-              <td>
-                <div *ngIf="t.dataIncepereRecoltare">
-                  <span class="small-muted">{{ 'Recoltare: ' | appTranslate }}</span>
-                  <span class="bold">{{ t.dataIncepereRecoltare | date:'dd.MM.yyyy' }}</span>
-                </div>
-                <div *ngIf="t.documentDareConsum" class="small-muted">
-                  Doc: {{ t.documentDareConsum }}
-                </div>
-                <div *ngIf="!t.dataIncepereRecoltare && !t.documentDareConsum">-</div>
-              </td>
-              <td>
-                <span class="badge" [class.badge-success]="t.semnaturaElectronica" [class.badge-secondary]="!t.semnaturaElectronica">
-                  {{ (t.semnaturaElectronica ? 'Semnat' : 'Nesemnat') | appTranslate }}
-                </span>
-                <span *ngIf="t.dozaDepasita" class="badge badge-error" [title]="t.justificareSupradozaj">
-                  {{ 'Supradozaj' | appTranslate }} ⚠️
-                </span>
-              </td>
-              <td *ngIf="isAdmin" class="actions-cell">
-                <button class="icon-btn" (click)="deleteTratament(t.id!)" title="Șterge">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="delete-icon"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="tratamente.length === 0">
-              <td colspan="12" class="empty-message">{{ 'Nu există tratamente fitosanitare înregistrate.' | appTranslate }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <app-generic-table 
+        [data]="mappedTratamente"
+        [columns]="tratamenteColumns"
+        [actions]="tratamenteActions"
+        [serverSide]="true"
+        [totalServerPages]="tratamenteTotalPages"
+        [currentServerPage]="tratamentePage + 1"
+        [itemsPerPage]="pageSize"
+        (pageChange)="onTratamentePageChange($event)"
+        [emptyMessage]="'Nu există tratamente fitosanitare înregistrate.' | appTranslate"
+        style="width: 100%;">
+      </app-generic-table>
     </div>
 
     <!-- TAB 2: EVIDENȚĂ FERTILIZĂRI -->
