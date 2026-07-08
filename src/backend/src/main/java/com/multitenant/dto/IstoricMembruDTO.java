@@ -16,5 +16,7 @@ public class IstoricMembruDTO {
     private TipEvenimentMembru tipEveniment;
     private LocalDate dataEveniment;
     private String observatii;
+    private Long documentId;
+    private String numeFisierDocument;
     private LocalDateTime createdAt;
 }

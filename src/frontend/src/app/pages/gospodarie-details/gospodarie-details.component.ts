@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { GospodarieService } from '../../services/gospodarie.service';
+import { DocumentService } from '../../services/document.service';
+import { LookupService } from '../../services/lookup.service';
 import { Gospodarie } from '../../models/gospodarie.model';
 import { PersoanaService } from '../../services/persoana.service';
 import { TerenService } from '../../services/teren.service';
@@ -50,7 +52,9 @@ export class GospodarieDetailsComponent implements OnInit {
   showIstoricForm = false;
   isEditingIstoric = false;
   editingIstoricId: number | null = null;
-  noulEveniment = { persoanaId: null as number | null, tipEveniment: '', dataEveniment: '', observatii: '' };
+  noulEveniment = { persoanaId: null as number | null, tipEveniment: '', dataEveniment: '', observatii: '', documentId: null as number | null, numeFisierDocument: '' };
+  selectedIstoricFile: File | null = null;
+  tipuriDocument: any[] = [];
 
   // Carte Funciara
   carteFunciaraRows: CarteFunciara[] = [];
@@ -125,10 +129,13 @@ export class GospodarieDetailsComponent implements OnInit {
     private persoanaService: PersoanaService,
     private terenService: TerenService,
     private parcelaService: ParcelaService,
-    private carteFunciaraService: CarteFunciaraService
+    private carteFunciaraService: CarteFunciaraService,
+    private documentService: DocumentService,
+    private lookupService: LookupService
   ) {}
 
   ngOnInit() {
+    this.lookupService.getTipuriDocument().subscribe(data => this.tipuriDocument = data);
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
@@ -410,20 +417,48 @@ export class GospodarieDetailsComponent implements OnInit {
   openAddIstoricModal() {
     this.isEditingIstoric = false;
     this.editingIstoricId = null;
-    this.noulEveniment = { persoanaId: null, tipEveniment: '', dataEveniment: '', observatii: '' };
+    this.selectedIstoricFile = null;
+    this.noulEveniment = { persoanaId: null, tipEveniment: '', dataEveniment: '', observatii: '', documentId: null, numeFisierDocument: '' };
     this.showIstoricForm = true;
   }
 
   editEvenimentIstoric(ev: any) {
     this.isEditingIstoric = true;
     this.editingIstoricId = ev.id;
+    this.selectedIstoricFile = null;
     this.noulEveniment = {
       persoanaId: ev.persoanaId,
       tipEveniment: ev.tipEveniment,
       dataEveniment: ev.dataEveniment ? ev.dataEveniment.split('T')[0] : '',
-      observatii: ev.observatii || ''
+      observatii: ev.observatii || '',
+      documentId: ev.documentId || null,
+      numeFisierDocument: ev.numeFisierDocument || ''
     };
     this.showIstoricForm = true;
+  }
+
+  onIstoricFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.selectedIstoricFile = input.files?.[0] ?? null;
+  }
+
+  clearSelectedIstoricFile() {
+    this.selectedIstoricFile = null;
+  }
+
+  downloadDocument(ev: any) {
+    if (!ev.documentId) return;
+    this.documentService.downloadDocument(ev.documentId, this.gospodarieId).subscribe({
+      next: (blob) => {
+         const url = window.URL.createObjectURL(blob);
+         const a = document.createElement('a');
+         a.href = url;
+         a.download = ev.numeFisierDocument || 'document';
+         a.click();
+         window.URL.revokeObjectURL(url);
+      },
+      error: () => alert('Eroare la descărcarea documentului.')
+    });
   }
 
   salveazaEvenimentIstoric() {
@@ -432,6 +467,39 @@ export class GospodarieDetailsComponent implements OnInit {
       return;
     }
 
+    if (this.selectedIstoricFile) {
+      let tipId = 1; // Fallback
+      if (this.tipuriDocument && this.tipuriDocument.length > 0) {
+        const cert = this.tipuriDocument.find(t => t.cod === 'CERTIFICAT' || t.cod === 'ALT_DOCUMENT');
+        if (cert) {
+          tipId = cert.id;
+        } else {
+          tipId = this.tipuriDocument[0].id;
+        }
+      }
+
+      const payload = {
+        gospodarieId: this.gospodarieId,
+        tipDocumentId: tipId,
+        dataEmitere: this.noulEveniment.dataEveniment || null,
+        observatii: `Act doveditor încărcat automat din Istoric Membri la evenimentul '${this.noulEveniment.tipEveniment}'`
+      };
+
+      this.documentService.uploadDocument(payload, this.selectedIstoricFile).subscribe({
+        next: (res: any) => {
+          this.noulEveniment.documentId = res.id;
+          this.noulEveniment.numeFisierDocument = res.numeFisier;
+          this.selectedIstoricFile = null;
+          this.procedeazaSalvareIstoric();
+        },
+        error: () => alert('Eroare la încărcarea documentului doveditor.')
+      });
+    } else {
+      this.procedeazaSalvareIstoric();
+    }
+  }
+
+  private procedeazaSalvareIstoric() {
     if (this.isEditingIstoric && this.editingIstoricId) {
       this.gospodarieService.updateEvenimentIstoric(this.gospodarieId, this.editingIstoricId, this.noulEveniment).subscribe({
         next: () => {
@@ -439,7 +507,7 @@ export class GospodarieDetailsComponent implements OnInit {
           this.showIstoricForm = false;
           this.isEditingIstoric = false;
           this.editingIstoricId = null;
-          this.noulEveniment = { persoanaId: null, tipEveniment: '', dataEveniment: '', observatii: '' };
+          this.noulEveniment = { persoanaId: null, tipEveniment: '', dataEveniment: '', observatii: '', documentId: null, numeFisierDocument: '' };
           this.loadIstoricMembri();
         },
         error: () => alert('Eroare la modificarea evenimentului istoric.')
@@ -449,7 +517,7 @@ export class GospodarieDetailsComponent implements OnInit {
         next: () => {
           alert('Eveniment înregistrat cu succes!');
           this.showIstoricForm = false;
-          this.noulEveniment = { persoanaId: null, tipEveniment: '', dataEveniment: '', observatii: '' };
+          this.noulEveniment = { persoanaId: null, tipEveniment: '', dataEveniment: '', observatii: '', documentId: null, numeFisierDocument: '' };
           this.loadIstoricMembri();
         },
         error: () => alert('Eroare la salvarea evenimentului istoric.')
