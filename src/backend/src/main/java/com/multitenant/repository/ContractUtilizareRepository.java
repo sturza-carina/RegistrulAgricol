@@ -28,7 +28,7 @@ public interface ContractUtilizareRepository extends JpaRepository<ContractUtili
     Optional<ContractUtilizare> findById(@NonNull Long id);
 
     @EntityGraph(attributePaths = {"parcela", "locatorProprietar", "locatorUtilizator"})
-    Page<ContractUtilizare> findByParcelaId(Long parcelaId, Pageable pageable);
+    Page<ContractUtilizare> findByParcela_Id(Long parcelaId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"parcela", "locatorProprietar", "locatorUtilizator"})
     @Query("SELECT c FROM ContractUtilizare c WHERE c.parcela.teren.gospodarie.uat.codSiruta = :uatCode")

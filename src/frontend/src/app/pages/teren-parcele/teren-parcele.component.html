@@ -93,6 +93,9 @@
           </div>
           <div style="display:flex;gap:6px;align-items:center;">
             <span *ngIf="p.polygon" style="font-size:11px;color:var(--primary);">Mapat</span>
+            <button class="btn-icon" (click)="$event.stopPropagation(); openEditParcelaForm(p)" title="Editează">
+              ✎
+            </button>
             <button class="btn-icon-delete" (click)="$event.stopPropagation(); deleteParcela(p)" title="Șterge">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -118,12 +121,17 @@
         <p><strong>Tip Mediu:</strong> {{ viewingParcela.tipMediu === 'CAMP_DESCHIS' ? 'Câmp deschis' : viewingParcela.tipMediu === 'SOLAR' ? 'Solar' : 'Seră încălzită' }}</p>
         <p *ngIf="viewingParcela.tipMediu !== 'CAMP_DESCHIS'"><strong>Suprafață Utilă:</strong> {{ viewingParcela.suprafataUtilaMp }} mp</p>
         <p><strong>Geometrie:</strong> {{ viewingParcela.polygon ? 'Mapat' : 'Nemapat' }}</p>
-        <button class="btn-delete-parcela" (click)="deleteParcela(viewingParcela)">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;">
-            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-          </svg>
-          Șterge Parcelă
-        </button>
+        <div style="display:flex;gap:10px;margin-top:10px;margin-bottom:16px;">
+          <button class="btn-secondary" style="flex:1;font-size:12px;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#e2e8f0;cursor:pointer;" (click)="openEditParcelaForm(viewingParcela)">
+            ✎ Editează
+          </button>
+          <button class="btn-delete-parcela" style="flex:1;margin-bottom:0;" (click)="deleteParcela(viewingParcela)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            </svg>
+            Șterge
+          </button>
+        </div>
 
         <ng-container *ngIf="showCulturi(viewingParcela)">
           <hr style="border-color: rgba(255,255,255,0.1); margin: 16px 0;">
@@ -842,9 +850,9 @@
       </div>
 
 
-      <!-- Add parcela form -->
+      <!-- Add/Edit parcela form -->
       <div *ngIf="isAddingParcela" class="add-parcela-form">
-        <h3 style="margin:0 0 12px;font-size:15px;">Parcelă Nouă</h3>
+        <h3 style="margin:0 0 12px;font-size:15px;">{{ newParcela.id ? 'Editează Parcelă' : 'Parcelă Nouă' }}</h3>
 
         <div class="form-group">
           <label>Denumire *</label>
@@ -894,7 +902,7 @@
         <div class="form-actions">
           <button class="btn-secondary rounded-btn" (click)="cancelAdd()" [disabled]="saving">Anulează</button>
           <button class="btn-primary" (click)="saveParcela()" [disabled]="saving">
-            {{ saving ? 'Se salvează...' : 'Salvează' }}
+            {{ saving ? 'Se salvează...' : (newParcela.id ? 'Actualizează' : 'Salvează') }}
           </button>
         </div>
       </div>

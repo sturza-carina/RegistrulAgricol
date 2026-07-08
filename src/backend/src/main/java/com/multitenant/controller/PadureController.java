@@ -9,9 +9,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.multitenant.annotation.TenantRequired;
+import org.springframework.security.access.prepost.PreAuthorize;
+
 @RestController
 @RequestMapping("/api/parcele/{parcelaId}/paduri")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
+@TenantRequired
 public class PadureController {
 
     private final PadureService padureService;

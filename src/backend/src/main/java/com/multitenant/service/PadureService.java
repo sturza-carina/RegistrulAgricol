@@ -22,7 +22,7 @@ public class PadureService {
 
     @Transactional(readOnly = true)
     public Page<PadureDTO> getPaduriByParcela(Long parcelaId, Pageable pageable) {
-        return padureRepository.findByParcelaId(parcelaId, pageable)
+        return padureRepository.findByParcela_Id(parcelaId, pageable)
                 .map(this::convertToDTO);
     }
 

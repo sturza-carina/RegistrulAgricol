@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PadureRepository extends JpaRepository<Padure, Long> {
-    Page<Padure> findByParcelaId(Long parcelaId, Pageable pageable);
+    Page<Padure> findByParcela_Id(Long parcelaId, Pageable pageable);
 }

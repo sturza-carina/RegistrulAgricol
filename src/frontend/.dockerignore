@@ -11,5 +11,3 @@ npm-debug.log*
 .cache
 .idea
 .env
-src/environments/environment.ts
-src/environments/environment.prod.ts
