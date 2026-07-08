@@ -6,6 +6,17 @@ server:
 spring:
   application:
     name: multi-tenant-backend
+  mail:
+    host: ${SPRING_MAIL_HOST:sandbox.smtp.mailtrap.io}
+    port: ${SPRING_MAIL_PORT:2525}
+    username: ${SPRING_MAIL_USERNAME:cb8c1d1d205848}
+    password: ${SPRING_MAIL_PASSWORD:42f4848e772da2}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
   jackson:
     serialization:
       fail-on-empty-beans: false
@@ -57,3 +68,5 @@ app:
     password: ${SIGNNOW_PASSWORD:}
   crypto:
     aes-key: ${APP_CRYPTO_AES_KEY:MyDefaultAesSymmetricEncryptionKey2026Registru}
+  mail:
+    from: ${APP_MAIL_FROM:test@test.ro}

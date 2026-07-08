@@ -98,4 +98,15 @@ export class CereriAdminComponent implements OnInit, OnDestroy {
       this.loadCereri();
     });
   }
+
+  downloadCererePdf() {
+    if (!this.selectedCerere) return;
+    this.http.get(`/api/admin/cereri/${this.selectedCerere.id}/pdf`, { responseType: 'blob' }).subscribe({
+      next: (blob: Blob) => {
+        const fileURL = URL.createObjectURL(blob);
+        window.open(fileURL, '_blank');
+      },
+      error: () => alert('Eroare la descărcarea sau generarea PDF-ului pentru cerere.')
+    });
+  }
 }

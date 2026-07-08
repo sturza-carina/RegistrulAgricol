@@ -20,7 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -35,6 +37,7 @@ public class CerereService {
     private final CetateanRepository cetateanRepository;
     private final ModelMapper modelMapper;
     private final SimpMessagingTemplate messagingTemplate;
+    private final EmailService emailService;
 
     public CerereService(CerereRepository cerereRepository, 
                          PersoanaRepository persoanaRepository,
@@ -42,7 +45,8 @@ public class CerereService {
                          CarnetComercializareRepository carnetComercializareRepository,
                          CetateanRepository cetateanRepository,
                          ModelMapper modelMapper, 
-                         SimpMessagingTemplate messagingTemplate) {
+                         SimpMessagingTemplate messagingTemplate,
+                         EmailService emailService) {
         this.cerereRepository = cerereRepository;
         this.persoanaRepository = persoanaRepository;
         this.atestatProducatorRepository = atestatProducatorRepository;
@@ -50,19 +54,50 @@ public class CerereService {
         this.cetateanRepository = cetateanRepository;
         this.modelMapper = modelMapper;
         this.messagingTemplate = messagingTemplate;
+        this.emailService = emailService;
     }
 
     @Transactional
     public CerereDTO createCerere(CerereDTO dto) {
         Cerere cerere = modelMapper.map(dto, Cerere.class);
+        if (dto.getTipCerere() != null) {
+            try {
+                cerere.setTipCerere(TipCerere.valueOf(dto.getTipCerere()));
+            } catch (IllegalArgumentException e) {
+                // Ignore invalid enums
+            }
+        }
         cerere.setStatus(StatusCerere.PENDING);
         cerere.setCodCerere("cerere-" + UUID.randomUUID().toString().substring(0, 8)); // Example formatting
         Cerere saved = cerereRepository.save(cerere);
         CerereDTO savedDto = modelMapper.map(saved, CerereDTO.class);
+        if (saved.getTipCerere() != null) {
+            savedDto.setTipCerere(saved.getTipCerere().name());
+        }
         
         // Notify admins for this UAT/Tenant
         String tenantId = TenantContext.getCurrentTenant();
         messagingTemplate.convertAndSend("/topic/tenant/" + tenantId + "/cereri", savedDto);
+
+        // Trimitere email automată către cetățean dacă adresa de email este prezentă
+        if (savedDto.getEmail() != null && !savedDto.getEmail().trim().isEmpty()) {
+            Map<String, Object> variabile = new HashMap<>();
+            variabile.put("nume", savedDto.getNume());
+            variabile.put("codCerere", savedDto.getCodCerere());
+
+            try {
+                emailService.trimiteEmailCuTemplate(
+                    savedDto.getEmail(),
+                    "Înregistrare Cerere - Registrul Agricol",
+                    "email-confirmare-cerere",
+                    variabile
+                );
+            } catch (Exception e) {
+                // Nu lăsăm ca o eroare la mail să blocheze salvarea cererii în DB
+                System.err.println("Nu s-a putut trimite mail-ul de confirmare: " + e.getMessage());
+            }
+        }
+
         return savedDto;
     }
 
