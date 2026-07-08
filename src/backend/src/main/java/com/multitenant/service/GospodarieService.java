@@ -2,10 +2,12 @@ package com.multitenant.service;
 
 import com.multitenant.model.registru.Gospodarie;
 import com.multitenant.model.registru.IstoricMembruGospodarie;
+import com.multitenant.model.registru.Document;
 import com.multitenant.repository.GospodarieRepository;
 import com.multitenant.repository.UatRepository;
 import com.multitenant.repository.PersoanaRepository;
 import com.multitenant.repository.IstoricMembruRepository;
+import com.multitenant.repository.DocumentRepository;
 import com.multitenant.model.core.Uat;
 import com.multitenant.model.persoana.Persoana;
 import com.multitenant.model.persoana.PersoanaFizica;
@@ -32,6 +34,7 @@ public class GospodarieService {
     private final UatRepository uatRepository;
     private final PersoanaRepository persoanaRepository;
     private final IstoricMembruRepository istoricMembruRepository;
+    private final DocumentRepository documentRepository;
     private final ModelMapper modelMapper;
 
     public GospodarieService(
@@ -39,11 +42,13 @@ public class GospodarieService {
             UatRepository uatRepository,
             PersoanaRepository persoanaRepository,
             IstoricMembruRepository istoricMembruRepository,
+            DocumentRepository documentRepository,
             ModelMapper modelMapper) {
         this.gospodarieRepository = gospodarieRepository;
         this.uatRepository = uatRepository;
         this.persoanaRepository = persoanaRepository;
         this.istoricMembruRepository = istoricMembruRepository;
+        this.documentRepository = documentRepository;
         this.modelMapper = modelMapper;
     }
 
@@ -184,6 +189,11 @@ public class GospodarieService {
             dto.setObservatii(entity.getObservatii());
             dto.setCreatedAt(entity.getCreatedAt());
 
+            if (entity.getDocument() != null) {
+                dto.setDocumentId(entity.getDocument().getId());
+                dto.setNumeFisierDocument(entity.getDocument().getNumeFisier());
+            }
+
             Persoana p = (Persoana) org.hibernate.Hibernate.unproxy(entity.getPersoana());
             if (p instanceof PersoanaFizica pf) {
                 dto.setNumeCompletPersoana((pf.getFirstName() != null ? pf.getFirstName() : "") + " " + (pf.getLastName() != null ? pf.getLastName() : ""));
@@ -210,6 +220,12 @@ public class GospodarieService {
         entity.setDataEveniment(dto.getDataEveniment());
         entity.setObservatii(dto.getObservatii());
         
+        if (dto.getDocumentId() != null) {
+            Document doc = documentRepository.findById(dto.getDocumentId())
+                    .orElseThrow(() -> new RuntimeException("Document not found"));
+            entity.setDocument(doc);
+        }
+        
         istoricMembruRepository.save(entity);
     }
 
@@ -229,6 +245,14 @@ public class GospodarieService {
         entity.setTipEveniment(dto.getTipEveniment());
         entity.setDataEveniment(dto.getDataEveniment());
         entity.setObservatii(dto.getObservatii());
+        
+        if (dto.getDocumentId() != null) {
+            Document doc = documentRepository.findById(dto.getDocumentId())
+                    .orElseThrow(() -> new RuntimeException("Document not found"));
+            entity.setDocument(doc);
+        } else {
+            entity.setDocument(null);
+        }
         
         istoricMembruRepository.save(entity);
     }
