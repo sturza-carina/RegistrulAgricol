@@ -38,7 +38,7 @@
   </div>
 
   <div class="cereri-grid" *ngIf="!loading && filteredCereri.length > 0">
-    <div class="cerere-card" *ngFor="let c of filteredCereri" (click)="toggleDetails(c.id)" [class.expanded]="selectedCerereId === c.id">
+    <div class="cerere-card" *ngFor="let c of paginatedCereri" (click)="toggleDetails(c.id)" [class.expanded]="selectedCerereId === c.id">
       <div class="cerere-header">
         <span class="cerere-id">#{{ c.codCerere }}</span>
         <span class="cerere-status" [ngClass]="getStatusClass(c.status)">
@@ -82,5 +82,21 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div *ngIf="totalPages > 1" class="pagination-controls" style="display: flex; justify-content: center; gap: 15px; margin-top: 30px; align-items: center;">
+    <button (click)="setPage(currentPage - 1)" [disabled]="currentPage === 1" 
+            style="padding: 8px 16px; border: 1px solid var(--border-color); background: var(--surface-color); border-radius: 6px; cursor: pointer; color: var(--text-main);"
+            [style.opacity]="currentPage === 1 ? '0.5' : '1'" [style.cursor]="currentPage === 1 ? 'not-allowed' : 'pointer'">
+      Înapoi
+    </button>
+    <span style="font-size: 14px; font-weight: 500; color: var(--text-muted);">
+      Pagina {{ currentPage }} din {{ totalPages }}
+    </span>
+    <button (click)="setPage(currentPage + 1)" [disabled]="currentPage === totalPages"
+            style="padding: 8px 16px; border: 1px solid var(--border-color); background: var(--surface-color); border-radius: 6px; cursor: pointer; color: var(--text-main);"
+            [style.opacity]="currentPage === totalPages ? '0.5' : '1'" [style.cursor]="currentPage === totalPages ? 'not-allowed' : 'pointer'">
+      Înainte
+    </button>
   </div>
 </div>

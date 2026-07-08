@@ -2,28 +2,19 @@
   <app-sidebar [activeGospodarieId]="activeGospodarieId" [activeTab]="activeTab"></app-sidebar>
   <main class="main-content">
     <header class="topbar">
-      <div class="topbar-spacer"></div>
-      
-      <!-- Notifications -->
-      <div class="notifications-wrapper" style="position: relative; margin-right: 20px; cursor: pointer;" (click)="openCereriAdmin()">
-        <div style="background: var(--surface-card, #ffffff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 20px; padding: 6px 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: var(--text-color, #333); box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">
-          Notificări cereri
-          <span class="notification-badge" *ngIf="unreadCereri > 0" style="background: #ef4444; color: white; border-radius: 12px; padding: 2px 8px; font-size: 11px; font-weight: bold;">{{ unreadCereri }}</span>
-        </div>
-      </div>
-
       <!-- Language Switcher -->
-      <div class="lang-switcher-container relative inline-block text-left" style="margin-right: 20px;">
-        <button type="button" (click)="toggleLangDropdown()" class="flex items-center justify-center p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" style="border: none; background: transparent; cursor: pointer; color: var(--text-secondary);">
+      <div class="lang-switcher-container relative inline-block text-left">
+        <button type="button" (click)="toggleLangDropdown()" class="flex items-center justify-center p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" style="border: none; background: transparent; cursor: pointer; color: var(--text-secondary); gap: 8px;">
           <!-- Globe Icon -->
           <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="2" y1="12" x2="22" y2="12"></line>
             <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
           </svg>
+          <span style="font-size: 14px; font-weight: 500; color: var(--text-color, #333);">{{ 'Alegeți Limba' | appTranslate }}</span>
         </button>
 
-        <div *ngIf="showLangDropdown" class="absolute right-0 mt-2 w-36 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[9999]" style="border: 1px solid var(--border-color, #e2e8f0); min-width: 140px;">
+        <div *ngIf="showLangDropdown" class="absolute left-0 mt-2 w-36 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[9999]" style="border: 1px solid var(--border-color, #e2e8f0); min-width: 140px;">
           <div class="py-1">
             <button (click)="changeLanguage('ro')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors block font-medium" [style.color]="currentLocale === 'ro' ? 'var(--primary)' : '#4b5563'" [style.font-weight]="currentLocale === 'ro' ? '700' : '500'" style="border: none; background: transparent; cursor: pointer; font-size: 13px;">
               Română
@@ -35,13 +26,19 @@
         </div>
       </div>
 
-      <div class="user-chip" *ngIf="user">
-        <div class="user-info">
-          <div class="user-name">{{ user.username || 'Admin User' }}</div>
+      <div class="topbar-spacer"></div>
+      
+      <!-- Notifications -->
+      <div class="notifications-wrapper" style="position: relative; cursor: pointer; height: 100%; display: flex; margin-right: 0;" (click)="openCereriAdmin()">
+        <div style="background: var(--surface-card, #ffffff); border-left: 1px solid var(--border-color, #e2e8f0); border-right: 1px solid var(--border-color, #e2e8f0); padding: 0 24px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text-color, #333); transition: all 0.2s; height: 100%;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; color: var(--text-secondary, #64748b);">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          {{ 'Notificări cereri' | appTranslate }}
+          <span class="notification-badge" *ngIf="unreadCereri > 0" style="background: #ef4444; color: white; border-radius: 12px; padding: 2px 8px; font-size: 11px; font-weight: bold;">{{ unreadCereri }}</span>
         </div>
-        <div class="avatar">{{ (user.username?.charAt(0) || 'A') | uppercase }}</div>
       </div>
-      <button class="logout-btn" (click)="logout()" i18n="@@topbar_logout">Deconectare</button>
     </header>
     <div class="page-content">
       <ng-content></ng-content>

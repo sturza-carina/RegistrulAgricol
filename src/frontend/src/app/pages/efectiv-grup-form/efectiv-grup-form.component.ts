@@ -132,7 +132,7 @@ export class EfectivGrupFormComponent implements OnInit, OnDestroy {
 
   loadDropdowns() {
     const uatCode = this.user?.role === 'ROLE_SUPER_ADMIN' ? undefined : this.activeUat?.codSiruta;
-    this.gospodarieService.getAllGospodarii(uatCode, 0, 1000).subscribe({
+    this.gospodarieService.getAllGospodarii(uatCode, undefined, undefined, undefined, 0, 1000).subscribe({
       next: (response) => {
         this.gospodariiList = response.content;
         this.updateFormConfig();

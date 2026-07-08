@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { GospodarieService } from '../../services/gospodarie.service';
@@ -17,7 +17,9 @@ import { FormConfig } from '../../components/generic-form/generic-form.models';
 })
 export class GospodarieFormComponent implements OnInit {
   @Input() isEmbedded = false;
+  @Input() isModal = false;
   @Input() inputGospodarieId: number | null = null;
+  @Output() closeForm = new EventEmitter<void>();
   
   isEditMode = false;
   gospodarieId: number | null = null;
@@ -256,6 +258,8 @@ export class GospodarieFormComponent implements OnInit {
           if (this.isEmbedded) {
             alert('Modificările au fost salvate cu succes.');
             this.loadGospodarie(this.gospodarieId!);
+          } else if (this.isModal) {
+            this.closeForm.emit();
           } else {
             this.router.navigate(['/gospodarii']);
           }
@@ -270,7 +274,11 @@ export class GospodarieFormComponent implements OnInit {
       this.gospodarieService.createGospodarie(payload as any).subscribe({
         next: () => {
           this.isSaving = false;
-          this.router.navigate(['/gospodarii']);
+          if (this.isModal) {
+            this.closeForm.emit();
+          } else {
+            this.router.navigate(['/gospodarii']);
+          }
         },
         error: (err) => {
           this.isSaving = false;
@@ -284,6 +292,8 @@ export class GospodarieFormComponent implements OnInit {
   cancel() {
     if (this.isEmbedded && this.gospodarieId) {
       this.loadGospodarie(this.gospodarieId);
+    } else if (this.isModal) {
+      this.closeForm.emit();
     } else {
       this.router.navigate(['/gospodarii']);
     }

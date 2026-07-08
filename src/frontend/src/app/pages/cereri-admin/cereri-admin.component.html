@@ -14,26 +14,44 @@
     </button>
   </div>
 
-  <div class="cards-grid">
-    <div class="cerere-card" *ngFor="let cerere of filteredCereri" (click)="selectCerere(cerere)" [ngClass]="{'is-pending': cerere.status === 'PENDING'}">
-      <div class="card-header">
-        <span class="cerere-cod">{{ cerere.codCerere }}</span>
-        <span class="status-badge" [ngClass]="'status-' + cerere.status.toLowerCase()">
-          {{ cerere.status === 'PENDING' ? 'În Așteptare' : (cerere.status === 'ACCEPTED' ? 'Aprobată' : 'Respinsă') }}
-        </span>
-      </div>
-      <div class="card-body">
-        <span class="type-badge" style="display: inline-block; padding: 4px 8px; font-size: 0.75rem; border-radius: 4px; background-color: #f3f4f6; color: #4b5563; margin-bottom: 8px;">
-          {{ cerere.tipCerere === 'ELIBERARE_ATESTAT_PRODUCATOR' ? 'Atestat Producător' : (cerere.tipCerere === 'ELIBERARE_CARNET_COMERCIALIZARE' ? 'Carnet Comercializare' : (cerere.tipCerere === 'ADEVERINTA_ROL' ? 'Adeverință Rol' : 'Cerere Generală')) }}
-        </span>
-        <h3>{{ cerere.nume }}</h3>
-        <p class="date">{{ cerere.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>
+  <div style="display: flex; flex-direction: column; min-height: 520px;">
+    <div class="cards-grid">
+      <div class="cerere-card" *ngFor="let cerere of paginatedCereri" (click)="selectCerere(cerere)" [ngClass]="{'is-pending': cerere.status === 'PENDING'}">
+        <div class="card-header">
+          <span class="cerere-cod">{{ cerere.codCerere }}</span>
+          <span class="status-badge" [ngClass]="'status-' + cerere.status.toLowerCase()">
+            {{ cerere.status === 'PENDING' ? 'În Așteptare' : (cerere.status === 'ACCEPTED' ? 'Aprobată' : 'Respinsă') }}
+          </span>
+        </div>
+        <div class="card-body">
+          <span class="type-badge" style="display: inline-block; padding: 4px 8px; font-size: 0.75rem; border-radius: 4px; background-color: #f3f4f6; color: #4b5563; margin-bottom: 4px;">
+            {{ cerere.tipCerere === 'ELIBERARE_ATESTAT_PRODUCATOR' ? 'Atestat Producător' : (cerere.tipCerere === 'ELIBERARE_CARNET_COMERCIALIZARE' ? 'Carnet Comercializare' : (cerere.tipCerere === 'ADEVERINTA_ROL' ? 'Adeverință Rol' : 'Cerere Generală')) }}
+          </span>
+          <h3>{{ cerere.nume }}</h3>
+          <p class="date">{{ cerere.createdAt | date:'dd.MM.yyyy HH:mm' }}</p>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div *ngIf="filteredCereri.length === 0" style="text-align: center; padding: 40px; color: var(--text-muted);">
-    Nu există cereri în această categorie.
+    <div *ngIf="totalPages > 1" class="pagination-controls" style="display: flex; justify-content: center; gap: 15px; margin-top: auto; padding-top: 10px; align-items: center;">
+      <button (click)="setPage(currentPage - 1)" [disabled]="currentPage === 1" 
+              style="padding: 8px 16px; border: 1px solid var(--border-color); background: white; border-radius: 6px; cursor: pointer; color: var(--text-color);"
+              [style.opacity]="currentPage === 1 ? '0.5' : '1'" [style.cursor]="currentPage === 1 ? 'not-allowed' : 'pointer'">
+        Înapoi
+      </button>
+      <span style="font-size: 14px; font-weight: 500; color: var(--text-muted);">
+        Pagina {{ currentPage }} din {{ totalPages }}
+      </span>
+      <button (click)="setPage(currentPage + 1)" [disabled]="currentPage === totalPages"
+              style="padding: 8px 16px; border: 1px solid var(--border-color); background: white; border-radius: 6px; cursor: pointer; color: var(--text-color);"
+              [style.opacity]="currentPage === totalPages ? '0.5' : '1'" [style.cursor]="currentPage === totalPages ? 'not-allowed' : 'pointer'">
+        Înainte
+      </button>
+    </div>
+
+    <div *ngIf="filteredCereri.length === 0" style="text-align: center; padding: 40px; color: var(--text-muted);">
+      Nu există cereri în această categorie.
+    </div>
   </div>
 </app-layout>
 

@@ -17,6 +17,8 @@ export class CereriAdminComponent implements OnInit, OnDestroy {
   cereri: any[] = [];
   selectedCerere: any = null;
   activeTab: 'PENDING' | 'RESOLVED' = 'PENDING';
+  currentPage: number = 1;
+  pageSize: number = 12; // 3 rows * 4 items
   private stompClient: Client;
 
   constructor(private http: HttpClient, private authService: AuthService, private cdr: ChangeDetectorRef) {
@@ -69,8 +71,22 @@ export class CereriAdminComponent implements OnInit, OnDestroy {
     }
   }
 
+  get paginatedCereri() {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredCereri.slice(start, start + this.pageSize);
+  }
+
+  get totalPages() {
+    return Math.ceil(this.filteredCereri.length / this.pageSize) || 1;
+  }
+
+  setPage(page: number) {
+    this.currentPage = page;
+  }
+
   setTab(tab: 'PENDING' | 'RESOLVED') {
     this.activeTab = tab;
+    this.currentPage = 1;
   }
 
   selectCerere(cerere: any) {
