@@ -35,11 +35,14 @@ public interface PersoanaRepository extends JpaRepository<Persoana, Long> {
     @Query("SELECT p FROM Persoana p WHERE TYPE(p) = PersoanaFizica AND TREAT(p AS PersoanaFizica).cnpHash = :cnpHash")
     java.util.Optional<Persoana> findByCnpHash(@Param("cnpHash") String cnpHash);
 
+    @Query("SELECT p FROM PersoanaFizica p LEFT JOIN FETCH p.identityDocuments WHERE p.cnpHash = :cnpHash")
+    java.util.Optional<Persoana> findByCnpHashWithIdentityDocuments(@Param("cnpHash") String cnpHash);
+
     default java.util.Optional<Persoana> findByCnpClar(String cnp) {
         if (cnp == null || cnp.trim().isEmpty()) {
             return java.util.Optional.empty();
         }
-        return findByCnpHash(com.multitenant.util.CryptoUtils.hashSha256(cnp.trim()));
+        return findByCnpHashWithIdentityDocuments(com.multitenant.util.CryptoUtils.hashSha256(cnp.trim()));
     }
 
     default java.util.Optional<Persoana> findByCnp(String cnp) {

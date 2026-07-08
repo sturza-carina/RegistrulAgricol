@@ -29,7 +29,9 @@ import { VitaDeVie, TipInregistrareVita } from '../../models/vita-de-vie.model';
 import { VitaDeVieService } from '../../services/vita-de-vie.service';
 import { PasuneFaneata, TipFolosintaPasune } from '../../models/pasune-faneata.model';
 import { PasuneFaneataService } from '../../services/pasune-faneata.service';
-import {SpecieRef} from '../../models/specie-ref.model';
+import { SpecieRef } from '../../models/specie-ref.model';
+import { Padure } from '../../models/padure.model';
+import { PadureService } from '../../services/padure.service';
 
 @Component({
   selector: 'app-teren-parcele',
@@ -116,6 +118,12 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
   editingRecoltare: Recoltare | null = null;
   newRecoltare: Partial<Recoltare> = { cantitateKg: 0 };
 
+  paduri: Padure[] = [];
+  isAddingPadure = false;
+  editingPadure: Padure | null = null;
+  newPadure: Partial<Padure> = { tipVegetatie: 'Pădure' };
+  tipuriVegetatieForestiera = ['Pădure', 'Perdea forestieră de protecție', 'Pepinieră silvică', 'Răchitărie', 'Alta'];
+
   categoriiFolosinta: string[] = [];
   tipuriSol: string[] = [];
   tipuriSursa: string[] = [];
@@ -137,6 +145,7 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     private pasuneFaneataService: PasuneFaneataService,
     private cicluService: CicluProductieService,
     private recoltareService: RecoltareService,
+    private padureService: PadureService,
     private http: HttpClient,
     private zone: NgZone
   ) {}
@@ -613,12 +622,14 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     this.pomi = [];
     this.vitaDeVie = [];
     this.pasuniFanete = [];
+    this.paduri = [];
     if (p.id) {
       if (this.showCulturi(p)) this.loadCulturi(p.id);
       this.loadSurse(p.id);
       if (this.showPomi(p)) this.loadPomi(p.id);
       if (this.showVita(p)) this.loadVita(p.id);
       if (this.showPasuneFaneata(p)) this.loadPasuneFaneata(p.id);
+      if (this.showPadure(p)) this.loadPaduri(p.id);
       if (p.tipMediu !== 'CAMP_DESCHIS') {
         this.loadCicluri(p.id);
         this.loadRecoltari(p.id);
@@ -642,6 +653,9 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     this.pasuniFanete = [];
     this.isAddingPasune = false;
     this.editingPasune = null;
+    this.paduri = [];
+    this.isAddingPadure = false;
+    this.editingPadure = null;
   }
 
   deleteParcela(p: Parcela) {
@@ -821,6 +835,12 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     if (!p || !p.categorieFolosinta) return false;
     const val = this.normalizeString(p.categorieFolosinta);
     return val === 'pasune' || val === 'fanete';
+  }
+
+  showPadure(p: Parcela | null): boolean {
+    if (!p || !p.categorieFolosinta) return false;
+    const val = this.normalizeString(p.categorieFolosinta);
+    return val === 'padure' || val === 'paduri' || val === 'vegetatie forestiera';
   }
 
   loadPomi(parcelaId: number) {
@@ -1171,6 +1191,74 @@ export class TerenParceleComponent implements OnInit, OnDestroy {
     this.recoltareService.deleteRecoltare(rec.id).subscribe({
       next: () => { this.recoltari = this.recoltari.filter(r => r.id !== rec.id); },
       error: () => alert('Eroare la ștergere recoltare.')
+    });
+  }
+
+  // --- PADURI METHODS ---
+  loadPaduri(parcelaId: number) {
+    this.padureService.getPaduri(parcelaId, 0, 100).subscribe({
+      next: (response) => { this.paduri = response.content || []; },
+      error: () => this.paduri = []
+    });
+  }
+
+  openAddPadureForm() {
+    this.isAddingPadure = true;
+    this.editingPadure = null;
+    this.newPadure = {
+      parcelaId: this.viewingParcela?.id,
+      tipVegetatie: 'Pădure',
+      suprafataHa: this.viewingParcela?.suprafata || 0
+    };
+  }
+
+  openEditPadure(padure: Padure) {
+    this.isAddingPadure = true;
+    this.editingPadure = padure;
+    this.newPadure = { ...padure };
+  }
+
+  cancelAddPadure() {
+    this.isAddingPadure = false;
+    this.editingPadure = null;
+    this.newPadure = { tipVegetatie: 'Pădure' };
+  }
+
+  savePadure() {
+    if (!this.newPadure.tipVegetatie || !this.newPadure.suprafataHa) {
+      alert('Introduceți tipul de vegetație și suprafața.');
+      return;
+    }
+    if (!this.viewingParcela?.id) return;
+
+    this.saving = true;
+    const payload = { ...this.newPadure, parcelaId: this.viewingParcela.id } as Padure;
+
+    const action = this.editingPadure && this.editingPadure.id
+      ? this.padureService.updatePadure(this.viewingParcela.id, this.editingPadure.id, payload)
+      : this.padureService.createPadure(this.viewingParcela.id, payload);
+
+    action.subscribe({
+      next: (saved) => {
+        this.saving = false;
+        this.cancelAddPadure();
+        if (this.viewingParcela?.id) this.loadPaduri(this.viewingParcela.id);
+      },
+      error: (err) => {
+        this.saving = false;
+        console.error(err);
+        const msg = err.error?.message || err.error || 'Eroare la salvare evidență pădure.';
+        alert(msg);
+      }
+    });
+  }
+
+  deletePadure(padure: Padure) {
+    if (!padure.id || !this.viewingParcela?.id) return;
+    if (!confirm(`Ștergeți evidența forestieră de ${padure.suprafataHa} ha?`)) return;
+    this.padureService.deletePadure(this.viewingParcela.id, padure.id).subscribe({
+      next: () => { this.paduri = this.paduri.filter(p => p.id !== padure.id); },
+      error: () => alert('Eroare la ștergere evidență pădure.')
     });
   }
 }

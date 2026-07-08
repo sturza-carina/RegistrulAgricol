@@ -4,138 +4,208 @@
     <meta charset="UTF-8"/>
     <title>Atestat de Producator</title>
     <style>
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
         body {
             font-family: 'Roboto', sans-serif;
-            margin: 40px;
+            font-size: 13px;
             color: #000;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
         }
-        .border-container {
-            border: 4px double #000;
-            padding: 30px;
-            min-height: 800px;
+        .outer-border {
+            border: none;
+            padding: 0;
+            height: auto;
+        }
+        .inner-border {
+            border: none;
+            padding: 10px 20px;
+            height: auto;
             position: relative;
         }
         .header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 10px;
         }
-        .header h1 {
-            font-size: 24px;
-            margin: 0 0 10px 0;
-            text-transform: uppercase;
+        .coat-of-arms {
+            width: 50px;
+            height: auto;
+            margin-bottom: 5px;
         }
-        .header h2 {
-            font-size: 20px;
-            margin: 0;
-            font-weight: normal;
+        .romania {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+            letter-spacing: 2px;
+        }
+        .primaria {
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+        .title {
+            font-size: 22px;
+            font-weight: bold;
+            margin: 5px 0;
         }
         .series {
-            text-align: right;
-            font-weight: bold;
-            font-size: 16px;
-            margin-bottom: 30px;
+            text-align: center;
+            font-size: 15px;
+            margin-bottom: 15px;
         }
         .content {
-            font-size: 16px;
-            line-height: 1.8;
+            font-size: 13px;
+            line-height: 1.4;
             text-align: justify;
         }
-        .bold-text {
-            font-weight: bold;
-        }
-        .field-fill {
+        .field {
+            display: inline-block;
             border-bottom: 1px dotted #000;
-            display: inline-block;
-            padding: 0 10px;
             font-weight: bold;
-            font-style: italic;
-        }
-        .footer-signatures {
-            margin-top: 80px;
-            width: 100%;
-        }
-        .signature-box {
-            display: inline-block;
-            width: 45%;
+            padding: 0 3px;
+            min-width: 40px;
             text-align: center;
         }
-        .validity {
-            margin-top: 40px;
-            text-align: center;
-            font-weight: bold;
-        }
-        .vize-table {
+        .table-container {
+            margin-top: 10px;
             width: 100%;
-            margin-top: 40px;
+        }
+        table {
+            width: 100%;
             border-collapse: collapse;
-        }
-        .vize-table th, .vize-table td {
-            border: 1px solid #000;
-            padding: 10px;
+            font-size: 11px;
             text-align: center;
+            position: relative;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 4px;
+        }
+        th {
+            font-weight: normal;
+        }
+        .specimen-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            color: rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(0, 0, 0, 0.2);
+            padding: 10px 20px;
+            letter-spacing: 5px;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .footer {
+            margin-top: 15px;
+            font-size: 12px;
+        }
+        .signatures {
+            margin-top: 5px;
+            text-align: center;
+            width: 100%;
+        }
+        .notes {
+            margin-top: 15px;
+            font-size: 10px;
+            text-align: left;
+            line-height: 1.2;
         }
     </style>
 </head>
 <body>
-    <div class="border-container">
-        <div class="header">
-            <h1>ROMÂNIA</h1>
-            <h2>Județul / Localitatea: (generat automat)</h2>
-            <br/>
-            <h1>ATESTAT DE PRODUCĂTOR</h1>
-        </div>
-
-        <div class="series">
-            Seria <span th:text="${cerere.codCerere}"></span> Nr. <span th:if="${cerere.numarCadastral != null}" th:text="${cerere.numarCadastral}"></span><span th:if="${cerere.numarCadastral == null}">001</span>
-        </div>
-
-        <div class="content">
-            <p>
-                Urmare a cererii nr. <span class="field-fill" th:text="${cerere.id}"></span> și a verificărilor efectuate, se eliberează prezentul atestat de producător:
-            </p>
-            <p>
-                Domnului/Doamnei <span class="field-fill" th:text="${cerere.nume}"></span>, 
-                CNP/CUI <span class="field-fill"><span th:if="${cerere.cnpCui != null}" th:text="${cerere.cnpCui}"></span><span th:if="${cerere.cnpCui == null}">_____________</span></span>,
-                cu domiciliul/sediul în <span class="field-fill" th:text="${cerere.domiciliu}"></span>.
-            </p>
-            <p>
-                Titularul prezentului atestat este înregistrat în Registrul Agricol la rolul nr. <span class="field-fill" th:text="${cerere.codCerere}"></span>
-                și desfășoară activități agricole, având calitatea de producător agricol conform Legii nr. 145/2014.
-            </p>
-        </div>
-
-        <div class="validity">
-            Prezentul atestat este valabil 7 ani de la data emiterii, cu condiția vizării anuale.
-            <br/>
-            Data emiterii: <span th:text="${#temporals.format(cerere.createdAt, 'dd.MM.yyyy')}"></span>
-        </div>
-
-        <table class="vize-table">
-            <tr>
-                <th>Anul</th>
-                <th>Semnătura și ștampila primăriei</th>
-                <th>Aviz consultativ structură asociativă</th>
-            </tr>
-            <tr>
-                <td th:text="${#temporals.format(cerere.createdAt, 'yyyy')}"></td>
-                <td><br/><br/></td>
-                <td><br/><br/></td>
-            </tr>
-            <tr>
-                <td th:text="${T(java.time.Year).now().getValue() + 1}"></td>
-                <td></td>
-                <td></td>
-            </tr>
-        </table>
-
-        <div class="footer-signatures">
-            <div class="signature-box">
-                <strong>PRIMAR,</strong><br/><br/>
-                L.S.
+    <div class="outer-border">
+        <div class="inner-border">
+            <div class="header">
+                <!-- Fallback if no image: -->
+                <div style="font-size: 40px; margin-bottom: 10px;">&#128100;</div>
+                <div class="romania">ROMÂNIA</div>
+                <div class="primaria">
+                    Primăria <span class="field" th:text="${cerere != null ? 'Comuna' : ''}" style="min-width: 150px;"></span> 
+                    Județul <span class="field" th:text="${persoana != null && persoana.adresa != null ? persoana.adresa.county : '...................'}" style="min-width: 150px;"></span>
+                </div>
+                <div class="title">ATESTAT DE PRODUCĂTOR</div>
+                <div class="series">
+                    Seria <span class="field" th:text="${atestat != null ? atestat.seria : 'XX'}"></span> 
+                    Nr. <span class="field" th:text="${atestat != null ? atestat.numarAtestat : '0000000'}"></span>
+                </div>
             </div>
-            <div class="signature-box">
-                <strong>SECRETAR GENERAL,</strong><br/><br/>
-                (semnătură)
+
+            <div class="content">
+                În temeiul prevederilor art. 5 alin. (1) din Legea nr. 145/2014 pentru stabilirea unor măsuri de reglementare a pieței produselor din sectorul agricol,<br/>
+                Având în vedere cererea d-lui (d-nei) <span class="field" th:text="${persoana != null ? (persoana.firstName + ' ' + persoana.lastName) : cerere.nume}" style="min-width: 200px;"></span> în calitate de titular(ă), 
+                domiciliat(ă) în județul <span class="field" th:text="${persoana != null && persoana.adresa != null ? persoana.adresa.county : '................'}"></span>, 
+                localitatea <span class="field" th:text="${persoana != null && persoana.adresa != null ? persoana.adresa.localitate : '................'}"></span>, 
+                str. <span class="field" th:text="${persoana != null && persoana.adresa != null && persoana.adresa.street != null ? persoana.adresa.street : '................'}"></span> 
+                nr. <span class="field" th:text="${persoana != null && persoana.adresa != null && persoana.adresa.streetNumber != null ? persoana.adresa.streetNumber : '.....'}"></span>, 
+                legitimat(ă) cu CI/BI seria <span class="field" th:text="${actIdentitate != null ? actIdentitate.series : '.......'}"></span>, 
+                nr. <span class="field" th:text="${actIdentitate != null ? actIdentitate.number : '.............'}"></span>, 
+                cod numeric personal (CNP) <span class="field" th:text="${persoana != null ? persoana.cnp : cerere.cnpCui}"></span>, 
+                și înregistrată la primărie sub nr. <span class="field" th:text="${cerere.id}"></span> din <span class="field" th:text="${#temporals.format(cerere.createdAt, 'dd.MM.yyyy')}"></span>.
+                <br/>
+                Urmare verificărilor efectuate în conformitate cu prevederile art. 3 din Legea nr. 145/2014,<br/>
+                Se emite
+                <div style="text-align: center; font-weight: bold; margin: 10px 0; font-size: 16px;">ATESTAT DE PRODUCĂTOR</div>
+                pentru <span class="field" th:text="${persoana != null ? (persoana.firstName + ' ' + persoana.lastName) : cerere.nume}" style="min-width: 200px;"></span>, 
+                domiciliat(ă) în județul <span class="field" th:text="${persoana != null && persoana.adresa != null ? persoana.adresa.county : '................'}"></span>, 
+                localitatea <span class="field" th:text="${persoana != null && persoana.adresa != null ? persoana.adresa.localitate : '................'}"></span>, 
+                str. <span class="field" th:text="${persoana != null && persoana.adresa != null && persoana.adresa.street != null ? persoana.adresa.street : '................'}"></span> 
+                nr. <span class="field" th:text="${persoana != null && persoana.adresa != null && persoana.adresa.streetNumber != null ? persoana.adresa.streetNumber : '.....'}"></span>, 
+                legitimat(ă) cu CI/BI seria <span class="field" th:text="${actIdentitate != null ? actIdentitate.series : '.......'}"></span>, 
+                nr. <span class="field" th:text="${actIdentitate != null ? actIdentitate.number : '.............'}"></span>, 
+                cod numeric personal (CNP) <span class="field" th:text="${persoana != null ? persoana.cnp : cerere.cnpCui}"></span> 
+                pentru următoarele produse agricole:
+            </div>
+
+            <div class="table-container" style="position: relative;">
+                <div class="specimen-watermark" th:if="${atestat == null}">SPECIMEN</div>
+                <table>
+                    <tr>
+                        <th rowspan="2" style="width: 25%;">Produsul*</th>
+                        <th colspan="2">Suprafața de teren<br/>exploatată</th>
+                        <th rowspan="2" style="width: 30%;">Produsul**</th>
+                        <th rowspan="2" style="width: 20%;">Număr, efective<br/>animale</th>
+                    </tr>
+                    <tr>
+                        <th style="width: 10%;">ha</th>
+                        <th style="width: 15%;">ari</th>
+                    </tr>
+                    <!-- Generate 10 empty rows -->
+                    <tr><td>&#160;</td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>&#160;</td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>&#160;</td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>&#160;</td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>&#160;</td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>&#160;</td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>&#160;</td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>&#160;</td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>&#160;</td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>&#160;</td><td></td><td></td><td></td><td></td></tr>
+                </table>
+            </div>
+
+            <div class="footer">
+                Data emiterii <span class="field" th:text="${atestat != null ? #temporals.format(atestat.dataEliberare, 'dd.MM.yyyy') : '..................'}"></span> &#160;&#160;&#160;&#160;&#160; 
+                Vizat anul <span class="field">...........</span> sem. <span class="field">......</span> &#160;&#160;&#160;&#160;&#160; 
+                Vizat anul <span class="field">...........</span> sem. <span class="field">......</span>
+            </div>
+
+            <div class="signatures">
+                <br/>
+                <strong>Primar,</strong><br/>
+                <br/>
+                <br/>
+                (Nume și prenume, semnătura, ștampila)
+            </div>
+
+            <div class="notes">
+                * Se va completa prin înscrierea tuturor produselor vegetale rezultate din culturi de câmp, culturi în spații protejate, plantații, pepiniere, pășuni și fânețe, pentru care se solicită emiterea atestatului.<br/>
+                ** Se va completa prin înscrierea tuturor produselor zootehnice, piscicole, sericicole, după caz, pentru care se solicită emiterea atestatului.<br/>
+                Formular tipărit de către Compania Națională "Imprimeria Națională" S.A., anul: 2015
             </div>
         </div>
     </div>
