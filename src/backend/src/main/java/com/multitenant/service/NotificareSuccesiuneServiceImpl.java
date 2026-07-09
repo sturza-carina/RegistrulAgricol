@@ -59,6 +59,9 @@ public class NotificareSuccesiuneServiceImpl implements NotificareSuccesiuneServ
 
         // Actualizăm starea decesului pe defunct în mod automat la salvarea notificării
         defunctFizica.setEsteDecedat(true);
+        if (defunctFizica.getCnpHash() == null && defunctFizica.getCnp() != null) {
+            defunctFizica.setCnpHash(PersoanaFizica.generateBlindIndex(defunctFizica.getCnp()));
+        }
         if (dto.getDataDecesului() != null) {
             defunctFizica.setDataDecesului(dto.getDataDecesului());
         }
@@ -85,6 +88,7 @@ public class NotificareSuccesiuneServiceImpl implements NotificareSuccesiuneServ
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<NotificareSuccesiuneDTO> getAll() {
         return notificareSuccesiuneRepository.findAll().stream()
                 .map(this::toDto)
@@ -92,6 +96,7 @@ public class NotificareSuccesiuneServiceImpl implements NotificareSuccesiuneServ
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<NotificareSuccesiuneDTO> findByDefunctCnp(String cnpClar) {
         return notificareSuccesiuneRepository.findByDefunctCnpClar(cnpClar).stream()
                 .map(this::toDto)
