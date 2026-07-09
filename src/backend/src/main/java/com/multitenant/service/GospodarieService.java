@@ -53,7 +53,8 @@ public class GospodarieService {
     }
 
     private GospodarieDTO convertToDTO(Gospodarie entity) {
-        if (entity == null) return null;
+        if (entity == null)
+            return null;
         GospodarieDTO dto = modelMapper.map(entity, GospodarieDTO.class);
         if (entity.getCapGospodarie() != null) {
             Persoana cap = entity.getCapGospodarie();
@@ -107,13 +108,13 @@ public class GospodarieService {
         if (gospodarie == null) {
             throw new IllegalArgumentException("Gospodarie cannot be null");
         }
-        
+
         if (gospodarie.getUat() != null && gospodarie.getUat().getId() != null) {
             Uat managedUat = uatRepository.findById(gospodarie.getUat().getId())
                     .orElseThrow(() -> new IllegalArgumentException("UAT not found"));
             gospodarie.setUat(managedUat);
         }
-        
+
         Gospodarie saved = gospodarieRepository.save(gospodarie);
         return convertToDTO(saved);
     }
@@ -124,10 +125,13 @@ public class GospodarieService {
         }
         Gospodarie existing = gospodarieRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Gospodarie not found"));
-        
-        if (updatedGospodarie.getCodGospodarie() != null) existing.setCodGospodarie(updatedGospodarie.getCodGospodarie());
-        if (updatedGospodarie.getAdresa() != null) existing.setAdresa(updatedGospodarie.getAdresa());
-        if (updatedGospodarie.getTipGospodarie() != null) existing.setTipGospodarie(updatedGospodarie.getTipGospodarie());
+
+        if (updatedGospodarie.getCodGospodarie() != null)
+            existing.setCodGospodarie(updatedGospodarie.getCodGospodarie());
+        if (updatedGospodarie.getAdresa() != null)
+            existing.setAdresa(updatedGospodarie.getAdresa());
+        if (updatedGospodarie.getTipGospodarie() != null)
+            existing.setTipGospodarie(updatedGospodarie.getTipGospodarie());
         existing.setActiva(updatedGospodarie.isActiva());
         if (updatedGospodarie.getUat() != null) {
             if (updatedGospodarie.getUat().getId() != null) {
@@ -151,9 +155,12 @@ public class GospodarieService {
     }
 
     @Transactional(readOnly = true)
-    public Page<GospodarieDTO> getAllGospodarii(String uatCode, String tipGospodarieStr, Boolean activa, String search, Pageable pageable) {
-        if (uatCode == null) uatCode = "";
-        if (search == null) search = "";
+    public Page<GospodarieDTO> getAllGospodarii(String uatCode, String tipGospodarieStr, Boolean activa, String search,
+            Pageable pageable) {
+        if (uatCode == null)
+            uatCode = "";
+        if (search == null)
+            search = "";
 
         com.multitenant.model.registru.TipGospodarie tip = null;
         if (tipGospodarieStr != null) {
@@ -172,7 +179,7 @@ public class GospodarieService {
     public void seteazaCapGospodarie(Long gospodarieId, Long persoanaId) {
         Gospodarie gospodarie = gospodarieRepository.findById(gospodarieId)
                 .orElseThrow(() -> new RuntimeException("Gospodarie not found"));
-        
+
         if (persoanaId == null) {
             gospodarie.setCapGospodarie(null);
         } else {
@@ -185,7 +192,8 @@ public class GospodarieService {
 
     @Transactional(readOnly = true)
     public List<IstoricMembruDTO> getIstoricMembri(Long gospodarieId) {
-        List<IstoricMembruGospodarie> list = istoricMembruRepository.findByGospodarieIdOrderByDataEvenimentDescIdDesc(gospodarieId);
+        List<IstoricMembruGospodarie> list = istoricMembruRepository
+                .findByGospodarieIdOrderByDataEvenimentDescIdDesc(gospodarieId);
         return list.stream().map(entity -> {
             IstoricMembruDTO dto = new IstoricMembruDTO();
             dto.setId(entity.getId());
@@ -203,7 +211,8 @@ public class GospodarieService {
 
             Persoana p = (Persoana) org.hibernate.Hibernate.unproxy(entity.getPersoana());
             if (p instanceof PersoanaFizica pf) {
-                dto.setNumeCompletPersoana((pf.getFirstName() != null ? pf.getFirstName() : "") + " " + (pf.getLastName() != null ? pf.getLastName() : ""));
+                dto.setNumeCompletPersoana((pf.getFirstName() != null ? pf.getFirstName() : "") + " "
+                        + (pf.getLastName() != null ? pf.getLastName() : ""));
             } else if (p instanceof PersoanaJuridica pj) {
                 dto.setNumeCompletPersoana(pj.getCompanyName());
             } else {
@@ -219,20 +228,20 @@ public class GospodarieService {
                 .orElseThrow(() -> new RuntimeException("Gospodarie not found"));
         Persoana persoana = persoanaRepository.findById(dto.getPersoanaId())
                 .orElseThrow(() -> new RuntimeException("Persoana not found"));
-                
+
         IstoricMembruGospodarie entity = new IstoricMembruGospodarie();
         entity.setGospodarie(gospodarie);
         entity.setPersoana(persoana);
         entity.setTipEveniment(dto.getTipEveniment());
         entity.setDataEveniment(dto.getDataEveniment());
         entity.setObservatii(dto.getObservatii());
-        
+
         if (dto.getDocumentId() != null) {
             Document doc = documentRepository.findById(dto.getDocumentId())
                     .orElseThrow(() -> new RuntimeException("Document not found"));
             entity.setDocument(doc);
         }
-        
+
         istoricMembruRepository.save(entity);
     }
 
@@ -240,19 +249,19 @@ public class GospodarieService {
     public void updateEvenimentIstoric(Long gospodarieId, Long evenimentId, IstoricMembruDTO dto) {
         IstoricMembruGospodarie entity = istoricMembruRepository.findById(evenimentId)
                 .orElseThrow(() -> new RuntimeException("Eveniment not found"));
-        
+
         if (!entity.getGospodarie().getId().equals(gospodarieId)) {
             throw new IllegalArgumentException("Eveniment does not belong to this gospodarie");
         }
-        
+
         Persoana persoana = persoanaRepository.findById(dto.getPersoanaId())
                 .orElseThrow(() -> new RuntimeException("Persoana not found"));
-                
+
         entity.setPersoana(persoana);
         entity.setTipEveniment(dto.getTipEveniment());
         entity.setDataEveniment(dto.getDataEveniment());
         entity.setObservatii(dto.getObservatii());
-        
+
         if (dto.getDocumentId() != null) {
             Document doc = documentRepository.findById(dto.getDocumentId())
                     .orElseThrow(() -> new RuntimeException("Document not found"));
@@ -260,7 +269,15 @@ public class GospodarieService {
         } else {
             entity.setDocument(null);
         }
-        
+
         istoricMembruRepository.save(entity);
+    }
+
+    public List<GospodarieDTO> getGospodariiForPersoana(String cnp) {
+        List<Gospodarie> gospodarii = gospodarieRepository.findGospodariiForPersoana(cnp);
+        return gospodarii
+                .stream()
+                .map(this::convertToDTO)
+                .toList();
     }
 }

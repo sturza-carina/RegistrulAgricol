@@ -7,6 +7,7 @@ import com.multitenant.service.GospodarieService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.multitenant.dto.GospodarieDTO;
 import com.multitenant.dto.IstoricMembruDTO;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
@@ -68,7 +69,8 @@ public class GospodarieController {
 
     @PutMapping("/{gospodarieId}/cap-gospodarie")
     @GdprAudited(entity = "Gospodarie")
-    public ResponseEntity<?> seteazaCapGospodarieQuery(@PathVariable Long gospodarieId, @RequestParam(required = false) Long persoanaId) {
+    public ResponseEntity<?> seteazaCapGospodarieQuery(@PathVariable Long gospodarieId,
+            @RequestParam(required = false) Long persoanaId) {
         gospodarieService.seteazaCapGospodarie(gospodarieId, persoanaId);
         return ResponseEntity.ok().build();
     }
@@ -81,7 +83,8 @@ public class GospodarieController {
 
     @PostMapping("/{gospodarieId}/istoric-membri")
     @GdprAudited(entity = "Gospodarie")
-    public ResponseEntity<?> adaugaEvenimentIstoric(@PathVariable Long gospodarieId, @RequestBody IstoricMembruDTO dto) {
+    public ResponseEntity<?> adaugaEvenimentIstoric(@PathVariable Long gospodarieId,
+            @RequestBody IstoricMembruDTO dto) {
         gospodarieService.adaugaEvenimentIstoric(gospodarieId, dto);
         return ResponseEntity.ok().build();
     }
@@ -95,4 +98,5 @@ public class GospodarieController {
         gospodarieService.updateEvenimentIstoric(gospodarieId, evenimentId, dto);
         return ResponseEntity.ok().build();
     }
+
 }

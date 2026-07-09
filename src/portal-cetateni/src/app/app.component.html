@@ -8,6 +8,7 @@
       <li><a routerLink="/cereri" routerLinkActive="active" *ngIf="authService.currentUser$ | async">Depune Cerere</a></li>
       <li><a routerLink="/cereri-mele" routerLinkActive="active" *ngIf="authService.currentUser$ | async">Cererile Mele</a></li>
       <li><a routerLink="/stadiu" routerLinkActive="active" *ngIf="!(authService.currentUser$ | async)">Verifică stadiu cerere</a></li>
+      <li><a routerLink="/gospodariile-mele" routerLinkActive="active" *ngIf="authService.currentUser$ | async">Gospodăriile Mele</a></li>
       <li><a routerLink="/contul-meu" routerLinkActive="active" *ngIf="authService.currentUser$ | async">Contul Meu</a></li>
       
       <li *ngIf="!(authService.currentUser$ | async)"><a routerLink="/login" routerLinkActive="active" class="btn-login">Autentificare</a></li>
