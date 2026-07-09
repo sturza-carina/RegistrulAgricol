@@ -36,4 +36,22 @@ public class NotificationKafkaConsumer {
             e.printStackTrace();
         }
     }
+
+    @KafkaListener(topics = "notificari-succesiuni", groupId = "portal-notificari-group")
+    public void consumeSuccesiune(String message) {
+        try {
+            System.out.println("[NotificationKafkaConsumer] Received Kafka message for succesiune: " + message);
+            Map<String, Object> payload = objectMapper.readValue(message, new TypeReference<Map<String, Object>>() {});
+            String mesaj = (String) payload.get("mesaj");
+
+            if (mesaj != null) {
+                // Broadcast către toți utilizatorii pe topicul general de notificări
+                String destination = "/topic/notificari/general";
+                messagingTemplate.convertAndSend(destination, payload);
+                System.out.println("[NotificationKafkaConsumer] Broadcasted succesiune notification via WebSocket to: " + destination);
+            }
+        } catch (Exception e) {
+            System.err.println("[NotificationKafkaConsumer] Error processing succesiune Kafka message: " + e.getMessage());
+        }
+    }
 }

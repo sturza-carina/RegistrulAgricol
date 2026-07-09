@@ -36,11 +36,22 @@ public class PersoanaFizica extends Persoana {
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
+    @Column(name = "este_decedat")
+    private Boolean esteDecedat = false;
+
+    @Column(name = "data_decesului")
+    private LocalDate dataDecesului;
+
+    @Column(name = "numar_certificat_deces")
+    private String numarCertificatDeces;
+
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "persoana", cascade = CascadeType.ALL, orphanRemoval = true)
     @NotAudited
     private List<ActIdentitate> identityDocuments = new ArrayList<>();
 
-
+    public static String generateBlindIndex(String cnp) {
+        return CryptoUtils.hashSha256(cnp);
+    }
 
     public void setCnp(String cnp) {
         this.cnp = cnp;

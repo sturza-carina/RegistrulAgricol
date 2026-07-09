@@ -1,0 +1,274 @@
+<div class="page-container" style="padding: 24px; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;">
+  
+  <!-- Page Header -->
+  <div class="page-header" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 24px; border-radius: 16px; margin-bottom: 24px; color: white; box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);">
+    <h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.02em;">Mențiuni Succesiuni și Urmărire Notificări Notari (SPN/BIN)</h1>
+    <p style="margin: 6px 0 0 0; font-size: 14px; opacity: 0.9;">Gestiunea stării deceselor și urmărirea dosarelor de succesiune la nivel de UAT, protejată prin Blind Indexing (GDPR).</p>
+  </div>
+
+  <!-- Alert Messages -->
+  <div *ngIf="successMessage" style="background-color: #f0fdf4; border-left: 4px solid #16a34a; color: #15803d; padding: 16px; border-radius: 8px; margin-bottom: 24px; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 10px;">
+    <span>✅</span> {{ successMessage }}
+  </div>
+  <div *ngIf="errorMessage" style="background-color: #fef2f2; border-left: 4px solid #dc2626; color: #b91c1c; padding: 16px; border-radius: 8px; margin-bottom: 24px; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 10px;">
+    <span>⚠️</span> {{ errorMessage }}
+  </div>
+
+  <!-- Main Grid Layout -->
+  <div class="grid-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+    
+    <!-- LEFT PANEL: Marcare Deces & Inițiere Formular -->
+    <div class="card" style="background: white; border: 1px solid var(--card-border, #e2e8f0); border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: transform 0.2s;">
+      <h2 style="margin-top: 0; margin-bottom: 20px; font-size: 18px; font-weight: 600; color: #0f172a; border-bottom: 2px solid #3b82f6; padding-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 20px;">📝</span> Înregistrare deces & Trimitere Notificare
+      </h2>
+
+      <form (submit)="submitForm(); $event.preventDefault()">
+        
+        <!-- SECTION 1: Căutare Persoană Fizică (Defunct) -->
+        <div class="form-group" style="margin-bottom: 20px; position: relative;">
+          <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">Selectați Defunctul (Persoană Fizică)*</label>
+          <div style="display: flex; gap: 8px;">
+            <input 
+              type="text" 
+              [(ngModel)]="personSearchTerm" 
+              name="personSearch" 
+              (input)="onPersonSearchInput()"
+              placeholder="Introduceți Nume, Prenume sau CNP..." 
+              style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s;"
+              onfocus="this.style.borderColor='#3b82f6'" 
+              onblur="this.style.borderColor='#cbd5e1'"
+            />
+            <button 
+              type="button" 
+              *ngIf="selectedPerson"
+              (click)="resetForm()"
+              style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 16px; font-size: 13px; font-weight: 500; cursor: pointer; color: #64748b;"
+            >
+              Resetează
+            </button>
+          </div>
+
+          <!-- Dropdown Autocomplete Rezultate -->
+          <div 
+            *ngIf="showPersonDropdown" 
+            style="position: absolute; width: 100%; top: 100%; left: 0; background: white; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 50; max-height: 220px; overflow-y: auto; margin-top: 4px;"
+          >
+            <div 
+              *ngFor="let p of personSearchResults" 
+              (click)="selectPerson(p)"
+              style="padding: 10px 14px; border-bottom: 1px solid #f1f5f9; cursor: pointer; font-size: 13.5px; transition: background 0.15s;"
+              onmouseover="this.style.background='#f8fafc'"
+              onmouseout="this.style.background='white'"
+            >
+              <div style="font-weight: 600; color: #1e293b;">{{ p.lastName }} {{ p.firstName }}</div>
+              <div style="font-size: 11px; color: #64748b;">CNP: {{ p.cnp || 'Criptat' }} | Gospodărie ID: {{ p.gospodarieId || '-' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Câmpuri Deces -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+          <div class="form-group">
+            <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">Dată Deces</label>
+            <input 
+              type="date" 
+              [(ngModel)]="dataDecesului" 
+              name="dataDecesului"
+              style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;"
+            />
+          </div>
+          <div class="form-group">
+            <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">Nr. Certificat Deces</label>
+            <input 
+              type="text" 
+              [(ngModel)]="numarCertificatDeces" 
+              name="numarCertificatDeces"
+              placeholder="ex: A.10 nr 123456" 
+              style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;"
+            />
+          </div>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+
+        <!-- SECTION 2: Detalii Notificare Notari -->
+        <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 15px; font-weight: 600; color: #334155;">📋 Informații trimitere Notar (SPN/BIN)</h3>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">Nume Notar / Birou Notarial (SPN/BIN)</label>
+          <input 
+            type="text" 
+            [(ngModel)]="numeNotarSpnBin" 
+            name="numeNotar"
+            list="notari-list"
+            placeholder="Introduceți sau selectați un Notar..." 
+            style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;"
+          />
+          <datalist id="notari-list">
+            <option *ngFor="let n of notariPredefiniti" [value]="n"></option>
+          </datalist>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div class="form-group">
+            <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">Număr Adresă Oficială*</label>
+            <input 
+              type="text" 
+              [(ngModel)]="numarAdresaOficiala" 
+              name="numarAdresaOficiala"
+              placeholder="ex: 123/2026/SPN" 
+              style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">Dată Trimitere Notar*</label>
+            <input 
+              type="date" 
+              [(ngModel)]="dataTrimitere" 
+              name="dataTrimitere"
+              style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">Observații Dosar</label>
+          <textarea 
+            [(ngModel)]="observatii" 
+            name="observatii" 
+            rows="3" 
+            placeholder="Specificați orice detalii relevante despre succesiune sau moștenitori..."
+            style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; resize: vertical;"
+          ></textarea>
+        </div>
+
+        <button 
+          type="submit" 
+          [disabled]="isSaving"
+          style="width: 100%; padding: 12px; border-radius: 8px; border: none; background: #3b82f6; color: white; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);"
+          onmouseover="this.style.background='#2563eb'"
+          onmouseout="this.style.background='#3b82f6'"
+        >
+          <span *ngIf="!isSaving">🚀 Înregistrează și Trimite Notificare</span>
+          <span *ngIf="isSaving">Se salvează...</span>
+        </button>
+
+      </form>
+    </div>
+
+    <!-- RIGHT PANEL: Căutare Istoric (Blind Index) & Tabel Urmărire -->
+    <div class="card" style="background: white; border: 1px solid var(--card-border, #e2e8f0); border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); height: 100%; display: flex; flex-direction: column;">
+      <h2 style="margin-top: 0; margin-bottom: 20px; font-size: 18px; font-weight: 600; color: #0f172a; border-bottom: 2px solid #10b981; padding-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 20px;">🔍</span> Căutare securizată & Urmărire dosare
+      </h2>
+
+      <!-- Search Section -->
+      <div style="background: #f8fafc; padding: 16px; border-radius: 12px; margin-bottom: 24px; border: 1px dashed #cbd5e1;">
+        <label style="display: block; font-size: 12.5px; font-weight: 600; color: #475569; margin-bottom: 6px;">Caută dosar după CNP defunct (Index Deterministic Securizat)</label>
+        <div style="display: flex; gap: 8px;">
+          <input 
+            type="text" 
+            [(ngModel)]="searchCnp" 
+            maxlength="13"
+            placeholder="Introduceți CNP-ul de 13 cifre în clar..." 
+            style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-family: monospace;"
+          />
+          <button 
+            type="button" 
+            (click)="searchDosar()"
+            style="background: #10b981; border: none; border-radius: 8px; color: white; padding: 0 20px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background 0.15s;"
+            onmouseover="this.style.background='#059669'"
+            onmouseout="this.style.background='#10b981'"
+          >
+            <span>🔍 Caută</span>
+          </button>
+        </div>
+        <small style="color: #64748b; font-size: 11px; margin-top: 6px; display: block;">Căutarea se face prin Blind Index deterministic. CNP-ul nu este trimis sau interogat în clar în baza de date.</small>
+      </div>
+
+      <!-- Results Table -->
+      <div style="flex-grow: 1; min-height: 250px;">
+        <h3 style="margin-top: 0; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: #334155; display: flex; justify-content: space-between; align-items: center;">
+          <span>📋 Rezultate Notificări ({{ searchResults.length }})</span>
+          <button (click)="loadAllNotificari()" style="background: transparent; border: none; color: #3b82f6; font-size: 12px; cursor: pointer; text-decoration: underline;">Vezi toate</button>
+        </h3>
+
+        <!-- Empty State -->
+        <div 
+          *ngIf="searchResults.length === 0" 
+          style="text-align: center; padding: 48px 16px; border: 1px solid #f1f5f9; border-radius: 12px; color: #94a3b8; font-size: 13.5px;"
+        >
+          <div style="font-size: 32px; margin-bottom: 12px;">📂</div>
+          <p style="margin: 0;">{{ hasSearched ? 'Nu s-a găsit niciun dosar de succesiune pentru CNP-ul căutat.' : 'Introduceți un CNP în bara de căutare sau apăsați "Vezi toate" pentru a lista notificările.' }}</p>
+        </div>
+
+        <!-- Table View -->
+        <div *ngIf="searchResults.length > 0" style="overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 12px;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+            <thead>
+              <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                <th style="padding: 12px 14px; color: #475569; font-weight: 600;">Defunct</th>
+                <th style="padding: 12px 14px; color: #475569; font-weight: 600;">Adresă / Notar</th>
+                <th style="padding: 12px 14px; color: #475569; font-weight: 600;">Dată Trimitere</th>
+                <th style="padding: 12px 14px; color: #475569; font-weight: 600;">Operator</th>
+                <th style="padding: 12px 14px; color: #475569; font-weight: 600; text-align: center;">Stadiu</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr 
+                *ngFor="let row of searchResults" 
+                style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s;"
+                onmouseover="this.style.background='#f8fafc'"
+                onmouseout="this.style.background='white'"
+              >
+                <td style="padding: 12px 14px; vertical-align: top;">
+                  <div style="font-weight: 600; color: #1e293b;">{{ row.defunctNume }}</div>
+                  <div style="font-size: 10.5px; color: #64748b; font-family: monospace;">{{ row.defunctCnpHash | slice:0:15 }}...</div>
+                </td>
+                <td style="padding: 12px 14px; vertical-align: top;">
+                  <div style="font-weight: 500; color: #334155;">Adresă: {{ row.numarAdresaOficiala }}</div>
+                  <div style="font-size: 11px; color: #64748b;">Notar: {{ row.numeNotarSpnBin || '-' }}</div>
+                </td>
+                <td style="padding: 12px 14px; vertical-align: top; color: #475569;">
+                  {{ row.dataTrimitere | date:'dd.MM.yyyy' }}
+                </td>
+                <td style="padding: 12px 14px; vertical-align: top; color: #475569;">
+                  {{ row.utilizatorOperare || 'sistem' }}
+                </td>
+                <td style="padding: 12px 14px; text-align: center; vertical-align: middle;">
+                  <!-- Dropdown pentru schimbare stadiu dinamic -->
+                  <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                    <!-- Badge stilizat corespunzător stadiului curent -->
+                    <span 
+                      style="display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase;"
+                      [style.background]="row.stadiuNotificare === 'TRIMIS' ? '#e0f2fe' : (row.stadiuNotificare === 'IN_LUCRU' ? '#fef3c7' : '#dcfce7')"
+                      [style.color]="row.stadiuNotificare === 'TRIMIS' ? '#0369a1' : (row.stadiuNotificare === 'IN_LUCRU' ? '#b45309' : '#15803d')"
+                    >
+                      {{ row.stadiuNotificare }}
+                    </span>
+                    
+                    <!-- Selector rapid de stadiu -->
+                    <select 
+                      [ngModel]="row.stadiuNotificare" 
+                      (ngModelChange)="changeStadiu(row.id, $event)"
+                      style="margin-top: 4px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 4px; font-size: 11px; outline: none;"
+                    >
+                      <option value="TRIMIS">TRIMIS</option>
+                      <option value="IN_LUCRU">IN LUCRU</option>
+                      <option value="FINALIZAT">FINALIZAT</option>
+                    </select>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>

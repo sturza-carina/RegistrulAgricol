@@ -24,6 +24,7 @@ import { AnimalTimelineComponent } from './pages/animal-timeline/animal-timeline
 import { CereriAdminComponent } from './pages/cereri-admin/cereri-admin.component';
 import { EvidentaChimicaComponent } from './pages/evidenta-chimica/evidenta-chimica.component';
 import { StatisticiComponent } from './pages/statistici/statistici.component';
+import { NotificareSuccesiuneComponent } from './pages/notificare-succesiune/notificare-succesiune.component';
 
 export const routes: Routes = [
   { path: 'login',          component: LoginComponent },
@@ -57,6 +58,7 @@ export const routes: Routes = [
   { path: 'cereri-admin',   component: CereriAdminComponent },
   { path: 'evidenta-chimica', component: EvidentaChimicaComponent },
   { path: 'statistici',     component: StatisticiComponent },
+  { path: 'succesiuni',     component: NotificareSuccesiuneComponent },
   { path: '',               redirectTo: '/login', pathMatch: 'full' }
 ];
 

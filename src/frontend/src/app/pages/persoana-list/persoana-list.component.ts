@@ -39,6 +39,7 @@ export class PersonListComponent implements OnInit {
     { field: 'displayName', header: 'Nume / Denumire', type: 'avatar', subField: 'displayHandle' },
     { field: 'personType', header: 'Tip Persoană', type: 'badge', format: val => val === 'PHYSICAL_PERSON' ? 'Persoană Fizică' : 'Persoană Juridică', badgeClasses: { 'PHYSICAL_PERSON': 'viewer', 'LEGAL_ENTITY': 'admin' } },
     { field: 'displayIdentifier', header: 'CNP / CUI', format: val => val || '-' },
+    { field: 'esteDecedat', header: 'Stare deces', type: 'badge', format: (val, row) => row.personType === 'PHYSICAL_PERSON' ? (val ? 'Decedat' : 'În viață') : '-', badgeClasses: { 'false': 'activ', 'true': 'admin' } },
     { field: 'judet', header: 'Județ', format: val => val || '-' },
     { field: 'localitate', header: 'Localitate', format: val => val || '-' }
   ];
@@ -94,6 +95,7 @@ export class PersonListComponent implements OnInit {
            displayHandle: this.getPersonTypeHandle(p),
            displayIdentifier: this.getPersonIdentifier(p),
            personType: p.personType,
+           esteDecedat: p.esteDecedat || false,
            judet: p.adresa?.county || '',
            localitate: p.adresa?.localitate || '',
            initials: this.getPersonName(p).substring(0, 1).toUpperCase(),

@@ -21,4 +21,9 @@ public class PersoanaDTO {
     private String phoneNumber;
     private String email;
     private List<Long> gospodarieIds;
+    
+    // Proprietăți de deces pentru persoane fizice
+    private Boolean esteDecedat;
+    private LocalDate dataDecesului;
+    private String numarCertificatDeces;
 }
