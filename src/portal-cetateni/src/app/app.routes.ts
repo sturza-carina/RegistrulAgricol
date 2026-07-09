@@ -7,6 +7,7 @@ import { Register } from './pages/register/register';
 import { CereriMele } from './pages/cereri-mele/cereri-mele';
 import { AuthGuard } from './guards/auth.guard';
 import { ContulMeu } from './pages/contul-meu/contul-meu';
+import { GospodariileMele } from './pages/gospodariile-mele/gospodariile-mele';
 
 export const routes: Routes = [
   { path: '', component: Home },
@@ -15,6 +16,7 @@ export const routes: Routes = [
   { path: 'cereri', component: Cereri, canActivate: [AuthGuard] },
   { path: 'cereri-mele', component: CereriMele, canActivate: [AuthGuard] },
   { path: 'stadiu', component: Stadiu },
-  { path: 'contul-meu', component: ContulMeu },
+  { path: 'contul-meu', component: ContulMeu, canActivate: [AuthGuard] },
+  { path: 'gospodariile-mele', component: GospodariileMele, canActivate: [AuthGuard] },
   { path: '**', redirectTo: '' }
 ];

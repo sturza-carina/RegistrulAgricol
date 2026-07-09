@@ -23,17 +23,21 @@ public interface GospodarieRepository extends JpaRepository<Gospodarie, Long> {
     Page<Gospodarie> findAllByOrderByIdDesc(Pageable pageable);
 
     @Query("SELECT g FROM Gospodarie g " +
-           "WHERE (:uatCode = '' OR g.uat.codSiruta = :uatCode) " +
-           "AND (:tipGospodarie IS NULL OR g.tipGospodarie = :tipGospodarie) " +
-           "AND (:activa IS NULL OR g.activa = :activa) " +
-           "AND (:search = '' OR LOWER(g.codGospodarie) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(g.adresa.street) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(g.adresa.localitate) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-           "ORDER BY g.id DESC")
+            "WHERE (:uatCode = '' OR g.uat.codSiruta = :uatCode) " +
+            "AND (:tipGospodarie IS NULL OR g.tipGospodarie = :tipGospodarie) " +
+            "AND (:activa IS NULL OR g.activa = :activa) " +
+            "AND (:search = '' OR LOWER(g.codGospodarie) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(g.adresa.street) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(g.adresa.localitate) LIKE LOWER(CONCAT('%', :search, '%'))) "
+            +
+            "ORDER BY g.id DESC")
     Page<Gospodarie> findWithFilters(@Param("uatCode") String uatCode,
-                                     @Param("tipGospodarie") com.multitenant.model.registru.TipGospodarie tipGospodarie,
-                                     @Param("activa") Boolean activa,
-                                     @Param("search") String search,
-                                     Pageable pageable);
+            @Param("tipGospodarie") com.multitenant.model.registru.TipGospodarie tipGospodarie,
+            @Param("activa") Boolean activa,
+            @Param("search") String search,
+            Pageable pageable);
 
     @Query("SELECT g FROM Gospodarie g LEFT JOIN FETCH g.uat WHERE g.id = :id")
     Optional<Gospodarie> findByIdWithUat(@Param("id") Long id);
+
+    @Query("SELECT g FROM PersoanaFizica pf JOIN pf.gospodarii g WHERE pf.cnp = :cnp AND g.activa = true")
+    List<Gospodarie> findGospodariiForPersoana(@Param("cnp") String cnp);
 }

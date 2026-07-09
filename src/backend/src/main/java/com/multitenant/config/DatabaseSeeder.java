@@ -433,9 +433,9 @@ public class DatabaseSeeder implements CommandLineRunner {
                     }
 
                     com.multitenant.model.persoana.PersoanaFizica persoana = new com.multitenant.model.persoana.PersoanaFizica();
-                    persoana.setFirstName("Ion" + i);
-                    persoana.setLastName("Popescu CJ");
-                    persoana.setCnp(String.format("190010112%04d", i));
+                    persoana.setFirstName(i == 1 ? "Cetatean" : "Ion" + i);
+                    persoana.setLastName(i == 1 ? "Popescu" : "Popescu CJ");
+                    persoana.setCnp(i == 1 ? "1800101123456" : String.format("190010112%04d", i));
                     persoana.setDateOfBirth(java.time.LocalDate.of(1990, 1, 1).plusDays(i));
                     persoana.setAdresa(a);
                     persoana.getGospodarii().add(savedG);
@@ -795,9 +795,9 @@ public class DatabaseSeeder implements CommandLineRunner {
                     }
 
                     com.multitenant.model.persoana.PersoanaFizica persoana = new com.multitenant.model.persoana.PersoanaFizica();
-                    persoana.setFirstName("Vasile" + i);
-                    persoana.setLastName("Ionescu BUC");
-                    persoana.setCnp(String.format("180020223%04d", i));
+                    persoana.setFirstName(i == 1 ? "Cetatean" : "Vasile" + i);
+                    persoana.setLastName(i == 1 ? "Popescu" : "Ionescu BUC");
+                    persoana.setCnp(i == 1 ? "1800101123456" : String.format("180020223%04d", i));
                     persoana.setDateOfBirth(java.time.LocalDate.of(1980, 2, 2).plusDays(i));
                     persoana.setAdresa(a);
                     persoana.getGospodarii().add(savedG);

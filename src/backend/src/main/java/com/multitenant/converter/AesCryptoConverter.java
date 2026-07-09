@@ -40,9 +40,10 @@ public class AesCryptoConverter implements AttributeConverter<String, String> {
             byte[] keyBytes = MessageDigest.getInstance("SHA-256").digest(keyStr.getBytes(StandardCharsets.UTF_8));
             SecretKeySpec secretKey = new SecretKeySpec(keyBytes, "AES");
 
-            // Generate a secure random IV for CBC mode
+            // Generate a deterministic IV for CBC mode to allow database querying
+            byte[] hash = MessageDigest.getInstance("SHA-256").digest(attribute.getBytes(StandardCharsets.UTF_8));
             byte[] iv = new byte[IV_SIZE];
-            new SecureRandom().nextBytes(iv);
+            System.arraycopy(hash, 0, iv, 0, IV_SIZE);
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
 
             Cipher cipher = Cipher.getInstance(ALGORITHM);
